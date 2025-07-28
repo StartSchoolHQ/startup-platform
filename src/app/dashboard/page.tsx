@@ -1,0 +1,146 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { WandSparkles, FileText, Eye, Users, User } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { statsCards, teamProgressData, personalProgressData } from "@/data/dashboard-data"
+import { StatsCard } from "@/types/dashboard"
+import { StatItem } from "@/components/dashboard/stat-item"
+import { TeamItem } from "@/components/dashboard/team-item"
+import { ActivityItem } from "@/components/dashboard/activity-item"
+import { BorderedContainer } from "@/components/dashboard/bordered-container"
+import { IconContainer } from "@/components/dashboard/icon-container"
+
+// Reusable card component for stats
+function StatsCardComponent({ title, value, subtitle, icon: Icon, iconColor }: StatsCard) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-lg font-bold">
+          {title}
+        </CardTitle>
+        <Icon className={`h-8 w-8 ${iconColor}`} />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        <p className="text-xs text-muted-foreground mt-1">
+          {subtitle}
+        </p>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Progress card component for teams
+function TeamProgressCard() {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
+        <div className="flex items-center gap-3">
+          <IconContainer 
+            icon={Users}
+            iconColor="text-purple-600"
+            backgroundColor="bg-purple-100"
+          />
+          <CardTitle className="text-lg font-semibold">{teamProgressData.title}</CardTitle>
+        </div>
+        <Button variant="link" className="text-blue-500 p-0 h-auto font-medium">
+          {teamProgressData.joinTeamsText}
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Stats row */}
+        <div className="grid grid-cols-2 gap-4">
+          {teamProgressData.stats.map((stat, index) => (
+            <StatItem key={index} stat={stat} />
+          ))}
+        </div>
+        
+        {/* Teams list */}
+        <div className="grid grid-cols-2 gap-4">
+          {teamProgressData.teams.map((team, index) => (
+            <TeamItem key={index} team={team} />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Progress card component for personal
+function PersonalProgressCard() {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
+        <div className="flex items-center gap-3">
+          <IconContainer 
+            icon={User}
+            iconColor="text-pink-600"
+            backgroundColor="bg-pink-100"
+          />
+          <CardTitle className="text-lg font-semibold">{personalProgressData.title}</CardTitle>
+        </div>
+        <div className="w-[80px]"></div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Stats row */}
+        <div className="grid grid-cols-2 gap-4">
+          {personalProgressData.stats.map((stat, index) => (
+            <StatItem key={index} stat={stat} />
+          ))}
+        </div>
+        
+        {/* Activities */}
+        <div className="grid grid-cols-2 gap-4">
+          {personalProgressData.activities.map((activity, index) => (
+            <ActivityItem key={index} activity={activity} />
+          ))}
+        </div>
+        
+        {/* Action buttons */}
+        <BorderedContainer className="justify-center w-full">
+          <Button variant="outline" size="sm" className="h-10 grow">
+            <FileText className="h-4 w-4 mr-2" />
+            Submit Weekly Report
+          </Button>
+          <Button size="sm" className="bg-black text-white hover:bg-gray-800 h-10 grow">
+            <WandSparkles className="h-4 w-4 mr-2" />
+            View Progress
+          </Button>
+        </BorderedContainer>
+      </CardContent>
+    </Card>
+  )
+}
+
+export default function OverviewPage() {
+  return (
+    <div className="space-y-6">
+      {/* Header section */}
+      <div>
+        <h1 className="text-2xl font-bold">Hi David 👋</h1>
+        <p className="text-muted-foreground">
+          Lorem ipsum is simply dummy text of the printing
+        </p>
+      </div>
+
+      {/* Stats cards grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {statsCards.map((card, index) => (
+          <StatsCardComponent
+            key={index}
+            title={card.title}
+            value={card.value}
+            subtitle={card.subtitle}
+            icon={card.icon}
+            iconColor={card.iconColor}
+          />
+        ))}
+      </div>
+
+      {/* Progress cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TeamProgressCard />
+        <PersonalProgressCard />
+      </div>
+    </div>
+  )
+}
