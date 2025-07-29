@@ -1,12 +1,5 @@
 import { LucideIcon } from "lucide-react"
-
-export interface MyJourneyStatsCard {
-  title: string
-  value: string
-  subtitle: string
-  icon: LucideIcon
-  iconColor: string
-}
+import { StatsCard } from "./dashboard"
 
 export interface Achievement {
   id: string
@@ -26,7 +19,7 @@ export interface Task {
   difficulty: "easy" | "medium" | "hard"
   xp: number
   points: number
-  action: "complete" | "done"
+  action: "done" | "complete"
   tips: boolean
 }
 
@@ -53,9 +46,9 @@ export interface Strike {
 export interface MyJourneyData {
   user: {
     name: string
-    status: "Active" | "Inactive"
+    status: string
   }
-  statsCards: MyJourneyStatsCard[]
+  statsCards: StatsCard[]
   achievements: Achievement[]
   tasks: Task[]
   weeklyReports: WeeklyReport[]

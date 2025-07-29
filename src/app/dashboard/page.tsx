@@ -8,26 +8,7 @@ import { TeamItem } from "@/components/dashboard/team-item"
 import { ActivityItem } from "@/components/dashboard/activity-item"
 import { BorderedContainer } from "@/components/dashboard/bordered-container"
 import { IconContainer } from "@/components/dashboard/icon-container"
-
-// Reusable card component for stats
-function StatsCardComponent({ title, value, subtitle, icon: Icon, iconColor }: StatsCard) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-bold">
-          {title}
-        </CardTitle>
-        <Icon className={`h-8 w-8 ${iconColor}`} />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground mt-1">
-          {subtitle}
-        </p>
-      </CardContent>
-    </Card>
-  )
-}
+import { StatsCardComponent } from "@/components/dashboard/stats-card"
 
 // Progress card component for teams
 function TeamProgressCard() {
