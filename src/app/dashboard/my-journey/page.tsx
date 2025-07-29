@@ -176,7 +176,7 @@ function WeeklyReportRow({ report }: { report: WeeklyReport }) {
       </td>
       <td className="py-4 px-4">
         <div className="flex justify-end">
-          <Button size="sm" className={`h-8 w-20 ${actionConfig.buttonClass}`}>
+          <Button size="sm" className={`h-8  ${actionConfig.buttonClass}`}>
             {actionConfig.icon}
             {actionConfig.buttonText}
           </Button>
@@ -256,7 +256,7 @@ function StrikeRow({ strike }: { strike: Strike }) {
       </td>
       <td className="py-4 px-4">
         <div className="flex justify-end">
-          <Button size="sm" className={`h-8 w-20 ${actionConfig.buttonClass}`}>
+          <Button size="sm" className={`h-8  ${actionConfig.buttonClass}`}>
             {actionConfig.icon}
             {actionConfig.buttonText}
           </Button>
