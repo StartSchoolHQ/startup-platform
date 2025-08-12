@@ -1,10 +1,9 @@
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Users, DollarSign, Trophy } from "lucide-react"
+import { AvatarStack } from "@/components/team-journey/avatar-stack"
 import { Product } from "@/types/team-journey"
-import { AvatarStack } from "./avatar-stack"
 
 interface ProductCardProps {
   product: Product

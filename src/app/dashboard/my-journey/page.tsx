@@ -1,27 +1,20 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Trophy,
-  Star,
-  Target,
-  CheckSquare,
-  Settings,
   FileText,
   Calendar,
   AlertTriangle,
   ExternalLink,
-  Shield,
   CheckCircle,
   Clock,
   Zap,
-  CreditCard,
   Banknote,
   Medal,
+  Settings,
 } from "lucide-react";
 import { myJourneyData } from "@/data/my-journey-data";
 import { Task, WeeklyReport, Strike } from "@/types/my-journey";

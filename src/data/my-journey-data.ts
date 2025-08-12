@@ -1,4 +1,4 @@
-import { Trophy, Star, Target, CheckSquare, Shield, Clock, Users, User } from "lucide-react"
+import { Trophy, Star, Target, CheckSquare } from "lucide-react"
 import { MyJourneyData } from "@/types/my-journey"
 
 export const myJourneyData: MyJourneyData = {
@@ -39,76 +39,83 @@ export const myJourneyData: MyJourneyData = {
   achievements: [
     {
       id: "1",
-      title: "Build in Public",
-      description: "Click to unifier",
+      title: "Launch Achievements",
+      description: "Click to unfilter",
+      icon: "🏆",
       status: "in-progress",
       points: 680,
       xp: 1020,
-      progress: 75,
-      clickText: "Click to filter"
+      date: "2024-01-15"
     },
     {
       id: "2",
       title: "Topic 2",
       description: "Click to filter",
+      icon: "⭐",
       status: "finished",
       points: 680,
       xp: 1020,
-      clickText: "Click to filter"
+      date: "2024-01-10"
     },
     {
       id: "3",
       title: "Topic 3",
       description: "Click to filter",
+      icon: "🎯",
       status: "not-started",
       points: 680,
       xp: 1020,
-      clickText: "Click to filter"
+      date: "2024-01-20"
     },
     {
       id: "4",
       title: "Topic 4",
       description: "Click to filter",
+      icon: "✅",
       status: "not-started",
       points: 680,
       xp: 1020,
-      clickText: "Click to filter"
+      date: "2024-01-25"
     },
     {
       id: "5",
       title: "Topic 5",
       description: "Click to filter",
+      icon: "📚",
       status: "not-started",
       points: 680,
       xp: 1020,
-      clickText: "Click to filter"
+      date: "2024-01-30"
     },
     {
       id: "6",
       title: "Topic 6",
       description: "Click to filter",
+      icon: "🚀",
       status: "not-started",
       points: 680,
       xp: 1000,
-      clickText: "Click to filter"
+      date: "2024-02-05"
     },
     {
       id: "7",
       title: "Topic 7",
       description: "Click to filter",
+      icon: "💡",
       status: "not-started",
       points: 680,
       xp: 1020,
-      clickText: "Click to filter"
+      date: "2024-02-10"
     },
     {
       id: "8",
       title: "Topic 8",
       description: "Click to filter",
+      icon: "🎉",
       status: "not-started",
       points: 680,
       xp: 1020,
-      clickText: "Click to filter"
+      date: "2024-02-15"
     }
   ],
   tasks: [

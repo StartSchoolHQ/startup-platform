@@ -1,4 +1,4 @@
-import { FileText, User, Zap, CreditCard, Trophy, Users } from "lucide-react"
+import { FileText, User, Zap, CreditCard } from "lucide-react"
 import { PeerReviewData } from "@/types/peer-review"
 import { StatsCard } from "@/types/dashboard"
 

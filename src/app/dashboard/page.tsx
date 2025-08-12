@@ -1,14 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { WandSparkles, FileText, Eye, Users, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { statsCards, teamProgressData, personalProgressData } from "@/data/dashboard-data"
-import { StatsCard } from "@/types/dashboard"
-import { StatItem } from "@/components/dashboard/stat-item"
+import { Users, FileText, WandSparkles } from "lucide-react"
+import { StatsCardComponent } from "@/components/dashboard/stats-card"
 import { TeamItem } from "@/components/dashboard/team-item"
 import { ActivityItem } from "@/components/dashboard/activity-item"
 import { BorderedContainer } from "@/components/dashboard/bordered-container"
 import { IconContainer } from "@/components/dashboard/icon-container"
-import { StatsCardComponent } from "@/components/dashboard/stats-card"
+import { StatItem } from "@/components/dashboard/stat-item"
+import { statsCards, teamProgressData, personalProgressData } from "@/data/dashboard-data"
 
 // Progress card component for teams
 function TeamProgressCard() {
@@ -18,12 +17,12 @@ function TeamProgressCard() {
         <div className="flex items-center gap-3">
           <IconContainer 
             icon={Users}
-            iconColor="text-purple-600"
-            backgroundColor="bg-purple-100"
+            iconColor="text-blue-600"
+            backgroundColor="bg-blue-100"
           />
           <CardTitle className="text-lg font-semibold">{teamProgressData.title}</CardTitle>
         </div>
-        <Button variant="link" className="text-blue-500 p-0 h-auto font-medium">
+        <Button variant="outline" size="sm">
           {teamProgressData.joinTeamsText}
         </Button>
       </CardHeader>
@@ -53,7 +52,7 @@ function PersonalProgressCard() {
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
         <div className="flex items-center gap-3">
           <IconContainer 
-            icon={User}
+            icon={Users}
             iconColor="text-pink-600"
             backgroundColor="bg-pink-100"
           />

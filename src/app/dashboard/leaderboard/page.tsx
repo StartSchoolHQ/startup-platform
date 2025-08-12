@@ -8,8 +8,9 @@ import { leaderboardData } from "@/data/leaderboard-data"
 import { RankIcon } from "@/components/leaderboard/rank-icon"
 import { ChangeIndicator } from "@/components/leaderboard/change-indicator"
 import { StreakBadge } from "@/components/leaderboard/streak-badge"
+import { LeaderboardEntry } from "@/types/leaderboard"
 
-function LeaderboardRow({ entry }: { entry: any }) {
+function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
   return (
          <div className={`grid gap-4 p-3 border-b border-gray-100 items-center ${
        entry.user.isCurrentUser ? 'bg-blue-50' : ''
@@ -17,7 +18,7 @@ function LeaderboardRow({ entry }: { entry: any }) {
              {/* Rank */}
        <div className="flex items-center gap-2">
          <RankIcon 
-           type={entry.rankIcon} 
+           type={entry.rankIcon || "none"} 
            rank={entry.rank} 
            changeDirection={entry.change.direction}
          />
@@ -148,8 +149,8 @@ export default function LeaderboardPage() {
 
            {/* Table Rows */}
            <div>
-             {leaderboardData.map((entry) => (
-               <LeaderboardRow key={entry.rank} entry={entry} />
+             {leaderboardData.map((item) => (
+               <LeaderboardRow key={item.rank} entry={item} />
              ))}
            </div>
          </CardContent>

@@ -5,15 +5,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { StatsCardComponent } from "@/components/dashboard/stats-card"
-import { AvatarStack } from "@/components/team-journey/avatar-stack"
 import { AchievementCard } from "@/components/my-journey/achievement-card"
 import { TasksTable } from "@/components/team-journey/tasks-table"
 import { WeeklyReportsTable } from "@/components/team-journey/weekly-reports-table"
 import { ClientMeetingsTable } from "@/components/team-journey/client-meetings-table"
 import { StrikesTable } from "@/components/team-journey/strikes-table"
-import { ExternalLink, FileText, DollarSign, Users, Trophy, Zap, Calendar, AlertTriangle, CreditCard, Medal, CheckCircle, TrendingUp, UserCheck, MessageSquare, Eye, Plus } from "lucide-react"
+import { ExternalLink, FileText, DollarSign, Users, Trophy, Zap, Calendar, AlertTriangle, CreditCard, CheckCircle, TrendingUp, UserCheck, MessageSquare, Plus } from "lucide-react"
 import { teamJourneyData } from "@/data/team-journey-data"
-import { myJourneyData } from "@/data/my-journey-data"
 import { StatsCard } from "@/types/dashboard"
 
 interface ProductDetailPageProps {
@@ -261,7 +259,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             {/* Weekly Report */}
             <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
               <div className="flex -space-x-2">
-                {product.teamMembers.slice(0, 4).map((member, index) => (
+                {product.teamMembers.slice(0, 4).map((member) => (
                   <Avatar key={member.id} className="w-8 h-8 border-2 border-white">
                     <AvatarImage src={member.avatar} alt={member.name} />
                     <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">

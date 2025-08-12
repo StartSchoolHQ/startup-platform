@@ -1,4 +1,4 @@
-import { Trophy, Star, Target, CheckSquare, Users, User, AlertTriangle, FileText } from "lucide-react"
+import { Trophy, Star, Target, CheckSquare, Users, AlertTriangle, FileText } from "lucide-react"
 import { StatsCard, TeamProgressData, PersonalProgressData } from "@/types/dashboard"
 
 // Mock data for the stats cards with exact values from screenshot

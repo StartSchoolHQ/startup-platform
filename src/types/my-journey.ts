@@ -1,15 +1,14 @@
-import { LucideIcon } from "lucide-react"
 import { StatsCard } from "./dashboard"
 
 export interface Achievement {
   id: string
   title: string
   description: string
-  status: "in-progress" | "finished" | "not-started"
-  points: number
+  icon: string
   xp: number
-  progress?: number
-  clickText: string
+  points: number
+  date: string
+  status: "in-progress" | "finished" | "not-started"
 }
 
 export interface Task {

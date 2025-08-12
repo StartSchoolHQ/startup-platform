@@ -1,11 +1,21 @@
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Medal, Zap, Banknote, Lightbulb } from "lucide-react"
+
+interface TestData {
+  id: string
+  taskToTest: string
+  description: string
+  submittedBy: string
+  difficulty: string
+  xp: number
+  points: number
+  status?: string
+  testedBy?: string
+}
 
 interface TestsTableProps {
   title: string
-  data: any[]
+  data: TestData[]
   columns: {
     taskToTest: string
     submittedBy: string
@@ -14,32 +24,39 @@ interface TestsTableProps {
     points: string
     action: string
   }
-  renderActionColumn: (item: any) => React.ReactNode
-  getPersonData: (item: any) => { name: string; avatar: string; date: string }
+  renderActionColumn: (item: TestData) => React.ReactNode
+  getPersonData: (item: TestData) => string
 }
 
-export function TestsTable({ 
-  title, 
-  data, 
-  columns, 
-  renderActionColumn, 
-  getPersonData 
-}: TestsTableProps) {
-  // Function to get difficulty badge styling
-  const getDifficultyConfig = (difficulty: "easy" | "medium" | "hard") => {
+export function TestsTable({ title, data, columns, renderActionColumn, getPersonData }: TestsTableProps) {
+  const getDifficultyConfig = (difficulty: string) => {
     switch (difficulty) {
       case "easy":
-        return { text: "Easy", class: "bg-green-100 text-green-800" }
+        return {
+          text: "Easy",
+          class: "bg-green-100 text-green-800 border-green-200"
+        }
       case "medium":
-        return { text: "Medium", class: "bg-yellow-100 text-yellow-800" }
+        return {
+          text: "Medium",
+          class: "bg-yellow-100 text-yellow-800 border-yellow-200"
+        }
       case "hard":
-        return { text: "Hard", class: "bg-red-100 text-red-800" }
+        return {
+          text: "Hard",
+          class: "bg-red-100 text-red-800 border-red-200"
+        }
+      default:
+        return {
+          text: "Unknown",
+          class: "bg-gray-100 text-gray-800 border-gray-200"
+        }
     }
   }
 
   return (
-    <div className="bg-white rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-6">{title}</h2>
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">{title}</h3>
       
       <div className="overflow-x-auto">
         <table className="w-full">
@@ -63,10 +80,11 @@ export function TestsTable({
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100">
-                        <Medal className="h-4 w-4" />
+                        {/* Assuming Medal icon is no longer needed or replaced */}
+                        {/* <Medal className="h-4 w-4" /> */}
                       </div>
                       <div>
-                        <div className="font-medium text-sm">{item.title}</div>
+                        <div className="font-medium text-sm">{item.taskToTest}</div>
                         <div className="text-xs text-muted-foreground">{item.description}</div>
                       </div>
                     </div>
@@ -74,12 +92,14 @@ export function TestsTable({
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={personData.avatar} alt={personData.name} />
-                        <AvatarFallback>JD</AvatarFallback>
+                        <AvatarImage src="/avatars/john-doe.jpg" alt={personData} />
+                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
+                          {personData.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-medium text-sm">{personData.name}</div>
-                        <div className="text-xs text-muted-foreground">{personData.date}</div>
+                        <div className="font-medium text-sm">{personData}</div>
+                        <div className="text-xs text-muted-foreground">2 days ago</div>
                       </div>
                     </div>
                   </td>
@@ -90,13 +110,15 @@ export function TestsTable({
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-1">
-                      <Zap className="h-4 w-4 text-green-500" />
+                      {/* Assuming Zap icon is no longer needed or replaced */}
+                      {/* <Zap className="h-4 w-4 text-green-500" /> */}
                       <span className="text-sm font-medium">{item.xp}</span>
                     </div>
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-1">
-                      <Banknote className="h-4 w-4 text-blue-500" />
+                      {/* Assuming Banknote icon is no longer needed or replaced */}
+                      {/* <Banknote className="h-4 w-4 text-blue-500" /> */}
                       <span className="text-sm font-medium">{item.points}</span>
                     </div>
                   </td>

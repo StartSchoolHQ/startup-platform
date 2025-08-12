@@ -1,4 +1,3 @@
-import { LucideIcon } from "lucide-react"
 import { StatsCard } from "./dashboard"
 
 export interface TestTask {
