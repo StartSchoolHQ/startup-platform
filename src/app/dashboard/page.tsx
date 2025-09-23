@@ -1,3 +1,6 @@
+'use client'
+
+import { useApp } from '@/contexts/app-context'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Users, FileText, WandSparkles } from "lucide-react"
@@ -92,13 +95,15 @@ function PersonalProgressCard() {
 }
 
 export default function OverviewPage() {
+  const { firstName } = useApp()
+
   return (
     <div className="space-y-6">
       {/* Header section */}
       <div>
-        <h1 className="text-2xl font-bold">Hi David 👋</h1>
+        <h1 className="text-2xl font-bold">Hi {firstName} 👋</h1>
         <p className="text-muted-foreground">
-          Lorem ipsum is simply dummy text of the printing
+          Here you can see progress for you and your team
         </p>
       </div>
 

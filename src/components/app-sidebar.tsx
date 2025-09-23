@@ -1,6 +1,7 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
+import { useApp } from "@/contexts/app-context";
 import {
   BarChart3,
   Trophy,
@@ -8,10 +9,10 @@ import {
   Users,
   FileText,
   Command,
-} from "lucide-react"
+} from "lucide-react";
 
-import { NavMain } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
+import { NavMain } from "@/components/nav-main";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -20,44 +21,39 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
-const data = {
-  user: {
-    name: "StartSchool User",
-    email: "user@startschool.com",
-    avatar: "/avatars/user.jpg",
+const navMainItems = [
+  {
+    title: "Overview",
+    url: "/dashboard",
+    icon: BarChart3,
   },
-  navMain: [
-    {
-      title: "Overview",
-      url: "/dashboard",
-      icon: BarChart3,
-    },
-    {
-      title: "Leaderboard",
-      url: "/dashboard/leaderboard",
-      icon: Trophy,
-    },
-    {
-      title: "My Journey",
-      url: "/dashboard/my-journey",
-      icon: User,
-    },
-    {
-      title: "Team Journey",
-      url: "/dashboard/team-journey",
-      icon: Users,
-    },
-    {
-      title: "Peer Review",
-      url: "/dashboard/peer-review",
-      icon: FileText,
-    },
-  ],
-}
+  {
+    title: "Leaderboard",
+    url: "/dashboard/leaderboard",
+    icon: Trophy,
+  },
+  {
+    title: "My Journey",
+    url: "/dashboard/my-journey",
+    icon: User,
+  },
+  {
+    title: "Team Journey",
+    url: "/dashboard/team-journey",
+    icon: Users,
+  },
+  {
+    title: "Peer Review",
+    url: "/dashboard/peer-review",
+    icon: FileText,
+  },
+];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useApp();
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -69,7 +65,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Command className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">StartSchool Module</span>
+                  <span className="truncate font-medium">
+                    StartSchool Module
+                  </span>
                   <span className="truncate text-xs">Batch 1</span>
                 </div>
               </a>
@@ -78,11 +76,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMainItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        {user && (
+          <NavUser 
+            user={{
+              name: user.name || 'User',
+              email: user.email,
+              avatar: user.avatar_url || '/avatars/shadcn.jpg'
+            }} 
+          />
+        )}
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
