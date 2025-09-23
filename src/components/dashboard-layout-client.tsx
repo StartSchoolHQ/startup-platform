@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useApp } from "@/contexts/app-context";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -41,7 +41,7 @@ function PageLoader() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function DashboardLayoutClient({

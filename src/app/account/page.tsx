@@ -1,226 +1,235 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowLeft, Camera, Save, Eye, EyeOff } from 'lucide-react'
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Camera, Save, Eye, EyeOff } from "lucide-react";
 
 interface UserProfile {
-  id: string
-  name: string | null
-  email: string
-  avatar_url: string | null
+  id: string;
+  name: string | null;
+  email: string;
+  avatar_url: string | null;
 }
 
 export default function AccountPage() {
-  const [user, setUser] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-  
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
   // Profile form state
-  const [name, setName] = useState('')
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-  
+  const [name, setName] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
   // Password form state
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  
-  const router = useRouter()
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const router = useRouter();
 
   const loadUserProfile = useCallback(async () => {
     try {
-      const supabase = createClient()
-      
+      const supabase = createClient();
+
       // Get current authenticated user
-      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+      const {
+        data: { user: authUser },
+        error: authError,
+      } = await supabase.auth.getUser();
       if (authError || !authUser) {
-        router.push('/login')
-        return
+        router.push("/login");
+        return;
       }
 
       // Get user profile from our users table
       const { data: userProfile, error: profileError } = await supabase
-        .from('users')
-        .select('id, name, email, avatar_url')
-        .eq('id', authUser.id)
-        .single()
+        .from("users")
+        .select("id, name, email, avatar_url")
+        .eq("id", authUser.id)
+        .single();
 
       if (profileError || !userProfile) {
-        setError('Failed to load user profile')
-        return
+        setError("Failed to load user profile");
+        return;
       }
 
-      setUser(userProfile)
-      setName(userProfile.name || '')
-      setAvatarPreview(userProfile.avatar_url)
+      setUser(userProfile);
+      setName(userProfile.name || "");
+      setAvatarPreview(userProfile.avatar_url);
     } catch (error) {
-      console.error('Error loading user profile:', error)
-      setError('An unexpected error occurred')
+      console.error("Error loading user profile:", error);
+      setError("An unexpected error occurred");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [router])
+  }, [router]);
 
   useEffect(() => {
-    loadUserProfile()
-  }, [loadUserProfile])
+    loadUserProfile();
+  }, [loadUserProfile]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setError('File size must be less than 5MB')
-        return
+        setError("File size must be less than 5MB");
+        return;
       }
-      
+
       // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Please select an image file')
-        return
+      if (!file.type.startsWith("image/")) {
+        setError("Please select an image file");
+        return;
       }
-      
-      setError(null)
-      setAvatarFile(file)
+
+      setError(null);
+      setAvatarFile(file);
       // Create preview URL
-      const previewUrl = URL.createObjectURL(file)
-      setAvatarPreview(previewUrl)
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarPreview(previewUrl);
     }
-  }
+  };
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (!name.trim()) {
-      setError('Full name is required')
-      return
+      setError("Full name is required");
+      return;
     }
 
-    setSaving(true)
-    setError(null)
-    setSuccess(null)
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
 
     try {
-      const supabase = createClient()
-      
-      let avatarUrl = user?.avatar_url
+      const supabase = createClient();
+
+      let avatarUrl = user?.avatar_url;
 
       // Upload new avatar if selected
       if (avatarFile && user) {
-        const fileExtension = avatarFile.name.split('.').pop()
-        const avatarFileName = `${user.id}/avatar-${Date.now()}.${fileExtension}`
-        
+        const fileExtension = avatarFile.name.split(".").pop();
+        const avatarFileName = `${
+          user.id
+        }/avatar-${Date.now()}.${fileExtension}`;
+
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('avatars')
+          .from("avatars")
           .upload(avatarFileName, avatarFile, {
-            cacheControl: '3600',
-            upsert: true
-          })
+            cacheControl: "3600",
+            upsert: true,
+          });
 
         if (uploadError) {
-          console.error('Upload error:', uploadError)
-          setError(`Failed to upload profile picture: ${uploadError.message}`)
-          return
+          console.error("Upload error:", uploadError);
+          setError(`Failed to upload profile picture: ${uploadError.message}`);
+          return;
         }
 
         // Get public URL for the uploaded avatar
-        const { data: { publicUrl } } = supabase.storage
-          .from('avatars')
-          .getPublicUrl(uploadData.path)
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("avatars").getPublicUrl(uploadData.path);
 
-        avatarUrl = publicUrl
+        avatarUrl = publicUrl;
       }
 
       // Update user profile in our users table
       const { error: updateError } = await supabase
-        .from('users')
+        .from("users")
         .update({
           name: name.trim(),
           avatar_url: avatarUrl,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', user!.id)
+        .eq("id", user!.id);
 
       if (updateError) {
-        setError('Failed to save profile. Please try again.')
-        return
+        setError("Failed to save profile. Please try again.");
+        return;
       }
 
-      setSuccess('Profile updated successfully!')
-      setAvatarFile(null)
-      
-      // Reload user profile to get updated data
-      await loadUserProfile()
+      setSuccess("Profile updated successfully!");
+      setAvatarFile(null);
 
+      // Reload user profile to get updated data
+      await loadUserProfile();
     } catch (error) {
-      console.error('Error updating profile:', error)
-      setError('An unexpected error occurred. Please try again.')
+      console.error("Error updating profile:", error);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (newPassword !== confirmPassword) {
-      setError('New passwords do not match')
-      return
+      setError("New passwords do not match");
+      return;
     }
 
     if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters long')
-      return
+      setError("New password must be at least 6 characters long");
+      return;
     }
 
-    setSaving(true)
-    setError(null)
-    setSuccess(null)
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
 
     try {
-      const supabase = createClient()
-      
+      const supabase = createClient();
+
       const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      })
+        password: newPassword,
+      });
 
       if (error) {
-        setError(error.message)
-        return
+        setError(error.message);
+        return;
       }
 
-      setSuccess('Password updated successfully!')
-      setNewPassword('')
-      setConfirmPassword('')
-
+      setSuccess("Password updated successfully!");
+      setNewPassword("");
+      setConfirmPassword("");
     } catch (error) {
-      console.error('Error updating password:', error)
-      setError('An unexpected error occurred. Please try again.')
+      console.error("Error updating password:", error);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const getInitials = (name: string) => {
-    if (!name) return "?"
+    if (!name) return "?";
     return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
       .toUpperCase()
-      .slice(0, 2)
-  }
+      .slice(0, 2);
+  };
 
   if (loading) {
     return (
@@ -229,27 +238,25 @@ export default function AccountPage() {
           <div className="text-lg">Loading...</div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!user) {
     return (
       <div className="container mx-auto py-8">
         <div className="flex items-center justify-center">
-          <div className="text-lg text-red-600">Failed to load user profile</div>
+          <div className="text-lg text-red-600">
+            Failed to load user profile
+          </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => router.back()}
-          className="mb-4"
-        >
+        <Button variant="ghost" onClick={() => router.back()} className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
@@ -294,13 +301,13 @@ export default function AccountPage() {
                   </label>
                   <div className="flex items-center space-x-4">
                     <Avatar className="w-20 h-20">
-                      <AvatarImage 
-                        src={avatarPreview || undefined} 
-                        alt={user.name || 'User'}
+                      <AvatarImage
+                        src={avatarPreview || undefined}
+                        alt={user.name || "User"}
                         className="object-cover"
                       />
                       <AvatarFallback className="text-lg">
-                        {getInitials(user.name || 'User')}
+                        {getInitials(user.name || "User")}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
@@ -363,7 +370,7 @@ export default function AccountPage() {
                 <div className="flex justify-end">
                   <Button type="submit" disabled={saving}>
                     <Save className="mr-2 h-4 w-4" />
-                    {saving ? 'Saving...' : 'Save Changes'}
+                    {saving ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
               </form>
@@ -383,7 +390,10 @@ export default function AccountPage() {
               <form onSubmit={handlePasswordUpdate} className="space-y-4">
                 {/* New Password */}
                 <div className="space-y-2">
-                  <label htmlFor="new-password" className="block text-sm font-medium">
+                  <label
+                    htmlFor="new-password"
+                    className="block text-sm font-medium"
+                  >
                     New Password
                   </label>
                   <div className="relative">
@@ -415,7 +425,10 @@ export default function AccountPage() {
 
                 {/* Confirm Password */}
                 <div className="space-y-2">
-                  <label htmlFor="confirm-password" className="block text-sm font-medium">
+                  <label
+                    htmlFor="confirm-password"
+                    className="block text-sm font-medium"
+                  >
                     Confirm New Password
                   </label>
                   <div className="relative">
@@ -434,7 +447,9 @@ export default function AccountPage() {
                       variant="ghost"
                       size="sm"
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                     >
                       {showConfirmPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -448,7 +463,7 @@ export default function AccountPage() {
                 <div className="flex justify-end">
                   <Button type="submit" disabled={saving}>
                     <Save className="mr-2 h-4 w-4" />
-                    {saving ? 'Updating...' : 'Update Password'}
+                    {saving ? "Updating..." : "Update Password"}
                   </Button>
                 </div>
               </form>
@@ -457,5 +472,5 @@ export default function AccountPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

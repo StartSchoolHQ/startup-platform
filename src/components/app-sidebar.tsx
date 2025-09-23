@@ -80,12 +80,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         {user && (
-          <NavUser 
+          <NavUser
             user={{
-              name: user.name || 'User',
+              name: user.name || "User",
               email: user.email,
-              avatar: user.avatar_url || '/avatars/shadcn.jpg'
-            }} 
+              avatar: user.avatar_url || "/avatars/shadcn.jpg",
+            }}
           />
         )}
       </SidebarFooter>
