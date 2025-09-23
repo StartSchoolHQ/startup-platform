@@ -85,7 +85,6 @@ A comprehensive startup accelerator platform built with Next.js and Supabase, de
 
 ## 📁 Project Structure
 
-```
 src/
 ├── app/                    # Next.js App Router
 │   ├── dashboard/         # Protected dashboard pages
@@ -100,7 +99,36 @@ src/
 ├── lib/                 # Utility functions and configurations
 │   └── supabase/       # Supabase client configurations
 └── types/              # TypeScript type definitions
-```
+
+src/
+├── app/                    # Next.js App Router
+│   ├── dashboard/         # Protected dashboard pages
+│   ├── login/            # Authentication pages
+│   ├── account/          # User account management
+│   └── profile/setup/    # Profile completion flow
+├── components/           # Reusable UI components
+│   ├── ui/              # shadcn/ui base components
+│   ├── dashboard/       # Dashboard-specific components
+│   └── ...              # Feature-specific components
+├── contexts/            # React Context providers
+├── lib/                 # Utility functions and configurations
+│   └── supabase/       # Supabase client configurations
+└── types/              # TypeScript type definitions
+
+src/
+├── app/                    # Next.js App Router
+│   ├── dashboard/         # Protected dashboard pages
+│   ├── login/            # Authentication pages
+│   ├── account/          # User account management
+│   └── profile/setup/    # Profile completion flow
+├── components/           # Reusable UI components
+│   ├── ui/              # shadcn/ui base components
+│   ├── dashboard/       # Dashboard-specific components
+│   └── ...              # Feature-specific components
+├── contexts/            # React Context providers
+├── lib/                 # Utility functions and configurations
+│   └── supabase/       # Supabase client configurations
+└── types/              # TypeScript type definitions
 
 ## 🔧 Available Scripts
 

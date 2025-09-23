@@ -11,102 +11,60 @@ import { BorderedContainer } from "@/components/dashboard/bordered-container";
 import { IconContainer } from "@/components/dashboard/icon-container";
 import { StatItem } from "@/components/dashboard/stat-item";
 import {
-  statsCards,
-  teamProgressData,
-  personalProgressData,
+  getStatsCards,
+  getTeamProgressData,
+  getPersonalProgressData,
 } from "@/data/dashboard-data";
-
-// Progress card component for teams
-function TeamProgressCard() {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
-        <div className="flex items-center gap-3">
-          <IconContainer
-            icon={Users}
-            iconColor="text-blue-600"
-            backgroundColor="bg-blue-100"
-          />
-          <CardTitle className="text-lg font-semibold">
-            {teamProgressData.title}
-          </CardTitle>
-        </div>
-        <Button variant="outline" size="sm">
-          {teamProgressData.joinTeamsText}
-        </Button>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Stats row */}
-        <div className="grid grid-cols-2 gap-4">
-          {teamProgressData.stats.map((stat, index) => (
-            <StatItem key={index} stat={stat} />
-          ))}
-        </div>
-
-        {/* Teams list */}
-        <div className="grid grid-cols-2 gap-4">
-          {teamProgressData.teams.map((team, index) => (
-            <TeamItem key={index} team={team} />
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Progress card component for personal
-function PersonalProgressCard() {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
-        <div className="flex items-center gap-3">
-          <IconContainer
-            icon={Users}
-            iconColor="text-pink-600"
-            backgroundColor="bg-pink-100"
-          />
-          <CardTitle className="text-lg font-semibold">
-            {personalProgressData.title}
-          </CardTitle>
-        </div>
-        <div className="w-[80px]"></div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Stats row */}
-        <div className="grid grid-cols-2 gap-4">
-          {personalProgressData.stats.map((stat, index) => (
-            <StatItem key={index} stat={stat} />
-          ))}
-        </div>
-
-        {/* Activities */}
-        <div className="grid grid-cols-2 gap-4">
-          {personalProgressData.activities.map((activity, index) => (
-            <ActivityItem key={index} activity={activity} />
-          ))}
-        </div>
-
-        {/* Action buttons */}
-        <BorderedContainer className="justify-center w-full">
-          <Button variant="outline" size="sm" className="h-10 grow">
-            <FileText className="h-4 w-4 mr-2" />
-            Submit Weekly Report
-          </Button>
-          <Button
-            size="sm"
-            className="bg-black text-white hover:bg-gray-800 h-10 grow"
-          >
-            <WandSparkles className="h-4 w-4 mr-2" />
-            View Progress
-          </Button>
-        </BorderedContainer>
-      </CardContent>
-    </Card>
-  );
-}
+import { useState, useEffect } from "react";
+import {
+  StatsCard,
+  TeamProgressData,
+  PersonalProgressData,
+} from "@/types/dashboard";
 
 export default function OverviewPage() {
-  const { firstName } = useApp();
+  const { firstName, user } = useApp();
+  const [statsCards, setStatsCards] = useState<StatsCard[]>([]);
+  const [teamProgressData, setTeamProgressData] =
+    useState<TeamProgressData | null>(null);
+  const [personalProgressData, setPersonalProgressData] =
+    useState<PersonalProgressData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      if (!user?.id) return;
+
+      try {
+        const [stats, teamData, personalData] = await Promise.all([
+          getStatsCards(user.id),
+          getTeamProgressData(user.id),
+          getPersonalProgressData(user.id),
+        ]);
+
+        setStatsCards(stats);
+        setTeamProgressData(teamData);
+        setPersonalProgressData(personalData);
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, [user?.id]);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Hi {firstName} 👋</h1>
+          <p className="text-muted-foreground">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -134,9 +92,96 @@ export default function OverviewPage() {
 
       {/* Progress cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TeamProgressCard />
-        <PersonalProgressCard />
+        {teamProgressData && <TeamProgressCard data={teamProgressData} />}
+        {personalProgressData && (
+          <PersonalProgressCard data={personalProgressData} />
+        )}
       </div>
     </div>
+  );
+}
+
+// Progress card component for teams
+function TeamProgressCard({ data }: { data: TeamProgressData }) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
+        <div className="flex items-center gap-3">
+          <IconContainer
+            icon={Users}
+            iconColor="text-blue-600"
+            backgroundColor="bg-blue-100"
+          />
+          <CardTitle className="text-lg font-semibold">{data.title}</CardTitle>
+        </div>
+        <Button variant="outline" size="sm">
+          {data.joinTeamsText}
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Stats row */}
+        <div className="grid grid-cols-2 gap-4">
+          {data.stats.map((stat, index) => (
+            <StatItem key={index} stat={stat} />
+          ))}
+        </div>
+
+        {/* Teams list */}
+        <div className="grid grid-cols-2 gap-4">
+          {data.teams.map((team, index) => (
+            <TeamItem key={index} team={team} />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Progress card component for personal
+function PersonalProgressCard({ data }: { data: PersonalProgressData }) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
+        <div className="flex items-center gap-3">
+          <IconContainer
+            icon={Users}
+            iconColor="text-pink-600"
+            backgroundColor="bg-pink-100"
+          />
+          <CardTitle className="text-lg font-semibold">{data.title}</CardTitle>
+        </div>
+        <div className="w-[80px]"></div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Stats row */}
+        <div className="grid grid-cols-2 gap-4">
+          {data.stats.map((stat, index) => (
+            <StatItem key={index} stat={stat} />
+          ))}
+        </div>
+
+        {/* Activities */}
+        <div className="grid grid-cols-2 gap-4">
+          {data.activities.map((activity, index) => (
+            <ActivityItem key={index} activity={activity} />
+          ))}
+        </div>
+
+        {/* Action buttons */}
+        <BorderedContainer className="justify-center w-full">
+          <Button variant="outline" size="sm" className="h-10 grow">
+            <FileText className="h-4 w-4 mr-2" />
+            Submit Weekly Report
+          </Button>
+          <Button
+            size="sm"
+            className="bg-black text-white hover:bg-gray-800 h-10 grow"
+          >
+            <WandSparkles className="h-4 w-4 mr-2" />
+            View Progress
+          </Button>
+        </BorderedContainer>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,12 +1,106 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, SlidersHorizontal, Plus } from "lucide-react"
-import { ProductCard } from "@/components/team-journey/product-card"
-import { teamJourneyData } from "@/data/team-journey-data"
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, Plus } from "lucide-react";
+import { ProductCard } from "@/components/team-journey/product-card";
+import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
+import { useState, useEffect, useCallback } from "react";
+import { useAppContext } from "@/contexts/app-context";
+import {
+  getAllTeamsForJourney,
+  getUserTeamsForJourney,
+  getArchivedTeamsForJourney,
+  transformTeamToProduct,
+} from "@/lib/database";
+import { Product } from "@/types/team-journey";
+
+type SortOption = "name" | "date" | "status" | "revenue";
+type SortOrder = "asc" | "desc";
 
 export default function TeamJourneyPage() {
+  const { user } = useAppContext();
+  const [showCreateTeamDialog, setShowCreateTeamDialog] = useState(false);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [myProducts, setMyProducts] = useState<Product[]>([]);
+  const [archivedProducts, setArchivedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("date");
+  const sortOrder: SortOrder = "desc"; // Fixed sort order for now
+
+  const loadData = useCallback(async () => {
+    if (!user?.id) return;
+
+    setLoading(true);
+    try {
+      const options = {
+        searchQuery: searchQuery || undefined,
+        sortBy,
+        sortOrder,
+        status: "all" as const,
+      };
+
+      // Load all products
+      const allTeams = await getAllTeamsForJourney(user.id, options);
+      setAllProducts(allTeams.map(transformTeamToProduct));
+
+      // Load user's products
+      const userTeams = await getUserTeamsForJourney(user.id, options);
+      setMyProducts(userTeams.map(transformTeamToProduct));
+
+      // Load archived products
+      const archivedTeams = await getArchivedTeamsForJourney(user.id, {
+        searchQuery: searchQuery || undefined,
+        sortBy,
+        sortOrder,
+      });
+      setArchivedProducts(archivedTeams.map(transformTeamToProduct));
+    } catch (error) {
+      console.error("Error loading team data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, searchQuery, sortBy, sortOrder]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleSearch = (value: string) => {
+    setSearchQuery(value);
+  };
+
+  const handleSort = (value: string) => {
+    setSortBy(value as SortOption);
+  };
+
+  const handleTeamCreated = () => {
+    // Refresh data when a new team is created
+    loadData();
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">My Products</h1>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -33,11 +127,13 @@ export default function TeamJourneyPage() {
                 <Input
                   placeholder="Search..."
                   className="pl-10 w-64"
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
                 />
               </div>
 
               {/* Sort */}
-              <Select>
+              <Select value={sortBy} onValueChange={handleSort}>
                 <SelectTrigger className="w-[100px]">
                   <SelectValue placeholder="Sort" />
                 </SelectTrigger>
@@ -49,14 +145,11 @@ export default function TeamJourneyPage() {
                 </SelectContent>
               </Select>
 
-              {/* Filter */}
-              <Button variant="outline" className="gap-2">
-                <SlidersHorizontal className="h-4 w-4" />
-                Filter
-              </Button>
-
               {/* Add Product */}
-              <Button className="gap-2 bg-black text-white hover:bg-gray-800">
+              <Button
+                className="gap-2 bg-black text-white hover:bg-gray-800"
+                onClick={() => setShowCreateTeamDialog(true)}
+              >
                 <Plus className="h-4 w-4" />
                 Add Product
               </Button>
@@ -65,30 +158,56 @@ export default function TeamJourneyPage() {
 
           {/* Tab Content */}
           <TabsContent value="all-products" className="space-y-4 mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {teamJourneyData.allProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            {allProducts.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No products found
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="my-products" className="space-y-4 mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {teamJourneyData.myProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            {myProducts.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                You haven&apos;t created any products yet. Click &quot;Add
+                Product&quot; to get started!
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {myProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="archive" className="space-y-4 mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {teamJourneyData.archive.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            {archivedProducts.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No archived products
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {archivedProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
+
+        {/* Team Creation Dialog */}
+        <CreateTeamDialog
+          open={showCreateTeamDialog}
+          onOpenChange={setShowCreateTeamDialog}
+          onTeamCreated={handleTeamCreated}
+        />
       </div>
     </div>
   );
-} 
+}

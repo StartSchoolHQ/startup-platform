@@ -1,73 +1,146 @@
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
-import { StatsCardComponent } from "@/components/dashboard/stats-card"
-import { AchievementCard } from "@/components/my-journey/achievement-card"
-import { TasksTable } from "@/components/team-journey/tasks-table"
-import { WeeklyReportsTable } from "@/components/team-journey/weekly-reports-table"
-import { ClientMeetingsTable } from "@/components/team-journey/client-meetings-table"
-import { StrikesTable } from "@/components/team-journey/strikes-table"
-import { ExternalLink, FileText, DollarSign, Users, Trophy, Zap, Calendar, AlertTriangle, CreditCard, CheckCircle, TrendingUp, UserCheck, MessageSquare, Plus } from "lucide-react"
-import { teamJourneyData } from "@/data/team-journey-data"
-import { StatsCard } from "@/types/dashboard"
+"use client";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { StatsCardComponent } from "@/components/dashboard/stats-card";
+import { AchievementCard } from "@/components/my-journey/achievement-card";
+import { TasksTable } from "@/components/team-journey/tasks-table";
+import { WeeklyReportsTable } from "@/components/team-journey/weekly-reports-table";
+import { ClientMeetingsTable } from "@/components/team-journey/client-meetings-table";
+import { StrikesTable } from "@/components/team-journey/strikes-table";
+import {
+  ExternalLink,
+  FileText,
+  DollarSign,
+  Users,
+  Trophy,
+  Zap,
+  Calendar,
+  AlertTriangle,
+  CreditCard,
+  CheckCircle,
+  TrendingUp,
+  UserCheck,
+  MessageSquare,
+  Plus,
+} from "lucide-react";
+import { getTeamDetails } from "@/lib/database";
+import { StatsCard } from "@/types/dashboard";
+import { useEffect, useState } from "react";
+import { useAppContext } from "@/contexts/app-context";
 
 interface ProductDetailPageProps {
   params: Promise<{
-    id: string
-  }>
+    id: string;
+  }>;
 }
 
-export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
-  // Await params before using them
-  const { id } = await params
-  
-  // Find the product by ID from all products
-  const allProducts = [
-    ...teamJourneyData.allProducts,
-    ...teamJourneyData.myProducts,
-    ...teamJourneyData.archive
-  ]
-  
-  const product = allProducts.find(p => p.id === id)
-  
-  if (!product) {
-    return <div>Product not found</div>
+interface TeamDetails {
+  id: string;
+  name: string;
+  description: string | null;
+  status: "active" | "archived";
+  created_at: string;
+  member_count: number | null;
+  members: {
+    user_id: string;
+    team_role: string;
+    joined_at: string;
+    users: {
+      name: string | null;
+      email: string;
+      graduation_level: number | null;
+    } | null;
+  }[];
+}
+
+export default function ProductDetailPage({ params }: ProductDetailPageProps) {
+  const { user } = useAppContext();
+  const [team, setTeam] = useState<TeamDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [teamId, setTeamId] = useState<string | null>(null);
+
+  // Extract ID from params
+  useEffect(() => {
+    const extractId = async () => {
+      const { id } = await params;
+      setTeamId(id);
+    };
+    extractId();
+  }, [params]);
+
+  // Load team data
+  useEffect(() => {
+    const loadTeam = async () => {
+      if (!teamId || !user?.id) return;
+
+      setLoading(true);
+      try {
+        const teamData = await getTeamDetails(teamId);
+        setTeam(teamData);
+      } catch (error) {
+        console.error("Error loading team:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTeam();
+  }, [teamId, user?.id]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    );
   }
 
-  // Stats cards data for this product
+  if (!team) {
+    return <div>Team not found</div>;
+  }
+
+  // Stats cards data for this team
   const statsCards: StatsCard[] = [
     {
       title: "Total Revenue",
-      value: `$${product.revenue.amount.toLocaleString()}`,
+      value: "$0", // Placeholder - would need revenue_streams data
       subtitle: "+20% from last month",
       icon: DollarSign,
-      iconColor: "text-green-500"
+      iconColor: "text-green-500",
     },
     {
-      title: "Clients",
-      value: product.customers.count.toString(),
+      title: "Team Members",
+      value: (team.member_count || 0).toString(),
       subtitle: "+10% from last month",
       icon: Users,
-      iconColor: "text-blue-500"
+      iconColor: "text-blue-500",
     },
     {
       title: "Achievements",
       value: "8/25",
       subtitle: "+19% from last week",
       icon: Trophy,
-      iconColor: "text-yellow-500"
+      iconColor: "text-yellow-500",
     },
     {
       title: "XP Earned",
       value: "9504",
       subtitle: "+201 since last week",
       icon: Zap,
-      iconColor: "text-purple-500"
-    }
-  ]
+      iconColor: "text-purple-500",
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -75,11 +148,13 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard/team-journey">Products</BreadcrumbLink>
+            <BreadcrumbLink href="/dashboard/team-journey">
+              Products
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <span className="font-medium">{product.name}</span>
+            <span className="font-medium">{team.name}</span>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -88,15 +163,21 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       <div className="flex items-start justify-between">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">{product.name}</h1>
-            <Badge 
-              variant={product.status === "Active" ? "default" : "secondary"}
-              className={product.status === "Active" ? "bg-green-100 text-green-800 hover:bg-green-100" : "bg-gray-100 text-gray-800"}
+            <h1 className="text-3xl font-bold">{team.name}</h1>
+            <Badge
+              variant={team.status === "active" ? "default" : "secondary"}
+              className={
+                team.status === "active"
+                  ? "bg-green-100 text-green-800 hover:bg-green-100"
+                  : "bg-gray-100 text-gray-800"
+              }
             >
-              {product.status}
+              {team.status === "active" ? "Active" : "Archived"}
             </Badge>
           </div>
-          <p className="text-muted-foreground text-lg">{product.description}</p>
+          <p className="text-muted-foreground text-lg">
+            {team.description || "No description provided"}
+          </p>
         </div>
 
         {/* Action Buttons */}
@@ -135,9 +216,14 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
               <div className="flex items-center justify-center w-8 h-8 rounded-md bg-purple-100">
                 <Users className="h-4 w-4 text-purple-600" />
               </div>
-              <CardTitle className="text-lg font-semibold">Team & Experience</CardTitle>
+              <CardTitle className="text-lg font-semibold">
+                Team & Experience
+              </CardTitle>
             </div>
-            <Button variant="link" className="text-blue-500 p-0 h-auto font-medium">
+            <Button
+              variant="link"
+              className="text-blue-500 p-0 h-auto font-medium"
+            >
               Modify Team
             </Button>
           </CardHeader>
@@ -150,7 +236,9 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                   <Users className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm">4 People</div>
+                  <div className="font-semibold text-sm">
+                    {team.member_count || 0} People
+                  </div>
                   <div className="text-xs text-muted-foreground">Team Size</div>
                 </div>
               </div>
@@ -162,24 +250,38 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                 </div>
                 <div>
                   <div className="font-semibold text-sm">42000</div>
-                  <div className="text-xs text-muted-foreground">Total Experience Earned</div>
+                  <div className="text-xs text-muted-foreground">
+                    Total Experience Earned
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Team Members - 2 columns */}
             <div className="grid grid-cols-2 gap-4">
-              {product.teamMembers.slice(0, 4).map((member) => (
-                <div key={member.id} className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
+              {team.members.slice(0, 4).map((member) => (
+                <div
+                  key={member.user_id}
+                  className="flex items-center gap-3 border border-gray-200 p-2 rounded-md"
+                >
                   <Avatar className="w-10 h-10">
-                    <AvatarImage src={member.avatar} alt={member.name} />
                     <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold">
-                      DP
+                      {member.users?.name
+                        ? member.users.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()
+                        : "U"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <div className="font-semibold text-sm">Davids Petruhovs</div>
-                    <div className="text-xs text-muted-foreground">10k XP | 24.5K Points</div>
+                    <div className="font-semibold text-sm">
+                      {member.users?.name || "Unknown User"}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      10k XP | 24.5K Points
+                    </div>
                   </div>
                 </div>
               ))}
@@ -194,7 +296,9 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
               <div className="flex items-center justify-center w-8 h-8 rounded-md bg-pink-100">
                 <Trophy className="h-4 w-4 text-pink-600" />
               </div>
-              <CardTitle className="text-lg font-semibold">Status & Progress</CardTitle>
+              <CardTitle className="text-lg font-semibold">
+                Status & Progress
+              </CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -206,8 +310,12 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                   <Calendar className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm">1/5/2024</div>
-                  <div className="text-xs text-muted-foreground">Date Created</div>
+                  <div className="font-semibold text-sm">
+                    {new Date(team.created_at).toLocaleDateString()}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Date Created
+                  </div>
                 </div>
               </div>
 
@@ -240,7 +348,9 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                 </div>
                 <div>
                   <div className="font-semibold text-sm">24040</div>
-                  <div className="text-xs text-muted-foreground">Total Points Earned</div>
+                  <div className="text-xs text-muted-foreground">
+                    Total Points Earned
+                  </div>
                 </div>
               </div>
 
@@ -251,7 +361,9 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                 </div>
                 <div>
                   <div className="font-semibold text-sm">4200</div>
-                  <div className="text-xs text-muted-foreground">Total Points Invested</div>
+                  <div className="text-xs text-muted-foreground">
+                    Total Points Invested
+                  </div>
                 </div>
               </div>
             </div>
@@ -259,18 +371,28 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             {/* Weekly Report */}
             <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
               <div className="flex -space-x-2">
-                {product.teamMembers.slice(0, 4).map((member) => (
-                  <Avatar key={member.id} className="w-8 h-8 border-2 border-white">
-                    <AvatarImage src={member.avatar} alt={member.name} />
+                {team.members.slice(0, 4).map((member) => (
+                  <Avatar
+                    key={member.user_id}
+                    className="w-8 h-8 border-2 border-white"
+                  >
                     <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
-                      DP
+                      {member.users?.name
+                        ? member.users.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()
+                        : "U"}
                     </AvatarFallback>
                   </Avatar>
                 ))}
               </div>
               <div>
                 <div className="font-semibold text-sm">Weekly Report</div>
-                <div className="text-xs text-muted-foreground">Every member needs to fill out the weekly report</div>
+                <div className="text-xs text-muted-foreground">
+                  Every member needs to fill out the weekly report
+                </div>
               </div>
             </div>
           </CardContent>
@@ -284,11 +406,17 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             <Trophy className="h-4 w-4" />
             Achievements
           </TabsTrigger>
-          <TabsTrigger value="weekly-reports" className="flex items-center gap-2">
+          <TabsTrigger
+            value="weekly-reports"
+            className="flex items-center gap-2"
+          >
             <FileText className="h-4 w-4" />
             Weekly Reports
           </TabsTrigger>
-          <TabsTrigger value="client-meetings" className="flex items-center gap-2">
+          <TabsTrigger
+            value="client-meetings"
+            className="flex items-center gap-2"
+          >
             <Users className="h-4 w-4" />
             Client Meetings
           </TabsTrigger>
@@ -372,62 +500,64 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           </div>
 
           {/* Tasks Table */}
-          <TasksTable tasks={[
-            {
-              id: "1",
-              title: "Launch on Product Hunt",
-              description: "Launch Achievements",
-              difficulty: "Easy",
-              xp: 50,
-              points: 25,
-              action: "complete",
-              hasTips: true
-            },
-            {
-              id: "2", 
-              title: "Random Task",
-              description: "Launch Achievements",
-              responsible: {
-                name: "John Doe",
-                avatar: "/avatars/john-doe.jpg",
-                date: "14.07"
+          <TasksTable
+            tasks={[
+              {
+                id: "1",
+                title: "Launch on Product Hunt",
+                description: "Launch Achievements",
+                difficulty: "Easy",
+                xp: 50,
+                points: 25,
+                action: "complete",
+                hasTips: true,
               },
-              difficulty: "Medium",
-              xp: 50,
-              points: 25,
-              action: "done"
-            },
-            {
-              id: "3",
-              title: "Random Task", 
-              description: "Launch Achievements",
-              difficulty: "Hard",
-              xp: 50,
-              points: 25,
-              action: "complete",
-              hasTips: true
-            },
-            {
-              id: "4",
-              title: "Random Task",
-              description: "Launch Achievements",
-              difficulty: "Easy",
-              xp: 50,
-              points: 25,
-              action: "complete",
-              hasTips: true
-            },
-            {
-              id: "5",
-              title: "Random Task",
-              description: "Launch Achievements", 
-              difficulty: "Easy",
-              xp: 50,
-              points: 25,
-              action: "complete",
-              hasTips: true
-            }
-          ]} />
+              {
+                id: "2",
+                title: "Random Task",
+                description: "Launch Achievements",
+                responsible: {
+                  name: "John Doe",
+                  avatar: "/avatars/john-doe.jpg",
+                  date: "14.07",
+                },
+                difficulty: "Medium",
+                xp: 50,
+                points: 25,
+                action: "done",
+              },
+              {
+                id: "3",
+                title: "Random Task",
+                description: "Launch Achievements",
+                difficulty: "Hard",
+                xp: 50,
+                points: 25,
+                action: "complete",
+                hasTips: true,
+              },
+              {
+                id: "4",
+                title: "Random Task",
+                description: "Launch Achievements",
+                difficulty: "Easy",
+                xp: 50,
+                points: 25,
+                action: "complete",
+                hasTips: true,
+              },
+              {
+                id: "5",
+                title: "Random Task",
+                description: "Launch Achievements",
+                difficulty: "Easy",
+                xp: 50,
+                points: 25,
+                action: "complete",
+                hasTips: true,
+              },
+            ]}
+          />
         </TabsContent>
 
         <TabsContent value="weekly-reports" className="space-y-6 mt-6">
@@ -455,7 +585,9 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
               <div className="text-2xl font-bold text-gray-900">24</div>
-              <div className="text-sm text-muted-foreground">Tasks Completed</div>
+              <div className="text-sm text-muted-foreground">
+                Tasks Completed
+              </div>
             </Card>
 
             <Card className="p-4 text-center">
@@ -471,83 +603,137 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                 <UserCheck className="h-6 w-6 text-cyan-600" />
               </div>
               <div className="text-2xl font-bold text-gray-900">1</div>
-              <div className="text-sm text-muted-foreground">Clients Acquired</div>
+              <div className="text-sm text-muted-foreground">
+                Clients Acquired
+              </div>
             </Card>
           </div>
 
           {/* Weekly Reports Table */}
-          <WeeklyReportsTable reports={[
-            {
-              id: "1",
-              week: "Week 4",
-              dateRange: "01.05-07.05",
-              weeklyFill: {
-                avatars: ["/avatars/john-doe.jpg", "/avatars/john-doe.jpg", "/avatars/john-doe.jpg", "/avatars/john-doe.jpg"],
-                names: ["Davids Petruhovs", "Davids Petruhovs", "Davids Petruhovs", "Davids Petruhovs"]
+          <WeeklyReportsTable
+            reports={[
+              {
+                id: "1",
+                week: "Week 4",
+                dateRange: "01.05-07.05",
+                weeklyFill: {
+                  avatars: [
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                  ],
+                  names: [
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                  ],
+                },
+                clients: 50,
+                meetings: 25,
+                xp: 50,
+                points: 25,
+                status: "complete",
               },
-              clients: 50,
-              meetings: 25,
-              xp: 50,
-              points: 25,
-              status: "complete"
-            },
-            {
-              id: "2",
-              week: "Week 3", 
-              dateRange: "01.05-07.05",
-              weeklyFill: {
-                avatars: ["/avatars/john-doe.jpg", "/avatars/john-doe.jpg", "/avatars/john-doe.jpg", "/avatars/john-doe.jpg"],
-                names: ["Davids Petruhovs", "Davids Petruhovs", "Davids Petruhovs", "Davids Petruhovs"]
+              {
+                id: "2",
+                week: "Week 3",
+                dateRange: "01.05-07.05",
+                weeklyFill: {
+                  avatars: [
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                  ],
+                  names: [
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                  ],
+                },
+                clients: 50,
+                meetings: 25,
+                xp: 50,
+                points: 25,
+                status: "done",
               },
-              clients: 50,
-              meetings: 25,
-              xp: 50,
-              points: 25,
-              status: "done"
-            },
-            {
-              id: "3",
-              week: "Week 2",
-              dateRange: "01.05-07.05", 
-              weeklyFill: {
-                avatars: ["/avatars/john-doe.jpg", "/avatars/john-doe.jpg", "/avatars/john-doe.jpg", "/avatars/john-doe.jpg"],
-                names: ["Davids Petruhovs", "Davids Petruhovs", "Davids Petruhovs", "Davids Petruhovs"]
+              {
+                id: "3",
+                week: "Week 2",
+                dateRange: "01.05-07.05",
+                weeklyFill: {
+                  avatars: [
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                  ],
+                  names: [
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                  ],
+                },
+                clients: 50,
+                meetings: 25,
+                xp: 50,
+                points: 25,
+                status: "missed",
               },
-              clients: 50,
-              meetings: 25,
-              xp: 50,
-              points: 25,
-              status: "missed"
-            },
-            {
-              id: "4",
-              week: "Week 1",
-              dateRange: "01.05-07.05",
-              weeklyFill: {
-                avatars: ["/avatars/john-doe.jpg", "/avatars/john-doe.jpg", "/avatars/john-doe.jpg", "/avatars/john-doe.jpg"],
-                names: ["Davids Petruhovs", "Davids Petruhovs", "Davids Petruhovs", "Davids Petruhovs"]
+              {
+                id: "4",
+                week: "Week 1",
+                dateRange: "01.05-07.05",
+                weeklyFill: {
+                  avatars: [
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                  ],
+                  names: [
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                  ],
+                },
+                clients: 50,
+                meetings: 2,
+                xp: 50,
+                points: 25,
+                status: "missed",
               },
-              clients: 50,
-              meetings: 2,
-              xp: 50,
-              points: 25,
-              status: "missed"
-            },
-            {
-              id: "5",
-              week: "Week 0",
-              dateRange: "01.05-07.05",
-              weeklyFill: {
-                avatars: ["/avatars/john-doe.jpg", "/avatars/john-doe.jpg", "/avatars/john-doe.jpg", "/avatars/john-doe.jpg"],
-                names: ["Davids Petruhovs", "Davids Petruhovs", "Davids Petruhovs", "Davids Petruhovs"]
+              {
+                id: "5",
+                week: "Week 0",
+                dateRange: "01.05-07.05",
+                weeklyFill: {
+                  avatars: [
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                    "/avatars/john-doe.jpg",
+                  ],
+                  names: [
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                    "Davids Petruhovs",
+                  ],
+                },
+                clients: 50,
+                meetings: 25,
+                xp: 50,
+                points: 25,
+                status: "done",
               },
-              clients: 50,
-              meetings: 25,
-              xp: 50,
-              points: 25,
-              status: "done"
-            }
-          ]} />
+            ]}
+          />
         </TabsContent>
 
         <TabsContent value="client-meetings" className="space-y-6 mt-6">
@@ -567,73 +753,75 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           </div>
 
           {/* Client Meetings Table */}
-          <ClientMeetingsTable meetings={[
-            {
-              id: "1",
-              client: {
-                company: "Acme Corp",
-                type: "Initial Call"
+          <ClientMeetingsTable
+            meetings={[
+              {
+                id: "1",
+                client: {
+                  company: "Acme Corp",
+                  type: "Initial Call",
+                },
+                responsible: {
+                  name: "John Doe",
+                  avatar: "/avatars/john-doe.jpg",
+                  datetime: "2025-07-15 10:00 AM",
+                },
+                points: 25,
               },
-              responsible: {
-                name: "John Doe",
-                avatar: "/avatars/john-doe.jpg",
-                datetime: "2025-07-15 10:00 AM"
+              {
+                id: "2",
+                client: {
+                  company: "Acme Corp",
+                  type: "Feedback Call",
+                },
+                responsible: {
+                  name: "John Doe",
+                  avatar: "/avatars/john-doe.jpg",
+                  datetime: "2025-07-15 10:00 AM",
+                },
+                points: 25,
               },
-              points: 25
-            },
-            {
-              id: "2",
-              client: {
-                company: "Acme Corp", 
-                type: "Feedback Call"
+              {
+                id: "3",
+                client: {
+                  company: "Acme Corp",
+                  type: "Closing Call",
+                },
+                responsible: {
+                  name: "John Doe",
+                  avatar: "/avatars/john-doe.jpg",
+                  datetime: "2025-07-15 10:00 AM",
+                },
+                points: 25,
               },
-              responsible: {
-                name: "John Doe",
-                avatar: "/avatars/john-doe.jpg",
-                datetime: "2025-07-15 10:00 AM"
+              {
+                id: "4",
+                client: {
+                  company: "Acme Corp",
+                  type: "Follow-Up Call",
+                },
+                responsible: {
+                  name: "John Doe",
+                  avatar: "/avatars/john-doe.jpg",
+                  datetime: "2025-07-15 10:00 AM",
+                },
+                points: 25,
               },
-              points: 25
-            },
-            {
-              id: "3",
-              client: {
-                company: "Acme Corp",
-                type: "Closing Call"
+              {
+                id: "5",
+                client: {
+                  company: "Acme Corp",
+                  type: "Initial Call",
+                },
+                responsible: {
+                  name: "John Doe",
+                  avatar: "/avatars/john-doe.jpg",
+                  datetime: "2025-07-15 10:00 AM",
+                },
+                points: 25,
               },
-              responsible: {
-                name: "John Doe",
-                avatar: "/avatars/john-doe.jpg",
-                datetime: "2025-07-15 10:00 AM"
-              },
-              points: 25
-            },
-            {
-              id: "4",
-              client: {
-                company: "Acme Corp",
-                type: "Follow-Up Call"
-              },
-              responsible: {
-                name: "John Doe",
-                avatar: "/avatars/john-doe.jpg",
-                datetime: "2025-07-15 10:00 AM"
-              },
-              points: 25
-            },
-            {
-              id: "5",
-              client: {
-                company: "Acme Corp",
-                type: "Initial Call"
-              },
-              responsible: {
-                name: "John Doe",
-                avatar: "/avatars/john-doe.jpg",
-                datetime: "2025-07-15 10:00 AM"
-              },
-              points: 25
-            }
-          ]} />
+            ]}
+          />
         </TabsContent>
 
         <TabsContent value="strikes" className="space-y-6 mt-6">
@@ -647,28 +835,30 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           </div>
 
           {/* Strikes Table */}
-          <StrikesTable strikes={[
-            {
-              id: "1",
-              title: "Missed Weekly Meeting Submission",
-              datetime: "2025-07-15 10:00 AM",
-              status: "explained",
-              xpPenalty: 500,
-              pointsPenalty: 250,
-              action: "done"
-            },
-            {
-              id: "2",
-              title: "Missed Weekly Minimum Meetings",
-              datetime: "2025-07-15 10:00 AM", 
-              status: "waiting-explanation",
-              xpPenalty: 250,
-              pointsPenalty: 125,
-              action: "explain"
-            }
-          ]} />
+          <StrikesTable
+            strikes={[
+              {
+                id: "1",
+                title: "Missed Weekly Meeting Submission",
+                datetime: "2025-07-15 10:00 AM",
+                status: "explained",
+                xpPenalty: 500,
+                pointsPenalty: 250,
+                action: "done",
+              },
+              {
+                id: "2",
+                title: "Missed Weekly Minimum Meetings",
+                datetime: "2025-07-15 10:00 AM",
+                status: "waiting-explanation",
+                xpPenalty: 250,
+                pointsPenalty: 125,
+                action: "explain",
+              },
+            ]}
+          />
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

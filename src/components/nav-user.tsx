@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { BadgeCheck, ChevronsUpDown, LogOut } from "lucide-react";
+import { BadgeCheck, ChevronsUpDown, LogOut, History } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -101,6 +101,12 @@ export function NavUser({
               <DropdownMenuItem onClick={() => router.push("/account")}>
                 <BadgeCheck />
                 Account
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => router.push("/dashboard/transaction-history")}
+              >
+                <History />
+                Transaction History
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
