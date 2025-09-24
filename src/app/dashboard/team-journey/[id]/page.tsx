@@ -18,6 +18,7 @@ import { TasksTable } from "@/components/team-journey/tasks-table";
 import { WeeklyReportsTable } from "@/components/team-journey/weekly-reports-table";
 import { ClientMeetingsTable } from "@/components/team-journey/client-meetings-table";
 import { StrikesTable } from "@/components/team-journey/strikes-table";
+import { TeamManagementModal } from "@/components/team-journey/team-management-modal";
 import {
   ExternalLink,
   FileText,
@@ -40,7 +41,7 @@ import {
   getUserTeamRole,
 } from "@/lib/database";
 import { StatsCard } from "@/types/dashboard";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAppContext } from "@/contexts/app-context";
 
 interface ProductDetailPageProps {
@@ -75,6 +76,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [teamId, setTeamId] = useState<string | null>(null);
   const [isTeamMember, setIsTeamMember] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [showTeamManagement, setShowTeamManagement] = useState(false);
 
   // Extract ID from params
   useEffect(() => {
@@ -86,30 +88,30 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   }, [params]);
 
   // Load team data
-  useEffect(() => {
-    const loadTeam = async () => {
-      if (!teamId || !user?.id) return;
+  const loadTeam = useCallback(async () => {
+    if (!teamId || !user?.id) return;
 
-      setLoading(true);
-      try {
-        const [teamData, membershipStatus, role] = await Promise.all([
-          getTeamDetails(teamId),
-          isUserTeamMember(teamId, user.id),
-          getUserTeamRole(teamId, user.id),
-        ]);
+    setLoading(true);
+    try {
+      const [teamData, membershipStatus, role] = await Promise.all([
+        getTeamDetails(teamId),
+        isUserTeamMember(teamId, user.id),
+        getUserTeamRole(teamId, user.id),
+      ]);
 
-        setTeam(teamData);
-        setIsTeamMember(membershipStatus);
-        setUserRole(role);
-      } catch (error) {
-        console.error("Error loading team:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTeam();
+      setTeam(teamData);
+      setIsTeamMember(membershipStatus);
+      setUserRole(role);
+    } catch (error) {
+      console.error("Error loading team:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [teamId, user?.id]);
+
+  useEffect(() => {
+    loadTeam();
+  }, [loadTeam]);
 
   if (loading) {
     return (
@@ -266,6 +268,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 <Button
                   variant="link"
                   className="text-blue-500 p-0 h-auto font-medium"
+                  onClick={() => setShowTeamManagement(true)}
                 >
                   Modify Team
                 </Button>
@@ -907,6 +910,17 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Team Management Modal */}
+      {team && userRole && (
+        <TeamManagementModal
+          isOpen={showTeamManagement}
+          onClose={() => setShowTeamManagement(false)}
+          team={team}
+          userRole={userRole}
+          onRefresh={loadTeam}
+        />
+      )}
     </div>
   );
 }

@@ -1,8 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { BadgeCheck, ChevronsUpDown, LogOut, History } from "lucide-react";
-
+import { BadgeCheck, ChevronsUpDown, LogOut, History, Mail } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -20,6 +19,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { createClient } from "@/lib/supabase/client";
+import { Badge } from "@/components/ui/badge";
+import { useAppContext } from "@/contexts/app-context";
+import { useInvitationCount } from "@/hooks/use-invitation-count";
 
 export function NavUser({
   user,
@@ -32,6 +34,8 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
+  const { user: appUser } = useAppContext();
+  const { count: invitationCount } = useInvitationCount(appUser?.id);
 
   const handleLogout = async () => {
     try {
@@ -101,6 +105,21 @@ export function NavUser({
               <DropdownMenuItem onClick={() => router.push("/account")}>
                 <BadgeCheck />
                 Account
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => router.push("/dashboard/invitations")}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <Mail />
+                    Invitations
+                  </div>
+                  {invitationCount > 0 && (
+                    <Badge variant="destructive" className="h-5 min-w-5 text-xs">
+                      {invitationCount}
+                    </Badge>
+                  )}
+                </div>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => router.push("/dashboard/transaction-history")}

@@ -683,3 +683,296 @@ export function transformTeamToProduct(team: DatabaseTeam): Product {
     teamMembers,
   };
 }
+
+// Team Invitation Functions
+export async function sendTeamInvitation(
+  teamId: string,
+  invitedUserEmail: string,
+  inviterUserId: string,
+  role: "member" | "leader" | "co_founder" = "member"
+) {
+  const supabase = createClient();
+
+  // First, find the user by email
+  const { data: invitedUser, error: userError } = await supabase
+    .from("users")
+    .select("id, email, name")
+    .eq("email", invitedUserEmail)
+    .single();
+
+  if (userError || !invitedUser) {
+    throw new Error("User with this email not found");
+  }
+
+  // Check if user is already a team member
+  const { data: existingMember } = await supabase
+    .from("team_members")
+    .select("id")
+    .eq("team_id", teamId)
+    .eq("user_id", invitedUser.id)
+    .is("left_at", null)
+    .single();
+
+  if (existingMember) {
+    throw new Error("User is already a member of this team");
+  }
+
+  // Check if invitation already exists
+  const { data: existingInvitation } = await supabase
+    .from("team_invitations")
+    .select("id")
+    .eq("team_id", teamId)
+    .eq("invited_user_id", invitedUser.id)
+    .eq("status", "pending")
+    .single();
+
+  if (existingInvitation) {
+    throw new Error("Invitation already sent to this user");
+  }
+
+  // Create invitation
+  const { data: invitation, error: inviteError } = await supabase
+    .from("team_invitations")
+    .insert({
+      team_id: teamId,
+      invited_user_id: invitedUser.id,
+      invited_by_user_id: inviterUserId,
+      role,
+      status: "pending",
+    })
+    .select()
+    .single();
+
+  if (inviteError) throw inviteError;
+
+  return invitation;
+}
+
+export async function getPendingInvitations(userId: string) {
+  const supabase = createClient();
+
+  const { data: invitations, error } = await supabase
+    .from("team_invitations")
+    .select(`
+      id,
+      team_id,
+      role,
+      status,
+      created_at,
+      teams (
+        id,
+        name,
+        description,
+        status,
+        member_count
+      ),
+      invited_by:users!team_invitations_invited_by_user_id_fkey (
+        id,
+        name,
+        email,
+        avatar_url
+      )
+    `)
+    .eq("invited_user_id", userId)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return invitations || [];
+}
+
+export async function getSentInvitations(userId: string) {
+  const supabase = createClient();
+
+  const { data: invitations, error } = await supabase
+    .from("team_invitations")
+    .select(`
+      id,
+      team_id,
+      role,
+      status,
+      created_at,
+      responded_at,
+      teams (
+        id,
+        name,
+        description,
+        status,
+        member_count
+      ),
+      invited_user:users!team_invitations_invited_user_id_fkey (
+        id,
+        name,
+        email,
+        avatar_url
+      )
+    `)
+    .eq("invited_by_user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return invitations || [];
+}
+
+export async function respondToInvitation(
+  invitationId: string,
+  userId: string,
+  response: "accepted" | "declined"
+) {
+  const supabase = createClient();
+
+  // Get invitation details
+  const { data: invitation, error: inviteError } = await supabase
+    .from("team_invitations")
+    .select("*")
+    .eq("id", invitationId)
+    .eq("invited_user_id", userId)
+    .eq("status", "pending")
+    .single();
+
+  if (inviteError || !invitation) {
+    throw new Error("Invitation not found or already responded to");
+  }
+
+  // Update invitation status
+  const { error: updateError } = await supabase
+    .from("team_invitations")
+    .update({
+      status: response,
+      responded_at: new Date().toISOString(),
+    })
+    .eq("id", invitationId);
+
+  if (updateError) throw updateError;
+
+  // If accepted, add user to team members
+  if (response === "accepted") {
+    const { error: memberError } = await supabase
+      .from("team_members")
+      .insert({
+        team_id: invitation.team_id,
+        user_id: userId,
+        team_role: invitation.role,
+      });
+
+    if (memberError) throw memberError;
+
+    // Update team member count
+    const { error: countError } = await supabase.rpc('increment_team_member_count', {
+      team_id: invitation.team_id
+    });
+
+    // If the RPC function doesn't exist, update manually
+    if (countError) {
+      const { data: currentTeam } = await supabase
+        .from("teams")
+        .select("member_count")
+        .eq("id", invitation.team_id)
+        .single();
+
+      await supabase
+        .from("teams")
+        .update({ member_count: (currentTeam?.member_count || 0) + 1 })
+        .eq("id", invitation.team_id);
+    }
+  }
+
+  return { success: true };
+}
+
+export async function getInvitationCount(userId: string): Promise<number> {
+  const supabase = createClient();
+
+  const { count, error } = await supabase
+    .from("team_invitations")
+    .select("*", { count: "exact", head: true })
+    .eq("invited_user_id", userId)
+    .eq("status", "pending");
+
+  if (error) throw error;
+
+  return count || 0;
+}
+
+// Remove a team member (for team management)
+export async function removeTeamMember(teamId: string, userId: string): Promise<void> {
+  const supabase = createClient();
+  
+  const { error } = await supabase
+    .from("team_members")
+    .delete()
+    .eq("team_id", teamId)
+    .eq("user_id", userId);
+  
+  if (error) {
+    console.error("Error removing team member:", error);
+    throw error;
+  }
+
+  // Update team member count
+  const { data: currentTeam } = await supabase
+    .from("teams")
+    .select("member_count")
+    .eq("id", teamId)
+    .single();
+
+  if (currentTeam) {
+    await supabase
+      .from("teams")
+      .update({ member_count: Math.max(0, (currentTeam.member_count || 0) - 1) })
+      .eq("id", teamId);
+  }
+}
+
+// Update team member role
+export async function updateTeamMemberRole(
+  teamId: string, 
+  userId: string, 
+  newRole: "member" | "leader" | "founder" | "co_founder"
+): Promise<void> {
+  const supabase = createClient();
+  
+  const { error } = await supabase
+    .from("team_members")
+    .update({ team_role: newRole })
+    .eq("team_id", teamId)
+    .eq("user_id", userId);
+  
+  if (error) {
+    console.error("Error updating team member role:", error);
+    throw error;
+  }
+}
+
+// Disband team (remove all members except founder and mark team as archived)
+export async function disbandTeam(teamId: string): Promise<void> {
+  const supabase = createClient();
+  
+  // Remove all team members except founder
+  const { error: membersError } = await supabase
+    .from("team_members")
+    .delete()
+    .eq("team_id", teamId)
+    .neq("team_role", "founder");
+  
+  if (membersError) {
+    console.error("Error removing team members:", membersError);
+    throw membersError;
+  }
+  
+  // Archive the team and set member count to 1 (only founder)
+  const { error: teamError } = await supabase
+    .from("teams")
+    .update({ 
+      status: "archived",
+      member_count: 1
+    })
+    .eq("id", teamId);
+  
+  if (teamError) {
+    console.error("Error archiving team:", teamError);
+    throw teamError;
+  }
+}
