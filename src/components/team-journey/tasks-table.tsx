@@ -1,57 +1,75 @@
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Medal, CheckCircle, Zap, CreditCard } from "lucide-react"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Medal, CheckCircle, Zap, CreditCard } from "lucide-react";
 
 interface Task {
-  id: string
-  title: string
-  description: string
+  id: string;
+  title: string;
+  description: string;
   responsible?: {
-    name: string
-    avatar: string
-    date: string
-  }
-  difficulty: "Easy" | "Medium" | "Hard"
-  xp: number
-  points: number
-  action: "complete" | "done"
-  hasTips?: boolean
+    name: string;
+    avatar: string;
+    date: string;
+  };
+  difficulty: "Easy" | "Medium" | "Hard";
+  xp: number;
+  points: number;
+  action: "complete" | "done";
+  hasTips?: boolean;
 }
 
 interface TasksTableProps {
-  tasks: Task[]
+  tasks: Task[];
+  isTeamMember?: boolean;
 }
 
-export function TasksTable({ tasks }: TasksTableProps) {
+export function TasksTable({ tasks, isTeamMember = false }: TasksTableProps) {
   const getDifficultyConfig = (difficulty: Task["difficulty"]) => {
     switch (difficulty) {
       case "Easy":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       case "Medium":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
       case "Hard":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800";
     }
-  }
+  };
 
   return (
-    <div >
+    <div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-200">
-              <th className="text-left py-4 px-4 font-medium text-gray-600">Task</th>
-              <th className="text-left py-4 px-4 font-medium text-gray-600">Responsible</th>
-              <th className="text-left py-4 px-4 font-medium text-gray-600">Difficulty</th>
-              <th className="text-left py-4 px-4 font-medium text-gray-600">XP</th>
-              <th className="text-left py-4 px-4 font-medium text-gray-600">Points</th>
-              <th className="text-right py-4 px-4 font-medium text-gray-600">Action</th>
+              <th className="text-left py-4 px-4 font-medium text-gray-600">
+                Task
+              </th>
+              <th className="text-left py-4 px-4 font-medium text-gray-600">
+                Responsible
+              </th>
+              <th className="text-left py-4 px-4 font-medium text-gray-600">
+                Difficulty
+              </th>
+              <th className="text-left py-4 px-4 font-medium text-gray-600">
+                XP
+              </th>
+              <th className="text-left py-4 px-4 font-medium text-gray-600">
+                Points
+              </th>
+              <th className="text-right py-4 px-4 font-medium text-gray-600">
+                Action
+              </th>
             </tr>
           </thead>
           <tbody>
             {tasks.map((task, index) => (
-              <tr key={task.id} className={`${index < tasks.length - 1 ? 'border-b border-gray-100' : ''} hover:bg-gray-50`}>
+              <tr
+                key={task.id}
+                className={`${
+                  index < tasks.length - 1 ? "border-b border-gray-100" : ""
+                } hover:bg-gray-50`}
+              >
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 rounded-md bg-green-100">
@@ -59,7 +77,9 @@ export function TasksTable({ tasks }: TasksTableProps) {
                     </div>
                     <div>
                       <div className="font-medium text-sm">{task.title}</div>
-                      <div className="text-xs text-muted-foreground">{task.description}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {task.description}
+                      </div>
                     </div>
                   </div>
                 </td>
@@ -67,14 +87,25 @@ export function TasksTable({ tasks }: TasksTableProps) {
                   {task.responsible ? (
                     <div className="flex items-center gap-2">
                       <Avatar className="w-6 h-6">
-                        <AvatarImage src={task.responsible.avatar} alt={task.responsible.name} />
+                        <AvatarImage
+                          src={task.responsible.avatar}
+                          alt={task.responsible.name}
+                        />
                         <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
-                          {task.responsible.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          {task.responsible.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="text-xs font-medium">{task.responsible.name}</div>
-                        <div className="text-xs text-muted-foreground">{task.responsible.date}</div>
+                        <div className="text-xs font-medium">
+                          {task.responsible.name}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {task.responsible.date}
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -82,7 +113,10 @@ export function TasksTable({ tasks }: TasksTableProps) {
                   )}
                 </td>
                 <td className="py-4 px-4">
-                  <Badge variant="secondary" className={getDifficultyConfig(task.difficulty)}>
+                  <Badge
+                    variant="secondary"
+                    className={getDifficultyConfig(task.difficulty)}
+                  >
                     {task.difficulty}
                   </Badge>
                 </td>
@@ -101,20 +135,37 @@ export function TasksTable({ tasks }: TasksTableProps) {
                 <td className="py-4 px-4">
                   <div className="flex justify-end gap-2">
                     {task.action === "done" ? (
-                      <Button size="sm" className="bg-green-600 text-white hover:bg-green-700 text-xs">
+                      <Button
+                        size="sm"
+                        className="bg-green-600 text-white hover:bg-green-700 text-xs"
+                      >
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Done
                       </Button>
                     ) : (
                       <>
                         {task.hasTips && (
-                          <Button variant="ghost" size="sm" className="text-xs px-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs px-2"
+                          >
                             Tips
                           </Button>
                         )}
-                        <Button variant="outline" size="sm" className="text-xs">
-                          Complete
-                        </Button>
+                        {isTeamMember ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs"
+                          >
+                            Complete
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground px-3 py-2">
+                            View Only
+                          </span>
+                        )}
                       </>
                     )}
                   </div>
@@ -125,5 +176,5 @@ export function TasksTable({ tasks }: TasksTableProps) {
         </table>
       </div>
     </div>
-  )
+  );
 }

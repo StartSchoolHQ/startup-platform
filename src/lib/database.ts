@@ -289,6 +289,49 @@ export async function getTeamDetails(teamId: string) {
   };
 }
 
+export async function isUserTeamMember(
+  teamId: string,
+  userId: string
+): Promise<boolean> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("team_members")
+    .select("user_id")
+    .eq("team_id", teamId)
+    .eq("user_id", userId)
+    .is("left_at", null)
+    .single();
+
+  if (error) {
+    // If no record found, user is not a team member
+    return false;
+  }
+
+  return !!data;
+}
+
+export async function getUserTeamRole(
+  teamId: string,
+  userId: string
+): Promise<string | null> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("team_members")
+    .select("team_role")
+    .eq("team_id", teamId)
+    .eq("user_id", userId)
+    .is("left_at", null)
+    .single();
+
+  if (error) {
+    return null;
+  }
+
+  return data?.team_role || null;
+}
+
 // Team Journey Functions for fetching products/teams with filtering, sorting, and search
 export async function getAllTeamsForJourney(
   userId: string,
@@ -476,7 +519,6 @@ export async function getArchivedTeamsForJourney(
       )
     `
     )
-    .eq("team_members.user_id", userId)
     .is("team_members.left_at", null)
     .eq("status", "archived");
 

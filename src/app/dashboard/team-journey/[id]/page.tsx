@@ -34,7 +34,11 @@ import {
   MessageSquare,
   Plus,
 } from "lucide-react";
-import { getTeamDetails } from "@/lib/database";
+import {
+  getTeamDetails,
+  isUserTeamMember,
+  getUserTeamRole,
+} from "@/lib/database";
 import { StatsCard } from "@/types/dashboard";
 import { useEffect, useState } from "react";
 import { useAppContext } from "@/contexts/app-context";
@@ -69,6 +73,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [team, setTeam] = useState<TeamDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [teamId, setTeamId] = useState<string | null>(null);
+  const [isTeamMember, setIsTeamMember] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   // Extract ID from params
   useEffect(() => {
@@ -86,8 +92,15 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
       setLoading(true);
       try {
-        const teamData = await getTeamDetails(teamId);
+        const [teamData, membershipStatus, role] = await Promise.all([
+          getTeamDetails(teamId),
+          isUserTeamMember(teamId, user.id),
+          getUserTeamRole(teamId, user.id),
+        ]);
+
         setTeam(teamData);
+        setIsTeamMember(membershipStatus);
+        setUserRole(role);
       } catch (error) {
         console.error("Error loading team:", error);
       } finally {
@@ -174,10 +187,34 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             >
               {team.status === "active" ? "Active" : "Archived"}
             </Badge>
+            {!isTeamMember && (
+              <Badge
+                variant="outline"
+                className="bg-blue-50 text-blue-700 border-blue-200"
+              >
+                View Only
+              </Badge>
+            )}
+            {isTeamMember && userRole && (
+              <Badge
+                variant="outline"
+                className="bg-green-50 text-green-700 border-green-200"
+              >
+                {userRole
+                  .replace("_", " ")
+                  .replace(/\b\w/g, (l) => l.toUpperCase())}
+              </Badge>
+            )}
           </div>
           <p className="text-muted-foreground text-lg">
             {team.description || "No description provided"}
           </p>
+          {!isTeamMember && (
+            <p className="text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-md border border-blue-200">
+              💡 You&apos;re viewing this team as a guest. Join the team to
+              participate in activities and submit reports.
+            </p>
+          )}
         </div>
 
         {/* Action Buttons */}
@@ -186,10 +223,12 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             <ExternalLink className="h-4 w-4" />
             Website
           </Button>
-          <Button className="gap-2 bg-black text-white hover:bg-gray-800">
-            <FileText className="h-4 w-4" />
-            Submit Weekly Report
-          </Button>
+          {isTeamMember && (
+            <Button className="gap-2 bg-black text-white hover:bg-gray-800">
+              <FileText className="h-4 w-4" />
+              Submit Weekly Report
+            </Button>
+          )}
         </div>
       </div>
 
@@ -220,12 +259,17 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 Team & Experience
               </CardTitle>
             </div>
-            <Button
-              variant="link"
-              className="text-blue-500 p-0 h-auto font-medium"
-            >
-              Modify Team
-            </Button>
+            {isTeamMember &&
+              (userRole === "founder" ||
+                userRole === "co_founder" ||
+                userRole === "leader") && (
+                <Button
+                  variant="link"
+                  className="text-blue-500 p-0 h-auto font-medium"
+                >
+                  Modify Team
+                </Button>
+              )}
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Top Row - Team Size and Experience */}
@@ -501,6 +545,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
           {/* Tasks Table */}
           <TasksTable
+            isTeamMember={isTeamMember}
             tasks={[
               {
                 id: "1",
@@ -741,10 +786,12 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Client Meetings</h2>
             <div className="flex items-center gap-3">
-              <Button className="gap-2 bg-black text-white hover:bg-gray-800">
-                <Plus className="h-4 w-4" />
-                Add Meeting
-              </Button>
+              {isTeamMember && (
+                <Button className="gap-2 bg-black text-white hover:bg-gray-800">
+                  <Plus className="h-4 w-4" />
+                  Add Meeting
+                </Button>
+              )}
               <Button variant="outline" className="gap-2">
                 <ExternalLink className="h-4 w-4" />
                 Read About Meetings
@@ -836,6 +883,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
           {/* Strikes Table */}
           <StrikesTable
+            isTeamMember={isTeamMember}
             strikes={[
               {
                 id: "1",
