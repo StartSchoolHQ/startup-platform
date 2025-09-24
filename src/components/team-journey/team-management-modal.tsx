@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -12,12 +13,16 @@ import {
   removeTeamMember,
   updateTeamMemberRole,
   disbandTeam,
+  getAvailableUsersForInvitation,
+  sendTeamInvitationById,
 } from "@/lib/database";
+import { invitationCountManager } from "@/hooks/use-invitation-count";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +38,8 @@ import {
   User,
   UserMinus,
   AlertTriangle,
+  Search,
+  Mail,
 } from "lucide-react";
 
 interface TeamMember {
@@ -45,6 +52,14 @@ interface TeamMember {
     avatar_url: string | null;
     graduation_level: number | null;
   } | null;
+}
+
+interface AvailableUser {
+  id: string;
+  name: string | null;
+  email: string;
+  avatar_url: string | null;
+  graduation_level: number | null;
 }
 
 interface TeamManagementModalProps {
@@ -67,6 +82,10 @@ export function TeamManagementModal({
   onRefresh,
 }: TeamManagementModalProps) {
   const [activeTab, setActiveTab] = useState("current-team");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [availableUsers, setAvailableUsers] = useState<AvailableUser[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [invitingUsers, setInvitingUsers] = useState<Set<string>>(new Set());
 
   const canManageMembers =
     userRole === "founder" ||
@@ -147,6 +166,63 @@ export function TeamManagementModal({
     }
   };
 
+  // Load available users for invitation
+  const loadAvailableUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const users = await getAvailableUsersForInvitation(team.id, searchTerm);
+      setAvailableUsers(users);
+    } catch (error) {
+      console.error("Error loading available users:", error);
+      toast.error("Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  }, [team.id, searchTerm]);
+
+  // Send invitation to user
+  const handleInviteUser = async (userId: string, userName: string | null) => {
+    setInvitingUsers((prev) => new Set(prev).add(userId));
+
+    try {
+      await sendTeamInvitationById(team.id, userId, "member");
+      toast.success(`Invitation sent to ${userName || "user"} successfully!`);
+      // Remove user from available list
+      setAvailableUsers((prev) => prev.filter((user) => user.id !== userId));
+      // Refresh invitation count and lists for all users
+      invitationCountManager.refreshAll();
+    } catch (error) {
+      console.error("Error sending invitation:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send invitation"
+      );
+    } finally {
+      setInvitingUsers((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(userId);
+        return newSet;
+      });
+    }
+  };
+
+  // Load users when invite tab becomes active
+  useEffect(() => {
+    if (activeTab === "invite-users") {
+      loadAvailableUsers();
+    }
+  }, [activeTab, loadAvailableUsers]);
+
+  // Debounce search to avoid excessive API calls
+  useEffect(() => {
+    if (activeTab === "invite-users") {
+      const timeoutId = setTimeout(() => {
+        loadAvailableUsers();
+      }, 300);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [searchTerm, activeTab, loadAvailableUsers]);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -155,6 +231,9 @@ export function TeamManagementModal({
             <Users className="h-5 w-5" />
             Manage Team: {team.name}
           </DialogTitle>
+          <DialogDescription>
+            Manage your team members and invite new users to join your team.
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -285,18 +364,81 @@ export function TeamManagementModal({
               <h3 className="text-lg font-semibold">Invite New Members</h3>
             </div>
 
-            <Card className="p-6">
-              <CardHeader className="px-0 pt-0">
-                <CardTitle className="text-base">Coming Soon</CardTitle>
-              </CardHeader>
-              <CardContent className="px-0 pb-0">
-                <p className="text-muted-foreground">
-                  User invitation functionality will be implemented in the next
-                  part. This will include browsing all users and sending team
-                  invitations.
-                </p>
-              </CardContent>
-            </Card>
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search users by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Users List */}
+            <div className="space-y-3">
+              {loading ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Loading users...</p>
+                </div>
+              ) : availableUsers.length === 0 ? (
+                <Card className="p-6">
+                  <div className="text-center">
+                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h4 className="font-semibold mb-2">No users found</h4>
+                    <p className="text-muted-foreground text-sm">
+                      {searchTerm
+                        ? "Try adjusting your search terms"
+                        : "All users are either already team members or have pending invitations"}
+                    </p>
+                  </div>
+                </Card>
+              ) : (
+                availableUsers.map((user) => (
+                  <Card key={user.id} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-10 h-10">
+                          <AvatarImage src={user.avatar_url || ""} />
+                          <AvatarFallback className="bg-gradient-to-r from-blue-400 to-purple-400 text-white font-bold">
+                            {user.name
+                              ? user.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                              : "U"}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <div className="flex-1">
+                          <h4 className="font-semibold">
+                            {user.name || "Unknown User"}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {user.email}
+                          </p>
+                          {user.graduation_level && (
+                            <Badge variant="outline" className="text-xs mt-1">
+                              Level {user.graduation_level}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={() => handleInviteUser(user.id, user.name)}
+                        disabled={invitingUsers.has(user.id)}
+                        className="flex items-center gap-2"
+                      >
+                        <Mail className="h-4 w-4" />
+                        {invitingUsers.has(user.id) ? "Inviting..." : "Invite"}
+                      </Button>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
           </TabsContent>
         </Tabs>
 

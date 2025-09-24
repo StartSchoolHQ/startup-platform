@@ -584,6 +584,19 @@ export async function leaveTeam(teamId: string, userId: string) {
 
   if (leaveError) throw leaveError;
 
+  // Clean up ALL invitation records for this user-team combination
+  // This prevents conflicts when the user is re-invited later
+  const { error: inviteCleanupError } = await supabase
+    .from("team_invitations")
+    .delete()
+    .eq("team_id", teamId)
+    .eq("invited_user_id", userId);
+
+  if (inviteCleanupError) {
+    console.error("Error cleaning up invitation records:", inviteCleanupError);
+    // Don't throw here - the main operation (leaving team) succeeded
+  }
+
   // Update team member count
   const { error: countError } = await supabase.rpc(
     "decrement_team_member_count",
@@ -712,20 +725,25 @@ export async function sendTeamInvitation(
     .eq("team_id", teamId)
     .eq("user_id", invitedUser.id)
     .is("left_at", null)
-    .single();
+    .maybeSingle();
 
   if (existingMember) {
     throw new Error("User is already a member of this team");
   }
 
   // Check if invitation already exists
-  const { data: existingInvitation } = await supabase
+  const { data: existingInvitation, error: checkError } = await supabase
     .from("team_invitations")
     .select("id")
     .eq("team_id", teamId)
     .eq("invited_user_id", invitedUser.id)
     .eq("status", "pending")
-    .single();
+    .maybeSingle();
+
+  // Log any errors but don't fail the invitation process
+  if (checkError) {
+    console.warn("Warning checking existing invitation:", checkError);
+  }
 
   if (existingInvitation) {
     throw new Error("Invitation already sent to this user");
@@ -909,6 +927,7 @@ export async function removeTeamMember(
 ): Promise<void> {
   const supabase = createClient();
 
+  // Remove the team member
   const { error } = await supabase
     .from("team_members")
     .delete()
@@ -918,6 +937,19 @@ export async function removeTeamMember(
   if (error) {
     console.error("Error removing team member:", error);
     throw error;
+  }
+
+  // Clean up ALL invitation records for this user-team combination
+  // This prevents conflicts when the user is re-invited later
+  const { error: inviteCleanupError } = await supabase
+    .from("team_invitations")
+    .delete()
+    .eq("team_id", teamId)
+    .eq("invited_user_id", userId);
+
+  if (inviteCleanupError) {
+    console.error("Error cleaning up invitation records:", inviteCleanupError);
+    // Don't throw here - the main operation (removing member) succeeded
   }
 
   // Update team member count
@@ -986,4 +1018,152 @@ export async function disbandTeam(teamId: string): Promise<void> {
     console.error("Error archiving team:", teamError);
     throw teamError;
   }
+}
+
+// Get all users in the app (excluding current team members)
+export async function getAvailableUsersForInvitation(
+  teamId: string,
+  searchTerm: string = ""
+): Promise<
+  {
+    id: string;
+    name: string | null;
+    email: string;
+    avatar_url: string | null;
+    graduation_level: number | null;
+  }[]
+> {
+  const supabase = createClient();
+
+  // First get current team member IDs
+  const { data: teamMembers, error: membersError } = await supabase
+    .from("team_members")
+    .select("user_id")
+    .eq("team_id", teamId)
+    .is("left_at", null);
+
+  if (membersError) throw membersError;
+
+  const memberIds = teamMembers?.map((member) => member.user_id) || [];
+
+  // Then get all users excluding team members and pending invitations
+  let query = supabase
+    .from("users")
+    .select("id, name, email, avatar_url, graduation_level")
+    .not("id", "in", `(${memberIds.join(",")})`);
+
+  // Add search filter if provided
+  if (searchTerm) {
+    query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+  }
+
+  const { data: users, error } = await query.limit(20);
+
+  if (error) throw error;
+
+  // Filter out users who already have pending invitations
+  const { data: pendingInvitations, error: invitationsError } = await supabase
+    .from("team_invitations")
+    .select("invited_user_id")
+    .eq("team_id", teamId)
+    .eq("status", "pending");
+
+  if (invitationsError) throw invitationsError;
+
+  const pendingUserIds =
+    pendingInvitations?.map((inv) => inv.invited_user_id) || [];
+
+  return users?.filter((user) => !pendingUserIds.includes(user.id)) || [];
+}
+
+// Send team invitation by user ID (for internal use)
+export async function sendTeamInvitationById(
+  teamId: string,
+  invitedUserId: string,
+  role: "member" | "leader" | "co_founder" = "member"
+): Promise<{ success: boolean; message: string }> {
+  const supabase = createClient();
+
+  // Get current authenticated user as the inviter
+  const {
+    data: { user: currentUser },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !currentUser) {
+    throw new Error("You must be logged in to send invitations");
+  }
+
+  // Check if user exists
+  const { data: invitedUser, error: userError } = await supabase
+    .from("users")
+    .select("id, email, name")
+    .eq("id", invitedUserId)
+    .single();
+
+  if (userError || !invitedUser) {
+    throw new Error("User not found");
+  }
+
+  // Check if user is already a team member
+  const { data: existingMember } = await supabase
+    .from("team_members")
+    .select("id")
+    .eq("team_id", teamId)
+    .eq("user_id", invitedUser.id)
+    .is("left_at", null)
+    .maybeSingle();
+
+  if (existingMember) {
+    throw new Error("User is already a member of this team");
+  }
+
+  // Check if there's already a pending invitation
+  const { data: existingInvitation, error: checkError } = await supabase
+    .from("team_invitations")
+    .select("id")
+    .eq("team_id", teamId)
+    .eq("invited_user_id", invitedUser.id)
+    .eq("status", "pending")
+    .maybeSingle();
+
+  // If there's an error checking for existing invitation, log it but don't fail the invitation
+  if (checkError) {
+    console.warn("Warning checking existing invitation:", checkError);
+  }
+
+  if (existingInvitation) {
+    throw new Error("User already has a pending invitation for this team");
+  }
+
+  // Get team information
+  const { data: team, error: teamError } = await supabase
+    .from("teams")
+    .select("name")
+    .eq("id", teamId)
+    .single();
+
+  if (teamError || !team) {
+    throw new Error("Team not found");
+  }
+
+  // Create the invitation
+  const { error: insertError } = await supabase
+    .from("team_invitations")
+    .insert({
+      team_id: teamId,
+      invited_user_id: invitedUser.id,
+      invited_by_user_id: currentUser.id,
+      role: role,
+      status: "pending",
+    });
+
+  if (insertError) {
+    console.error("Error creating invitation:", insertError);
+    throw new Error("Failed to create invitation");
+  }
+
+  return {
+    success: true,
+    message: `Invitation sent to ${invitedUser.name || invitedUser.email}`,
+  };
 }

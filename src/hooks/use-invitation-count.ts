@@ -4,6 +4,7 @@ import { getInvitationCount } from "@/lib/database";
 // Simple event emitter for invitation count updates
 class InvitationCountManager {
   private listeners: (() => void)[] = [];
+  private listListeners: (() => void)[] = [];
 
   subscribe(listener: () => void) {
     this.listeners.push(listener);
@@ -12,8 +13,24 @@ class InvitationCountManager {
     };
   }
 
+  subscribeToListUpdates(listener: () => void) {
+    this.listListeners.push(listener);
+    return () => {
+      this.listListeners = this.listListeners.filter((l) => l !== listener);
+    };
+  }
+
   refresh() {
     this.listeners.forEach((listener) => listener());
+  }
+
+  refreshLists() {
+    this.listListeners.forEach((listener) => listener());
+  }
+
+  refreshAll() {
+    this.refresh();
+    this.refreshLists();
   }
 }
 

@@ -34,6 +34,7 @@ export default function TeamJourneyPage() {
   const [archivedProducts, setArchivedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState(""); // Separate state for input value
   const [sortBy, setSortBy] = useState<SortOption>("date");
   const sortOrder: SortOrder = "desc"; // Fixed sort order for now
 
@@ -75,8 +76,17 @@ export default function TeamJourneyPage() {
     loadData();
   }, [loadData]);
 
+  // Debounce search input to avoid excessive API calls
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setSearchQuery(searchInput);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchInput]);
+
   const handleSearch = (value: string) => {
-    setSearchQuery(value);
+    setSearchInput(value); // Update input value immediately for UI responsiveness
   };
 
   const handleSort = (value: string) => {
@@ -127,7 +137,7 @@ export default function TeamJourneyPage() {
                 <Input
                   placeholder="Search..."
                   className="pl-10 w-64"
-                  value={searchQuery}
+                  value={searchInput}
                   onChange={(e) => handleSearch(e.target.value)}
                 />
               </div>

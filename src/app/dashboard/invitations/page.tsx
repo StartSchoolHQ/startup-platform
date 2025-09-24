@@ -92,6 +92,14 @@ export default function InvitationsPage() {
     loadInvitations();
   }, [loadInvitations]);
 
+  // Subscribe to invitation list updates
+  useEffect(() => {
+    const unsubscribe = invitationCountManager.subscribeToListUpdates(() => {
+      loadInvitations();
+    });
+    return unsubscribe;
+  }, [loadInvitations]);
+
   const handleResponse = async (
     invitationId: string,
     response: "accepted" | "declined"
@@ -107,7 +115,7 @@ export default function InvitationsPage() {
           : "Invitation declined."
       );
       await loadInvitations(); // Refresh invitations
-      invitationCountManager.refresh(); // Update invitation count in nav
+      invitationCountManager.refreshAll(); // Update invitation count and all lists
     } catch (error) {
       console.error("Error responding to invitation:", error);
       toast.error("Failed to respond to invitation");
