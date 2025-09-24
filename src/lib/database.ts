@@ -754,7 +754,8 @@ export async function getPendingInvitations(userId: string) {
 
   const { data: invitations, error } = await supabase
     .from("team_invitations")
-    .select(`
+    .select(
+      `
       id,
       team_id,
       role,
@@ -773,7 +774,8 @@ export async function getPendingInvitations(userId: string) {
         email,
         avatar_url
       )
-    `)
+    `
+    )
     .eq("invited_user_id", userId)
     .eq("status", "pending")
     .order("created_at", { ascending: false });
@@ -788,7 +790,8 @@ export async function getSentInvitations(userId: string) {
 
   const { data: invitations, error } = await supabase
     .from("team_invitations")
-    .select(`
+    .select(
+      `
       id,
       team_id,
       role,
@@ -808,7 +811,8 @@ export async function getSentInvitations(userId: string) {
         email,
         avatar_url
       )
-    `)
+    `
+    )
     .eq("invited_by_user_id", userId)
     .order("created_at", { ascending: false });
 
@@ -850,20 +854,21 @@ export async function respondToInvitation(
 
   // If accepted, add user to team members
   if (response === "accepted") {
-    const { error: memberError } = await supabase
-      .from("team_members")
-      .insert({
-        team_id: invitation.team_id,
-        user_id: userId,
-        team_role: invitation.role,
-      });
+    const { error: memberError } = await supabase.from("team_members").insert({
+      team_id: invitation.team_id,
+      user_id: userId,
+      team_role: invitation.role,
+    });
 
     if (memberError) throw memberError;
 
     // Update team member count
-    const { error: countError } = await supabase.rpc('increment_team_member_count', {
-      team_id: invitation.team_id
-    });
+    const { error: countError } = await supabase.rpc(
+      "increment_team_member_count",
+      {
+        team_id: invitation.team_id,
+      }
+    );
 
     // If the RPC function doesn't exist, update manually
     if (countError) {
@@ -898,15 +903,18 @@ export async function getInvitationCount(userId: string): Promise<number> {
 }
 
 // Remove a team member (for team management)
-export async function removeTeamMember(teamId: string, userId: string): Promise<void> {
+export async function removeTeamMember(
+  teamId: string,
+  userId: string
+): Promise<void> {
   const supabase = createClient();
-  
+
   const { error } = await supabase
     .from("team_members")
     .delete()
     .eq("team_id", teamId)
     .eq("user_id", userId);
-  
+
   if (error) {
     console.error("Error removing team member:", error);
     throw error;
@@ -922,25 +930,27 @@ export async function removeTeamMember(teamId: string, userId: string): Promise<
   if (currentTeam) {
     await supabase
       .from("teams")
-      .update({ member_count: Math.max(0, (currentTeam.member_count || 0) - 1) })
+      .update({
+        member_count: Math.max(0, (currentTeam.member_count || 0) - 1),
+      })
       .eq("id", teamId);
   }
 }
 
 // Update team member role
 export async function updateTeamMemberRole(
-  teamId: string, 
-  userId: string, 
+  teamId: string,
+  userId: string,
   newRole: "member" | "leader" | "founder" | "co_founder"
 ): Promise<void> {
   const supabase = createClient();
-  
+
   const { error } = await supabase
     .from("team_members")
     .update({ team_role: newRole })
     .eq("team_id", teamId)
     .eq("user_id", userId);
-  
+
   if (error) {
     console.error("Error updating team member role:", error);
     throw error;
@@ -950,28 +960,28 @@ export async function updateTeamMemberRole(
 // Disband team (remove all members except founder and mark team as archived)
 export async function disbandTeam(teamId: string): Promise<void> {
   const supabase = createClient();
-  
+
   // Remove all team members except founder
   const { error: membersError } = await supabase
     .from("team_members")
     .delete()
     .eq("team_id", teamId)
     .neq("team_role", "founder");
-  
+
   if (membersError) {
     console.error("Error removing team members:", membersError);
     throw membersError;
   }
-  
+
   // Archive the team and set member count to 1 (only founder)
   const { error: teamError } = await supabase
     .from("teams")
-    .update({ 
+    .update({
       status: "archived",
-      member_count: 1
+      member_count: 1,
     })
     .eq("id", teamId);
-  
+
   if (teamError) {
     console.error("Error archiving team:", teamError);
     throw teamError;

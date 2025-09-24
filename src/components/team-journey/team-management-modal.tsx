@@ -8,10 +8,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { 
-  removeTeamMember, 
-  updateTeamMemberRole, 
-  disbandTeam 
+import {
+  removeTeamMember,
+  updateTeamMemberRole,
+  disbandTeam,
 } from "@/lib/database";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,15 +24,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  Users, 
-  UserPlus, 
+import {
+  Users,
+  UserPlus,
   MoreVertical,
   Crown,
   Shield,
   User,
   UserMinus,
-  AlertTriangle
+  AlertTriangle,
 } from "lucide-react";
 
 interface TeamMember {
@@ -59,16 +59,19 @@ interface TeamManagementModalProps {
   onRefresh?: () => void;
 }
 
-export function TeamManagementModal({ 
-  isOpen, 
-  onClose, 
-  team, 
+export function TeamManagementModal({
+  isOpen,
+  onClose,
+  team,
   userRole,
-  onRefresh
+  onRefresh,
 }: TeamManagementModalProps) {
   const [activeTab, setActiveTab] = useState("current-team");
 
-  const canManageMembers = userRole === "founder" || userRole === "co_founder" || userRole === "leader";
+  const canManageMembers =
+    userRole === "founder" ||
+    userRole === "co_founder" ||
+    userRole === "leader";
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -108,7 +111,10 @@ export function TeamManagementModal({
     }
   };
 
-  const handleChangeRole = async (memberId: string, newRole: "member" | "leader" | "founder" | "co_founder") => {
+  const handleChangeRole = async (
+    memberId: string,
+    newRole: "member" | "leader" | "founder" | "co_founder"
+  ) => {
     try {
       await updateTeamMemberRole(team.id, memberId, newRole);
       toast.success("Member role updated successfully");
@@ -121,10 +127,14 @@ export function TeamManagementModal({
   };
 
   const handleDisbandTeam = async () => {
-    if (!window.confirm("Are you sure you want to disband this team? This action cannot be undone.")) {
+    if (
+      !window.confirm(
+        "Are you sure you want to disband this team? This action cannot be undone."
+      )
+    ) {
       return;
     }
-    
+
     try {
       await disbandTeam(team.id);
       toast.success("Team disbanded successfully");
@@ -149,11 +159,17 @@ export function TeamManagementModal({
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="current-team" className="flex items-center gap-2">
+            <TabsTrigger
+              value="current-team"
+              className="flex items-center gap-2"
+            >
               <Users className="h-4 w-4" />
               Current Team ({team.members.length})
             </TabsTrigger>
-            <TabsTrigger value="invite-users" className="flex items-center gap-2">
+            <TabsTrigger
+              value="invite-users"
+              className="flex items-center gap-2"
+            >
               <UserPlus className="h-4 w-4" />
               Invite Users
             </TabsTrigger>
@@ -195,7 +211,7 @@ export function TeamManagementModal({
                             : "U"}
                         </AvatarFallback>
                       </Avatar>
-                      
+
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <h4 className="font-semibold">
@@ -207,14 +223,17 @@ export function TeamManagementModal({
                           {member.users?.email}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
-                          <Badge 
-                            variant="secondary" 
+                          <Badge
+                            variant="secondary"
                             className={getRoleBadgeColor(member.team_role)}
                           >
-                            {member.team_role.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                            {member.team_role
+                              .replace("_", " ")
+                              .replace(/\b\w/g, (l) => l.toUpperCase())}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
-                            Joined {new Date(member.joined_at).toLocaleDateString()}
+                            Joined{" "}
+                            {new Date(member.joined_at).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
@@ -228,15 +247,23 @@ export function TeamManagementModal({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleChangeRole(member.user_id, "leader")}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleChangeRole(member.user_id, "leader")
+                            }
+                          >
                             <Shield className="h-4 w-4 mr-2" />
                             Make Leader
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleChangeRole(member.user_id, "member")}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleChangeRole(member.user_id, "member")
+                            }
+                          >
                             <User className="h-4 w-4 mr-2" />
                             Make Member
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => handleKickMember(member.user_id)}
                             className="text-red-600 focus:text-red-600"
                           >
@@ -257,15 +284,16 @@ export function TeamManagementModal({
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Invite New Members</h3>
             </div>
-            
+
             <Card className="p-6">
               <CardHeader className="px-0 pt-0">
                 <CardTitle className="text-base">Coming Soon</CardTitle>
               </CardHeader>
               <CardContent className="px-0 pb-0">
                 <p className="text-muted-foreground">
-                  User invitation functionality will be implemented in the next part.
-                  This will include browsing all users and sending team invitations.
+                  User invitation functionality will be implemented in the next
+                  part. This will include browsing all users and sending team
+                  invitations.
                 </p>
               </CardContent>
             </Card>

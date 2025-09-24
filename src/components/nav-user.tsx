@@ -1,7 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { BadgeCheck, ChevronsUpDown, LogOut, History, Mail } from "lucide-react";
+import {
+  BadgeCheck,
+  ChevronsUpDown,
+  LogOut,
+  History,
+  Mail,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -115,7 +121,10 @@ export function NavUser({
                     Invitations
                   </div>
                   {invitationCount > 0 && (
-                    <Badge variant="destructive" className="h-5 min-w-5 text-xs">
+                    <Badge
+                      variant="destructive"
+                      className="h-5 min-w-5 text-xs"
+                    >
                       {invitationCount}
                     </Badge>
                   )}

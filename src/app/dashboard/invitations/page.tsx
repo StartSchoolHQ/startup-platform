@@ -61,7 +61,9 @@ interface Invitation {
 
 export default function InvitationsPage() {
   const { user } = useAppContext();
-  const [pendingInvitations, setPendingInvitations] = useState<Invitation[]>([]);
+  const [pendingInvitations, setPendingInvitations] = useState<Invitation[]>(
+    []
+  );
   const [sentInvitations, setSentInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [responding, setResponding] = useState<string | null>(null);
@@ -90,7 +92,10 @@ export default function InvitationsPage() {
     loadInvitations();
   }, [loadInvitations]);
 
-  const handleResponse = async (invitationId: string, response: "accepted" | "declined") => {
+  const handleResponse = async (
+    invitationId: string,
+    response: "accepted" | "declined"
+  ) => {
     if (!user?.id) return;
 
     setResponding(invitationId);
@@ -211,7 +216,8 @@ export default function InvitationsPage() {
                   No pending invitations
                 </h3>
                 <p className="text-gray-500 text-center">
-                  You don&apos;t have any pending team invitations at the moment.
+                  You don&apos;t have any pending team invitations at the
+                  moment.
                 </p>
               </CardContent>
             </Card>
@@ -230,7 +236,8 @@ export default function InvitationsPage() {
                             {invitation.teams.name}
                           </CardTitle>
                           <p className="text-sm text-muted-foreground">
-                            {invitation.teams.description || "No description provided"}
+                            {invitation.teams.description ||
+                              "No description provided"}
                           </p>
                           <div className="flex items-center gap-2 pt-1">
                             <Badge className={getRoleColor(invitation.role)}>
@@ -240,7 +247,11 @@ export default function InvitationsPage() {
                               {invitation.teams.member_count} members
                             </Badge>
                             <Badge
-                              variant={invitation.teams.status === "active" ? "default" : "secondary"}
+                              variant={
+                                invitation.teams.status === "active"
+                                  ? "default"
+                                  : "secondary"
+                              }
                               className={
                                 invitation.teams.status === "active"
                                   ? "bg-green-100 text-green-800"
@@ -279,7 +290,8 @@ export default function InvitationsPage() {
                         </Avatar>
                         <div>
                           <div className="text-sm font-medium">
-                            Invited by {invitation.invited_by?.name || "Unknown User"}
+                            Invited by{" "}
+                            {invitation.invited_by?.name || "Unknown User"}
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {invitation.invited_by?.email}
@@ -290,7 +302,9 @@ export default function InvitationsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleResponse(invitation.id, "declined")}
+                          onClick={() =>
+                            handleResponse(invitation.id, "declined")
+                          }
                           disabled={responding === invitation.id}
                           className="gap-1"
                         >
@@ -299,7 +313,9 @@ export default function InvitationsPage() {
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => handleResponse(invitation.id, "accepted")}
+                          onClick={() =>
+                            handleResponse(invitation.id, "accepted")
+                          }
                           disabled={responding === invitation.id}
                           className="gap-1 bg-green-600 hover:bg-green-700"
                         >
@@ -343,13 +359,16 @@ export default function InvitationsPage() {
                             {invitation.teams.name}
                           </CardTitle>
                           <p className="text-sm text-muted-foreground">
-                            Invited {invitation.invited_user?.name || "Unknown User"} as{" "}
+                            Invited{" "}
+                            {invitation.invited_user?.name || "Unknown User"} as{" "}
                             <span className="font-medium">
                               {invitation.role.replace("_", " ")}
                             </span>
                           </p>
                           <div className="flex items-center gap-2 pt-1">
-                            <Badge className={getStatusColor(invitation.status)}>
+                            <Badge
+                              className={getStatusColor(invitation.status)}
+                            >
                               {invitation.status.toUpperCase()}
                             </Badge>
                             {invitation.responded_at && (

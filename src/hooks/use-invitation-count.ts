@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getInvitationCount } from '@/lib/database';
+import { useState, useEffect, useCallback } from "react";
+import { getInvitationCount } from "@/lib/database";
 
 // Simple event emitter for invitation count updates
 class InvitationCountManager {
@@ -8,12 +8,12 @@ class InvitationCountManager {
   subscribe(listener: () => void) {
     this.listeners.push(listener);
     return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
+      this.listeners = this.listeners.filter((l) => l !== listener);
     };
   }
 
   refresh() {
-    this.listeners.forEach(listener => listener());
+    this.listeners.forEach((listener) => listener());
   }
 }
 
@@ -28,7 +28,7 @@ export function useInvitationCount(userId: string | undefined) {
         const newCount = await getInvitationCount(userId);
         setCount(newCount);
       } catch (error) {
-        console.error('Error loading invitation count:', error);
+        console.error("Error loading invitation count:", error);
       }
     }
   }, [userId]);
