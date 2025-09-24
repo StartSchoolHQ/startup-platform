@@ -16,6 +16,8 @@ interface DatabaseTeam {
       id: string;
       name: string | null;
       avatar_url: string | null;
+      total_xp: number;
+      total_credits: number;
     };
   }[];
   revenue_streams?: {
@@ -275,7 +277,9 @@ export async function getTeamDetails(teamId: string) {
         name,
         email,
         avatar_url,
-        graduation_level
+        graduation_level,
+        total_xp,
+        total_credits
       )
     `
     )
@@ -361,7 +365,9 @@ export async function getAllTeamsForJourney(
         users (
           id,
           name,
-          avatar_url
+          avatar_url,
+          total_xp,
+          total_credits
         )
       ),
       revenue_streams (
@@ -436,7 +442,9 @@ export async function getUserTeamsForJourney(
         users (
           id,
           name,
-          avatar_url
+          avatar_url,
+          total_xp,
+          total_credits
         )
       ),
       revenue_streams (
@@ -511,7 +519,9 @@ export async function getArchivedTeamsForJourney(
         users (
           id,
           name,
-          avatar_url
+          avatar_url,
+          total_xp,
+          total_credits
         )
       ),
       revenue_streams (
@@ -659,13 +669,19 @@ export function transformTeamToProduct(team: DatabaseTeam): Product {
       0
     ) || 0;
 
-  // Transform team members to expected format
+  // Transform team members to expected format and calculate total XP
   const teamMembers =
     team.team_members?.map(
       (member: {
         user_id: string;
         team_role: "member" | "leader" | "founder" | "co_founder";
-        users?: { id: string; name: string | null; avatar_url: string | null };
+        users?: {
+          id: string;
+          name: string | null;
+          avatar_url: string | null;
+          total_xp: number;
+          total_credits: number;
+        };
       }) => ({
         id: member.users?.id || member.user_id,
         name: member.users?.name || "Unknown User",
@@ -673,11 +689,15 @@ export function transformTeamToProduct(team: DatabaseTeam): Product {
       })
     ) || [];
 
-  // Calculate points based on achievements (placeholder logic)
-  const points = {
-    amount: totalRevenue * 10, // Simplified calculation
-    label: "Points Received",
-  };
+  // Calculate total team XP from all members
+  const totalTeamXP =
+    team.team_members?.reduce(
+      (sum: number, member) => sum + (member.users?.total_xp || 0),
+      0
+    ) || 0;
+
+  // Get actual team size (number of active members)
+  const actualTeamSize = team.team_members?.length || 0;
 
   return {
     id: team.id,
@@ -685,14 +705,17 @@ export function transformTeamToProduct(team: DatabaseTeam): Product {
     description: team.description || "No description provided",
     status: team.status === "active" ? "Active" : "Inactive",
     customers: {
-      count: team.member_count || 0,
+      count: actualTeamSize,
       label: "Team Members",
     },
     revenue: {
       amount: totalRevenue,
       label: "Monthly Revenue",
     },
-    points,
+    points: {
+      amount: totalTeamXP,
+      label: "Team Experience",
+    },
     avatar: "/avatars/suppdocs.jpg", // Default avatar for now
     teamMembers,
   };

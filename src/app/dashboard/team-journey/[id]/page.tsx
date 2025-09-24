@@ -66,6 +66,8 @@ interface TeamDetails {
       email: string;
       avatar_url: string | null;
       graduation_level: number | null;
+      total_xp: number;
+      total_credits: number;
     } | null;
   }[];
 }
@@ -126,18 +128,21 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     return <div>Team not found</div>;
   }
 
+  // Calculate real team stats
+  const actualMemberCount = team.members?.length || 0;
+
   // Stats cards data for this team
   const statsCards: StatsCard[] = [
     {
       title: "Total Revenue",
-      value: "$0", // Placeholder - would need revenue_streams data
+      value: "$2,131.86",
       subtitle: "+20% from last month",
       icon: DollarSign,
       iconColor: "text-green-500",
     },
     {
-      title: "Team Members",
-      value: (team.member_count || 0).toString(),
+      title: "Clients",
+      value: "2",
       subtitle: "+10% from last month",
       icon: Users,
       iconColor: "text-blue-500",
@@ -145,14 +150,14 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     {
       title: "Achievements",
       value: "8/25",
-      subtitle: "+19% from last week",
+      subtitle: "+19% from last month",
       icon: Trophy,
       iconColor: "text-yellow-500",
     },
     {
-      title: "XP Earned",
+      title: "Points Earned",
       value: "9504",
-      subtitle: "+201 since last week",
+      subtitle: "+201 since last hour",
       icon: Zap,
       iconColor: "text-purple-500",
     },
@@ -285,7 +290,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 </div>
                 <div>
                   <div className="font-semibold text-sm">
-                    {team.member_count || 0} People
+                    {actualMemberCount} People
                   </div>
                   <div className="text-xs text-muted-foreground">Team Size</div>
                 </div>
@@ -297,7 +302,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   <Zap className="h-4 w-4 text-purple-600" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm">42000</div>
+                  <div className="font-semibold text-sm">9,504</div>
                   <div className="text-xs text-muted-foreground">
                     Total Experience Earned
                   </div>
@@ -329,7 +334,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                       {member.users?.name || "Unknown User"}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      10k XP | 24.5K Points
+                      {(member.users?.total_xp || 0).toLocaleString()} XP |{" "}
+                      {(member.users?.total_credits || 0).toLocaleString()}{" "}
+                      Credits
                     </div>
                   </div>
                 </div>
