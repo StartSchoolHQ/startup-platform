@@ -274,6 +274,7 @@ export async function getTeamDetails(teamId: string) {
       users (
         name,
         email,
+        avatar_url,
         graduation_level
       )
     `

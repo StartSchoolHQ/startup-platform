@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Breadcrumb,
@@ -64,6 +64,7 @@ interface TeamDetails {
     users: {
       name: string | null;
       email: string;
+      avatar_url: string | null;
       graduation_level: number | null;
     } | null;
   }[];
@@ -312,6 +313,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   className="flex items-center gap-3 border border-gray-200 p-2 rounded-md"
                 >
                   <Avatar className="w-10 h-10">
+                    <AvatarImage src={member.users?.avatar_url || ""} />
                     <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold">
                       {member.users?.name
                         ? member.users.name
@@ -423,6 +425,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     key={member.user_id}
                     className="w-8 h-8 border-2 border-white"
                   >
+                    <AvatarImage src={member.users?.avatar_url || ""} />
                     <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
                       {member.users?.name
                         ? member.users.name

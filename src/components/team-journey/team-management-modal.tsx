@@ -42,6 +42,7 @@ interface TeamMember {
   users: {
     name: string | null;
     email: string;
+    avatar_url: string | null;
     graduation_level: number | null;
   } | null;
 }
@@ -183,7 +184,7 @@ export function TeamManagementModal({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Avatar className="w-12 h-12">
-                        <AvatarImage src="" />
+                        <AvatarImage src={member.users?.avatar_url || ""} />
                         <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold">
                           {member.users?.name
                             ? member.users.name
