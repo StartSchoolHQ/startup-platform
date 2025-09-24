@@ -1118,20 +1118,14 @@ export async function sendTeamInvitationById(
   }
 
   // Check if there's already a pending invitation
-  const { data: existingInvitation, error: checkError } = await supabase
+  const { data: existingInvitations } = await supabase
     .from("team_invitations")
-    .select("id")
+    .select("id, status")
     .eq("team_id", teamId)
     .eq("invited_user_id", invitedUser.id)
-    .eq("status", "pending")
-    .maybeSingle();
+    .eq("status", "pending");
 
-  // If there's an error checking for existing invitation, log it but don't fail the invitation
-  if (checkError) {
-    console.warn("Warning checking existing invitation:", checkError);
-  }
-
-  if (existingInvitation) {
+  if (existingInvitations && existingInvitations.length > 0) {
     throw new Error("User already has a pending invitation for this team");
   }
 
