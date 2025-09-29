@@ -9,6 +9,7 @@ interface DatabaseTeam {
   status: "active" | "archived";
   created_at: string;
   member_count: number | null;
+  strikes_count: number | null;
   team_members?: {
     user_id: string;
     team_role: "member" | "leader" | "founder" | "co_founder";

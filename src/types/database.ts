@@ -201,6 +201,78 @@ export type Database = {
           }
         ];
       };
+      team_strikes: {
+        Row: {
+          id: string;
+          team_id: string;
+          user_id: string | null;
+          strike_type: string;
+          title: string;
+          description: string | null;
+          xp_penalty: number | null;
+          credits_penalty: number | null;
+          status: string | null;
+          explanation: string | null;
+          explained_by_user_id: string | null;
+          explained_at: string | null;
+          resolved_by_user_id: string | null;
+          resolved_at: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          team_id: string;
+          user_id?: string | null;
+          strike_type: string;
+          title: string;
+          description?: string | null;
+          xp_penalty?: number | null;
+          credits_penalty?: number | null;
+          status?: string | null;
+          explanation?: string | null;
+          explained_by_user_id?: string | null;
+          explained_at?: string | null;
+          resolved_by_user_id?: string | null;
+          resolved_at?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          team_id?: string;
+          user_id?: string | null;
+          strike_type?: string;
+          title?: string;
+          description?: string | null;
+          xp_penalty?: number | null;
+          credits_penalty?: number | null;
+          status?: string | null;
+          explanation?: string | null;
+          explained_by_user_id?: string | null;
+          explained_at?: string | null;
+          resolved_by_user_id?: string | null;
+          resolved_at?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "team_strikes_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "teams";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "team_strikes_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       teams: {
         Row: {
           archived_at: string | null;
@@ -210,6 +282,7 @@ export type Database = {
           id: string;
           name: string;
           status: Database["public"]["Enums"]["status_state"];
+          strikes_count: number | null;
           weekly_maintenance_cost: number;
         };
         Insert: {
@@ -220,6 +293,7 @@ export type Database = {
           id?: string;
           name: string;
           status?: Database["public"]["Enums"]["status_state"];
+          strikes_count?: number | null;
           weekly_maintenance_cost?: number;
         };
         Update: {
@@ -230,6 +304,7 @@ export type Database = {
           id?: string;
           name?: string;
           status?: Database["public"]["Enums"]["status_state"];
+          strikes_count?: number | null;
           weekly_maintenance_cost?: number;
         };
         Relationships: [];
@@ -387,6 +462,63 @@ export type Database = {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      weekly_reports: {
+        Row: {
+          id: string;
+          user_id: string;
+          team_id: string;
+          week_start_date: string;
+          week_end_date: string;
+          week_number: number;
+          week_year: number;
+          submission_data: Json;
+          submitted_at: string;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          team_id: string;
+          week_start_date: string;
+          week_end_date: string;
+          week_number: number;
+          week_year: number;
+          submission_data?: Json;
+          submitted_at?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          team_id?: string;
+          week_start_date?: string;
+          week_end_date?: string;
+          week_number?: number;
+          week_year?: number;
+          submission_data?: Json;
+          submitted_at?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "weekly_reports_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "weekly_reports_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "teams";
             referencedColumns: ["id"];
           }
         ];
@@ -589,6 +721,7 @@ export type Enums<
   : never;
 
 // Helper types for your application
+// Helper types for your application
 export type User = Tables<"users">;
 export type Team = Tables<"teams">;
 export type Achievement = Tables<"achievements">;
@@ -596,4 +729,6 @@ export type Task = Tables<"tasks">;
 export type Transaction = Tables<"transactions">;
 export type UserTaskCompletion = Tables<"user_task_completions">;
 export type TeamMember = Tables<"team_members">;
+export type TeamStrike = Tables<"team_strikes">;
+export type WeeklyReport = Tables<"weekly_reports">;
 export type RevenueStream = Tables<"revenue_streams">;

@@ -57,6 +57,7 @@ interface TeamDetails {
   status: "active" | "archived";
   created_at: string;
   member_count: number | null;
+  strikes_count?: number | null;
   members: {
     user_id: string;
     team_role: string;
@@ -382,14 +383,22 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <div>
-                    <div className="font-semibold text-sm">Strikes</div>
+                    <div className="font-semibold text-sm">
+                      {team.strikes_count || 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Strikes</div>
                   </div>
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                    <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                    <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                    <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                    {Array.from({ length: 5 }, (_, index) => (
+                      <div
+                        key={index}
+                        className={`w-2 h-2 rounded-full ${
+                          index < (team.strikes_count || 0)
+                            ? "bg-red-500"
+                            : "bg-gray-300"
+                        }`}
+                      ></div>
+                    ))}
                   </div>
                 </div>
               </div>
