@@ -19,6 +19,7 @@ import { WeeklyReportsTable } from "@/components/team-journey/weekly-reports-tab
 import { ClientMeetingsTable } from "@/components/team-journey/client-meetings-table";
 import { StrikesTable } from "@/components/team-journey/strikes-table";
 import { TeamManagementModal } from "@/components/team-journey/team-management-modal";
+import { WeeklyReportModal } from "@/components/weekly-reports/weekly-report-modal";
 import {
   ExternalLink,
   FileText,
@@ -43,6 +44,7 @@ import {
 import { StatsCard } from "@/types/dashboard";
 import { useEffect, useState, useCallback } from "react";
 import { useAppContext } from "@/contexts/app-context";
+import { hasUserSubmittedThisWeek } from "@/lib/weekly-reports";
 
 interface ProductDetailPageProps {
   params: Promise<{
@@ -81,6 +83,12 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [isTeamMember, setIsTeamMember] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [showTeamManagement, setShowTeamManagement] = useState(false);
+  const [showWeeklyReportModal, setShowWeeklyReportModal] = useState(false);
+  const [hasSubmittedThisWeek, setHasSubmittedThisWeek] = useState(false);
+  const [checkingSubmission, setCheckingSubmission] = useState(true);
+  const [memberSubmissionStatus, setMemberSubmissionStatus] = useState<
+    Record<string, boolean>
+  >({});
 
   // Extract ID from params
   useEffect(() => {
@@ -113,9 +121,63 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     }
   }, [teamId, user?.id]);
 
+  // Check weekly report submission status
+  const checkWeeklyReportStatus = useCallback(async () => {
+    if (!teamId || !user?.id) return;
+
+    setCheckingSubmission(true);
+    try {
+      const hasSubmitted = await hasUserSubmittedThisWeek(user.id, teamId);
+      setHasSubmittedThisWeek(hasSubmitted);
+    } catch (error) {
+      console.error("Error checking weekly report status:", error);
+    } finally {
+      setCheckingSubmission(false);
+    }
+  }, [teamId, user?.id]);
+
+  // Check all team members' submission statuses
+  const checkAllMemberStatuses = useCallback(async () => {
+    if (!teamId || !team?.members) return;
+
+    try {
+      const statusPromises = team.members.map(async (member) => {
+        const hasSubmitted = await hasUserSubmittedThisWeek(
+          member.user_id,
+          teamId
+        );
+        return { userId: member.user_id, hasSubmitted };
+      });
+
+      const statuses = await Promise.all(statusPromises);
+      const statusMap = statuses.reduce((acc, { userId, hasSubmitted }) => {
+        acc[userId] = hasSubmitted;
+        return acc;
+      }, {} as Record<string, boolean>);
+
+      setMemberSubmissionStatus(statusMap);
+    } catch (error) {
+      console.error("Error checking member submission statuses:", error);
+    }
+  }, [teamId, team?.members]);
+
   useEffect(() => {
     loadTeam();
   }, [loadTeam]);
+
+  useEffect(() => {
+    if (isTeamMember) {
+      checkWeeklyReportStatus();
+    }
+    if (team?.members) {
+      checkAllMemberStatuses();
+    }
+  }, [
+    isTeamMember,
+    checkWeeklyReportStatus,
+    checkAllMemberStatuses,
+    team?.members,
+  ]);
 
   if (loading) {
     return (
@@ -233,9 +295,17 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             Website
           </Button>
           {isTeamMember && (
-            <Button className="gap-2 bg-black text-white hover:bg-gray-800">
+            <Button
+              className="gap-2 bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => setShowWeeklyReportModal(true)}
+              disabled={checkingSubmission || hasSubmittedThisWeek}
+            >
               <FileText className="h-4 w-4" />
-              Submit Weekly Report
+              {checkingSubmission
+                ? "Checking..."
+                : hasSubmittedThisWeek
+                ? "Report Submitted"
+                : "Submit Weekly Report"}
             </Button>
           )}
         </div>
@@ -284,6 +354,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           <CardContent className="space-y-6">
             {/* Top Row - Team Size and Experience */}
             <div className="grid grid-cols-2 gap-4">
+              {" "}
               {/* Team Size */}
               <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
                 <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-100">
@@ -296,7 +367,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   <div className="text-xs text-muted-foreground">Team Size</div>
                 </div>
               </div>
-
               {/* Total Experience Earned */}
               <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
                 <div className="flex items-center justify-center w-8 h-8 rounded-md bg-purple-100">
@@ -436,23 +506,34 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             {/* Weekly Report */}
             <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
               <div className="flex -space-x-2">
-                {team.members.slice(0, 4).map((member) => (
-                  <Avatar
-                    key={member.user_id}
-                    className="w-8 h-8 border-2 border-white"
-                  >
-                    <AvatarImage src={member.users?.avatar_url || ""} />
-                    <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
-                      {member.users?.name
-                        ? member.users.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .toUpperCase()
-                        : "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                ))}
+                {team.members.slice(0, 4).map((member) => {
+                  const hasSubmitted = memberSubmissionStatus[member.user_id];
+                  const hasStatus = member.user_id in memberSubmissionStatus;
+
+                  return (
+                    <div key={member.user_id} className="relative">
+                      <Avatar className="w-8 h-8 border-2 border-white">
+                        <AvatarImage src={member.users?.avatar_url || ""} />
+                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
+                          {member.users?.name
+                            ? member.users.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()
+                            : "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      {hasStatus && (
+                        <div
+                          className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+                            hasSubmitted ? "bg-green-500" : "bg-red-500"
+                          }`}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               <div>
                 <div className="font-semibold text-sm">Weekly Report</div>
@@ -938,6 +1019,20 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           team={team}
           userRole={userRole}
           onRefresh={loadTeam}
+        />
+      )}
+
+      {/* Weekly Report Modal */}
+      {team && user?.id && (
+        <WeeklyReportModal
+          open={showWeeklyReportModal}
+          onOpenChange={setShowWeeklyReportModal}
+          teamId={team.id}
+          userId={user.id}
+          onSuccess={() => {
+            checkWeeklyReportStatus();
+            checkAllMemberStatuses();
+          }}
         />
       )}
     </div>

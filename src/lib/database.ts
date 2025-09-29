@@ -360,6 +360,7 @@ export async function getAllTeamsForJourney(
       status,
       created_at,
       member_count,
+      strikes_count,
       team_members!inner (
         user_id,
         team_role,
@@ -437,6 +438,7 @@ export async function getUserTeamsForJourney(
       status,
       created_at,
       member_count,
+      strikes_count,
       team_members!inner (
         user_id,
         team_role,
@@ -514,6 +516,7 @@ export async function getArchivedTeamsForJourney(
       status,
       created_at,
       member_count,
+      strikes_count,
       team_members!inner (
         user_id,
         team_role,
