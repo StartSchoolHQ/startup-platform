@@ -32,12 +32,12 @@ export function StrikesTable({
       case "explained":
         return {
           text: "Explained",
-          class: "bg-green-100 text-green-800",
+          class: "bg-emerald-100 text-emerald-800",
         };
       case "waiting-explanation":
         return {
           text: "Waiting on Explanation",
-          class: "bg-red-100 text-red-800",
+          class: "bg-destructive/10 text-destructive",
         };
     }
   };
@@ -47,14 +47,14 @@ export function StrikesTable({
       case "done":
         return {
           text: "Done",
-          class: "bg-green-600 text-white hover:bg-green-700",
+          class: "bg-emerald-600 text-white hover:bg-emerald-700",
           icon: <CheckCircle className="h-3 w-3 mr-1" />,
         };
       case "explain":
         return {
           text: "Explain",
           class:
-            "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50",
+            "bg-background border border-input text-foreground hover:bg-muted/20",
           icon: <Clock className="h-3 w-3 mr-1" />,
         };
     }
@@ -65,20 +65,20 @@ export function StrikesTable({
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-4 px-4 font-medium text-gray-600">
+            <tr className="border-b border-border">
+              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                 Strike
               </th>
-              <th className="text-left py-4 px-4 font-medium text-gray-600">
+              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                 Status
               </th>
-              <th className="text-left py-4 px-4 font-medium text-gray-600">
+              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                 XP
               </th>
-              <th className="text-left py-4 px-4 font-medium text-gray-600">
+              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                 Points
               </th>
-              <th className="text-right py-4 px-4 font-medium text-gray-600">
+              <th className="text-right py-4 px-4 font-medium text-muted-foreground">
                 Action
               </th>
             </tr>
@@ -92,12 +92,12 @@ export function StrikesTable({
                 <tr
                   key={strike.id}
                   className={`${
-                    index < strikes.length - 1 ? "border-b border-gray-100" : ""
-                  } hover:bg-gray-50`}
+                    index < strikes.length - 1 ? "border-b border-border" : ""
+                  } hover:bg-muted/20 transition-colors`}
                 >
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-md bg-red-100">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
                         <AlertTriangle className="h-4 w-4 text-red-600" />
                       </div>
                       <div>
@@ -117,7 +117,7 @@ export function StrikesTable({
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-1">
-                      <Zap className="h-4 w-4 text-green-500" />
+                      <Zap className="h-4 w-4 text-green-600" />
                       <span className="text-sm font-medium">
                         -{strike.xpPenalty}
                       </span>
@@ -125,7 +125,7 @@ export function StrikesTable({
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-1">
-                      <CreditCard className="h-4 w-4 text-blue-500" />
+                      <CreditCard className="h-4 w-4 text-blue-600" />
                       <span className="text-sm font-medium">
                         -{strike.pointsPenalty}
                       </span>

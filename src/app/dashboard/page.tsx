@@ -109,8 +109,8 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
         <div className="flex items-center gap-3">
           <IconContainer
             icon={Users}
-            iconColor="text-blue-600"
-            backgroundColor="bg-blue-100"
+            iconColor="text-blue-600 dark:text-blue-400"
+            backgroundColor="bg-blue-100 dark:bg-blue-950/20"
           />
           <CardTitle className="text-lg font-semibold">{data.title}</CardTitle>
         </div>
@@ -175,7 +175,7 @@ function PersonalProgressCard({ data }: { data: PersonalProgressData }) {
           </Button>
           <Button
             size="sm"
-            className="bg-black text-white hover:bg-gray-800 h-10 grow"
+            className="bg-foreground text-background hover:bg-foreground/90 h-10 grow"
           >
             <WandSparkles className="h-4 w-4 mr-2" />
             View Progress

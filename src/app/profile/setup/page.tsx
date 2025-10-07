@@ -118,27 +118,27 @@ export default function ProfileSetupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
             Complete Your Profile
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-muted-foreground">
             Please provide your details to get started
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded relative">
               {error}
             </div>
           )}
 
           {/* Avatar Upload */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               Profile Picture *
             </label>
             <div className="flex items-center space-x-4">
@@ -150,7 +150,7 @@ export default function ProfileSetupPage() {
                     className="object-cover"
                   />
                 ) : (
-                  <AvatarFallback className="bg-gray-200 text-gray-400 text-xs">
+                  <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                     No image
                   </AvatarFallback>
                 )}
@@ -160,11 +160,11 @@ export default function ProfileSetupPage() {
                   type="file"
                   accept="image/*"
                   onChange={handleAvatarChange}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                  className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                   disabled={loading}
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   JPG, PNG or GIF (max 5MB)
                 </p>
               </div>
@@ -175,7 +175,7 @@ export default function ProfileSetupPage() {
           <div>
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-foreground"
             >
               Full Name *
             </label>
@@ -186,7 +186,7 @@ export default function ProfileSetupPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your full name"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="mt-1 block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder:text-muted-foreground bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
               disabled={loading}
             />
           </div>

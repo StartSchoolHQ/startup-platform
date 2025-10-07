@@ -1,43 +1,64 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { BookOpen, TrendingUp } from "lucide-react"
-import { leaderboardData } from "@/data/leaderboard-data"
-import { RankIcon } from "@/components/leaderboard/rank-icon"
-import { ChangeIndicator } from "@/components/leaderboard/change-indicator"
-import { StreakBadge } from "@/components/leaderboard/streak-badge"
-import { LeaderboardEntry } from "@/types/leaderboard"
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { BookOpen, TrendingUp } from "lucide-react";
+import { leaderboardData } from "@/data/leaderboard-data";
+import { RankIcon } from "@/components/leaderboard/rank-icon";
+import { ChangeIndicator } from "@/components/leaderboard/change-indicator";
+import { StreakBadge } from "@/components/leaderboard/streak-badge";
+import { LeaderboardEntry } from "@/types/leaderboard";
 
 function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
   return (
-         <div className={`grid gap-4 p-3 border-b border-gray-100 items-center ${
-       entry.user.isCurrentUser ? 'bg-blue-50' : ''
-                                               }`} style={{ gridTemplateColumns: '80px 200px 1fr 1fr 1fr 1fr 1fr 100px' }}>
-             {/* Rank */}
-       <div className="flex items-center gap-2">
-         <RankIcon 
-           type={entry.rankIcon || "none"} 
-           rank={entry.rank} 
-           changeDirection={entry.change.direction}
-         />
-       </div>
+    <div
+      className={`grid gap-4 p-3 border-b border-border items-center ${
+        entry.user.isCurrentUser ? "bg-blue-50" : ""
+      }`}
+      style={{ gridTemplateColumns: "80px 200px 1fr 1fr 1fr 1fr 1fr 100px" }}
+    >
+      {/* Rank */}
+      <div className="flex items-center gap-2">
+        <RankIcon
+          type={entry.rankIcon || "none"}
+          rank={entry.rank}
+          changeDirection={entry.change.direction}
+        />
+      </div>
 
       {/* User */}
       <div className="flex items-center gap-3">
-                 <Avatar className="h-8 w-8">
-           <AvatarImage src="/avatars/john-doe.jpg" alt={entry.user.name} />
-           <AvatarFallback>{entry.user.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
-         </Avatar>
+        <Avatar className="h-8 w-8">
+          <AvatarImage src="/avatars/john-doe.jpg" alt={entry.user.name} />
+          <AvatarFallback>
+            {entry.user.name
+              .split(" ")
+              .map((n: string) => n[0])
+              .join("")}
+          </AvatarFallback>
+        </Avatar>
         <div>
           <div className="flex items-center gap-2">
             <span className="font-medium text-sm">{entry.user.name}</span>
             {entry.user.isCurrentUser && (
-              <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700">You</Badge>
+              <Badge
+                variant="secondary"
+                className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700"
+              >
+                You
+              </Badge>
             )}
           </div>
-          <span className="text-xs text-gray-500">{entry.user.teams}</span>
+          <span className="text-xs text-muted-foreground">
+            {entry.user.teams}
+          </span>
         </div>
       </div>
 
@@ -45,7 +66,9 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
       <div>
         <div className="flex items-center gap-1">
           <span className="text-green-600 text-xs">⚡</span>
-          <span className="font-semibold text-sm">{entry.xp.current.toLocaleString()}</span>
+          <span className="font-semibold text-sm">
+            {entry.xp.current.toLocaleString()}
+          </span>
         </div>
         <div className="flex items-center gap-1 text-xs text-green-500">
           <TrendingUp className="h-3 w-3" />
@@ -57,7 +80,9 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
       <div>
         <div className="flex items-center gap-1">
           <span className="text-blue-600 text-xs">💎</span>
-          <span className="font-semibold text-sm">{entry.points.current.toLocaleString()}</span>
+          <span className="font-semibold text-sm">
+            {entry.points.current.toLocaleString()}
+          </span>
         </div>
         <div className="flex items-center gap-1 text-xs text-blue-500">
           <TrendingUp className="h-3 w-3" />
@@ -69,7 +94,9 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
       <div>
         <div className="flex items-center gap-1">
           <span className="text-yellow-600 text-xs">🏆</span>
-          <span className="font-semibold text-sm">{entry.achievements.current}</span>
+          <span className="font-semibold text-sm">
+            {entry.achievements.current}
+          </span>
         </div>
         <div className="flex items-center gap-1 text-xs text-yellow-500">
           <TrendingUp className="h-3 w-3" />
@@ -96,10 +123,13 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
 
       {/* Change */}
       <div className="flex justify-center">
-        <ChangeIndicator direction={entry.change.direction} amount={entry.change.amount} />
+        <ChangeIndicator
+          direction={entry.change.direction}
+          amount={entry.change.amount}
+        />
       </div>
     </div>
-  )
+  );
 }
 
 export default function LeaderboardPage() {
@@ -132,29 +162,34 @@ export default function LeaderboardPage() {
         </Button>
       </div>
 
-             {/* Leaderboard Table */}
-       <Card className="border-none shadow-none">
-         <CardContent className="p-0">
-           {/* Table Header */}
-                       <div className="grid gap-4 p-3 border-b border-gray-200 text-sm font-medium text-gray-600" style={{ gridTemplateColumns: '80px 200px 1fr 1fr 1fr 1fr 1fr 100px' }}>
-             <div>Rank</div>
-             <div>User</div>
-             <div>XP</div>
-             <div>Points</div>
-             <div>Achievements</div>
-             <div>Tasks</div>
-             <div>Streak</div>
-             <div className="text-center">Change</div>
-           </div>
+      {/* Leaderboard Table */}
+      <Card className="border-none shadow-none">
+        <CardContent className="p-0">
+          {/* Table Header */}
+          <div
+            className="grid gap-4 p-3 border-b border-border text-sm font-medium text-muted-foreground"
+            style={{
+              gridTemplateColumns: "80px 200px 1fr 1fr 1fr 1fr 1fr 100px",
+            }}
+          >
+            <div>Rank</div>
+            <div>User</div>
+            <div>XP</div>
+            <div>Points</div>
+            <div>Achievements</div>
+            <div>Tasks</div>
+            <div>Streak</div>
+            <div className="text-center">Change</div>
+          </div>
 
-           {/* Table Rows */}
-           <div>
-             {leaderboardData.map((item) => (
-               <LeaderboardRow key={item.rank} entry={item} />
-             ))}
-           </div>
-         </CardContent>
-       </Card>
+          {/* Table Rows */}
+          <div>
+            {leaderboardData.map((item) => (
+              <LeaderboardRow key={item.rank} entry={item} />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  )
-} 
+  );
+}

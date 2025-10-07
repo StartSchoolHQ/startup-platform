@@ -29,8 +29,8 @@ export function ProductCard({ product }: ProductCardProps) {
             variant={product.status === "Active" ? "default" : "secondary"}
             className={
               product.status === "Active"
-                ? "bg-green-100 text-green-800 hover:bg-green-100"
-                : "bg-gray-100 text-gray-800"
+                ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
+                : "bg-muted text-muted-foreground"
             }
           >
             {product.status}
@@ -42,8 +42,8 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* Metrics */}
         <div className="space-y-4">
           {/* Clients */}
-          <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-100">
+          <div className="flex items-center gap-3 border border-border p-2 rounded-md">
+            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
               <Users className="h-4 w-4 text-blue-600" />
             </div>
             <div>
@@ -55,8 +55,8 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           {/* Revenue */}
-          <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-green-100">
+          <div className="flex items-center gap-3 border border-border p-2 rounded-md">
+            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
               <DollarSign className="h-4 w-4 text-green-600" />
             </div>
             <div>
@@ -70,8 +70,8 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           {/* Points */}
-          <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-orange-100">
+          <div className="flex items-center gap-3 border border-border p-2 rounded-md">
+            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
               <Trophy className="h-4 w-4 text-orange-600" />
             </div>
             <div>
@@ -90,7 +90,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* View Product Button */}
         <Button
-          className="bg-black text-white hover:bg-gray-800"
+          className="bg-foreground text-background hover:bg-foreground/90"
           size="sm"
           asChild
         >

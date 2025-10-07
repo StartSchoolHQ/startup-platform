@@ -28,17 +28,19 @@ function TaskRow({ task }: { task: Task }) {
       case "easy":
         return {
           badgeText: "Easy",
-          badgeClass: "bg-green-100 text-green-800",
+          badgeClass:
+            "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200",
         };
       case "medium":
         return {
           badgeText: "Medium",
-          badgeClass: "bg-yellow-100 text-yellow-800",
+          badgeClass:
+            "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200",
         };
       case "hard":
         return {
           badgeText: "Hard",
-          badgeClass: "bg-red-100 text-red-800",
+          badgeClass: "bg-destructive/10 text-destructive",
         };
     }
   };
@@ -48,14 +50,15 @@ function TaskRow({ task }: { task: Task }) {
       case "done":
         return {
           buttonText: "Done",
-          buttonClass: "bg-green-600 text-white hover:bg-green-700",
+          buttonClass:
+            "bg-emerald-600 dark:bg-emerald-700 text-white hover:bg-emerald-700 dark:hover:bg-emerald-800",
           icon: <CheckCircle className="h-3 w-3 mr-1" />,
         };
       case "complete":
         return {
           buttonText: "Complete",
           buttonClass:
-            "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50",
+            "bg-background border border-input text-foreground hover:bg-accent hover:text-accent-foreground",
           icon: <Clock className="h-3 w-3 mr-1" />,
         };
     }
@@ -65,15 +68,15 @@ function TaskRow({ task }: { task: Task }) {
   const actionConfig = getActionConfig(task.action);
 
   return (
-    <tr className="border-b border-gray-100 hover:bg-gray-50">
+    <tr className="border-b border-border hover:bg-muted/50">
       <td className="py-4 px-4">
         <div className="flex items-center gap-3">
           <div
             className={`flex items-center justify-center w-8 h-8 rounded-md ${
-              task.action === "done" ? "bg-green-100" : "bg-gray-100"
+              task.action === "done" ? "bg-green-100" : "bg-muted"
             }`}
           >
-            <Medal className="h-4 w-4 text-purple-600" />
+            <Medal className="h-4 w-4 text-primary" />
           </div>
           <div>
             <div className="font-medium text-sm">{task.title}</div>
@@ -90,13 +93,13 @@ function TaskRow({ task }: { task: Task }) {
       </td>
       <td className="py-4 px-4">
         <div className="flex items-center gap-1">
-          <Zap className="h-4 w-4 text-green-500" />
+          <Zap className="h-4 w-4 text-green-600" />
           <span className="text-sm font-medium">{task.xp}</span>
         </div>
       </td>
       <td className="py-4 px-4">
         <div className="flex items-center gap-1">
-          <Banknote className="h-4 w-4 text-blue-500" />
+          <Banknote className="h-4 w-4 text-blue-600" />
           <span className="text-sm font-medium">{task.points}</span>
         </div>
       </td>
@@ -120,7 +123,7 @@ function WeeklyReportRow({ report }: { report: WeeklyReport }) {
         return {
           buttonText: "Complete",
           buttonClass:
-            "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50",
+            "bg-background border border-border text-foreground hover:bg-accent",
           icon: <Clock className="h-3 w-3 mr-1" />,
         };
       case "done":
@@ -132,7 +135,8 @@ function WeeklyReportRow({ report }: { report: WeeklyReport }) {
       case "missed":
         return {
           buttonText: "Missed",
-          buttonClass: "bg-red-600 text-white hover:bg-red-700",
+          buttonClass:
+            "bg-destructive text-destructive-foreground hover:bg-destructive/80",
           icon: <AlertTriangle className="h-3 w-3 mr-1" />,
         };
     }
@@ -141,10 +145,10 @@ function WeeklyReportRow({ report }: { report: WeeklyReport }) {
   const actionConfig = getActionConfig(report.status);
 
   return (
-    <tr className="border-b border-gray-100 hover:bg-gray-50">
+    <tr className="border-b border-border hover:bg-muted/50">
       <td className="py-4 px-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold">
+          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">
             W
           </div>
           <div>
@@ -162,7 +166,7 @@ function WeeklyReportRow({ report }: { report: WeeklyReport }) {
         <div className="flex items-center gap-2">
           <Calendar
             className={`h-4 w-4 ${
-              report.iconColor === "green" ? "text-green-500" : "text-red-500"
+              report.iconColor === "green" ? "text-green-600" : "text-red-600"
             }`}
           />
         </div>
@@ -208,7 +212,7 @@ function StrikeRow({ strike }: { strike: Strike }) {
         return {
           buttonText: "Explain",
           buttonClass:
-            "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50",
+            "bg-background border border-border text-foreground hover:bg-accent",
           icon: <Clock className="h-3 w-3 mr-1" />,
         };
     }
@@ -218,7 +222,7 @@ function StrikeRow({ strike }: { strike: Strike }) {
   const actionConfig = getActionConfig(strike.action);
 
   return (
-    <tr className="border-b border-gray-100 hover:bg-gray-50">
+    <tr className="border-b border-border hover:bg-muted/50">
       <td className="py-4 px-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center w-8 h-8 rounded-md bg-red-100">
@@ -278,7 +282,10 @@ export default function MyJourneyPage() {
             <Settings className="h-4 w-4" />
             Set Status
           </Button>
-          <Button size="sm" className="bg-black text-white hover:bg-gray-800">
+          <Button
+            size="sm"
+            className="bg-foreground text-background hover:bg-foreground/80"
+          >
             <FileText className="h-4 w-4 mr-2" />
             Submit Weekly Report
           </Button>
@@ -344,25 +351,25 @@ export default function MyJourneyPage() {
           </div>
 
           {/* Tasks Table */}
-          <div className="bg-white rounded-lg p-6">
+          <div className="bg-card rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">Tasks</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                  <tr className="border-b border-border">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Task
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Difficulty
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       XP
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Points
                     </th>
-                    <th className="text-right py-4 px-4 font-medium text-gray-500">
+                    <th className="text-right py-4 px-4 font-medium text-muted-foreground">
                       Action
                     </th>
                   </tr>
@@ -388,22 +395,22 @@ export default function MyJourneyPage() {
           </div>
 
           {/* Weekly Reports Table */}
-          <div className="bg-white rounded-lg p-6">
+          <div className="bg-card rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">Weekly Reports</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                  <tr className="border-b border-border">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Week
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Date Filled
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Status
                     </th>
-                    <th className="text-right py-4 px-4 font-medium text-gray-500">
+                    <th className="text-right py-4 px-4 font-medium text-muted-foreground">
                       Action
                     </th>
                   </tr>
@@ -429,25 +436,25 @@ export default function MyJourneyPage() {
           </div>
 
           {/* Strikes Table */}
-          <div className="bg-white rounded-lg p-6">
+          <div className="bg-card rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">Strikes</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                  <tr className="border-b border-border">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Strike
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Status
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       XP Penalty
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Points Penalty
                     </th>
-                    <th className="text-right py-4 px-4 font-medium text-gray-500">
+                    <th className="text-right py-4 px-4 font-medium text-muted-foreground">
                       Action
                     </th>
                   </tr>

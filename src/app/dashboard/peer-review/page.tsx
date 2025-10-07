@@ -169,7 +169,7 @@ export default function PeerReviewPage() {
         <TabsContent value="available-tests" className="space-y-6 mt-6">
           {loading ? (
             <div className="text-center py-8">
-              <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
               <p className="text-muted-foreground">
                 Loading available tasks...
               </p>
@@ -178,23 +178,23 @@ export default function PeerReviewPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                  <tr className="border-b border-border">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Task to Test
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Team
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Difficulty
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       XP Reward
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Submitted
                     </th>
-                    <th className="text-right py-4 px-4 font-medium text-gray-500">
+                    <th className="text-right py-4 px-4 font-medium text-muted-foreground">
                       Action
                     </th>
                   </tr>
@@ -220,11 +220,11 @@ export default function PeerReviewPage() {
                         return (
                           <tr
                             key={task.id}
-                            className="border-b border-gray-100 hover:bg-gray-50"
+                            className="border-b border-border hover:bg-muted/50"
                           >
                             <td className="py-4 px-4">
                               <div className="flex items-center gap-3">
-                                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100">
+                                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
                                   <Medal className="h-4 w-4" />
                                 </div>
                                 <div>
@@ -239,7 +239,7 @@ export default function PeerReviewPage() {
                             </td>
                             <td className="py-4 px-4">
                               <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                                 <span className="text-sm font-medium">
                                   {task.teams!.name}
                                 </span>
@@ -255,7 +255,7 @@ export default function PeerReviewPage() {
                             </td>
                             <td className="py-4 px-4">
                               <div className="flex items-center gap-1">
-                                <Zap className="h-4 w-4 text-green-500" />
+                                <Zap className="h-4 w-4 text-green-600" />
                                 <span className="text-sm font-medium">
                                   {task.tasks!.base_xp_reward}
                                 </span>
@@ -291,23 +291,23 @@ export default function PeerReviewPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-4 px-4 font-medium text-gray-500">
+                <tr className="border-b border-border">
+                  <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                     Task to Test
                   </th>
-                  <th className="text-left py-4 px-4 font-medium text-gray-500">
+                  <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                     Tested By
                   </th>
-                  <th className="text-left py-4 px-4 font-medium text-gray-500">
+                  <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                     Difficulty
                   </th>
-                  <th className="text-left py-4 px-4 font-medium text-gray-500">
+                  <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                     XP
                   </th>
-                  <th className="text-left py-4 px-4 font-medium text-gray-500">
+                  <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                     Points
                   </th>
-                  <th className="text-right py-4 px-4 font-medium text-gray-500">
+                  <th className="text-right py-4 px-4 font-medium text-muted-foreground">
                     Action
                   </th>
                 </tr>
@@ -319,11 +319,11 @@ export default function PeerReviewPage() {
                   return (
                     <tr
                       key={test.id}
-                      className="border-b border-gray-100 hover:bg-gray-50"
+                      className="border-b border-border hover:bg-muted/50"
                     >
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
                             <Medal className="h-4 w-4" />
                           </div>
                           <div>
@@ -405,30 +405,30 @@ export default function PeerReviewPage() {
         <TabsContent value="my-tasks" className="space-y-6 mt-6">
           {loading ? (
             <div className="text-center py-8">
-              <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
               <p className="text-muted-foreground">Loading my tasks...</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                  <tr className="border-b border-border">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Task
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Team
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Difficulty
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Status
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-500">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Submitted
                     </th>
-                    <th className="text-right py-4 px-4 font-medium text-gray-500">
+                    <th className="text-right py-4 px-4 font-medium text-muted-foreground">
                       Action
                     </th>
                   </tr>
@@ -454,11 +454,11 @@ export default function PeerReviewPage() {
                         return (
                           <tr
                             key={task.id}
-                            className="border-b border-gray-100 hover:bg-gray-50"
+                            className="border-b border-border hover:bg-muted/50"
                           >
                             <td className="py-4 px-4">
                               <div className="flex items-center gap-3">
-                                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100">
+                                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
                                   <Medal className="h-4 w-4" />
                                 </div>
                                 <div>

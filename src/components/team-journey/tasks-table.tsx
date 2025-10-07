@@ -29,27 +29,27 @@ export function TasksTable({
   const getDifficultyConfig = (difficulty: TaskTableItem["difficulty"]) => {
     switch (difficulty) {
       case "Easy":
-        return "bg-green-100 text-green-800";
+        return "bg-emerald-100 text-emerald-800";
       case "Medium":
         return "bg-yellow-100 text-yellow-800";
       case "Hard":
-        return "bg-red-100 text-red-800";
+        return "bg-destructive/10 text-destructive";
     }
   };
 
   const getStatusConfig = (status: TaskTableItem["status"]) => {
     switch (status) {
       case "Finished":
-        return "bg-green-100 text-green-800";
+        return "bg-emerald-100 text-emerald-800";
       case "In Progress":
         return "bg-blue-100 text-blue-800";
       case "Not Accepted":
-        return "bg-red-100 text-red-800";
+        return "bg-destructive/10 text-destructive";
       case "Peer Review":
         return "bg-purple-100 text-purple-800";
       case "Not Started":
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -58,26 +58,26 @@ export function TasksTable({
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-4 px-4 font-medium text-gray-600">
+            <tr className="border-b border-border">
+              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                 Task
               </th>
-              <th className="text-left py-4 px-4 font-medium text-gray-600">
+              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                 Responsible
               </th>
-              <th className="text-left py-4 px-4 font-medium text-gray-600">
+              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                 Difficulty
               </th>
-              <th className="text-left py-4 px-4 font-medium text-gray-600">
+              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                 XP
               </th>
-              <th className="text-left py-4 px-4 font-medium text-gray-600">
+              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                 Points
               </th>
-              <th className="text-left py-4 px-4 font-medium text-gray-600">
+              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                 Status
               </th>
-              <th className="text-right py-4 px-4 font-medium text-gray-600">
+              <th className="text-right py-4 px-4 font-medium text-muted-foreground">
                 Action
               </th>
             </tr>
@@ -87,13 +87,13 @@ export function TasksTable({
               <tr
                 key={task.id}
                 className={`${
-                  index < tasks.length - 1 ? "border-b border-gray-100" : ""
-                } hover:bg-gray-50`}
+                  index < tasks.length - 1 ? "border-b border-border" : ""
+                } hover:bg-muted/20 transition-colors`}
               >
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-md bg-green-100">
-                      <Medal className="h-4 w-4 text-green-600" />
+                    <div className="flex items-center justify-center w-8 h-8 rounded-md bg-emerald-100">
+                      <Medal className="h-4 w-4 text-emerald-600" />
                     </div>
                     <div>
                       <div className="font-medium text-sm">{task.title}</div>
@@ -111,7 +111,7 @@ export function TasksTable({
                           src={task.responsible.avatar}
                           alt={task.responsible.name}
                         />
-                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
+                        <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
                           {task.responsible.name
                             .split(" ")
                             .map((n) => n[0])
@@ -174,13 +174,13 @@ export function TasksTable({
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-1">
-                    <Zap className="h-4 w-4 text-green-500" />
+                    <Zap className="h-4 w-4 text-emerald-600" />
                     <span className="text-sm font-medium">{task.xp}</span>
                   </div>
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-1">
-                    <CreditCard className="h-4 w-4 text-blue-500" />
+                    <CreditCard className="h-4 w-4 text-blue-600" />
                     <span className="text-sm font-medium">{task.points}</span>
                   </div>
                 </td>
@@ -198,7 +198,7 @@ export function TasksTable({
                       <>
                         <Button
                           size="sm"
-                          className="bg-green-600 text-white hover:bg-green-700 text-xs"
+                          className="bg-emerald-600 text-white hover:bg-emerald-700 text-xs"
                           disabled
                         >
                           <CheckCircle className="h-3 w-3 mr-1" />

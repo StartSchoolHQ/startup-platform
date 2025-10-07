@@ -105,7 +105,7 @@ export default function TeamJourneyPage() {
           <h1 className="text-2xl font-bold">My Products</h1>
         </div>
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Loading...</div>
+          <div className="text-muted-foreground">Loading...</div>
         </div>
       </div>
     );
@@ -133,7 +133,7 @@ export default function TeamJourneyPage() {
             <div className="flex items-center gap-3">
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder="Search..."
                   className="pl-10 w-64"
@@ -157,7 +157,7 @@ export default function TeamJourneyPage() {
 
               {/* Add Product */}
               <Button
-                className="gap-2 bg-black text-white hover:bg-gray-800"
+                className="gap-2 bg-foreground text-background hover:bg-foreground/80"
                 onClick={() => setShowCreateTeamDialog(true)}
               >
                 <Plus className="h-4 w-4" />
@@ -169,7 +169,7 @@ export default function TeamJourneyPage() {
           {/* Tab Content */}
           <TabsContent value="all-products" className="space-y-4 mt-6">
             {allProducts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 No products found
               </div>
             ) : (
@@ -183,7 +183,7 @@ export default function TeamJourneyPage() {
 
           <TabsContent value="my-products" className="space-y-4 mt-6">
             {myProducts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 You haven&apos;t created any products yet. Click &quot;Add
                 Product&quot; to get started!
               </div>
@@ -198,7 +198,7 @@ export default function TeamJourneyPage() {
 
           <TabsContent value="archive" className="space-y-4 mt-6">
             {archivedProducts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 No archived products
               </div>
             ) : (

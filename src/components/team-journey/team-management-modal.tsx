@@ -95,26 +95,26 @@ export function TeamManagementModal({
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "founder":
-        return <Crown className="h-4 w-4 text-yellow-500" />;
+        return <Crown className="h-4 w-4 text-yellow-600" />;
       case "co_founder":
-        return <Shield className="h-4 w-4 text-blue-500" />;
+        return <Shield className="h-4 w-4 text-blue-600" />;
       case "leader":
-        return <Shield className="h-4 w-4 text-green-500" />;
+        return <Shield className="h-4 w-4 text-emerald-600" />;
       default:
-        return <User className="h-4 w-4 text-gray-500" />;
+        return <User className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "founder":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80";
       case "co_founder":
-        return "bg-blue-100 text-blue-800 hover:bg-blue-100";
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100/80";
       case "leader":
-        return "bg-green-100 text-green-800 hover:bg-green-100";
+        return "bg-emerald-100 text-emerald-800 hover:bg-emerald-100/80";
       default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
+        return "bg-muted text-muted-foreground hover:bg-muted/80";
     }
   };
 
@@ -263,7 +263,7 @@ export function TeamManagementModal({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
                     onClick={handleDisbandTeam}
                   >
                     <AlertTriangle className="h-4 w-4 mr-2" />
@@ -280,7 +280,7 @@ export function TeamManagementModal({
                     <div className="flex items-center gap-3">
                       <Avatar className="w-12 h-12">
                         <AvatarImage src={member.users?.avatar_url || ""} />
-                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold">
+                        <AvatarFallback className="bg-primary text-primary-foreground font-bold">
                           {member.users?.name
                             ? member.users.name
                                 .split(" ")
@@ -344,7 +344,7 @@ export function TeamManagementModal({
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleKickMember(member.user_id)}
-                            className="text-red-600 focus:text-red-600"
+                            className="text-destructive focus:text-destructive"
                           >
                             <UserMinus className="h-4 w-4 mr-2" />
                             Remove from Team
@@ -400,7 +400,7 @@ export function TeamManagementModal({
                       <div className="flex items-center gap-3">
                         <Avatar className="w-10 h-10">
                           <AvatarImage src={user.avatar_url || ""} />
-                          <AvatarFallback className="bg-gradient-to-r from-blue-400 to-purple-400 text-white font-bold">
+                          <AvatarFallback className="bg-secondary text-secondary-foreground font-bold">
                             {user.name
                               ? user.name
                                   .split(" ")
