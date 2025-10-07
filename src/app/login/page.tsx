@@ -92,8 +92,8 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden p-4 bg-[#09090b]">
-      {/* Grid background */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgb(0_0_0/0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgb(0_0_0/0.05)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgb(255_255_255/0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgb(255_255_255/0.03)_1px,transparent_1px)] bg-[size:24px_24px]" />
+      {/* Grid background - always dark theme styling */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgb(255_255_255/0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgb(255_255_255/0.03)_1px,transparent_1px)] bg-[size:24px_24px]" />
 
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
@@ -156,17 +156,17 @@ export default function LoginPage() {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="relative z-10 w-full max-w-md"
       >
-        <Card className="border-border/50 bg-card/80 backdrop-blur-xl shadow-2xl">
+        <Card className="border-zinc-800/50 bg-zinc-900/80 backdrop-blur-xl shadow-2xl">
           <CardHeader className="text-center pb-8">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
                 Welcome Back
               </CardTitle>
-              <CardDescription className="text-muted-foreground mt-2">
+              <CardDescription className="text-zinc-400 mt-2">
                 Sign in to continue building your startup
               </CardDescription>
             </motion.div>
@@ -178,7 +178,7 @@ export default function LoginPage() {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg text-sm"
+                  className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm"
                 >
                   {error}
                 </motion.div>
@@ -192,7 +192,7 @@ export default function LoginPage() {
               >
                 <Label
                   htmlFor="email"
-                  className="text-sm font-medium text-foreground"
+                  className="text-sm font-medium text-zinc-200"
                 >
                   Email
                 </Label>
@@ -204,7 +204,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
                   required
-                  className="bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20 transition-all duration-200"
+                  className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-400 focus:border-purple-500 focus:ring-purple-500/20 transition-all duration-200"
                 />
               </motion.div>
 
@@ -216,7 +216,7 @@ export default function LoginPage() {
               >
                 <Label
                   htmlFor="password"
-                  className="text-sm font-medium text-foreground"
+                  className="text-sm font-medium text-zinc-200"
                 >
                   Password
                 </Label>
@@ -228,7 +228,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}
                   required
-                  className="bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20 transition-all duration-200"
+                  className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-400 focus:border-purple-500 focus:ring-purple-500/20 transition-all duration-200"
                 />
               </motion.div>
 
@@ -263,9 +263,9 @@ export default function LoginPage() {
               transition={{ duration: 0.8, delay: 0.6 }}
               className="text-center"
             >
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-zinc-400">
                 Don&apos;t have an account?{" "}
-                <span className="text-primary hover:text-primary/80 cursor-pointer transition-colors">
+                <span className="text-purple-400 hover:text-purple-300 cursor-pointer transition-colors">
                   Sign up
                 </span>
               </p>
