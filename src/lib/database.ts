@@ -351,10 +351,10 @@ export async function isUserTeamMember(
     .eq("team_id", teamId)
     .eq("user_id", userId)
     .is("left_at", null)
-    .single();
+    .maybeSingle();
 
   if (error) {
-    // If no record found, user is not a team member
+    console.error("Error checking team membership:", error);
     return false;
   }
 
@@ -373,9 +373,10 @@ export async function getUserTeamRole(
     .eq("team_id", teamId)
     .eq("user_id", userId)
     .is("left_at", null)
-    .single();
+    .maybeSingle();
 
   if (error) {
+    console.error("Error fetching user team role:", error);
     return null;
   }
 
