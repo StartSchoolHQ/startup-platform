@@ -14,7 +14,6 @@ interface Transaction {
   credits_change: number;
   description: string | null;
   created_at: string;
-  task?: { name: string } | null;
   team?: { name: string } | null;
   achievement?: { name: string } | null;
   revenue_stream?: { product_name: string } | null;
@@ -57,7 +56,7 @@ const formatTransactionDescription = (transaction: Transaction) => {
   
   switch (transaction.type) {
     case 'task':
-      return transaction.task?.name ? `Completed task: ${transaction.task.name}` : 'Task completed';
+      return 'Task completed';
     case 'revenue':
       return transaction.revenue_stream?.product_name 
         ? `Revenue from: ${transaction.revenue_stream.product_name}` 
