@@ -18,8 +18,8 @@
 1. An **External Peer Reviewer** chooses the task to review.
 2. The reviewer clicks **"Accept Testing"**.
 3. **Validation**: The system checks if the reviewer belongs to the team associated with the task.
-   - **If NO**: An error modal is displayed (`Show Modal that you can't do that`). The process stops here for this reviewer.
-   - **If YES**: The reviewer is assigned to the review, and their ID is saved.
+   - **If YES**: An error modal is displayed (`Show Modal that you can't do that - conflict of interest`). The process stops here for this reviewer.
+   - **If NO**: The reviewer is assigned to the review, and their ID is saved (external reviewer approved).
 4. A modal appears containing the original user's submission data and input fields for the review.
 5. The reviewer fills out the form and makes a decision.
 
