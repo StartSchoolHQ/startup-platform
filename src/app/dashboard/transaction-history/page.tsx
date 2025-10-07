@@ -21,13 +21,13 @@ interface Transaction {
 
 const getTransactionIcon = (type: string) => {
   switch (type) {
-    case 'task':
+    case "task":
       return CheckCircle;
-    case 'revenue':
+    case "revenue":
       return DollarSign;
-    case 'validation':
+    case "validation":
       return Trophy;
-    case 'team_cost':
+    case "team_cost":
       return Users;
     default:
       return Star;
@@ -36,16 +36,16 @@ const getTransactionIcon = (type: string) => {
 
 const getTransactionColor = (type: string) => {
   switch (type) {
-    case 'task':
-      return 'text-green-500';
-    case 'revenue':
-      return 'text-blue-500';
-    case 'validation':
-      return 'text-purple-500';
-    case 'team_cost':
-      return 'text-orange-500';
+    case "task":
+      return "text-green-500";
+    case "revenue":
+      return "text-blue-500";
+    case "validation":
+      return "text-purple-500";
+    case "team_cost":
+      return "text-orange-500";
     default:
-      return 'text-gray-500';
+      return "text-gray-500";
   }
 };
 
@@ -53,22 +53,22 @@ const formatTransactionDescription = (transaction: Transaction) => {
   if (transaction.description) {
     return transaction.description;
   }
-  
+
   switch (transaction.type) {
-    case 'task':
-      return 'Task completed';
-    case 'revenue':
-      return transaction.revenue_stream?.product_name 
-        ? `Revenue from: ${transaction.revenue_stream.product_name}` 
-        : 'Revenue earned';
-    case 'validation':
-      return 'Peer validation reward';
-    case 'team_cost':
-      return transaction.team?.name 
-        ? `Team cost for: ${transaction.team.name}` 
-        : 'Team maintenance cost';
+    case "task":
+      return "Task completed";
+    case "revenue":
+      return transaction.revenue_stream?.product_name
+        ? `Revenue from: ${transaction.revenue_stream.product_name}`
+        : "Revenue earned";
+    case "validation":
+      return "Peer validation reward";
+    case "team_cost":
+      return transaction.team?.name
+        ? `Team cost for: ${transaction.team.name}`
+        : "Team maintenance cost";
     default:
-      return 'Transaction';
+      return "Transaction";
   }
 };
 
@@ -80,12 +80,12 @@ export default function TransactionHistoryPage() {
   useEffect(() => {
     const loadTransactions = async () => {
       if (!user?.id) return;
-      
+
       try {
         const data = await getUserTransactions(user.id, 50); // Get last 50 transactions
         setTransactions(data);
       } catch (error) {
-        console.error('Error loading transactions:', error);
+        console.error("Error loading transactions:", error);
       } finally {
         setLoading(false);
       }
@@ -99,7 +99,9 @@ export default function TransactionHistoryPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Transaction History</h1>
-          <p className="text-muted-foreground">Loading your transaction history...</p>
+          <p className="text-muted-foreground">
+            Loading your transaction history...
+          </p>
         </div>
       </div>
     );
@@ -124,10 +126,12 @@ export default function TransactionHistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{user?.total_xp || 0}</div>
-            <p className="text-xs text-muted-foreground">Experience points earned</p>
+            <p className="text-xs text-muted-foreground">
+              Experience points earned
+            </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Credits</CardTitle>
@@ -135,7 +139,9 @@ export default function TransactionHistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{user?.total_credits || 0}</div>
-            <p className="text-xs text-muted-foreground">Available startup capital</p>
+            <p className="text-xs text-muted-foreground">
+              Available startup capital
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -150,7 +156,8 @@ export default function TransactionHistoryPage() {
             <div className="text-center py-8">
               <p className="text-muted-foreground">No transactions yet</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Start completing tasks or joining teams to see your transaction history
+                Start completing tasks or joining teams to see your transaction
+                history
               </p>
             </div>
           ) : (
@@ -158,40 +165,62 @@ export default function TransactionHistoryPage() {
               {transactions.map((transaction) => {
                 const Icon = getTransactionIcon(transaction.type);
                 const iconColor = getTransactionColor(transaction.type);
-                
+
                 return (
-                  <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div
+                    key={transaction.id}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-full bg-muted">
                         <Icon className={`h-4 w-4 ${iconColor}`} />
                       </div>
                       <div>
-                        <p className="font-medium">{formatTransactionDescription(transaction)}</p>
+                        <p className="font-medium">
+                          {formatTransactionDescription(transaction)}
+                        </p>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(transaction.created_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                          {new Date(transaction.created_at).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       {transaction.xp_change !== 0 && (
-                        <Badge variant={transaction.xp_change > 0 ? "default" : "destructive"}>
-                          {transaction.xp_change > 0 ? '+' : ''}{transaction.xp_change} XP
+                        <Badge
+                          variant={
+                            transaction.xp_change > 0
+                              ? "default"
+                              : "destructive"
+                          }
+                        >
+                          {transaction.xp_change > 0 ? "+" : ""}
+                          {transaction.xp_change} XP
                         </Badge>
                       )}
                       {transaction.credits_change !== 0 && (
-                        <Badge variant={transaction.credits_change > 0 ? "default" : "destructive"}>
-                          {transaction.credits_change > 0 ? '+' : ''}{transaction.credits_change} Credits
+                        <Badge
+                          variant={
+                            transaction.credits_change > 0
+                              ? "default"
+                              : "destructive"
+                          }
+                        >
+                          {transaction.credits_change > 0 ? "+" : ""}
+                          {transaction.credits_change} Credits
                         </Badge>
                       )}
                       <Badge variant="outline" className="capitalize">
-                        {transaction.type.replace('_', ' ')}
+                        {transaction.type.replace("_", " ")}
                       </Badge>
                     </div>
                   </div>

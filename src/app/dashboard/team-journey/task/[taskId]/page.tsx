@@ -35,6 +35,8 @@ import {
 import { useAppContext } from "@/contexts/app-context";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { TaskSubmissionModal } from "@/components/tasks/task-submission-modal";
+import { uploadTaskFiles } from "@/lib/file-upload";
 
 interface TaskDetailPageProps {
   params: Promise<{
@@ -49,6 +51,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   const [taskId, setTaskId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [showReassignModal, setShowReassignModal] = useState(false);
+  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [teamMembers, setTeamMembers] = useState<
     Array<{ id: string; name: string; avatar_url?: string }>
   >([]);
@@ -174,16 +177,43 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   };
 
   const handleCompleteTask = async () => {
-    if (!task?.progress_id) return;
+    setShowSubmissionModal(true);
+  };
+
+  const handleSubmissionSubmit = async (submissionData: {
+    description?: string;
+    external_urls: Array<{ url: string; title: string; type: string }>;
+    files: File[];
+    submitted_at: string;
+    [key: string]: unknown;
+  }) => {
+    if (!task?.progress_id || !user?.id) return;
 
     setActionLoading(true);
     try {
-      const success = await completeTask(task.progress_id, {
-        completed_by: user?.id,
+      // Upload files first
+      let uploadedFileUrls: string[] = [];
+      if (submissionData.files.length > 0) {
+        const uploadResults = await uploadTaskFiles(
+          submissionData.files,
+          task.progress_id,
+          user.id
+        );
+        uploadedFileUrls = uploadResults.map((result) => result.url);
+      }
+
+      // Prepare submission data for database
+      const dbSubmissionData = {
+        ...submissionData,
+        files: uploadedFileUrls, // Replace File objects with URLs
+        completed_by: user.id,
         completion_date: new Date().toISOString(),
-        notes: "Task completed",
-      });
+      };
+
+      // Submit to database
+      const success = await completeTask(task.progress_id, dbSubmissionData);
       if (success) {
+        setShowSubmissionModal(false);
         await loadTask(); // Reload task to get updated status
       } else {
         console.error("Failed to complete task");
@@ -591,13 +621,63 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg font-semibold">
-                    History
+                    Task History
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Complete timeline of task lifecycle events
+                  </p>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700">
-                    Similar component to activity Log
-                  </p>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3 p-3 border rounded-lg">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <p className="font-medium">Task was created</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(
+                            task.assigned_at || task.started_at || new Date()
+                          ).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    {task.assigned_at && (
+                      <div className="flex items-start gap-3 p-3 border rounded-lg">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                        <div className="flex-1">
+                          <p className="font-medium">Task was assigned</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(task.assigned_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {task.started_at && (
+                      <div className="flex items-start gap-3 p-3 border rounded-lg">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+                        <div className="flex-1">
+                          <p className="font-medium">Work started</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(task.started_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {task.completed_at && (
+                      <div className="flex items-start gap-3 p-3 border rounded-lg">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                        <div className="flex-1">
+                          <p className="font-medium">
+                            {task.status === "pending_review"
+                              ? "Task submitted for review"
+                              : "Task completed"}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(task.completed_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -861,6 +941,16 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
           </div>
         </div>
       )}
+
+      {/* Task Submission Modal */}
+      <TaskSubmissionModal
+        isOpen={showSubmissionModal}
+        onClose={() => setShowSubmissionModal(false)}
+        onSubmit={handleSubmissionSubmit}
+        taskTitle={task?.title || "Task"}
+        formSchema={task?.submission_form_schema}
+        isLoading={actionLoading}
+      />
     </div>
   );
 }

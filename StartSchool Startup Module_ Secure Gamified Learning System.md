@@ -1,3 +1,4 @@
+
 # **StartSchool Startup Module: Clean Gamified System**
 
 **Core Philosophy**: Build real products, generate real revenue, earn real rewards. Everything else is secondary.

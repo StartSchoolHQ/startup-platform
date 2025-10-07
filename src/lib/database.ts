@@ -135,6 +135,51 @@ export async function createTeam(
 
   console.log("Creating team with:", { founderId, teamName, description });
 
+  // First, check if user is already in an active team
+  try {
+    const { data: existingMembership, error: membershipError } = await supabase
+      .from("team_members")
+      .select(
+        `
+        team_id,
+        teams!inner (
+          name
+        )
+      `
+      )
+      .eq("user_id", founderId)
+      .is("left_at", null)
+      .limit(1);
+
+    if (membershipError) {
+      console.error(
+        "Database error checking team membership:",
+        membershipError
+      );
+      throw new Error(
+        "Unable to verify team membership status. Please try again."
+      );
+    }
+
+    if (existingMembership && existingMembership.length > 0) {
+      const teamName = existingMembership[0].teams?.name || "Unknown Team";
+      throw new Error(
+        `Cannot create team: You are already a member of "${teamName}". Each user can only be part of one team at a time.`
+      );
+    }
+  } catch (error) {
+    // If it's already our custom error, re-throw it
+    if (
+      error instanceof Error &&
+      error.message.startsWith("Cannot create team:")
+    ) {
+      throw error;
+    }
+    // Otherwise, wrap any other error
+    console.error("Unexpected error checking team membership:", error);
+    throw new Error("Unable to verify team membership. Please try again.");
+  }
+
   // Check if user has enough credits (team creation costs 100 credits)
   const TEAM_CREATION_COST = 100;
 
@@ -513,9 +558,10 @@ export async function getArchivedTeamsForJourney(
       status,
       created_at,
       member_count,
-      team_members!inner (
+      team_members (
         user_id,
         team_role,
+        left_at,
         users (
           id,
           name,
@@ -530,7 +576,6 @@ export async function getArchivedTeamsForJourney(
       )
     `
     )
-    .is("team_members.left_at", null)
     .eq("status", "archived");
 
   // Apply search filter
@@ -741,6 +786,54 @@ export async function sendTeamInvitation(
     throw new Error("User with this email not found");
   }
 
+  // Check if the invited user is already in an active team
+  try {
+    const { data: existingMembership, error: membershipError } = await supabase
+      .from("team_members")
+      .select(
+        `
+        team_id,
+        teams!inner (
+          name
+        )
+      `
+      )
+      .eq("user_id", invitedUser.id)
+      .is("left_at", null)
+      .limit(1);
+
+    if (membershipError) {
+      console.error(
+        "Database error checking team membership:",
+        membershipError
+      );
+      throw new Error(
+        "Unable to verify user's team membership status. Please try again."
+      );
+    }
+
+    if (existingMembership && existingMembership.length > 0) {
+      const teamName = existingMembership[0].teams?.name || "Unknown Team";
+      const userName = invitedUser.name || invitedUser.email;
+      throw new Error(
+        `Cannot send invitation: ${userName} is already a member of "${teamName}". Users can only be part of one team at a time.`
+      );
+    }
+  } catch (error) {
+    // If it's already our custom error, re-throw it
+    if (
+      error instanceof Error &&
+      error.message.startsWith("Cannot send invitation:")
+    ) {
+      throw error;
+    }
+    // Otherwise, wrap any other error
+    console.error("Unexpected error checking team membership:", error);
+    throw new Error(
+      "Unable to verify user's team membership. Please try again."
+    );
+  }
+
   // Check if user is already a team member
   const { data: existingMember } = await supabase
     .from("team_members")
@@ -895,6 +988,52 @@ export async function respondToInvitation(
 
   // If accepted, add user to team members
   if (response === "accepted") {
+    // First check if user is already in an active team
+    try {
+      const { data: existingMembership, error: membershipError } =
+        await supabase
+          .from("team_members")
+          .select(
+            `
+          team_id,
+          teams!inner (
+            name
+          )
+        `
+          )
+          .eq("user_id", userId)
+          .is("left_at", null)
+          .limit(1);
+
+      if (membershipError) {
+        console.error(
+          "Database error checking team membership:",
+          membershipError
+        );
+        throw new Error(
+          "Unable to verify your team membership status. Please try again."
+        );
+      }
+
+      if (existingMembership && existingMembership.length > 0) {
+        const teamName = existingMembership[0].teams?.name || "Unknown Team";
+        throw new Error(
+          `Cannot accept invitation: You are already a member of "${teamName}". You can only be part of one team at a time.`
+        );
+      }
+    } catch (error) {
+      // If it's already our custom error, re-throw it
+      if (
+        error instanceof Error &&
+        error.message.startsWith("Cannot accept invitation:")
+      ) {
+        throw error;
+      }
+      // Otherwise, wrap any other error
+      console.error("Unexpected error checking team membership:", error);
+      throw new Error("Unable to verify team membership. Please try again.");
+    }
+
     const { error: memberError } = await supabase.from("team_members").insert({
       team_id: invitation.team_id,
       user_id: userId,
@@ -1012,38 +1151,13 @@ export async function updateTeamMemberRole(
   }
 }
 
-// Disband team (remove all members except founder and mark team as archived)
+// Disband team (remove ALL members including founder and mark team as archived)
 export async function disbandTeam(teamId: string): Promise<void> {
-  const supabase = createClient();
-
-  // Remove all team members except founder
-  const { error: membersError } = await supabase
-    .from("team_members")
-    .delete()
-    .eq("team_id", teamId)
-    .neq("team_role", "founder");
-
-  if (membersError) {
-    console.error("Error removing team members:", membersError);
-    throw membersError;
-  }
-
-  // Archive the team and set member count to 1 (only founder)
-  const { error: teamError } = await supabase
-    .from("teams")
-    .update({
-      status: "archived",
-      member_count: 1,
-    })
-    .eq("id", teamId);
-
-  if (teamError) {
-    console.error("Error archiving team:", teamError);
-    throw teamError;
-  }
+  // Use the proper function that disbands everyone
+  await archiveTeamAndDisbandMembers(teamId);
 }
 
-// Get all users in the app (excluding current team members)
+// Get users available for team invitation (excluding users already in any team, current team members, and those with pending invitations)
 export async function getAvailableUsersForInvitation(
   teamId: string,
   searchTerm: string = ""
@@ -1069,22 +1183,18 @@ export async function getAvailableUsersForInvitation(
 
   const memberIds = teamMembers?.map((member) => member.user_id) || [];
 
-  // Then get all users excluding team members and pending invitations
-  let query = supabase
-    .from("users")
-    .select("id, name, email, avatar_url, graduation_level")
-    .not("id", "in", `(${memberIds.join(",")})`);
+  // Get users who are already in ANY active team (they can't be invited to another team)
+  const { data: usersInTeams, error: teamsError } = await supabase
+    .from("team_members")
+    .select("user_id")
+    .is("left_at", null);
 
-  // Add search filter if provided
-  if (searchTerm) {
-    query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
-  }
+  if (teamsError) throw teamsError;
 
-  const { data: users, error } = await query.limit(20);
+  const usersInActiveTeams =
+    usersInTeams?.map((member) => member.user_id) || [];
 
-  if (error) throw error;
-
-  // Filter out users who already have pending invitations
+  // Get users who have pending invitations to this team
   const { data: pendingInvitations, error: invitationsError } = await supabase
     .from("team_invitations")
     .select("invited_user_id")
@@ -1096,7 +1206,90 @@ export async function getAvailableUsersForInvitation(
   const pendingUserIds =
     pendingInvitations?.map((inv) => inv.invited_user_id) || [];
 
-  return users?.filter((user) => !pendingUserIds.includes(user.id)) || [];
+  // Combine all user IDs to exclude: current team members + users in any team + pending invitations
+  const excludeUserIds = [
+    ...memberIds,
+    ...usersInActiveTeams,
+    ...pendingUserIds,
+  ];
+
+  // Then get all available users (those not in any active team and not already invited)
+  let query = supabase
+    .from("users")
+    .select("id, name, email, avatar_url, graduation_level");
+
+  // Exclude users who are already in teams or have pending invitations
+  if (excludeUserIds.length > 0) {
+    query = query.not("id", "in", `(${excludeUserIds.join(",")})`);
+  }
+
+  // Add search filter if provided
+  if (searchTerm) {
+    query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+  }
+
+  const { data: users, error } = await query.limit(20);
+
+  if (error) throw error;
+
+  return users || [];
+}
+
+// Archive team and disband all members (including founder)
+export async function archiveTeamAndDisbandMembers(teamId: string) {
+  const supabase = createClient();
+
+  try {
+    // Use the database function that runs with elevated privileges
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.rpc as any)("disband_all_team_members", {
+      team_id_param: teamId,
+    });
+
+    if (error) throw error;
+
+    console.log(`Team ${teamId} archived and all members disbanded`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error archiving team and disbanding members:", error);
+    throw error;
+  }
+}
+
+// Get statistics about why users are not available for invitation (for UI display)
+export async function getInvitationAvailabilityStats() {
+  const supabase = createClient();
+
+  // Total users
+  const { count: totalUsers, error: totalError } = await supabase
+    .from("users")
+    .select("*", { count: "exact", head: true });
+
+  if (totalError) throw totalError;
+
+  // Users in active teams
+  const { count: usersInTeams, error: teamsError } = await supabase
+    .from("team_members")
+    .select("user_id", { count: "exact", head: true })
+    .is("left_at", null);
+
+  if (teamsError) throw teamsError;
+
+  // Users with pending invitations
+  const { count: usersWithPendingInvites, error: invitesError } = await supabase
+    .from("team_invitations")
+    .select("invited_user_id", { count: "exact", head: true })
+    .eq("status", "pending");
+
+  if (invitesError) throw invitesError;
+
+  return {
+    totalUsers: totalUsers || 0,
+    usersInTeams: usersInTeams || 0,
+    usersWithPendingInvites: usersWithPendingInvites || 0,
+    availableUsers:
+      (totalUsers || 0) - (usersInTeams || 0) - (usersWithPendingInvites || 0),
+  };
 }
 
 // Send team invitation by user ID (for internal use)
@@ -1183,4 +1376,338 @@ export async function sendTeamInvitationById(
     success: true,
     message: `Invitation sent to ${invitedUser.name || invitedUser.email}`,
   };
+}
+
+// Peer Review functions
+export async function getAvailableTasksForReview(userId: string) {
+  const supabase = createClient();
+
+  // First, get the user's active team (should be only one)
+  const { data: userTeams, error: userTeamsError } = await supabase
+    .from("team_members")
+    .select("team_id")
+    .eq("user_id", userId)
+    .is("left_at", null);
+
+  if (userTeamsError) {
+    console.error("Error fetching user teams:", userTeamsError);
+    throw userTeamsError;
+  }
+
+  const userTeamIds = userTeams?.map((tm) => tm.team_id) || [];
+
+  // Business rule: User should only be in one active team
+  if (userTeamIds.length > 1) {
+    console.warn(
+      `User ${userId} is in multiple teams: ${userTeamIds.join(
+        ", "
+      )}. This should be cleaned up.`
+    );
+  }
+
+  // Get tasks available for peer review (ONLY from teams user is NOT a member of)
+  // External Peer Reviewer = someone from a different team than the submitting team
+  let query = supabase
+    .from("team_task_progress" as never)
+    .select(
+      `
+      id,
+      task_id,
+      team_id,
+      assigned_to_user_id,
+      completed_at,
+      submission_data,
+      tasks(
+        id,
+        title,
+        description,
+        difficulty_level,
+        base_xp_reward,
+        category
+      ),
+      teams(
+        id,
+        name
+      )
+    `
+    )
+    .eq("status", "pending_review");
+
+  // Users can only review tasks from teams they are NOT members of
+  if (userTeamIds.length > 0) {
+    userTeamIds.forEach((teamId) => {
+      query = query.neq("team_id", teamId);
+    });
+  }
+  // If user is not in any active team, they can review tasks from all teams (external to all)
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching available tasks for review:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+// Database cleanup function for multiple team memberships
+export async function getUsersWithMultipleActiveTeams() {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("team_members")
+    .select(
+      `
+      user_id,
+      team_id,
+      joined_at,
+      users!inner(email, name),
+      teams!inner(name)
+    `
+    )
+    .is("left_at", null);
+
+  if (error) throw error;
+
+  type UserTeamData = {
+    user: { email: string; name: string | null };
+    teams: Array<{
+      team_id: string;
+      team_name: string;
+      joined_at: string;
+    }>;
+  };
+
+  // Group by user_id and find those with multiple active memberships
+  const userTeamCounts = data?.reduce(
+    (acc: Record<string, UserTeamData>, member) => {
+      if (!acc[member.user_id]) {
+        acc[member.user_id] = {
+          user: member.users,
+          teams: [],
+        };
+      }
+      acc[member.user_id].teams.push({
+        team_id: member.team_id,
+        team_name: member.teams.name,
+        joined_at: member.joined_at,
+      });
+      return acc;
+    },
+    {} as Record<string, UserTeamData>
+  );
+
+  // Filter to only users with multiple teams
+  const problematicUsers = Object.entries(userTeamCounts || {})
+    .filter(([, data]) => data.teams.length > 1)
+    .map(([user_id, data]) => ({
+      user_id,
+      ...data,
+    }));
+
+  return problematicUsers;
+}
+
+export async function archiveUserTeamMembership(
+  userId: string,
+  teamId: string
+) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("team_members")
+    .update({ left_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .eq("team_id", teamId)
+    .is("left_at", null);
+
+  if (error) throw error;
+}
+
+// Helper function to check if user is already in an active team
+export async function isUserInActiveTeam(userId: string): Promise<{
+  isInTeam: boolean;
+  teamName?: string;
+  teamId?: string;
+}> {
+  const supabase = createClient();
+
+  const { data: membership, error } = await supabase
+    .from("team_members")
+    .select(
+      `
+      team_id,
+      teams!inner(name)
+    `
+    )
+    .eq("user_id", userId)
+    .is("left_at", null)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return {
+    isInTeam: !!membership,
+    teamName: membership?.teams?.name,
+    teamId: membership?.team_id,
+  };
+}
+
+// Check if user has active team membership (business rule: only one active team)
+export async function getUserActiveTeam(userId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("team_members")
+    .select(
+      `
+      team_id,
+      joined_at,
+      team_role,
+      teams!inner(id, name, description, member_count)
+    `
+    )
+    .eq("user_id", userId)
+    .is("left_at", null);
+
+  if (error) throw error;
+
+  if (data && data.length > 1) {
+    console.warn(
+      `User ${userId} has multiple active teams: ${data
+        .map((d) => d.teams.name)
+        .join(", ")}`
+    );
+  }
+
+  return data?.[0] || null; // Return first active team (should be only one)
+}
+
+// Validate team invitation (enforce one active team rule)
+export async function validateTeamInvitation(userId: string) {
+  const activeTeam = await getUserActiveTeam(userId);
+
+  if (activeTeam) {
+    return {
+      valid: false,
+      error: `User is already a member of "${activeTeam.teams.name}". Users can only be in one active team.`,
+      currentTeam: activeTeam.teams,
+    };
+  }
+
+  return { valid: true };
+}
+
+// Database cleanup: Keep most recent team membership and archive others
+export async function cleanupMultipleTeamMemberships(dryRun: boolean = true) {
+  const problematicUsers = await getUsersWithMultipleActiveTeams();
+  const cleanupResults = [];
+
+  for (const user of problematicUsers) {
+    // Sort teams by joined_at desc (most recent first)
+    const sortedTeams = user.teams.sort(
+      (a, b) =>
+        new Date(b.joined_at).getTime() - new Date(a.joined_at).getTime()
+    );
+
+    const keepTeam = sortedTeams[0]; // Keep most recent
+    const archiveTeams = sortedTeams.slice(1); // Archive the rest
+
+    const result: {
+      user_id: string;
+      user_email: string;
+      user_name: string | null;
+      keepTeam: string;
+      archiveTeams: string[];
+      totalTeams: number;
+      error?: string;
+    } = {
+      user_id: user.user_id,
+      user_email: user.user.email,
+      user_name: user.user.name,
+      keepTeam: keepTeam.team_name,
+      archiveTeams: archiveTeams.map((t) => t.team_name),
+      totalTeams: sortedTeams.length,
+    };
+
+    if (!dryRun) {
+      // Actually perform the cleanup
+      for (const team of archiveTeams) {
+        try {
+          await archiveUserTeamMembership(user.user_id, team.team_id);
+          console.log(
+            `Archived ${user.user.email} from team "${team.team_name}"`
+          );
+        } catch (error) {
+          console.error(
+            `Failed to archive ${user.user.email} from team "${team.team_name}":`,
+            error
+          );
+          result.error = `Failed to archive from ${team.team_name}`;
+        }
+      }
+    }
+
+    cleanupResults.push(result);
+  }
+
+  return {
+    totalProblematicUsers: problematicUsers.length,
+    dryRun,
+    results: cleanupResults,
+  };
+}
+
+// Leave all active teams (for cleanup purposes)
+export async function leaveAllActiveTeams(userId: string) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("team_members")
+    .update({ left_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .is("left_at", null);
+
+  if (error) throw error;
+  return "Left all active teams";
+}
+
+export async function getMySubmittedTasksForReview(userId: string) {
+  const supabase = createClient();
+
+  // Get user's own tasks that are pending review
+  const { data, error } = await supabase
+    .from("team_task_progress" as never)
+    .select(
+      `
+      id,
+      task_id,
+      team_id,
+      assigned_to_user_id,
+      completed_at,
+      submission_data,
+      tasks!inner(
+        id,
+        title,
+        description,
+        difficulty_level,
+        base_xp_reward,
+        category
+      ),
+      teams!inner(
+        id,
+        name
+      )
+    `
+    )
+    .eq("status", "pending_review")
+    .eq("assigned_to_user_id", userId);
+
+  if (error) {
+    console.error("Error fetching my submitted tasks:", error);
+    throw error;
+  }
+
+  return data || [];
 }

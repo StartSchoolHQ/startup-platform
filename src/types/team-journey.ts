@@ -82,6 +82,17 @@ export interface TeamTask {
     url: string;
     description: string;
   }>;
+  submission_form_schema?: {
+    fields: Array<{
+      name: string;
+      type: "text" | "textarea" | "url_list" | "file";
+      label: string;
+      placeholder?: string;
+      required?: boolean;
+      multiple?: boolean;
+      accept?: string;
+    }>;
+  };
 
   // Team progress data (from team_task_progress table)
   status: TaskStatus;
