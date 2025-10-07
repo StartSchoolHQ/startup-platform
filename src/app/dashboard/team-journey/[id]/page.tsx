@@ -45,6 +45,8 @@ import { StatsCard } from "@/types/dashboard";
 import { useEffect, useState, useCallback } from "react";
 import { useAppContext } from "@/contexts/app-context";
 import { hasUserSubmittedThisWeek } from "@/lib/weekly-reports";
+import { getTeamTasks, assignTaskToMember } from "@/lib/tasks";
+import { TaskTableItem } from "@/types/team-journey";
 
 interface ProductDetailPageProps {
   params: Promise<{
@@ -89,6 +91,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [memberSubmissionStatus, setMemberSubmissionStatus] = useState<
     Record<string, boolean>
   >({});
+  const [tasks, setTasks] = useState<TaskTableItem[]>([]);
+  const [loadingTasks, setLoadingTasks] = useState(false);
 
   // Extract ID from params
   useEffect(() => {
@@ -161,6 +165,39 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     }
   }, [teamId, team?.members]);
 
+  // Load team tasks from database
+  const loadTasks = useCallback(async () => {
+    if (!teamId) return;
+
+    setLoadingTasks(true);
+    try {
+      const teamTasks = await getTeamTasks(teamId);
+      setTasks(teamTasks);
+    } catch (error) {
+      console.error("Error loading tasks:", error);
+    } finally {
+      setLoadingTasks(false);
+    }
+  }, [teamId]);
+
+  // Handle task assignment
+  const handleAssignTask = useCallback(
+    async (taskId: string, userId: string) => {
+      try {
+        const success = await assignTaskToMember(taskId, userId);
+        if (success) {
+          // Reload tasks to show updated assignment
+          await loadTasks();
+        } else {
+          console.error("Failed to assign task");
+        }
+      } catch (error) {
+        console.error("Error assigning task:", error);
+      }
+    },
+    [loadTasks]
+  );
+
   useEffect(() => {
     loadTeam();
   }, [loadTeam]);
@@ -172,11 +209,14 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     if (team?.members) {
       checkAllMemberStatuses();
     }
+    // Load tasks when team is loaded
+    loadTasks();
   }, [
     isTeamMember,
     checkWeeklyReportStatus,
     checkAllMemberStatuses,
     team?.members,
+    loadTasks,
   ]);
 
   if (loading) {
@@ -647,65 +687,24 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           </div>
 
           {/* Tasks Table */}
-          <TasksTable
-            isTeamMember={isTeamMember}
-            tasks={[
-              {
-                id: "1",
-                title: "Launch on Product Hunt",
-                description: "Launch Achievements",
-                difficulty: "Easy",
-                xp: 50,
-                points: 25,
-                action: "complete",
-                hasTips: true,
-              },
-              {
-                id: "2",
-                title: "Random Task",
-                description: "Launch Achievements",
-                responsible: {
-                  name: "John Doe",
-                  avatar: "/avatars/john-doe.jpg",
-                  date: "14.07",
-                },
-                difficulty: "Medium",
-                xp: 50,
-                points: 25,
-                action: "done",
-              },
-              {
-                id: "3",
-                title: "Random Task",
-                description: "Launch Achievements",
-                difficulty: "Hard",
-                xp: 50,
-                points: 25,
-                action: "complete",
-                hasTips: true,
-              },
-              {
-                id: "4",
-                title: "Random Task",
-                description: "Launch Achievements",
-                difficulty: "Easy",
-                xp: 50,
-                points: 25,
-                action: "complete",
-                hasTips: true,
-              },
-              {
-                id: "5",
-                title: "Random Task",
-                description: "Launch Achievements",
-                difficulty: "Easy",
-                xp: 50,
-                points: 25,
-                action: "complete",
-                hasTips: true,
-              },
-            ]}
-          />
+          {loadingTasks ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-gray-500">Loading tasks...</div>
+            </div>
+          ) : (
+            <TasksTable
+              isTeamMember={isTeamMember}
+              tasks={tasks}
+              teamMembers={
+                team?.members?.map((member) => ({
+                  id: member.user_id,
+                  name: member.users?.name || "Unknown User",
+                  avatar: member.users?.avatar_url || "/avatars/john-doe.jpg",
+                })) || []
+              }
+              onAssignTask={handleAssignTask}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="weekly-reports" className="space-y-6 mt-6">

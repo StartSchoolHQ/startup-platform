@@ -1,31 +1,32 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Medal, CheckCircle, Zap, CreditCard } from "lucide-react";
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  responsible?: {
-    name: string;
-    avatar: string;
-    date: string;
-  };
-  difficulty: "Easy" | "Medium" | "Hard";
-  xp: number;
-  points: number;
-  action: "complete" | "done";
-  hasTips?: boolean;
-}
+import { TaskTableItem } from "@/types/team-journey";
+import { useRouter } from "next/navigation";
 
 interface TasksTableProps {
-  tasks: Task[];
+  tasks: TaskTableItem[];
   isTeamMember?: boolean;
+  teamMembers?: Array<{ id: string; name: string; avatar: string }>;
+  onAssignTask?: (taskId: string, userId: string) => void;
 }
 
-export function TasksTable({ tasks, isTeamMember = false }: TasksTableProps) {
-  const getDifficultyConfig = (difficulty: Task["difficulty"]) => {
+export function TasksTable({
+  tasks,
+  isTeamMember = false,
+  teamMembers = [],
+  onAssignTask,
+}: TasksTableProps) {
+  const router = useRouter();
+  const getDifficultyConfig = (difficulty: TaskTableItem["difficulty"]) => {
     switch (difficulty) {
       case "Easy":
         return "bg-green-100 text-green-800";
@@ -33,6 +34,22 @@ export function TasksTable({ tasks, isTeamMember = false }: TasksTableProps) {
         return "bg-yellow-100 text-yellow-800";
       case "Hard":
         return "bg-red-100 text-red-800";
+    }
+  };
+
+  const getStatusConfig = (status: TaskTableItem["status"]) => {
+    switch (status) {
+      case "Finished":
+        return "bg-green-100 text-green-800";
+      case "In Progress":
+        return "bg-blue-100 text-blue-800";
+      case "Not Accepted":
+        return "bg-red-100 text-red-800";
+      case "Peer Review":
+        return "bg-purple-100 text-purple-800";
+      case "Not Started":
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -56,6 +73,9 @@ export function TasksTable({ tasks, isTeamMember = false }: TasksTableProps) {
               </th>
               <th className="text-left py-4 px-4 font-medium text-gray-600">
                 Points
+              </th>
+              <th className="text-left py-4 px-4 font-medium text-gray-600">
+                Status
               </th>
               <th className="text-right py-4 px-4 font-medium text-gray-600">
                 Action
@@ -108,8 +128,40 @@ export function TasksTable({ tasks, isTeamMember = false }: TasksTableProps) {
                         </div>
                       </div>
                     </div>
+                  ) : isTeamMember && task.isAvailable ? (
+                    <Select
+                      onValueChange={(userId) => {
+                        if (onAssignTask) {
+                          onAssignTask(task.id, userId);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-[140px] h-8 text-xs">
+                        <SelectValue placeholder="Choose Member" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teamMembers.map((member) => (
+                          <SelectItem key={member.id} value={member.id}>
+                            <div className="flex items-center gap-2">
+                              <Avatar className="w-4 h-4">
+                                <AvatarImage src={member.avatar} />
+                                <AvatarFallback className="text-xs">
+                                  {member.name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span>{member.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   ) : (
-                    <span className="text-sm text-muted-foreground">N/A</span>
+                    <span className="text-sm text-muted-foreground">
+                      {task.isAvailable === false ? "Locked" : "Choose Member"}
+                    </span>
                   )}
                 </td>
                 <td className="py-4 px-4">
@@ -133,11 +185,20 @@ export function TasksTable({ tasks, isTeamMember = false }: TasksTableProps) {
                   </div>
                 </td>
                 <td className="py-4 px-4">
+                  <Badge
+                    variant="secondary"
+                    className={getStatusConfig(task.status)}
+                  >
+                    {task.status}
+                  </Badge>
+                </td>
+                <td className="py-4 px-4">
                   <div className="flex justify-end gap-2">
-                    {task.action === "done" ? (
+                    {task.status === "Finished" ? (
                       <Button
                         size="sm"
                         className="bg-green-600 text-white hover:bg-green-700 text-xs"
+                        disabled
                       >
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Done
@@ -153,18 +214,34 @@ export function TasksTable({ tasks, isTeamMember = false }: TasksTableProps) {
                             Tips
                           </Button>
                         )}
-                        {isTeamMember ? (
+                        {isTeamMember &&
+                        task.isAvailable &&
+                        task.responsible ? (
                           <Button
                             variant="outline"
                             size="sm"
                             className="text-xs"
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/team-journey/task/${task.id}`
+                              )
+                            }
                           >
-                            Complete
+                            {task.status === "In Progress" ? "Submit" : "Start"}
                           </Button>
                         ) : (
-                          <span className="text-xs text-muted-foreground px-3 py-2">
-                            View Only
-                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs px-3 py-2"
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/team-journey/task/${task.id}`
+                              )
+                            }
+                          >
+                            View Info
+                          </Button>
                         )}
                       </>
                     )}

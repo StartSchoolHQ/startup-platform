@@ -63,7 +63,7 @@ export async function getUserTransactions(userId: string, limit = 10) {
     .select(
       `
       *,
-      task:tasks(name),
+      task:achievement_tasks(name),
       team:teams(name),
       achievement:achievements(name),
       revenue_stream:revenue_streams(product_name)

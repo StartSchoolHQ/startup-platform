@@ -1,68 +1,46 @@
-📋 Today's Work Summary & Tomorrow's Plan
-✅ What We Accomplished Today:
-🔧 Bug Fixes & Technical Issues:
-Fixed CSS Import Error: Created permanent solution with globals.d.ts and updated tsconfig.json
-Resolved HMR/Development Server Errors: Cleared Next.js cache and fixed module instantiation issues
-Fixed TypeScript Build Errors: Added missing strikes_count field to all team journey database queries
-Updated Database Types: Regenerated and synchronized Supabase TypeScript types
-📊 Weekly Reports System - Phase 5 Completed:
-✅ Avatar Status Indicators: Implemented green/red status circles on team member avatars
-🎯 Focused Implementation: Added status indicators specifically to the avatar stack in "Status & Progress" card
-⚡ Real-time Updates: Status circles update automatically when reports are submitted
-🔄 Status Tracking: Added memberSubmissionStatus state and checkAllMemberStatuses() function
-🎨 Visual Design:
-🟢 Green circles = Member submitted weekly report
-🔴 Red circles = Member hasn't submitted yet
-⚪ No circle = Loading/checking status
-🏗️ Technical Infrastructure:
-Database Schema: All existing tables properly configured with strikes_count support
-Development Environment: Clean, fully functional dev server at http://localhost:3000
-Phase 1-5 Complete: Weekly reports system 83% complete (5/6 phases done)
-🎯 Tomorrow's Work: Phase 6 - Strike System Integration
-📋 Detailed Implementation Plan:
-Step 1: Database Schema Updates (First Priority)
-Enhance team_strikes table:
-Create enforcement tracking table:
-Step 2: Database Functions (Core Logic)
-Create detect_missed_weekly_reports() function
-Create assign_weekly_report_strikes() function
-Test database functions with mock data
-Step 3: Supabase Edge Function (Automation)
-Create enforcement Edge Function in TypeScript
-Implement weekly report compliance checking
-Add strike assignment logic with duplicate prevention
-Test locally and deploy
-Step 4: UI Integration (User Experience)
-Update StrikesTable component:
-Show strike types ("Weekly Report Missed", "Manual", etc.)
-Display week context ("Week of Sep 23-29, 2025")
-Add auto/manual indicators
-Update WeeklyReportsTable:
-Add ⚠️ strike indicators next to missed weeks
-Show hover details for strike information
-Step 5: Automation Setup (Final Implementation)
-Set up Edge Function scheduling (likely via GitHub Actions cron)
-Test full automation pipeline
-Monitor and validate strike assignments
-🏁 Current System Status:
-✅ Fully Working:
-Complete weekly report submission workflow
-Duplicate submission prevention
-Riga timezone handling
-Avatar status indicators with real-time updates
-Clean UI with proper state management
-Database integrity and security
-🎯 Ready for Phase 6:
-Progress: 83% Complete (5/6 phases)
-Foundation: Rock-solid with full functionality and visual feedback
-Next Goal: Complete automated enforcement with strike system integration
-🛠️ Technical Approach Decided:
-Method: Supabase Edge Functions (TypeScript)
-Scheduling: GitHub Actions cron trigger
-Benefits: Works with any Supabase plan, easy to debug, familiar language
-💡 Key Context for Tomorrow:
-User requested slow, careful implementation - don't rush Phase 6
-Focus on avatar stack only - user specifically wanted indicators in Status & Progress card
-Edge Functions approach chosen - avoid database pg_cron dependency
-All foundation work complete - can proceed directly to Phase 6 implementation
-Development environment fully functional - no blocking technical issues
+# Strikes Integration — Status and Next Steps
+
+## What’s Done (Strikes + Weekly Reports groundwork)
+
+- Weekly reports system complete through Phase 5 (schema, modal, submission, duplicate prevention).
+- Visual indicators in Status & Progress card: green/red circles on avatars for weekly submission status.
+- Database supports `teams.strikes_count` and existing `team_strikes` records.
+- Utility functions available: `hasUserSubmittedThisWeek`, `get_riga_week_boundaries` for accurate week detection (Riga timezone).
+- Build and type errors related to strikes were fixed (made `strikes_count` optional in code paths; removed from selects where needed).
+
+## What’s Left (Phase 6 — Automated Enforcement via Edge Functions)
+
+1. Database schema enhancements
+
+   - Add to `team_strikes`: `strike_type`, `related_week_start`, `related_week_end`, `auto_assigned`, `enforcement_details JSONB`.
+   - Create `strike_enforcement_log` table for audit of each run.
+
+2. Database functions
+
+   - `detect_missed_weekly_reports(week_start, week_end, team_id?)` → returns users missing submissions.
+   - `assign_weekly_report_strikes(results)` → idempotent insert of strikes with context.
+
+3. Supabase Edge Function (TypeScript)
+
+   - Endpoint that: computes last week in Riga TZ, calls detection, assigns strikes, writes a log, returns summary.
+   - Duplicate prevention: check existing `team_strikes` for same user/week.
+
+4. Scheduling
+
+   - Trigger weekly via GitHub Actions cron (e.g., Mondays 09:00 Riga) calling the Edge Function URL.
+
+5. UI wiring
+   - StrikesTable: show `strike_type`, week period, auto/manual badge.
+   - WeeklyReportsTable: show ⚠ indicator for weeks with strikes, tooltip with details.
+
+## Notes / Assumptions
+
+- Grace period (optional): allow submissions until Monday 09:00 Riga before assigning strikes.
+- Late submission handling: if submitted after strike, keep strike but allow “explained” status.
+- Idempotence: no duplicate strikes per user/week/team.
+
+## Quick Start when resuming
+
+- Step 1: apply DB schema changes for `team_strikes` and `strike_enforcement_log`.
+- Step 2: scaffold Edge Function with week calculation and stubbed detection/assignment calls.
+- Step 3: UI updates for strike type and week context.
