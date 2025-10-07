@@ -195,14 +195,28 @@ export function TasksTable({
                 <td className="py-4 px-4">
                   <div className="flex justify-end gap-2">
                     {task.status === "Finished" ? (
-                      <Button
-                        size="sm"
-                        className="bg-green-600 text-white hover:bg-green-700 text-xs"
-                        disabled
-                      >
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Done
-                      </Button>
+                      <>
+                        <Button
+                          size="sm"
+                          className="bg-green-600 text-white hover:bg-green-700 text-xs"
+                          disabled
+                        >
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Done
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs px-3 py-2"
+                          onClick={() =>
+                            router.push(
+                              `/dashboard/team-journey/task/${task.id}`
+                            )
+                          }
+                        >
+                          View Info
+                        </Button>
+                      </>
                     ) : (
                       <>
                         {task.hasTips && (
@@ -230,18 +244,21 @@ export function TasksTable({
                             {task.status === "In Progress" ? "Submit" : "Start"}
                           </Button>
                         ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-xs px-3 py-2"
-                            onClick={() =>
-                              router.push(
-                                `/dashboard/team-journey/task/${task.id}`
-                              )
-                            }
-                          >
-                            View Info
-                          </Button>
+                          // Only show "View Info" if task has someone assigned (has progress to view)
+                          task.responsible && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs px-3 py-2"
+                              onClick={() =>
+                                router.push(
+                                  `/dashboard/team-journey/task/${task.id}`
+                                )
+                              }
+                            >
+                              View Info
+                            </Button>
+                          )
                         )}
                       </>
                     )}

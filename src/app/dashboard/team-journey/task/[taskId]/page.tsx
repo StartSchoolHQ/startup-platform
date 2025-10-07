@@ -629,17 +629,6 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-start gap-3 p-3 border rounded-lg">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                      <div className="flex-1">
-                        <p className="font-medium">Task was created</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(
-                            task.assigned_at || task.started_at || new Date()
-                          ).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
                     {task.assigned_at && (
                       <div className="flex items-start gap-3 p-3 border rounded-lg">
                         <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
