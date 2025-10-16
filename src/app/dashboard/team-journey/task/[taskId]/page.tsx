@@ -703,10 +703,25 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                       <div className="flex items-start gap-3 p-3 border rounded-lg">
                         <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
                         <div className="flex-1">
-                          <p className="font-medium">Task was assigned</p>
+                          <p className="font-medium">Task assigned</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(task.assigned_at).toLocaleString()}
+                            {new Date(task.assigned_at).toLocaleString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: false,
+                              }
+                            )}
                           </p>
+                          {task.assignee_name && (
+                            <p className="text-sm text-muted-foreground">
+                              Assigned to {task.assignee_name}
+                            </p>
+                          )}
                         </div>
                       </div>
                     )}
@@ -716,14 +731,21 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                         <div className="flex-1">
                           <p className="font-medium">Work started</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(task.started_at).toLocaleString()}
+                            {new Date(task.started_at).toLocaleString("en-US", {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                            })}
                           </p>
                         </div>
                       </div>
                     )}
                     {task.completed_at && (
                       <div className="flex items-start gap-3 p-3 border rounded-lg">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                         <div className="flex-1">
                           <p className="font-medium">
                             {task.status === "pending_review"
@@ -731,11 +753,114 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                               : "Task completed"}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(task.completed_at).toLocaleString()}
+                            {new Date(task.completed_at).toLocaleString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: false,
+                              }
+                            )}
                           </p>
                         </div>
                       </div>
                     )}
+                    {(task.status === "approved" ||
+                      task.status === "rejected") &&
+                      task.reviewer_name && (
+                        <>
+                          {/* Parse multiple review attempts from submission_notes */}
+                          {task.submission_notes &&
+                            (() => {
+                              const reviewParts = task.submission_notes
+                                .split("Peer Review:")
+                                .filter((part) => part.trim());
+
+                              return reviewParts.map(
+                                (reviewFeedback, index) => {
+                                  const isLastReview =
+                                    index === reviewParts.length - 1;
+                                  const currentStatus = isLastReview
+                                    ? task.status
+                                    : "rejected";
+
+                                  return (
+                                    <div
+                                      key={index}
+                                      className="flex items-start gap-3 p-3 border rounded-lg"
+                                    >
+                                      <div
+                                        className={`w-2 h-2 rounded-full mt-2 ${
+                                          currentStatus === "approved"
+                                            ? "bg-green-500"
+                                            : "bg-red-500"
+                                        }`}
+                                      ></div>
+                                      <div className="flex-1">
+                                        <p className="font-medium">
+                                          Peer review{" "}
+                                          {currentStatus === "approved"
+                                            ? "approved"
+                                            : "rejected"}
+                                          {!isLastReview &&
+                                            " (attempt " + (index + 1) + ")"}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                          Reviewed by {task.reviewer_name}
+                                        </p>
+                                        {isLastReview && task.updated_at && (
+                                          <p className="text-sm text-muted-foreground">
+                                            {new Date(
+                                              task.updated_at
+                                            ).toLocaleString("en-US", {
+                                              year: "numeric",
+                                              month: "2-digit",
+                                              day: "2-digit",
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                              hour12: false,
+                                            })}
+                                          </p>
+                                        )}
+                                        <p className="text-sm text-muted-foreground mt-1 italic">
+                                          &ldquo;{reviewFeedback.trim()}&rdquo;
+                                        </p>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                              );
+                            })()}
+                        </>
+                      )}
+                    {task.status === "pending_review" && (
+                      <div className="flex items-start gap-3 p-3 border rounded-lg border-dashed">
+                        <div className="w-2 h-2 bg-orange-300 rounded-full mt-2 animate-pulse"></div>
+                        <div className="flex-1">
+                          <p className="font-medium text-orange-700">
+                            Awaiting peer review
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Task is currently under review
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {/* Empty state */}
+                    {!task.assigned_at &&
+                      !task.started_at &&
+                      !task.completed_at && (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Clock className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                          <p>No timeline events yet</p>
+                          <p className="text-sm">
+                            Task activity will appear here once started
+                          </p>
+                        </div>
+                      )}
                   </div>
                 </CardContent>
               </Card>

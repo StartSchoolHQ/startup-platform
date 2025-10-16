@@ -154,7 +154,7 @@ export async function getUserTasks(userId: string): Promise<TaskTableItem[]> {
 
     // Convert to TaskTableItem format
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data || []).map((row: any) => {
+    const result = (data || []).map((row: any) => {
       const getUIStatus = (status: TaskStatus): TaskTableItem["status"] => {
         switch (status) {
           case "approved":
@@ -197,6 +197,8 @@ export async function getUserTasks(userId: string): Promise<TaskTableItem[]> {
         completedAt: row.completed_at,
       };
     });
+
+    return result;
   } catch (error) {
     console.error("Error in getUserTasks:", error);
     return [];
@@ -223,6 +225,7 @@ export async function getTaskById(
         status,
         started_at,
         completed_at,
+        updated_at,
         submission_data,
         submission_notes,
         reviewer_user_id,
@@ -281,6 +284,7 @@ export async function getTaskById(
       assigned_at: data.assigned_at,
       started_at: data.started_at,
       completed_at: data.completed_at,
+      updated_at: data.updated_at,
       submission_notes: data.submission_notes,
       is_available: data.status !== "completed",
       reviewer_user_id: data.reviewer_user_id,

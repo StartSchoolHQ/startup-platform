@@ -1424,7 +1424,8 @@ export async function getAvailableTasksForReview(userId: string) {
         description,
         difficulty_level,
         base_xp_reward,
-        category
+        category,
+        peer_review_criteria
       ),
       teams(
         id,
@@ -1717,8 +1718,8 @@ export async function getMySubmittedTasksForReview(userId: string) {
       "rejected",
       "revision_required",
     ])
-    .eq("assigned_to_user_id", userId)
-    .not("completed_at", "is", null); // Only tasks that have been submitted
+    .eq("assigned_to_user_id", userId);
+  // Removed completed_at filter - rejected tasks have NULL completed_at but should still show
 
   if (error) {
     console.error("Error fetching my submitted tasks:", error);

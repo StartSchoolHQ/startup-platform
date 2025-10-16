@@ -51,6 +51,10 @@ interface AvailableTask {
     difficulty_level: number;
     base_xp_reward: number;
     category: string;
+    peer_review_criteria?: Array<{
+      category: string;
+      points: string[];
+    }>;
   } | null;
   teams: {
     id: string;
@@ -106,7 +110,8 @@ export default function PeerReviewPage() {
               description,
               difficulty_level,
               base_xp_reward,
-              category
+              category,
+              peer_review_criteria
             ),
             teams(
               id,
@@ -705,32 +710,21 @@ export default function PeerReviewPage() {
                             </td>
                             <td className="py-4 px-4">
                               <div className="flex justify-end gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-xs px-3 py-2"
-                                >
-                                  View Submission
-                                </Button>
                                 {(task.status === "approved" ||
                                   task.status === "rejected" ||
-                                  task.status === "revision_required") &&
-                                  task.submission_notes &&
-                                  task.submission_notes.includes(
-                                    "Peer Review:"
-                                  ) && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="text-xs px-3 py-2"
-                                      onClick={() => {
-                                        setSelectedFeedbackTask(task);
-                                        setFeedbackModalOpen(true);
-                                      }}
-                                    >
-                                      View Feedback
-                                    </Button>
-                                  )}
+                                  task.status === "revision_required") && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-xs px-3 py-2"
+                                    onClick={() => {
+                                      setSelectedFeedbackTask(task);
+                                      setFeedbackModalOpen(true);
+                                    }}
+                                  >
+                                    View Feedback
+                                  </Button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -968,6 +962,40 @@ export default function PeerReviewPage() {
                 )}
               </div>
 
+              {/* Peer Review Criteria */}
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <h3 className="font-medium mb-3">Peer Review Criteria</h3>
+                {selectedTaskForReview.tasks?.peer_review_criteria &&
+                selectedTaskForReview.tasks.peer_review_criteria.length > 0 ? (
+                  <div className="space-y-4">
+                    {selectedTaskForReview.tasks.peer_review_criteria.map(
+                      (criteria, index) => (
+                        <div key={index}>
+                          <h4 className="text-sm font-semibold mb-2 text-purple-900">
+                            {criteria.category}
+                          </h4>
+                          <ul className="space-y-1 text-sm text-muted-foreground">
+                            {criteria.points.map((point, pointIndex) => (
+                              <li
+                                key={pointIndex}
+                                className="flex items-start gap-2"
+                              >
+                                <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-2 flex-shrink-0"></span>
+                                {point}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No review criteria available for this task.
+                  </p>
+                )}
+              </div>
+
               {/* Review Form */}
               <div className="space-y-4">
                 <div>
@@ -1074,10 +1102,26 @@ export default function PeerReviewPage() {
                 </div>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {selectedFeedbackTask.submission_notes
-                      ?.split("Peer Review:")
-                      .pop()
-                      ?.trim() || "No feedback provided"}
+                    {(() => {
+                      const notes = selectedFeedbackTask.submission_notes;
+                      if (!notes) {
+                        return selectedFeedbackTask.status === "rejected"
+                          ? "This task was rejected but no specific feedback was provided."
+                          : "No feedback provided";
+                      }
+
+                      // If notes contain "Peer Review:", extract the part after it
+                      if (notes.includes("Peer Review:")) {
+                        const feedback = notes
+                          .split("Peer Review:")
+                          .pop()
+                          ?.trim();
+                        return feedback || "No specific feedback provided";
+                      }
+
+                      // Otherwise, show the full notes as feedback
+                      return notes;
+                    })()}
                   </p>
                 </div>
               </div>
