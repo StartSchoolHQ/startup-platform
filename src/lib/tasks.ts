@@ -133,6 +133,76 @@ export async function assignTaskToMember(
   }
 }
 
+// Fetch user's assigned tasks (for My Journey page)
+export async function getUserTasks(userId: string): Promise<TaskTableItem[]> {
+  try {
+    const supabase = createClient();
+
+    // Use SQL query to fetch user tasks with peer review feedback
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc(
+      "get_user_tasks_with_feedback",
+      {
+        p_user_id: userId,
+      }
+    );
+
+    if (error) {
+      console.error("Error fetching user tasks:", error);
+      return [];
+    }
+
+    // Convert to TaskTableItem format
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data || []).map((row: any) => {
+      const getUIStatus = (status: TaskStatus): TaskTableItem["status"] => {
+        switch (status) {
+          case "approved":
+            return "Finished";
+          case "in_progress":
+            return "In Progress";
+          case "rejected":
+          case "revision_required":
+            return "Not Accepted";
+          case "pending_review":
+            return "Peer Review";
+          case "not_started":
+          default:
+            return "Not Started";
+        }
+      };
+
+      const getDifficulty = (level: number): TaskTableItem["difficulty"] => {
+        if (level >= 4) return "Hard";
+        if (level >= 3) return "Medium";
+        return "Easy";
+      };
+
+      return {
+        id: row.progress_id,
+        title: row.title,
+        description: row.description,
+        difficulty: getDifficulty(row.difficulty_level),
+        xp: row.base_xp_reward,
+        points: row.base_credits_reward || row.base_xp_reward,
+        status: getUIStatus(row.status),
+        action: row.status === "approved" ? "done" : "complete",
+        isAvailable: true,
+        // Add additional data for showing peer review feedback
+        reviewFeedback: row.peer_review_feedback,
+        reviewerName: row.reviewer_name,
+        reviewerAvatarUrl: row.reviewer_avatar_url,
+        teamName: row.team_name,
+        assignedAt: row.assigned_at,
+        completedAt: row.completed_at,
+      };
+    });
+  } catch (error) {
+    console.error("Error in getUserTasks:", error);
+    return [];
+  }
+}
+
 // Get a single task by progress ID
 export async function getTaskById(
   progressId: string
@@ -155,6 +225,7 @@ export async function getTaskById(
         completed_at,
         submission_data,
         submission_notes,
+        reviewer_user_id,
         tasks!task_id (
           title,
           description,
@@ -174,6 +245,10 @@ export async function getTaskById(
           name
         ),
         users!assigned_to_user_id (
+          name,
+          avatar_url
+        ),
+        reviewer:users!reviewer_user_id (
           name,
           avatar_url
         )
@@ -206,7 +281,11 @@ export async function getTaskById(
       assigned_at: data.assigned_at,
       started_at: data.started_at,
       completed_at: data.completed_at,
+      submission_notes: data.submission_notes,
       is_available: data.status !== "completed",
+      reviewer_user_id: data.reviewer_user_id,
+      reviewer_name: data.reviewer?.name,
+      reviewer_avatar_url: data.reviewer?.avatar_url,
       detailed_instructions: data.tasks.detailed_instructions,
       tips_content: data.tasks.tips_content,
       peer_review_criteria: data.tasks.peer_review_criteria,

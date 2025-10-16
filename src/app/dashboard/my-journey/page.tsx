@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,13 +16,177 @@ import {
   Banknote,
   Medal,
   Settings,
+  MessageSquare,
 } from "lucide-react";
 import { myJourneyData } from "@/data/my-journey-data";
 import { Task, WeeklyReport, Strike } from "@/types/my-journey";
+import { TaskTableItem } from "@/types/team-journey";
 import { AchievementCard } from "@/components/my-journey/achievement-card";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
+import { getUserTasks } from "@/lib/tasks";
+import { createClient } from "@/lib/supabase/client";
 
-// Task row component
+// Real task row component for actual user tasks
+function RealTaskRow({ task }: { task: TaskTableItem }) {
+  const getDifficultyConfig = (difficulty: TaskTableItem["difficulty"]) => {
+    switch (difficulty) {
+      case "Easy":
+        return {
+          badgeText: "Easy",
+          badgeClass:
+            "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200",
+        };
+      case "Medium":
+        return {
+          badgeText: "Medium",
+          badgeClass:
+            "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200",
+        };
+      case "Hard":
+        return {
+          badgeText: "Hard",
+          badgeClass: "bg-destructive/10 text-destructive",
+        };
+    }
+  };
+
+  const getStatusConfig = (status: TaskTableItem["status"]) => {
+    switch (status) {
+      case "Finished":
+        return {
+          badgeText: "Completed ✓",
+          badgeClass: "bg-emerald-100 text-emerald-800",
+          buttonText: "Done",
+          buttonClass: "bg-emerald-600 text-white hover:bg-emerald-700",
+          icon: <CheckCircle className="h-3 w-3 mr-1" />,
+        };
+      case "In Progress":
+        return {
+          badgeText: "In Progress",
+          badgeClass: "bg-blue-100 text-blue-800",
+          buttonText: "Continue",
+          buttonClass: "bg-blue-600 text-white hover:bg-blue-700",
+          icon: <Clock className="h-3 w-3 mr-1" />,
+        };
+      case "Not Accepted":
+        return {
+          badgeText: "Rejected",
+          badgeClass: "bg-red-100 text-red-800",
+          buttonText: "Retry",
+          buttonClass: "bg-red-600 text-white hover:bg-red-700",
+          icon: <AlertTriangle className="h-3 w-3 mr-1" />,
+        };
+      case "Peer Review":
+        return {
+          badgeText: "Under Review",
+          badgeClass: "bg-purple-100 text-purple-800",
+          buttonText: "Waiting",
+          buttonClass: "bg-purple-600 text-white hover:bg-purple-700",
+          icon: <Clock className="h-3 w-3 mr-1" />,
+        };
+      case "Not Started":
+      default:
+        return {
+          badgeText: "Not Started",
+          badgeClass: "bg-muted text-muted-foreground",
+          buttonText: "Start",
+          buttonClass:
+            "bg-background border border-input text-foreground hover:bg-accent",
+          icon: <Clock className="h-3 w-3 mr-1" />,
+        };
+    }
+  };
+
+  const difficultyConfig = getDifficultyConfig(task.difficulty);
+  const statusConfig = getStatusConfig(task.status);
+
+  return (
+    <>
+      <tr className="border-b border-border hover:bg-muted/50">
+        <td className="py-4 px-4">
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex items-center justify-center w-8 h-8 rounded-md ${
+                task.status === "Finished" ? "bg-green-100" : "bg-muted"
+              }`}
+            >
+              <Medal className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex-1">
+              <div className="font-medium text-sm">{task.title}</div>
+              <div className="text-xs text-muted-foreground">
+                {task.description}
+              </div>
+              {task.teamName && (
+                <div className="text-xs text-blue-600 mt-1">
+                  Team: {task.teamName}
+                </div>
+              )}
+            </div>
+          </div>
+        </td>
+        <td className="py-4 px-4">
+          <Badge variant="secondary" className={difficultyConfig.badgeClass}>
+            {difficultyConfig.badgeText}
+          </Badge>
+        </td>
+        <td className="py-4 px-4">
+          <Badge variant="secondary" className={statusConfig.badgeClass}>
+            {statusConfig.badgeText}
+          </Badge>
+        </td>
+        <td className="py-4 px-4">
+          <div className="flex items-center gap-1">
+            <Zap className="h-4 w-4 text-green-600" />
+            <span className="text-sm font-medium">{task.xp}</span>
+          </div>
+        </td>
+        <td className="py-4 px-4">
+          <div className="flex items-center gap-1">
+            <Banknote className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium">{task.points}</span>
+          </div>
+        </td>
+        <td className="py-4 px-4">
+          <div className="flex justify-end">
+            <Button
+              size="sm"
+              className={`h-8 ${statusConfig.buttonClass}`}
+              disabled={
+                task.status === "Peer Review" || task.status === "Finished"
+              }
+            >
+              {statusConfig.icon}
+              {statusConfig.buttonText}
+            </Button>
+          </div>
+        </td>
+      </tr>
+      {/* Peer Review Feedback Row */}
+      {task.reviewFeedback && (
+        <tr className="bg-blue-50 border-b border-border">
+          <td colSpan={6} className="py-3 px-4">
+            <div className="flex items-start gap-3">
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 flex-shrink-0 mt-0.5">
+                <MessageSquare className="h-3 w-3 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <div className="text-sm font-medium text-blue-800 mb-1">
+                  Peer Review Feedback:
+                </div>
+                <div className="text-sm text-blue-700 bg-white rounded-md p-2 border border-blue-200">
+                  {task.reviewFeedback}
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+// Task row component (kept for legacy data)
 function TaskRow({ task }: { task: Task }) {
   const getDifficultyConfig = (difficulty: Task["difficulty"]) => {
     switch (difficulty) {
@@ -264,6 +429,36 @@ function StrikeRow({ strike }: { strike: Strike }) {
 }
 
 export default function MyJourneyPage() {
+  const [userTasks, setUserTasks] = useState<TaskTableItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<{ id: string } | null>(null);
+
+  useEffect(() => {
+    const fetchUserAndTasks = async () => {
+      const supabase = createClient();
+
+      // Get current user
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+      if (!currentUser) return;
+
+      setUser({ id: currentUser.id });
+
+      // Fetch user tasks
+      try {
+        const tasks = await getUserTasks(currentUser.id);
+        setUserTasks(tasks);
+      } catch (error) {
+        console.error("Error fetching user tasks:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserAndTasks();
+  }, []);
+
   return (
     <main className="p-8">
       {/* Profile Header */}
@@ -352,35 +547,48 @@ export default function MyJourneyPage() {
 
           {/* Tasks Table */}
           <div className="bg-card rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Tasks</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
-                      Task
-                    </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
-                      Difficulty
-                    </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
-                      XP
-                    </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
-                      Points
-                    </th>
-                    <th className="text-right py-4 px-4 font-medium text-muted-foreground">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {myJourneyData.tasks.map((task) => (
-                    <TaskRow key={task.id} task={task} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <h3 className="text-lg font-semibold mb-4">My Tasks</h3>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-muted-foreground">Loading tasks...</div>
+              </div>
+            ) : userTasks.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No tasks assigned yet. Join a team to get started!
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                        Task
+                      </th>
+                      <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                        Difficulty
+                      </th>
+                      <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                        Status
+                      </th>
+                      <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                        XP
+                      </th>
+                      <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                        Points
+                      </th>
+                      <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userTasks.map((task) => (
+                      <RealTaskRow key={task.id} task={task} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </TabsContent>
 

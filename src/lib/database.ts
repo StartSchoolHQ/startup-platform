@@ -1432,7 +1432,8 @@ export async function getAvailableTasksForReview(userId: string) {
       )
     `
     )
-    .eq("status", "pending_review");
+    .eq("status", "pending_review")
+    .is("reviewer_user_id", null); // Only show tasks that don't have a reviewer assigned yet
 
   // Users can only review tasks from teams they are NOT members of
   if (userTeamIds.length > 0) {
@@ -1677,7 +1678,7 @@ export async function leaveAllActiveTeams(userId: string) {
 export async function getMySubmittedTasksForReview(userId: string) {
   const supabase = createClient();
 
-  // Get user's own tasks that are pending review
+  // Get user's own tasks that have been submitted for review (includes completed, pending, approved, rejected)
   const { data, error } = await supabase
     .from("team_task_progress" as never)
     .select(
@@ -1688,6 +1689,9 @@ export async function getMySubmittedTasksForReview(userId: string) {
       assigned_to_user_id,
       completed_at,
       submission_data,
+      submission_notes,
+      status,
+      reviewer_user_id,
       tasks!inner(
         id,
         title,
@@ -1699,11 +1703,22 @@ export async function getMySubmittedTasksForReview(userId: string) {
       teams!inner(
         id,
         name
+      ),
+      reviewer:users!reviewer_user_id(
+        id,
+        name,
+        avatar_url
       )
     `
     )
-    .eq("status", "pending_review")
-    .eq("assigned_to_user_id", userId);
+    .in("status", [
+      "pending_review",
+      "approved",
+      "rejected",
+      "revision_required",
+    ])
+    .eq("assigned_to_user_id", userId)
+    .not("completed_at", "is", null); // Only tasks that have been submitted
 
   if (error) {
     console.error("Error fetching my submitted tasks:", error);

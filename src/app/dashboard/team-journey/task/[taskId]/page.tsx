@@ -572,49 +572,119 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                  <CardTitle className="text-lg font-semibold">
-                    Peer Review Information
-                  </CardTitle>
-                  <Badge
-                    variant="secondary"
-                    className="bg-green-100 text-green-800"
-                  >
-                    Accepted
-                  </Badge>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-gray-700 leading-relaxed">
-                    Lorem Ipsum is simply dummy text of the printing and
-                    typesetting industry. Lorem Ipsum has been the
-                    industry&apos;s standard dummy text ever since the 1500s,
-                    when an unknown printer took a galley of type and scrambled
-                    it to make a type specimen book. It has survived not only
-                    five centuries, but also the leap into electronic
-                    typesetting, remaining essentially unchanged. It was
-                    popularised in the 1960s with the release of Letraset sheets
-                    containing Lorem Ipsum passages, and more recently with
-                    desktop publishing software like Aldus PageMaker including
-                    versions of Lorem Ipsum.
-                  </p>
+              {/* Peer Review Results */}
+              {(task.status === "approved" ||
+                task.status === "rejected" ||
+                task.status === "revision_required") &&
+              task.submission_notes &&
+              task.submission_notes.includes("Peer Review:") ? (
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                    <CardTitle className="text-lg font-semibold">
+                      Peer Review Results
+                    </CardTitle>
+                    <Badge
+                      variant="secondary"
+                      className={
+                        task.status === "approved"
+                          ? "bg-green-100 text-green-800"
+                          : task.status === "rejected"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }
+                    >
+                      {task.status === "approved"
+                        ? "Accepted"
+                        : task.status === "rejected"
+                        ? "Rejected"
+                        : "Revision Required"}
+                    </Badge>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium text-blue-800">
+                          Reviewer Feedback:
+                        </span>
+                      </div>
+                      <p className="text-gray-700 leading-relaxed">
+                        {task.submission_notes
+                          .split("Peer Review:")
+                          .pop()
+                          ?.trim() || "No feedback provided"}
+                      </p>
+                    </div>
 
-                  <div className="flex items-center gap-3 pt-4 border-t">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src="/avatars/john-doe.jpg" />
-                      <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
-                        JD
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="text-sm font-medium">John Doe</div>
-                      <div className="text-xs text-muted-foreground">
-                        14.07 5:45 PM
+                    <div className="flex items-center gap-3 pt-4 border-t">
+                      <Avatar className="w-8 h-8">
+                        {task.reviewer_avatar_url ? (
+                          <AvatarImage src={task.reviewer_avatar_url} />
+                        ) : null}
+                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
+                          {task.reviewer_name
+                            ? task.reviewer_name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()
+                            : "PR"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="text-sm font-medium">
+                          {task.reviewer_name || "Peer Reviewer"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Reviewed on{" "}
+                          {task.completed_at
+                            ? new Date(task.completed_at).toLocaleString()
+                            : "Recently"}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              ) : task.status === "pending_review" ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold">
+                      Peer Review Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <Clock className="h-5 w-5 text-yellow-600" />
+                      <div>
+                        <p className="font-medium text-yellow-800">
+                          Under Review
+                        </p>
+                        <p className="text-sm text-yellow-700">
+                          This task is currently being reviewed by a peer.
+                          Results will appear here once the review is complete.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold">
+                      Peer Review Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8 text-muted-foreground">
+                      <User className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>No peer review information available yet.</p>
+                      <p className="text-sm">
+                        Complete and submit this task to initiate peer review.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="history" className="space-y-6 mt-6">

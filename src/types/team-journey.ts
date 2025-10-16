@@ -102,7 +102,11 @@ export interface TeamTask {
   assigned_at?: string;
   started_at?: string;
   completed_at?: string;
+  submission_notes?: string;
   is_available?: boolean;
+  reviewer_user_id?: string;
+  reviewer_name?: string;
+  reviewer_avatar_url?: string;
 
   // For backwards compatibility and convenience
   id: string; // Maps to progress_id for existing code
@@ -135,4 +139,11 @@ export interface TaskTableItem {
   action: "complete" | "done";
   hasTips?: boolean;
   isAvailable?: boolean;
+  // Additional fields for My Journey view
+  reviewFeedback?: string | null;
+  reviewerName?: string | null;
+  reviewerAvatarUrl?: string | null;
+  teamName?: string;
+  assignedAt?: string;
+  completedAt?: string;
 }
