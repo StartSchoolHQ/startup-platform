@@ -1,0 +1,3 @@
+Team member gets assigned a task -> He starts the task-> When finished he fills in the modal with necessary fields -> submits the task.
+
+Task then shows up in peer review page under available tests(only non-team members can accept this t ask for testing)-> when task accepted it shows under my tasks for the users who took the task in testing and sets status to in review-> when testing is done we either accept or reject task with comment(if rejected, it returns to task-list to the team and they can retry) and if accepted the member who did the task(not the reviewer) gets XP and Points. 

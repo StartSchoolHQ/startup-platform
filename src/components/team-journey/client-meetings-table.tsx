@@ -55,7 +55,7 @@ export function ClientMeetingsTable({ meetings }: ClientMeetingsTableProps) {
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-                      <Building2 className="h-4 w-4 text-blue-600" />
+                      <Building2 className="h-4 w-4 text-primary" />
                     </div>
                     <div>
                       <div className="font-medium text-sm">
@@ -94,13 +94,13 @@ export function ClientMeetingsTable({ meetings }: ClientMeetingsTableProps) {
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-1">
-                    <Zap className="h-4 w-4 text-green-500" />
+                    <Zap className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium">50</span>
                   </div>
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-1">
-                    <CreditCard className="h-4 w-4 text-blue-500" />
+                    <CreditCard className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium">
                       {meeting.points}
                     </span>

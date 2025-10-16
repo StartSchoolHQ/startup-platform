@@ -79,37 +79,58 @@
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
+  /* Main background - updated to #22223b */
+  --background: oklch(0.155 0.025 258.75);
   --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
+
+  /* Cards - slightly lighter than background using #170a23 inspiration */
+  --card: oklch(0.102 0.029 270.322);
   --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
+
+  /* Popovers - same as cards */
+  --popover: oklch(0.102 0.029 270.322);
   --popover-foreground: oklch(0.984 0.003 247.858);
+
+  /* Primary - using intro page purple #8200db */
   --primary: oklch(0.572 0.194 293.89);
   --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
+
+  /* Secondary - purple tinted for buttons to match borders */
+  --secondary: oklch(0.572 0.194 293.89 / 20%);
+  --secondary-foreground: oklch(0.9 0.005 270);
+
+  /* Muted areas - between background and card */
+  --muted: oklch(0.055 0.016 266);
+  --muted-foreground: oklch(0.65 0.015 270);
+
+  /* Accent - purple tint matching borders */
+  --accent: oklch(0.572 0.194 293.89 / 15%);
+  --accent-foreground: oklch(0.85 0.01 270);
+
+  /* Keep destructive red */
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
+
+  /* Borders - using exact intro purple #8200db with much higher opacity */
+  --border: oklch(0.572 0.194 293.89 / 70%);
+  --input: oklch(0.572 0.194 293.89 / 80%);
+  --ring: oklch(0.572 0.194 293.89);
+
+  /* Charts - purple themed */
+  --chart-1: oklch(0.572 0.194 293.89);
+  --chart-2: oklch(0.45 0.15 280);
+  --chart-3: oklch(0.35 0.12 290);
+  --chart-4: oklch(0.65 0.18 300);
+  --chart-5: oklch(0.55 0.16 285);
+
+  /* Sidebar - matching main background #22223b */
+  --sidebar: oklch(0.155 0.025 258.75);
+  --sidebar-foreground: oklch(0.9 0.005 270);
+  --sidebar-primary: oklch(0.572 0.194 293.89);
   --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --sidebar-accent: oklch(0.07 0.018 275);
+  --sidebar-accent-foreground: oklch(0.85 0.01 270);
+  --sidebar-border: oklch(0.572 0.194 293.89 / 60%);
+  --sidebar-ring: oklch(0.572 0.194 293.89);
 }
 
 @layer base {

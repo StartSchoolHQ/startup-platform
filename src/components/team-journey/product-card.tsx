@@ -29,7 +29,7 @@ export function ProductCard({ product }: ProductCardProps) {
             variant={product.status === "Active" ? "default" : "secondary"}
             className={
               product.status === "Active"
-                ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
+                ? "bg-primary/10 text-primary hover:bg-primary/20"
                 : "bg-muted text-muted-foreground"
             }
           >
@@ -44,7 +44,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* Clients */}
           <div className="flex items-center gap-3 border border-border p-2 rounded-md">
             <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-              <Users className="h-4 w-4 text-blue-600" />
+              <Users className="h-4 w-4 text-primary" />
             </div>
             <div>
               <div className="font-semibold text-sm">
@@ -57,7 +57,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* Revenue */}
           <div className="flex items-center gap-3 border border-border p-2 rounded-md">
             <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-              <DollarSign className="h-4 w-4 text-green-600" />
+              <DollarSign className="h-4 w-4 text-primary" />
             </div>
             <div>
               <div className="font-semibold text-sm">
@@ -72,7 +72,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* Points */}
           <div className="flex items-center gap-3 border border-border p-2 rounded-md">
             <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-              <Trophy className="h-4 w-4 text-orange-600" />
+              <Trophy className="h-4 w-4 text-primary" />
             </div>
             <div>
               <div className="font-semibold text-sm">

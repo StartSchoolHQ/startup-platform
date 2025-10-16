@@ -10,19 +10,11 @@ export function RankIcon({ type, rank, changeDirection }: RankIconProps) {
   const getIcon = () => {
     switch (type) {
       case "crown":
-        return (
-          <span className="text-yellow-500 dark:text-yellow-400 text-sm">
-            👑
-          </span>
-        );
+        return <span className="text-primary text-sm">👑</span>;
       case "trophy":
         return <span className="text-muted-foreground text-sm">🏆</span>;
       case "medal":
-        return (
-          <span className="text-orange-500 dark:text-orange-400 text-sm">
-            🥉
-          </span>
-        );
+        return <span className="text-accent-foreground text-sm">🥉</span>;
       case "flame":
         return <span className="text-sm font-medium text-foreground">#4</span>;
       default:
@@ -36,9 +28,7 @@ export function RankIcon({ type, rank, changeDirection }: RankIconProps) {
 
   const getTrendIcon = () => {
     if (changeDirection === "up") {
-      return (
-        <TrendingUp className="h-3 w-3 text-emerald-500 dark:text-emerald-400" />
-      );
+      return <TrendingUp className="h-3 w-3 text-primary" />;
     } else if (changeDirection === "down") {
       return <TrendingDown className="h-3 w-3 text-destructive" />;
     }

@@ -13,15 +13,13 @@ export function ChangeIndicator({ direction, amount }: ChangeIndicatorProps) {
   return (
     <div className="flex items-center gap-1">
       {direction === "up" ? (
-        <ArrowUp className="h-3 w-3 text-emerald-500 dark:text-emerald-400" />
+        <ArrowUp className="h-3 w-3 text-primary" />
       ) : (
         <ArrowDown className="h-3 w-3 text-destructive" />
       )}
       <span
         className={`text-sm ${
-          direction === "up"
-            ? "text-emerald-500 dark:text-emerald-400"
-            : "text-destructive"
+          direction === "up" ? "text-primary" : "text-destructive"
         }`}
       >
         {amount}

@@ -12,7 +12,7 @@ export function TeamItem({ team }: TeamItemProps) {
       <IconContainer
         icon={team.icon}
         iconColor={team.iconColor}
-        backgroundColor="bg-blue-100 dark:bg-blue-950/20"
+        backgroundColor="bg-primary/10"
       />
       <div>
         <div className="text-lg font-bold">{team.name}</div>

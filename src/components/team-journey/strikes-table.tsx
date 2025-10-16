@@ -32,7 +32,7 @@ export function StrikesTable({
       case "explained":
         return {
           text: "Explained",
-          class: "bg-emerald-100 text-emerald-800",
+          class: "bg-primary/10 text-primary",
         };
       case "waiting-explanation":
         return {
@@ -47,7 +47,7 @@ export function StrikesTable({
       case "done":
         return {
           text: "Done",
-          class: "bg-emerald-600 text-white hover:bg-emerald-700",
+          class: "bg-primary text-primary-foreground hover:bg-primary/90",
           icon: <CheckCircle className="h-3 w-3 mr-1" />,
         };
       case "explain":
@@ -98,7 +98,7 @@ export function StrikesTable({
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-                        <AlertTriangle className="h-4 w-4 text-red-600" />
+                        <AlertTriangle className="h-4 w-4 text-destructive" />
                       </div>
                       <div>
                         <div className="font-medium text-sm">
@@ -117,7 +117,7 @@ export function StrikesTable({
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-1">
-                      <Zap className="h-4 w-4 text-green-600" />
+                      <Zap className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium">
                         -{strike.xpPenalty}
                       </span>
@@ -125,7 +125,7 @@ export function StrikesTable({
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-1">
-                      <CreditCard className="h-4 w-4 text-blue-600" />
+                      <CreditCard className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium">
                         -{strike.pointsPenalty}
                       </span>

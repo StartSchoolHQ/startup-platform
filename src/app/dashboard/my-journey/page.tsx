@@ -19,76 +19,47 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { myJourneyData } from "@/data/my-journey-data";
-import { Task, WeeklyReport, Strike } from "@/types/my-journey";
+import { WeeklyReport, Strike } from "@/types/my-journey";
 import { TaskTableItem } from "@/types/team-journey";
 import { AchievementCard } from "@/components/my-journey/achievement-card";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { DifficultyBadge } from "@/components/ui/difficulty-badge";
 import { getUserTasks } from "@/lib/tasks";
 import { createClient } from "@/lib/supabase/client";
 
 // Real task row component for actual user tasks
 function RealTaskRow({ task }: { task: TaskTableItem }) {
-  const getDifficultyConfig = (difficulty: TaskTableItem["difficulty"]) => {
-    switch (difficulty) {
-      case "Easy":
-        return {
-          badgeText: "Easy",
-          badgeClass:
-            "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200",
-        };
-      case "Medium":
-        return {
-          badgeText: "Medium",
-          badgeClass:
-            "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200",
-        };
-      case "Hard":
-        return {
-          badgeText: "Hard",
-          badgeClass: "bg-destructive/10 text-destructive",
-        };
-    }
-  };
-
-  const getStatusConfig = (status: TaskTableItem["status"]) => {
+  const getStatusButtonConfig = (status: TaskTableItem["status"]) => {
     switch (status) {
       case "Finished":
         return {
-          badgeText: "Completed ✓",
-          badgeClass: "bg-emerald-100 text-emerald-800",
           buttonText: "Done",
-          buttonClass: "bg-emerald-600 text-white hover:bg-emerald-700",
+          buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
           icon: <CheckCircle className="h-3 w-3 mr-1" />,
         };
       case "In Progress":
         return {
-          badgeText: "In Progress",
-          badgeClass: "bg-blue-100 text-blue-800",
           buttonText: "Continue",
-          buttonClass: "bg-blue-600 text-white hover:bg-blue-700",
+          buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
           icon: <Clock className="h-3 w-3 mr-1" />,
         };
       case "Not Accepted":
         return {
-          badgeText: "Rejected",
-          badgeClass: "bg-red-100 text-red-800",
           buttonText: "Retry",
-          buttonClass: "bg-red-600 text-white hover:bg-red-700",
+          buttonClass:
+            "bg-destructive text-destructive-foreground hover:bg-destructive/90",
           icon: <AlertTriangle className="h-3 w-3 mr-1" />,
         };
       case "Peer Review":
         return {
-          badgeText: "Under Review",
-          badgeClass: "bg-purple-100 text-purple-800",
           buttonText: "Waiting",
-          buttonClass: "bg-purple-600 text-white hover:bg-purple-700",
+          buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
           icon: <Clock className="h-3 w-3 mr-1" />,
         };
       case "Not Started":
       default:
         return {
-          badgeText: "Not Started",
-          badgeClass: "bg-muted text-muted-foreground",
           buttonText: "Start",
           buttonClass:
             "bg-background border border-input text-foreground hover:bg-accent",
@@ -97,8 +68,7 @@ function RealTaskRow({ task }: { task: TaskTableItem }) {
     }
   };
 
-  const difficultyConfig = getDifficultyConfig(task.difficulty);
-  const statusConfig = getStatusConfig(task.status);
+  const statusButtonConfig = getStatusButtonConfig(task.status);
 
   return (
     <>
@@ -107,7 +77,7 @@ function RealTaskRow({ task }: { task: TaskTableItem }) {
           <div className="flex items-center gap-3">
             <div
               className={`flex items-center justify-center w-8 h-8 rounded-md ${
-                task.status === "Finished" ? "bg-green-100" : "bg-muted"
+                task.status === "Finished" ? "bg-primary/10" : "bg-muted"
               }`}
             >
               <Medal className="h-4 w-4 text-primary" />
@@ -118,7 +88,7 @@ function RealTaskRow({ task }: { task: TaskTableItem }) {
                 {task.description}
               </div>
               {task.teamName && (
-                <div className="text-xs text-blue-600 mt-1">
+                <div className="text-xs text-primary mt-1">
                   Team: {task.teamName}
                 </div>
               )}
@@ -126,14 +96,31 @@ function RealTaskRow({ task }: { task: TaskTableItem }) {
           </div>
         </td>
         <td className="py-4 px-4">
-          <Badge variant="secondary" className={difficultyConfig.badgeClass}>
-            {difficultyConfig.badgeText}
-          </Badge>
+          <DifficultyBadge
+            level={
+              task.difficulty === "Easy"
+                ? 1
+                : task.difficulty === "Medium"
+                ? 2
+                : 3
+            }
+          />
         </td>
         <td className="py-4 px-4">
-          <Badge variant="secondary" className={statusConfig.badgeClass}>
-            {statusConfig.badgeText}
-          </Badge>
+          <StatusBadge
+            status={
+              task.status === "Finished"
+                ? "approved"
+                : task.status === "Not Accepted"
+                ? "rejected"
+                : task.status === "Peer Review"
+                ? "pending_review"
+                : task.status === "In Progress"
+                ? "in_progress"
+                : "not_started"
+            }
+            variant="journey"
+          />
         </td>
         <td className="py-4 px-4">
           <div className="flex items-center gap-1">
@@ -151,30 +138,30 @@ function RealTaskRow({ task }: { task: TaskTableItem }) {
           <div className="flex justify-end">
             <Button
               size="sm"
-              className={`h-8 ${statusConfig.buttonClass}`}
+              className={`h-8 ${statusButtonConfig.buttonClass}`}
               disabled={
                 task.status === "Peer Review" || task.status === "Finished"
               }
             >
-              {statusConfig.icon}
-              {statusConfig.buttonText}
+              {statusButtonConfig.icon}
+              {statusButtonConfig.buttonText}
             </Button>
           </div>
         </td>
       </tr>
       {/* Peer Review Feedback Row */}
       {task.reviewFeedback && (
-        <tr className="bg-blue-50 border-b border-border">
+        <tr className="bg-primary/5 border-b border-border">
           <td colSpan={6} className="py-3 px-4">
             <div className="flex items-start gap-3">
-              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 flex-shrink-0 mt-0.5">
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 flex-shrink-0 mt-0.5">
                 <MessageSquare className="h-3 w-3 text-blue-600" />
               </div>
               <div className="flex-1">
-                <div className="text-sm font-medium text-blue-800 mb-1">
+                <div className="text-sm font-medium text-primary mb-1">
                   Peer Review Feedback:
                 </div>
-                <div className="text-sm text-blue-700 bg-white rounded-md p-2 border border-blue-200">
+                <div className="text-sm text-foreground bg-card rounded-md p-2 border border-border">
                   {task.reviewFeedback}
                 </div>
               </div>
@@ -187,99 +174,6 @@ function RealTaskRow({ task }: { task: TaskTableItem }) {
 }
 
 // Task row component (kept for legacy data)
-function TaskRow({ task }: { task: Task }) {
-  const getDifficultyConfig = (difficulty: Task["difficulty"]) => {
-    switch (difficulty) {
-      case "easy":
-        return {
-          badgeText: "Easy",
-          badgeClass:
-            "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200",
-        };
-      case "medium":
-        return {
-          badgeText: "Medium",
-          badgeClass:
-            "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200",
-        };
-      case "hard":
-        return {
-          badgeText: "Hard",
-          badgeClass: "bg-destructive/10 text-destructive",
-        };
-    }
-  };
-
-  const getActionConfig = (action: Task["action"]) => {
-    switch (action) {
-      case "done":
-        return {
-          buttonText: "Done",
-          buttonClass:
-            "bg-emerald-600 dark:bg-emerald-700 text-white hover:bg-emerald-700 dark:hover:bg-emerald-800",
-          icon: <CheckCircle className="h-3 w-3 mr-1" />,
-        };
-      case "complete":
-        return {
-          buttonText: "Complete",
-          buttonClass:
-            "bg-background border border-input text-foreground hover:bg-accent hover:text-accent-foreground",
-          icon: <Clock className="h-3 w-3 mr-1" />,
-        };
-    }
-  };
-
-  const difficultyConfig = getDifficultyConfig(task.difficulty);
-  const actionConfig = getActionConfig(task.action);
-
-  return (
-    <tr className="border-b border-border hover:bg-muted/50">
-      <td className="py-4 px-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={`flex items-center justify-center w-8 h-8 rounded-md ${
-              task.action === "done" ? "bg-green-100" : "bg-muted"
-            }`}
-          >
-            <Medal className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <div className="font-medium text-sm">{task.title}</div>
-            <div className="text-xs text-muted-foreground">
-              {task.description}
-            </div>
-          </div>
-        </div>
-      </td>
-      <td className="py-4 px-4">
-        <Badge variant="secondary" className={difficultyConfig.badgeClass}>
-          {difficultyConfig.badgeText}
-        </Badge>
-      </td>
-      <td className="py-4 px-4">
-        <div className="flex items-center gap-1">
-          <Zap className="h-4 w-4 text-green-600" />
-          <span className="text-sm font-medium">{task.xp}</span>
-        </div>
-      </td>
-      <td className="py-4 px-4">
-        <div className="flex items-center gap-1">
-          <Banknote className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-medium">{task.points}</span>
-        </div>
-      </td>
-      <td className="py-4 px-4">
-        <div className="flex justify-end">
-          <Button size="sm" className={`h-8  ${actionConfig.buttonClass}`}>
-            {actionConfig.icon}
-            {actionConfig.buttonText}
-          </Button>
-        </div>
-      </td>
-    </tr>
-  );
-}
-
 // Weekly report row component
 function WeeklyReportRow({ report }: { report: WeeklyReport }) {
   const getActionConfig = (status: WeeklyReport["status"]) => {
@@ -294,7 +188,7 @@ function WeeklyReportRow({ report }: { report: WeeklyReport }) {
       case "done":
         return {
           buttonText: "Done",
-          buttonClass: "bg-green-600 text-white hover:bg-green-700",
+          buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
           icon: <CheckCircle className="h-3 w-3 mr-1" />,
         };
       case "missed":
@@ -355,12 +249,12 @@ function StrikeRow({ strike }: { strike: Strike }) {
       case "explained":
         return {
           badgeText: "Explained",
-          badgeClass: "bg-green-100 text-green-800",
+          badgeClass: "bg-primary/10 text-primary",
         };
       case "waiting-explanation":
         return {
           badgeText: "Waiting on Explanation",
-          badgeClass: "bg-red-100 text-red-800",
+          badgeClass: "bg-destructive/10 text-destructive",
         };
     }
   };
@@ -370,7 +264,7 @@ function StrikeRow({ strike }: { strike: Strike }) {
       case "done":
         return {
           buttonText: "Done",
-          buttonClass: "bg-green-600 text-white hover:bg-green-700",
+          buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
           icon: <CheckCircle className="h-3 w-3 mr-1" />,
         };
       case "explain":
@@ -390,7 +284,7 @@ function StrikeRow({ strike }: { strike: Strike }) {
     <tr className="border-b border-border hover:bg-muted/50">
       <td className="py-4 px-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-red-100">
+          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-destructive/10">
             <AlertTriangle className="h-4 w-4 text-red-600" />
           </div>
           <div>
@@ -431,7 +325,6 @@ function StrikeRow({ strike }: { strike: Strike }) {
 export default function MyJourneyPage() {
   const [userTasks, setUserTasks] = useState<TaskTableItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ id: string } | null>(null);
 
   useEffect(() => {
     const fetchUserAndTasks = async () => {
@@ -442,8 +335,6 @@ export default function MyJourneyPage() {
         data: { user: currentUser },
       } = await supabase.auth.getUser();
       if (!currentUser) return;
-
-      setUser({ id: currentUser.id });
 
       // Fetch user tasks
       try {
@@ -467,7 +358,7 @@ export default function MyJourneyPage() {
           <h1 className="text-3xl font-bold mb-2">{myJourneyData.user.name}</h1>
           <Badge
             variant="secondary"
-            className="bg-green-100 text-green-800 px-3 py-1"
+            className="bg-primary/10 text-primary px-3 py-1"
           >
             {myJourneyData.user.status}
           </Badge>

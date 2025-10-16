@@ -186,7 +186,7 @@ export function TaskSubmissionModal({
           <div key={field.name}>
             <Label htmlFor={field.name}>
               {field.label}{" "}
-              {field.required && <span className="text-red-500">*</span>}
+              {field.required && <span className="text-destructive">*</span>}
             </Label>
             <Input
               id={field.name}
@@ -205,7 +205,7 @@ export function TaskSubmissionModal({
           <div key={field.name}>
             <Label htmlFor={field.name}>
               {field.label}{" "}
-              {field.required && <span className="text-red-500">*</span>}
+              {field.required && <span className="text-destructive">*</span>}
             </Label>
             <Textarea
               id={field.name}
@@ -225,7 +225,7 @@ export function TaskSubmissionModal({
           <div key={field.name}>
             <Label>
               {field.label}{" "}
-              {field.required && <span className="text-red-500">*</span>}
+              {field.required && <span className="text-destructive">*</span>}
             </Label>
             <div className="flex gap-2">
               <Input
@@ -276,9 +276,9 @@ export function TaskSubmissionModal({
           <div key={field.name}>
             <Label>
               {field.label}{" "}
-              {field.required && <span className="text-red-500">*</span>}
+              {field.required && <span className="text-destructive">*</span>}
             </Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+            <div className="border-2 border-dashed border-border rounded-lg p-4">
               <input
                 type="file"
                 accept={field.accept}
@@ -291,11 +291,11 @@ export function TaskSubmissionModal({
                 htmlFor={`file-${field.name}`}
                 className="cursor-pointer flex flex-col items-center gap-2"
               >
-                <Upload className="h-8 w-8 text-gray-400" />
-                <span className="text-sm text-gray-600">
+                <Upload className="h-8 w-8 text-muted-foreground" />
+                <span className="text-sm text-foreground">
                   Click to upload files or drag and drop
                 </span>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-muted-foreground">
                   {field.accept || "Any file type"}
                 </span>
               </Label>
@@ -307,9 +307,9 @@ export function TaskSubmissionModal({
                     key={index}
                     className="flex items-center gap-2 p-2 border rounded"
                   >
-                    <FileText className="h-4 w-4 text-gray-500" />
+                    <FileText className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm flex-1">{file.name}</span>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-muted-foreground">
                       {(file.size / 1024 / 1024).toFixed(2)} MB
                     </span>
                     <Button

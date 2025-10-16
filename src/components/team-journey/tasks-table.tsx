@@ -1,6 +1,7 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { DifficultyBadge } from "@/components/ui/difficulty-badge";
 import {
   Select,
   SelectContent,
@@ -26,32 +27,6 @@ export function TasksTable({
   onAssignTask,
 }: TasksTableProps) {
   const router = useRouter();
-  const getDifficultyConfig = (difficulty: TaskTableItem["difficulty"]) => {
-    switch (difficulty) {
-      case "Easy":
-        return "bg-emerald-100 text-emerald-800";
-      case "Medium":
-        return "bg-yellow-100 text-yellow-800";
-      case "Hard":
-        return "bg-destructive/10 text-destructive";
-    }
-  };
-
-  const getStatusConfig = (status: TaskTableItem["status"]) => {
-    switch (status) {
-      case "Finished":
-        return "bg-emerald-100 text-emerald-800";
-      case "In Progress":
-        return "bg-blue-100 text-blue-800";
-      case "Not Accepted":
-        return "bg-destructive/10 text-destructive";
-      case "Peer Review":
-        return "bg-purple-100 text-purple-800";
-      case "Not Started":
-      default:
-        return "bg-muted text-muted-foreground";
-    }
-  };
 
   return (
     <div>
@@ -92,8 +67,8 @@ export function TasksTable({
               >
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-md bg-emerald-100">
-                      <Medal className="h-4 w-4 text-emerald-600" />
+                    <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
+                      <Medal className="h-4 w-4 text-primary" />
                     </div>
                     <div>
                       <div className="font-medium text-sm">{task.title}</div>
@@ -165,32 +140,43 @@ export function TasksTable({
                   )}
                 </td>
                 <td className="py-4 px-4">
-                  <Badge
-                    variant="secondary"
-                    className={getDifficultyConfig(task.difficulty)}
-                  >
-                    {task.difficulty}
-                  </Badge>
+                  <DifficultyBadge
+                    level={
+                      task.difficulty === "Easy"
+                        ? 1
+                        : task.difficulty === "Medium"
+                        ? 2
+                        : 3
+                    }
+                  />
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-1">
-                    <Zap className="h-4 w-4 text-emerald-600" />
+                    <Zap className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium">{task.xp}</span>
                   </div>
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-1">
-                    <CreditCard className="h-4 w-4 text-blue-600" />
+                    <CreditCard className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium">{task.points}</span>
                   </div>
                 </td>
                 <td className="py-4 px-4">
-                  <Badge
-                    variant="secondary"
-                    className={getStatusConfig(task.status)}
-                  >
-                    {task.status}
-                  </Badge>
+                  <StatusBadge
+                    status={
+                      task.status === "Finished"
+                        ? "approved"
+                        : task.status === "Not Accepted"
+                        ? "rejected"
+                        : task.status === "Peer Review"
+                        ? "pending_review"
+                        : task.status === "In Progress"
+                        ? "in_progress"
+                        : "not_started"
+                    }
+                    variant="journey"
+                  />
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex justify-end gap-2">
@@ -198,7 +184,7 @@ export function TasksTable({
                       <>
                         <Button
                           size="sm"
-                          className="bg-emerald-600 text-white hover:bg-emerald-700 text-xs"
+                          className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
                           disabled
                         >
                           <CheckCircle className="h-3 w-3 mr-1" />

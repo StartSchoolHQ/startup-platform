@@ -19,7 +19,7 @@ import { LeaderboardEntry } from "@/types/leaderboard";
 function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
   return (
     <div
-      className={`grid gap-4 p-3 border-b border-border items-center ${
+      className={`grid gap-4 p-4 border-b border-border items-center ${
         entry.user.isCurrentUser ? "bg-blue-50" : ""
       }`}
       style={{ gridTemplateColumns: "80px 200px 1fr 1fr 1fr 1fr 1fr 100px" }}

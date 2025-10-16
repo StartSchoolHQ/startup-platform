@@ -292,8 +292,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               variant={team.status === "active" ? "default" : "secondary"}
               className={
                 team.status === "active"
-                  ? "bg-green-100 text-green-800 hover:bg-green-100"
-                  : "bg-gray-100 text-gray-800"
+                  ? "bg-primary/10 text-primary hover:bg-primary/15"
+                  : "bg-muted text-muted-foreground"
               }
             >
               {team.status === "active" ? "Active" : "Archived"}
@@ -301,7 +301,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             {!isTeamMember && (
               <Badge
                 variant="outline"
-                className="bg-blue-50 text-blue-700 border-blue-200"
+                className="bg-muted/50 text-muted-foreground border-border"
               >
                 View Only
               </Badge>
@@ -309,7 +309,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             {isTeamMember && userRole && (
               <Badge
                 variant="outline"
-                className="bg-green-50 text-green-700 border-green-200"
+                className="bg-primary/10 text-primary border-primary/20"
               >
                 {userRole
                   .replace("_", " ")
@@ -321,7 +321,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             {team.description || "No description provided"}
           </p>
           {!isTeamMember && (
-            <p className="text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-md border border-blue-200">
+            <p className="text-sm text-primary bg-primary/5 px-3 py-2 rounded-md border border-primary/20">
               💡 You&apos;re viewing this team as a guest. Join the team to
               participate in activities and submit reports.
             </p>
@@ -396,8 +396,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             <div className="grid grid-cols-2 gap-4">
               {" "}
               {/* Team Size */}
-              <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-100">
+              <div className="flex items-center gap-3 border border-border p-2 rounded-md">
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10">
                   <Users className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
@@ -408,8 +408,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 </div>
               </div>
               {/* Total Experience Earned */}
-              <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-purple-100">
+              <div className="flex items-center gap-3 border border-border p-2 rounded-md">
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10">
                   <Zap className="h-4 w-4 text-purple-600" />
                 </div>
                 <div>
@@ -426,7 +426,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               {team.members.slice(0, 4).map((member) => (
                 <div
                   key={member.user_id}
-                  className="flex items-center gap-3 border border-gray-200 p-2 rounded-md"
+                  className="flex items-center gap-3 border border-border p-2 rounded-md"
                 >
                   <Avatar className="w-10 h-10">
                     <AvatarImage src={member.users?.avatar_url || ""} />
@@ -472,8 +472,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             {/* Top Row - Date Created and Strikes */}
             <div className="grid grid-cols-2 gap-4">
               {/* Date Created */}
-              <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-100">
+              <div className="flex items-center gap-3 border border-border p-2 rounded-md">
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10">
                   <Calendar className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
@@ -487,8 +487,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               </div>
 
               {/* Strikes */}
-              <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-red-100">
+              <div className="flex items-center gap-3 border border-border p-2 rounded-md">
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-destructive/10">
                   <AlertTriangle className="h-4 w-4 text-red-600" />
                 </div>
                 <div className="flex items-center gap-2">
@@ -517,8 +517,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             {/* Bottom Row - Points and Invested */}
             <div className="grid grid-cols-2 gap-4">
               {/* Total Points Earned */}
-              <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-green-100">
+              <div className="flex items-center gap-3 border border-border p-2 rounded-md">
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10">
                   <CreditCard className="h-4 w-4 text-green-600" />
                 </div>
                 <div>
@@ -530,8 +530,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               </div>
 
               {/* Total Points Invested */}
-              <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-red-100">
+              <div className="flex items-center gap-3 border border-border p-2 rounded-md">
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-destructive/10">
                   <CreditCard className="h-4 w-4 text-red-600" />
                 </div>
                 <div>
@@ -544,7 +544,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             </div>
 
             {/* Weekly Report */}
-            <div className="flex items-center gap-3 border border-gray-200 p-2 rounded-md">
+            <div className="flex items-center gap-3 border border-border p-2 rounded-md">
               <div className="flex -space-x-2">
                 {team.members.slice(0, 4).map((member) => {
                   const hasSubmitted = memberSubmissionStatus[member.user_id];
@@ -720,7 +720,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           {/* This Week Progress Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="p-4 text-center">
-              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-lg bg-blue-100">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-lg bg-primary/10">
                 <TrendingUp className="h-6 w-6 text-blue-600" />
               </div>
               <div className="text-2xl font-bold text-gray-900">92%</div>
@@ -728,7 +728,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             </Card>
 
             <Card className="p-4 text-center">
-              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-lg bg-green-100">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-lg bg-primary/10">
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
               <div className="text-2xl font-bold text-gray-900">24</div>

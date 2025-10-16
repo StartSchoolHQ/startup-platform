@@ -8,8 +8,10 @@ interface ActivityItemProps {
 
 export function ActivityItem({ activity }: ActivityItemProps) {
   const getBackgroundColor = (iconColor: string) => {
-    if (iconColor.includes("red")) return "bg-red-100 dark:bg-red-950/20";
-    if (iconColor.includes("pink")) return "bg-pink-100 dark:bg-pink-950/20";
+    if (iconColor.includes("red") || iconColor.includes("destructive"))
+      return "bg-destructive/10";
+    if (iconColor.includes("pink") || iconColor.includes("primary"))
+      return "bg-primary/10";
     return "bg-muted";
   };
 

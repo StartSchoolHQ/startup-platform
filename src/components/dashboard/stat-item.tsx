@@ -13,9 +13,9 @@ export function StatItem({ stat }: StatItemProps) {
         icon={stat.icon}
         iconColor={stat.iconColor}
         backgroundColor={
-          stat.iconColor.includes("orange")
-            ? "bg-orange-100 dark:bg-orange-950/20"
-            : "bg-purple-100 dark:bg-purple-950/20"
+          stat.iconColor.includes("orange") || stat.iconColor.includes("yellow")
+            ? "bg-accent/20"
+            : "bg-primary/10"
         }
       />
       <div>

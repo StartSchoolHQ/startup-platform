@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,7 +34,9 @@ import {
 import { useAppContext } from "@/contexts/app-context";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { TaskSubmissionModal } from "@/components/tasks/task-submission-modal";
+import { TaskDetailsModal } from "@/components/ui/task-details-modal";
+import { StatusBadge, TaskStatus } from "@/components/ui/status-badge";
+import { formatDate } from "@/lib/date-utils";
 import { uploadTaskFiles } from "@/lib/file-upload";
 
 interface TaskDetailPageProps {
@@ -296,25 +297,6 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
     );
   }
 
-  const getStatusConfig = (status: string) => {
-    switch (status) {
-      case "approved":
-        return { label: "Finished", color: "bg-green-100 text-green-800" };
-      case "in_progress":
-        return { label: "In Progress", color: "bg-orange-100 text-orange-800" };
-      case "rejected":
-      case "revision_required":
-        return { label: "Not Accepted", color: "bg-red-100 text-red-800" };
-      case "pending_review":
-        return { label: "Peer Review", color: "bg-purple-100 text-purple-800" };
-      case "not_started":
-      default:
-        return { label: "Not Started", color: "bg-gray-100 text-gray-800" };
-    }
-  };
-
-  const statusConfig = getStatusConfig(task.status);
-
   return (
     <div className="space-y-6">
       {/* Breadcrumb Navigation */}
@@ -345,9 +327,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold">{task.title}</h1>
-            <Badge variant="secondary" className={statusConfig.color}>
-              {statusConfig.label}
-            </Badge>
+            <StatusBadge status={task.status as TaskStatus} variant="journey" />
           </div>
           <p className="text-muted-foreground text-lg">
             {task.category && `{{${task.category}}}`}
@@ -583,25 +563,13 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                     <CardTitle className="text-lg font-semibold">
                       Peer Review Results
                     </CardTitle>
-                    <Badge
-                      variant="secondary"
-                      className={
-                        task.status === "approved"
-                          ? "bg-green-100 text-green-800"
-                          : task.status === "rejected"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }
-                    >
-                      {task.status === "approved"
-                        ? "Accepted"
-                        : task.status === "rejected"
-                        ? "Rejected"
-                        : "Revision Required"}
-                    </Badge>
+                    <StatusBadge
+                      status={task.status as TaskStatus}
+                      variant="journey"
+                    />
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <User className="h-4 w-4 text-blue-600" />
                         <span className="text-sm font-medium text-blue-800">
@@ -638,7 +606,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                         <div className="text-xs text-muted-foreground">
                           Reviewed on{" "}
                           {task.completed_at
-                            ? new Date(task.completed_at).toLocaleString()
+                            ? formatDate(task.completed_at)
                             : "Recently"}
                         </div>
                       </div>
@@ -705,17 +673,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                         <div className="flex-1">
                           <p className="font-medium">Task assigned</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(task.assigned_at).toLocaleString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "2-digit",
-                                day: "2-digit",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: false,
-                              }
-                            )}
+                            {formatDate(task.assigned_at)}
                           </p>
                           {task.assignee_name && (
                             <p className="text-sm text-muted-foreground">
@@ -731,14 +689,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                         <div className="flex-1">
                           <p className="font-medium">Work started</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(task.started_at).toLocaleString("en-US", {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              hour12: false,
-                            })}
+                            {formatDate(task.started_at)}
                           </p>
                         </div>
                       </div>
@@ -753,17 +704,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                               : "Task completed"}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(task.completed_at).toLocaleString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "2-digit",
-                                day: "2-digit",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: false,
-                              }
-                            )}
+                            {formatDate(task.completed_at)}
                           </p>
                         </div>
                       </div>
@@ -813,16 +754,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                                         </p>
                                         {isLastReview && task.updated_at && (
                                           <p className="text-sm text-muted-foreground">
-                                            {new Date(
-                                              task.updated_at
-                                            ).toLocaleString("en-US", {
-                                              year: "numeric",
-                                              month: "2-digit",
-                                              day: "2-digit",
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                              hour12: false,
-                                            })}
+                                            {formatDate(task.updated_at)}
                                           </p>
                                         )}
                                         <p className="text-sm text-muted-foreground mt-1 italic">
@@ -921,7 +853,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {task.assigned_at
-                        ? new Date(task.assigned_at).toLocaleDateString()
+                        ? formatDate(task.assigned_at, "date-only")
                         : "Recently assigned"}
                     </div>
                   </div>
@@ -1053,7 +985,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
               ) : (
                 <Button className="w-full" disabled>
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  {statusConfig.label}
+                  Task Status
                 </Button>
               )}
 
@@ -1127,7 +1059,8 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
       )}
 
       {/* Task Submission Modal */}
-      <TaskSubmissionModal
+      <TaskDetailsModal
+        mode="submission"
         isOpen={showSubmissionModal}
         onClose={() => setShowSubmissionModal(false)}
         onSubmit={handleSubmissionSubmit}

@@ -22,15 +22,15 @@ export function AchievementCard({
       case "in-progress":
         return {
           badgeText: "In Progress",
-          badgeClass: "bg-yellow-100 text-yellow-800",
-          cardClass: "border-purple-200 bg-purple-50/30",
+          badgeClass: "bg-accent/20 text-accent-foreground",
+          cardClass: "border-border bg-accent/5",
           iconBg: "bg-muted",
         };
       case "finished":
         return {
           badgeText: "Finished",
-          badgeClass: "bg-emerald-100 text-emerald-800",
-          cardClass: "border-emerald-200 bg-emerald-50/30",
+          badgeClass: "bg-primary/10 text-primary",
+          cardClass: "border-primary/20 bg-primary/5",
           iconBg: "bg-muted",
         };
       case "not-started":
@@ -59,7 +59,7 @@ export function AchievementCard({
       </CardHeader>
       <CardContent className="px-4 pb-4">
         <div className="flex items-center gap-2 align-middle mb-4">
-          <Medal className="h-12 w-12 text-purple-500 flex-shrink-0 bg-muted rounded-md p-2" />
+          <Medal className="h-12 w-12 text-primary flex-shrink-0 bg-muted rounded-md p-2" />
           <div className="">
             <h3 className="font-semibold text-lg">{title}</h3>
             <p className="text-sm text-muted-foreground">{description}</p>
@@ -70,7 +70,7 @@ export function AchievementCard({
           {/* Points Box */}
           <div className="border border-border rounded-lg p-2 bg-background">
             <div className="flex items-center gap-2">
-              <CreditCard className="h-8 w-8 text-blue-600 flex-shrink-0 bg-muted rounded-md p-2" />
+              <CreditCard className="h-8 w-8 text-primary flex-shrink-0 bg-muted rounded-md p-2" />
               <div className="min-w-0">
                 <div className="font-semibold text-base text-foreground">
                   {points}
@@ -83,7 +83,7 @@ export function AchievementCard({
           {/* XP Box */}
           <div className="border border-border rounded-lg p-2 bg-background">
             <div className="flex items-center gap-2">
-              <Zap className="h-8 w-8 text-emerald-600 flex-shrink-0 bg-muted rounded-md p-2" />
+              <Zap className="h-8 w-8 text-primary flex-shrink-0 bg-muted rounded-md p-2" />
               <div className="min-w-0">
                 <div className="font-semibold text-base text-foreground">
                   {xp}

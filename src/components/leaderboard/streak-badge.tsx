@@ -7,9 +7,9 @@ export function StreakBadge({ days, type }: StreakBadgeProps) {
   const getBadgeColor = () => {
     switch (type) {
       case "active":
-        return "bg-emerald-100 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400";
+        return "bg-primary/10 text-primary";
       case "warning":
-        return "bg-orange-100 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400";
+        return "bg-accent/20 text-accent-foreground";
       case "inactive":
         return "bg-muted text-muted-foreground";
       default:

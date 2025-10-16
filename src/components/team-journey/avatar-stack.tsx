@@ -44,7 +44,7 @@ export function AvatarStack({
           `}
         >
           <AvatarImage src={user.avatar} alt={user.name} />
-          <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-primary-foreground font-bold text-xs">
+          <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
             {user.name
               .split(" ")
               .map((n) => n[0])

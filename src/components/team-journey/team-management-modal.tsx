@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { formatDate } from "@/lib/date-utils";
 import {
   Dialog,
   DialogContent,
@@ -95,11 +96,11 @@ export function TeamManagementModal({
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "founder":
-        return <Crown className="h-4 w-4 text-yellow-600" />;
+        return <Crown className="h-4 w-4 text-primary" />;
       case "co_founder":
-        return <Shield className="h-4 w-4 text-blue-600" />;
+        return <Shield className="h-4 w-4 text-primary" />;
       case "leader":
-        return <Shield className="h-4 w-4 text-emerald-600" />;
+        return <Shield className="h-4 w-4 text-primary" />;
       default:
         return <User className="h-4 w-4 text-muted-foreground" />;
     }
@@ -108,11 +109,11 @@ export function TeamManagementModal({
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "founder":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80";
+        return "bg-primary/10 text-primary hover:bg-primary/20";
       case "co_founder":
-        return "bg-blue-100 text-blue-800 hover:bg-blue-100/80";
+        return "bg-primary/10 text-primary hover:bg-primary/20";
       case "leader":
-        return "bg-emerald-100 text-emerald-800 hover:bg-emerald-100/80";
+        return "bg-primary/10 text-primary hover:bg-primary/20";
       default:
         return "bg-muted text-muted-foreground hover:bg-muted/80";
     }
@@ -311,8 +312,7 @@ export function TeamManagementModal({
                               .replace(/\b\w/g, (l) => l.toUpperCase())}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
-                            Joined{" "}
-                            {new Date(member.joined_at).toLocaleDateString()}
+                            Joined {formatDate(member.joined_at)}
                           </span>
                         </div>
                       </div>

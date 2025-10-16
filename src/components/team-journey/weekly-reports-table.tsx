@@ -34,7 +34,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
       case "done":
         return {
           buttonText: "Done",
-          buttonClass: "bg-emerald-600 text-white hover:bg-emerald-700",
+          buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
           icon: <CheckCircle className="h-3 w-3 mr-1" />,
         };
       case "missed":
@@ -50,7 +50,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
   const getRowBackgroundColor = (status: WeeklyReport["status"]) => {
     switch (status) {
       case "done":
-        return "bg-emerald-50/50 border-l-4 border-l-emerald-500";
+        return "bg-primary/5 border-l-4 border-l-primary";
       case "missed":
         return "bg-destructive/5 border-l-4 border-l-destructive";
       default:
@@ -104,7 +104,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-                        <Calendar className="h-4 w-4 text-blue-600" />
+                        <Calendar className="h-4 w-4 text-primary" />
                       </div>
                       <div>
                         <div className="font-medium text-sm text-foreground">
@@ -133,7 +133,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-1">
-                      <Users className="h-4 w-4 text-blue-600" />
+                      <Users className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium text-foreground">
                         {report.clients}
                       </span>
@@ -141,7 +141,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4 text-purple-500" />
+                      <Calendar className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium">
                         {report.meetings}
                       </span>
@@ -149,13 +149,13 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-1">
-                      <Zap className="h-4 w-4 text-green-500" />
+                      <Zap className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium">{report.xp}</span>
                     </div>
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-1">
-                      <CreditCard className="h-4 w-4 text-blue-500" />
+                      <CreditCard className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium">
                         {report.points}
                       </span>

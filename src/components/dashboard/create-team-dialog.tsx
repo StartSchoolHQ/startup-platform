@@ -109,7 +109,7 @@ export function CreateTeamDialog({
         )}
 
         {success && (
-          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 rounded-lg text-emerald-700 dark:text-emerald-400 text-sm">
+          <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg text-primary text-sm">
             {success}
           </div>
         )}
@@ -155,9 +155,7 @@ export function CreateTeamDialog({
             </div>
             <span
               className={`font-semibold ${
-                canAfford
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-destructive"
+                canAfford ? "text-primary" : "text-destructive"
               }`}
             >
               {user?.total_credits || 0} Credits
