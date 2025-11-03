@@ -27,6 +27,7 @@ A comprehensive startup accelerator platform built with Next.js and Supabase, de
 - **Achievement System**: Track tasks, credits, and XP progression
 - **Leaderboard**: Competitive rankings and performance metrics
 - **Revenue Tracking**: Monitor startup revenue streams and growth
+- **Automated Strike System**: Automated tracking of missed weekly reports with strike penalties
 
 ## 🛠️ Tech Stack
 
@@ -37,6 +38,8 @@ A comprehensive startup accelerator platform built with Next.js and Supabase, de
 - **Styling**: Tailwind CSS 4
 - **TypeScript**: Full type safety with database types
 - **State Management**: React Context API
+- **Automation**: Supabase Edge Functions + pg_cron for scheduled tasks
+- **HTTP Client**: pg_net for database-driven HTTP requests
 
 ## 📦 Installation
 
@@ -86,49 +89,49 @@ A comprehensive startup accelerator platform built with Next.js and Supabase, de
 ## 📁 Project Structure
 
 src/
-├── app/                    # Next.js App Router
-│   ├── dashboard/         # Protected dashboard pages
-│   ├── login/            # Authentication pages
-│   ├── account/          # User account management
-│   └── profile/setup/    # Profile completion flow
-├── components/           # Reusable UI components
-│   ├── ui/              # shadcn/ui base components
-│   ├── dashboard/       # Dashboard-specific components
-│   └── ...              # Feature-specific components
-├── contexts/            # React Context providers
-├── lib/                 # Utility functions and configurations
-│   └── supabase/       # Supabase client configurations
-└── types/              # TypeScript type definitions
+├── app/ # Next.js App Router
+│ ├── dashboard/ # Protected dashboard pages
+│ ├── login/ # Authentication pages
+│ ├── account/ # User account management
+│ └── profile/setup/ # Profile completion flow
+├── components/ # Reusable UI components
+│ ├── ui/ # shadcn/ui base components
+│ ├── dashboard/ # Dashboard-specific components
+│ └── ... # Feature-specific components
+├── contexts/ # React Context providers
+├── lib/ # Utility functions and configurations
+│ └── supabase/ # Supabase client configurations
+└── types/ # TypeScript type definitions
 
 src/
-├── app/                    # Next.js App Router
-│   ├── dashboard/         # Protected dashboard pages
-│   ├── login/            # Authentication pages
-│   ├── account/          # User account management
-│   └── profile/setup/    # Profile completion flow
-├── components/           # Reusable UI components
-│   ├── ui/              # shadcn/ui base components
-│   ├── dashboard/       # Dashboard-specific components
-│   └── ...              # Feature-specific components
-├── contexts/            # React Context providers
-├── lib/                 # Utility functions and configurations
-│   └── supabase/       # Supabase client configurations
-└── types/              # TypeScript type definitions
+├── app/ # Next.js App Router
+│ ├── dashboard/ # Protected dashboard pages
+│ ├── login/ # Authentication pages
+│ ├── account/ # User account management
+│ └── profile/setup/ # Profile completion flow
+├── components/ # Reusable UI components
+│ ├── ui/ # shadcn/ui base components
+│ ├── dashboard/ # Dashboard-specific components
+│ └── ... # Feature-specific components
+├── contexts/ # React Context providers
+├── lib/ # Utility functions and configurations
+│ └── supabase/ # Supabase client configurations
+└── types/ # TypeScript type definitions
 
 src/
-├── app/                    # Next.js App Router
-│   ├── dashboard/         # Protected dashboard pages
-│   ├── login/            # Authentication pages
-│   ├── account/          # User account management
-│   └── profile/setup/    # Profile completion flow
-├── components/           # Reusable UI components
-│   ├── ui/              # shadcn/ui base components
-│   ├── dashboard/       # Dashboard-specific components
-│   └── ...              # Feature-specific components
-├── contexts/            # React Context providers
-├── lib/                 # Utility functions and configurations
-│   └── supabase/       # Supabase client configurations
-└── types/              # TypeScript type definitions
+├── app/ # Next.js App Router
+│ ├── dashboard/ # Protected dashboard pages
+│ ├── login/ # Authentication pages
+│ ├── account/ # User account management
+│ └── profile/setup/ # Profile completion flow
+├── components/ # Reusable UI components
+│ ├── ui/ # shadcn/ui base components
+│ ├── dashboard/ # Dashboard-specific components
+│ └── ... # Feature-specific components
+├── contexts/ # React Context providers
+├── lib/ # Utility functions and configurations
+│ └── supabase/ # Supabase client configurations
+└── types/ # TypeScript type definitions
 
 ## 🔧 Available Scripts
 
@@ -179,13 +182,44 @@ The app can be deployed to any platform supporting Node.js:
 - Railway
 - Digital Ocean App Platform
 
+## 🤖 Automation System
+
+### Weekly Report Strike System
+
+The platform includes a fully automated system for tracking missed weekly reports:
+
+- **Edge Function**: `weekly-strikes-automation` processes all teams and generates strikes for missed reports
+- **Scheduled Execution**: Runs every Monday at 9:00 AM UTC via pg_cron
+- **Database Functions**:
+  - `check_missed_weekly_reports`: Identifies teams with missing reports
+  - `get_team_strikes`: Retrieves team strike history
+  - `update_team_strikes_count`: Maintains strike counters
+- **Frontend Integration**: Dynamic loading and display of strikes in team journey pages
+
+### Manual Testing
+
+```bash
+# Test the Edge Function manually
+curl -X POST https://ksoohvygoysofvtqdumz.supabase.co/functions/v1/weekly-strikes-automation \
+  -H "Authorization: Bearer YOUR_ANON_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"manual_test": true}'
+```
+
+### Monitoring
+
+- Check cron job status: `SELECT * FROM cron.job WHERE jobname = 'weekly-strikes-automation';`
+- View execution history: `SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;`
+- Monitor HTTP responses: `SELECT * FROM net._http_response ORDER BY created DESC LIMIT 10;`
+
 ## 📈 Features Roadmap
 
+- [x] Automated weekly report strike system
 - [ ] Real-time notifications
 - [ ] Advanced analytics dashboard
 - [ ] Mobile app companion
 - [ ] Integration with external tools
-- [ ] Automated reporting system
+- [ ] Email notifications for strikes
 
 ## 🤝 Contributing
 

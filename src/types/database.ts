@@ -17,32 +17,102 @@ export type Database = {
       achievements: {
         Row: {
           active: boolean;
+          color_theme: string | null;
           created_at: string;
+          credits_reward: number | null;
           description: string | null;
           icon: string | null;
           id: string;
           name: string;
           sort_order: number;
+          xp_reward: number | null;
         };
         Insert: {
           active?: boolean;
+          color_theme?: string | null;
           created_at?: string;
+          credits_reward?: number | null;
           description?: string | null;
           icon?: string | null;
           id?: string;
           name: string;
           sort_order?: number;
+          xp_reward?: number | null;
         };
         Update: {
           active?: boolean;
+          color_theme?: string | null;
           created_at?: string;
+          credits_reward?: number | null;
           description?: string | null;
           icon?: string | null;
           id?: string;
           name?: string;
           sort_order?: number;
+          xp_reward?: number | null;
         };
         Relationships: [];
+      };
+      client_meetings: {
+        Row: {
+          cancelled_at: string | null;
+          client_name: string;
+          completed_at: string | null;
+          created_at: string | null;
+          id: string;
+          meeting_date: string | null;
+          responsible_user_id: string;
+          status: string;
+          team_id: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          cancelled_at?: string | null;
+          client_name: string;
+          completed_at?: string | null;
+          created_at?: string | null;
+          id?: string;
+          meeting_date?: string | null;
+          responsible_user_id: string;
+          status?: string;
+          team_id: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          cancelled_at?: string | null;
+          client_name?: string;
+          completed_at?: string | null;
+          created_at?: string | null;
+          id?: string;
+          meeting_date?: string | null;
+          responsible_user_id?: string;
+          status?: string;
+          team_id?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "client_meetings_responsible_user_id_fkey";
+            columns: ["responsible_user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_progress";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_meetings_responsible_user_id_fkey";
+            columns: ["responsible_user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_meetings_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "teams";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       revenue_streams: {
         Row: {
@@ -732,3 +802,4 @@ export type TeamMember = Tables<"team_members">;
 export type TeamStrike = Tables<"team_strikes">;
 export type WeeklyReport = Tables<"weekly_reports">;
 export type RevenueStream = Tables<"revenue_streams">;
+export type ClientMeeting = Tables<"client_meetings">;

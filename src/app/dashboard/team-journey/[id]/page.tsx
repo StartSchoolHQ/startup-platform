@@ -20,6 +20,7 @@ import { ClientMeetingsTable } from "@/components/team-journey/client-meetings-t
 import { StrikesTable } from "@/components/team-journey/strikes-table";
 import { TeamManagementModal } from "@/components/team-journey/team-management-modal";
 import { WeeklyReportModal } from "@/components/weekly-reports/weekly-report-modal";
+import { AddClientMeetingModal } from "@/components/team-journey/add-client-meeting-modal";
 import {
   ExternalLink,
   FileText,
@@ -40,6 +41,8 @@ import {
   getTeamDetails,
   isUserTeamMember,
   getUserTeamRole,
+  getTeamStrikes,
+  getTeamWeeklyReports,
 } from "@/lib/database";
 import { StatsCard } from "@/types/dashboard";
 import { useEffect, useState, useCallback } from "react";
@@ -56,6 +59,44 @@ interface ProductDetailPageProps {
   params: Promise<{
     id: string;
   }>;
+}
+
+interface Strike {
+  id: string;
+  title: string;
+  datetime: string;
+  status: "explained" | "waiting-explanation";
+  xpPenalty: number;
+  pointsPenalty: number;
+  action: "done" | "explain";
+}
+
+interface WeeklyReportSubmission {
+  submission_data?: {
+    whatDidYouDoThisWeek?: string;
+    whatWereYourBlockers?: string;
+    whatWasYourBiggestAchievement?: string;
+    clientsContacted?: number;
+    meetingsHeld?: number;
+  };
+  users?: {
+    name?: string;
+    avatar_url?: string;
+  };
+}
+
+interface WeeklyReport {
+  id: string;
+  week: string;
+  dateRange: string;
+  weeklyFill: {
+    avatars: string[];
+    names: string[];
+  };
+  clients: number;
+  meetings: number;
+  status: "complete" | "done" | "missed";
+  submissions?: WeeklyReportSubmission[];
 }
 
 interface TeamDetails {
@@ -90,6 +131,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [showTeamManagement, setShowTeamManagement] = useState(false);
   const [showWeeklyReportModal, setShowWeeklyReportModal] = useState(false);
+  const [showAddMeetingModal, setShowAddMeetingModal] = useState(false);
   const [hasSubmittedThisWeek, setHasSubmittedThisWeek] = useState(false);
   const [checkingSubmission, setCheckingSubmission] = useState(true);
   const [memberSubmissionStatus, setMemberSubmissionStatus] = useState<
@@ -102,6 +144,11 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   >(null);
   const [filteredTasks, setFilteredTasks] = useState<TaskWithAchievement[]>([]);
   const [loadingAchievements, setLoadingAchievements] = useState(false);
+  const [strikes, setStrikes] = useState<Strike[]>([]);
+  const [loadingStrikes, setLoadingStrikes] = useState(false);
+  const [weeklyReports, setWeeklyReports] = useState<WeeklyReport[]>([]);
+  const [loadingWeeklyReports, setLoadingWeeklyReports] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Extract ID from params
   useEffect(() => {
@@ -263,6 +310,135 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     }
   }, [user?.id]);
 
+  // Load team strikes from database
+  const loadStrikes = useCallback(async () => {
+    if (!teamId) return;
+
+    setLoadingStrikes(true);
+    try {
+      const strikesData = await getTeamStrikes(teamId);
+      const strikesArray = Array.isArray(strikesData) ? strikesData : [];
+
+      // Transform database strikes to UI format
+      setStrikes(
+        strikesArray.map((strike) => ({
+          id: strike.id,
+          title: strike.reason || "Strike",
+          datetime: new Date(
+            strike.strike_date || strike.created_at
+          ).toLocaleString(),
+          status: strike.explanation
+            ? "explained"
+            : ("waiting-explanation" as const),
+          xpPenalty: 0, // Will be updated when we add penalties to the database
+          pointsPenalty: 0, // Will be updated when we add penalties to the database
+          action: strike.explanation ? "done" : ("explain" as const),
+        }))
+      );
+    } catch (error) {
+      console.error("Error loading strikes:", error);
+      setStrikes([]);
+    } finally {
+      setLoadingStrikes(false);
+    }
+  }, [teamId]);
+
+  // Load team weekly reports from database
+  const loadWeeklyReports = useCallback(async () => {
+    if (!teamId) return;
+
+    setLoadingWeeklyReports(true);
+    try {
+      const reportsData = await getTeamWeeklyReports(teamId);
+      const reportsArray = Array.isArray(reportsData) ? reportsData : [];
+
+      // Group reports by week to show team submission status
+      const weeklyReportsMap = new Map();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      reportsArray.forEach((report: any) => {
+        const weekKey = `${report.week_year}-${report.week_number}`;
+        if (!weeklyReportsMap.has(weekKey)) {
+          weeklyReportsMap.set(weekKey, {
+            week_number: report.week_number,
+            week_year: report.week_year,
+            week_start_date: report.week_start_date,
+            week_end_date: report.week_end_date,
+            submissions: [],
+          });
+        }
+        weeklyReportsMap.get(weekKey).submissions.push(report);
+      });
+
+      // Transform to UI format
+      const transformedReports = Array.from(weeklyReportsMap.values())
+        .sort((a, b) => {
+          if (a.week_year !== b.week_year) return b.week_year - a.week_year;
+          return b.week_number - a.week_number;
+        })
+        .map((weekData) => {
+          const hasSubmissions = weekData.submissions.length > 0;
+          const startDate = new Date(
+            weekData.week_start_date
+          ).toLocaleDateString("en-US", {
+            month: "2-digit",
+            day: "2-digit",
+          });
+          const endDate = new Date(weekData.week_end_date).toLocaleDateString(
+            "en-US",
+            {
+              month: "2-digit",
+              day: "2-digit",
+            }
+          );
+
+          return {
+            id: `${weekData.week_year}-${weekData.week_number}`,
+            week: `Week ${weekData.week_number}`,
+            dateRange: `${startDate}-${endDate}`,
+            weeklyFill: {
+              avatars: weekData.submissions.map(
+                (sub: WeeklyReportSubmission) =>
+                  sub.users?.avatar_url || "/avatars/john-doe.jpg"
+              ),
+              names: weekData.submissions.map(
+                (sub: WeeklyReportSubmission) =>
+                  sub.users?.name || "Unknown User"
+              ),
+            },
+            clients: weekData.submissions.reduce(
+              (
+                total: number,
+                sub: { submission_data?: { clientsContacted?: number } }
+              ) => {
+                return total + (sub.submission_data?.clientsContacted || 0);
+              },
+              0
+            ),
+            meetings: weekData.submissions.reduce(
+              (
+                total: number,
+                sub: { submission_data?: { meetingsHeld?: number } }
+              ) => {
+                return total + (sub.submission_data?.meetingsHeld || 0);
+              },
+              0
+            ),
+            status: (hasSubmissions
+              ? "done"
+              : "missed") as WeeklyReport["status"],
+            submissions: weekData.submissions,
+          };
+        });
+
+      setWeeklyReports(transformedReports);
+    } catch (error) {
+      console.error("Error loading weekly reports:", error);
+      setWeeklyReports([]);
+    } finally {
+      setLoadingWeeklyReports(false);
+    }
+  }, [teamId]);
+
   // Handle achievement card click for filtering
   const handleAchievementClick = useCallback(
     async (achievementId: string | null) => {
@@ -313,9 +489,11 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     if (team?.members) {
       checkAllMemberStatuses();
     }
-    // Load tasks and achievements when team is loaded
+    // Load tasks, achievements, strikes, and weekly reports when team is loaded
     loadTasks();
     loadAchievements();
+    loadStrikes();
+    loadWeeklyReports();
   }, [
     isTeamMember,
     checkWeeklyReportStatus,
@@ -323,6 +501,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     team?.members,
     loadTasks,
     loadAchievements,
+    loadStrikes,
+    loadWeeklyReports,
   ]);
 
   if (loading) {
@@ -930,130 +1110,17 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           </div>
 
           {/* Weekly Reports Table */}
-          <WeeklyReportsTable
-            reports={[
-              {
-                id: "1",
-                week: "Week 4",
-                dateRange: "01.05-07.05",
-                weeklyFill: {
-                  avatars: [
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                  ],
-                  names: [
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                  ],
-                },
-                clients: 50,
-                meetings: 25,
-                xp: 50,
-                points: 25,
-                status: "complete",
-              },
-              {
-                id: "2",
-                week: "Week 3",
-                dateRange: "01.05-07.05",
-                weeklyFill: {
-                  avatars: [
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                  ],
-                  names: [
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                  ],
-                },
-                clients: 50,
-                meetings: 25,
-                xp: 50,
-                points: 25,
-                status: "done",
-              },
-              {
-                id: "3",
-                week: "Week 2",
-                dateRange: "01.05-07.05",
-                weeklyFill: {
-                  avatars: [
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                  ],
-                  names: [
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                  ],
-                },
-                clients: 50,
-                meetings: 25,
-                xp: 50,
-                points: 25,
-                status: "missed",
-              },
-              {
-                id: "4",
-                week: "Week 1",
-                dateRange: "01.05-07.05",
-                weeklyFill: {
-                  avatars: [
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                  ],
-                  names: [
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                  ],
-                },
-                clients: 50,
-                meetings: 2,
-                xp: 50,
-                points: 25,
-                status: "missed",
-              },
-              {
-                id: "5",
-                week: "Week 0",
-                dateRange: "01.05-07.05",
-                weeklyFill: {
-                  avatars: [
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                    "/avatars/john-doe.jpg",
-                  ],
-                  names: [
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                    "Davids Petruhovs",
-                  ],
-                },
-                clients: 50,
-                meetings: 25,
-                xp: 50,
-                points: 25,
-                status: "done",
-              },
-            ]}
-          />
+          {loadingWeeklyReports ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-gray-500">Loading weekly reports...</div>
+            </div>
+          ) : weeklyReports.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No weekly reports found for this team yet.
+            </div>
+          ) : (
+            <WeeklyReportsTable reports={weeklyReports} />
+          )}
         </TabsContent>
 
         <TabsContent value="client-meetings" className="space-y-6 mt-6">
@@ -1062,7 +1129,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             <h2 className="text-xl font-semibold">Client Meetings</h2>
             <div className="flex items-center gap-3">
               {isTeamMember && (
-                <Button className="gap-2 bg-black text-white hover:bg-gray-800">
+                <Button
+                  className="gap-2 bg-black text-white hover:bg-gray-800"
+                  onClick={() => setShowAddMeetingModal(true)}
+                >
                   <Plus className="h-4 w-4" />
                   Add Meeting
                 </Button>
@@ -1075,75 +1145,18 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           </div>
 
           {/* Client Meetings Table */}
-          <ClientMeetingsTable
-            meetings={[
-              {
-                id: "1",
-                client: {
-                  company: "Acme Corp",
-                  type: "Initial Call",
-                },
-                responsible: {
-                  name: "John Doe",
-                  avatar: "/avatars/john-doe.jpg",
-                  datetime: "2025-07-15 10:00 AM",
-                },
-                points: 25,
-              },
-              {
-                id: "2",
-                client: {
-                  company: "Acme Corp",
-                  type: "Feedback Call",
-                },
-                responsible: {
-                  name: "John Doe",
-                  avatar: "/avatars/john-doe.jpg",
-                  datetime: "2025-07-15 10:00 AM",
-                },
-                points: 25,
-              },
-              {
-                id: "3",
-                client: {
-                  company: "Acme Corp",
-                  type: "Closing Call",
-                },
-                responsible: {
-                  name: "John Doe",
-                  avatar: "/avatars/john-doe.jpg",
-                  datetime: "2025-07-15 10:00 AM",
-                },
-                points: 25,
-              },
-              {
-                id: "4",
-                client: {
-                  company: "Acme Corp",
-                  type: "Follow-Up Call",
-                },
-                responsible: {
-                  name: "John Doe",
-                  avatar: "/avatars/john-doe.jpg",
-                  datetime: "2025-07-15 10:00 AM",
-                },
-                points: 25,
-              },
-              {
-                id: "5",
-                client: {
-                  company: "Acme Corp",
-                  type: "Initial Call",
-                },
-                responsible: {
-                  name: "John Doe",
-                  avatar: "/avatars/john-doe.jpg",
-                  datetime: "2025-07-15 10:00 AM",
-                },
-                points: 25,
-              },
-            ]}
-          />
+          {team && (
+            <ClientMeetingsTable
+              key={refreshTrigger}
+              teamId={team.id}
+              isTeamMember={isTeamMember}
+              userId={user?.id}
+              onDataChange={() => {
+                // Refresh any dependent data when meetings change
+                loadWeeklyReports(); // This will refresh weekly reports if needed
+              }}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="strikes" className="space-y-6 mt-6">
@@ -1157,29 +1170,17 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           </div>
 
           {/* Strikes Table */}
-          <StrikesTable
-            isTeamMember={isTeamMember}
-            strikes={[
-              {
-                id: "1",
-                title: "Missed Weekly Meeting Submission",
-                datetime: "2025-07-15 10:00 AM",
-                status: "explained",
-                xpPenalty: 500,
-                pointsPenalty: 250,
-                action: "done",
-              },
-              {
-                id: "2",
-                title: "Missed Weekly Minimum Meetings",
-                datetime: "2025-07-15 10:00 AM",
-                status: "waiting-explanation",
-                xpPenalty: 250,
-                pointsPenalty: 125,
-                action: "explain",
-              },
-            ]}
-          />
+          {loadingStrikes ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-gray-500">Loading strikes...</div>
+            </div>
+          ) : strikes.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No strikes found for this team. Great job! 🎉
+            </div>
+          ) : (
+            <StrikesTable isTeamMember={isTeamMember} strikes={strikes} />
+          )}
         </TabsContent>
       </Tabs>
 
@@ -1204,6 +1205,19 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           onSuccess={() => {
             checkWeeklyReportStatus();
             checkAllMemberStatuses();
+          }}
+        />
+      )}
+
+      {/* Add Client Meeting Modal */}
+      {team && (
+        <AddClientMeetingModal
+          open={showAddMeetingModal}
+          onOpenChange={setShowAddMeetingModal}
+          teamId={team.id}
+          onSuccess={() => {
+            // Trigger a refresh of the client meetings table
+            setRefreshTrigger((prev) => prev + 1);
           }}
         />
       )}

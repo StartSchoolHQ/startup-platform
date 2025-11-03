@@ -79,6 +79,93 @@ export async function getUserTransactions(userId: string, limit = 10) {
   return data;
 }
 
+// Get peer review statistics from transactions
+export async function getPeerReviewStatsFromTransactions(userId: string) {
+  const supabase = createClient();
+
+  // Get all validation type transactions (peer review rewards)
+  const { data: validationTransactions, error } = await supabase
+    .from("transactions")
+    .select("xp_change, credits_change, created_at")
+    .eq("user_id", userId)
+    .eq("type", "validation")
+    .gte("xp_change", 0); // Only positive rewards (not penalties)
+
+  if (error) {
+    console.error("Error fetching peer review transactions:", error);
+    throw error;
+  }
+
+  const transactions = validationTransactions || [];
+
+  // Calculate totals
+  const totalXpEarned = transactions.reduce(
+    (sum, t) => sum + (t.xp_change || 0),
+    0
+  );
+  const totalPointsEarned = transactions.reduce(
+    (sum, t) => sum + (t.credits_change || 0),
+    0
+  );
+  const tasksReviewedCount = transactions.length;
+
+  return {
+    tasksReviewedByUser: tasksReviewedCount,
+    totalXpEarned,
+    totalPointsEarned,
+  };
+}
+
+// Simple function to get team strikes
+export async function getTeamStrikes(teamId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("get_team_strikes", {
+    p_team_id: teamId,
+  });
+
+  if (error) {
+    console.error("Error fetching team strikes:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+// Simple function to get team weekly reports
+export async function getTeamWeeklyReports(teamId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("weekly_reports")
+    .select(
+      `
+      id,
+      week_number,
+      week_year,
+      week_start_date,
+      week_end_date,
+      submitted_at,
+      submission_data,
+      user_id,
+      users (
+        name,
+        avatar_url
+      )
+    `
+    )
+    .eq("team_id", teamId)
+    .order("week_year", { ascending: false })
+    .order("week_number", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching team weekly reports:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
 // Team statistics functions
 export async function getUserTeamStats(userId: string) {
   const supabase = createClient();
@@ -1674,6 +1761,63 @@ export async function leaveAllActiveTeams(userId: string) {
 
   if (error) throw error;
   return "Left all active teams";
+}
+
+// Client Meetings Functions (following golden rule - simple and clean!)
+export async function getTeamClientMeetings(teamId: string) {
+  const supabase = createClient();
+  console.log("Loading client meetings for team:", teamId);
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from("client_meetings")
+      .select(
+        `
+        id,
+        client_name,
+        status,
+        created_at,
+        completed_at,
+        cancelled_at,
+        responsible_user_id,
+        users:responsible_user_id (
+          id,
+          name,
+          avatar_url
+        )
+      `
+      )
+      .eq("team_id", teamId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching client meetings:", error);
+      throw error;
+    }
+
+    // Transform the data to match our expected interface
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (
+      (data as any)?.map((meeting: any) => ({
+        id: meeting.id,
+        client_name: meeting.client_name,
+        status: meeting.status,
+        created_at: meeting.created_at,
+        completed_at: meeting.completed_at,
+        cancelled_at: meeting.cancelled_at,
+        responsible_user_id: meeting.responsible_user_id,
+        users: {
+          id: meeting.users?.id || "",
+          name: meeting.users?.name || "Unknown User",
+          avatar_url: meeting.users?.avatar_url || "",
+        },
+      })) || []
+    );
+  } catch (error) {
+    console.error("Error in getTeamClientMeetings:", error);
+    return [];
+  }
 }
 
 export async function getMySubmittedTasksForReview(userId: string) {

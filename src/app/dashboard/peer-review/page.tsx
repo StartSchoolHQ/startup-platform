@@ -6,17 +6,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 
 import { Trophy, CheckCircle2, Users, ExternalLink, Clock } from "lucide-react";
-import { peerReviewData } from "@/data/peer-review-data";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
 import {
   getAvailableTasksForReview,
   getMySubmittedTasksForReview,
+  getPeerReviewStatsFromTransactions,
 } from "@/lib/database";
 import { useApp } from "@/contexts/app-context";
 import { createClient } from "@/lib/supabase/client";
 import { TaskRow } from "@/components/tasks/task-row";
 
 import { TaskDetailsModal } from "@/components/ui/task-details-modal";
+import { FileText, User, Zap, CreditCard } from "lucide-react";
+
+interface PeerReviewStats {
+  availableTasksCount: number;
+  tasksReviewedByUser: number;
+  totalPointsEarned: number;
+  totalXpEarned: number;
+}
 
 interface AvailableTask {
   id: string;
@@ -56,6 +64,12 @@ export default function PeerReviewPage() {
   const [myTasks, setMyTasks] = useState<AvailableTask[]>([]);
   const [myAcceptedTasks, setMyAcceptedTasks] = useState<AvailableTask[]>([]);
   const [loading, setLoading] = useState(true);
+  const [peerReviewStats, setPeerReviewStats] = useState<PeerReviewStats>({
+    availableTasksCount: 0,
+    tasksReviewedByUser: 0,
+    totalPointsEarned: 0,
+    totalXpEarned: 0,
+  });
   const [acceptingTaskId, setAcceptingTaskId] = useState<string | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedTaskForReview, setSelectedTaskForReview] =
@@ -74,9 +88,10 @@ export default function PeerReviewPage() {
       if (!user?.id) return;
 
       try {
-        const [available, mySubmitted] = await Promise.all([
+        const [available, mySubmitted, stats] = await Promise.all([
           getAvailableTasksForReview(user.id),
           getMySubmittedTasksForReview(user.id),
+          getPeerReviewStatsFromTransactions(user.id),
         ]);
 
         // Load tasks that current user has accepted for review
@@ -140,6 +155,14 @@ export default function PeerReviewPage() {
           console.error("Invalid accepted tasks data:", acceptedTasksData);
           setMyAcceptedTasks([]);
         }
+
+        // Update peer review stats
+        setPeerReviewStats({
+          availableTasksCount: available?.length || 0,
+          tasksReviewedByUser: stats.tasksReviewedByUser,
+          totalPointsEarned: stats.totalPointsEarned,
+          totalXpEarned: stats.totalXpEarned,
+        });
       } catch (error) {
         console.error("Error loading tasks:", error);
       } finally {
@@ -243,6 +266,21 @@ export default function PeerReviewPage() {
         );
         setReviewModalOpen(false);
         alert(`Review submitted! Task ${reviewDecision}.`);
+
+        // Refresh stats after successful review
+        try {
+          const updatedStats = await getPeerReviewStatsFromTransactions(
+            user.id
+          );
+          setPeerReviewStats((prev) => ({
+            ...prev,
+            tasksReviewedByUser: updatedStats.tasksReviewedByUser,
+            totalPointsEarned: updatedStats.totalPointsEarned,
+            totalXpEarned: updatedStats.totalXpEarned,
+          }));
+        } catch (error) {
+          console.error("Error refreshing stats:", error);
+        }
       } else {
         alert(data?.error || "Failed to submit review");
       }
@@ -272,9 +310,38 @@ export default function PeerReviewPage() {
 
       {/* Stats Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {peerReviewData.statsCards.map((card, index) => (
-          <StatsCardComponent key={index} {...card} />
-        ))}
+        <StatsCardComponent
+          title="Total Tasks Available"
+          value={
+            loading ? "..." : peerReviewStats.availableTasksCount.toString()
+          }
+          subtitle="Available for review"
+          icon={FileText}
+          iconColor="text-green-500"
+        />
+        <StatsCardComponent
+          title="Tasks Tested By You"
+          value={
+            loading ? "..." : peerReviewStats.tasksReviewedByUser.toString()
+          }
+          subtitle="Reviews completed"
+          icon={User}
+          iconColor="text-pink-500"
+        />
+        <StatsCardComponent
+          title="Points Earned"
+          value={loading ? "..." : peerReviewStats.totalPointsEarned.toString()}
+          subtitle="From peer reviews"
+          icon={CreditCard}
+          iconColor="text-orange-500"
+        />
+        <StatsCardComponent
+          title="XP Earned"
+          value={loading ? "..." : peerReviewStats.totalXpEarned.toString()}
+          subtitle="From peer reviews"
+          icon={Zap}
+          iconColor="text-purple-500"
+        />
       </div>
 
       {/* Tabs */}

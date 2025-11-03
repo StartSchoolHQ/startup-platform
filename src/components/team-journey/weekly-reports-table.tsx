@@ -1,6 +1,14 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Calendar, Users, CheckCircle, X, Zap, CreditCard } from "lucide-react";
+import { Calendar, Users, CheckCircle, X, Eye } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 interface WeeklyReport {
   id: string;
@@ -12,9 +20,19 @@ interface WeeklyReport {
   };
   clients: number;
   meetings: number;
-  xp: number;
-  points: number;
   status: "complete" | "done" | "missed";
+  submissions?: Array<{
+    submission_data?: {
+      whatDidYouDoThisWeek?: string;
+      whatWereYourBlockers?: string;
+      whatWasYourBiggestAchievement?: string;
+      clientsContacted?: number;
+      meetingsHeld?: number;
+    };
+    users?: {
+      name?: string;
+    };
+  }>;
 }
 
 interface WeeklyReportsTableProps {
@@ -22,6 +40,16 @@ interface WeeklyReportsTableProps {
 }
 
 export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
+  const [selectedReport, setSelectedReport] = useState<WeeklyReport | null>(
+    null
+  );
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleViewReport = (report: WeeklyReport) => {
+    setSelectedReport(report);
+    setIsDialogOpen(true);
+  };
+
   const getStatusConfig = (status: WeeklyReport["status"]) => {
     switch (status) {
       case "complete":
@@ -75,12 +103,6 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
               </th>
               <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                 Meetings
-              </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
-                XP
-              </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
-                Points
               </th>
               <th className="text-right py-4 px-4 font-medium text-muted-foreground">
                 Action
@@ -148,21 +170,18 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                     </div>
                   </td>
                   <td className="py-4 px-4">
-                    <div className="flex items-center gap-1">
-                      <Zap className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium">{report.xp}</span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-4">
-                    <div className="flex items-center gap-1">
-                      <CreditCard className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium">
-                        {report.points}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-4">
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-2">
+                      {report.status === "done" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs"
+                          onClick={() => handleViewReport(report)}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          View Report
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         className={`text-xs ${statusConfig.buttonClass}`}
@@ -178,6 +197,72 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
           </tbody>
         </table>
       </div>
+
+      {/* View Report Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Weekly Report - {selectedReport?.week}</DialogTitle>
+            <DialogDescription>{selectedReport?.dateRange}</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 max-h-[400px] overflow-y-auto">
+            {selectedReport?.submissions?.map((submission, index) => (
+              <div key={index} className="border rounded-lg p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="font-semibold text-sm">
+                    {submission.users?.name || "Unknown User"}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    • {submission.submission_data?.clientsContacted || 0}{" "}
+                    clients • {submission.submission_data?.meetingsHeld || 0}{" "}
+                    meetings
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">
+                      What did you do this week?
+                    </div>
+                    <div className="text-sm">
+                      {submission.submission_data?.whatDidYouDoThisWeek ||
+                        "No response"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">
+                      What were your blockers?
+                    </div>
+                    <div className="text-sm">
+                      {submission.submission_data?.whatWereYourBlockers ||
+                        "No response"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">
+                      What was your biggest achievement?
+                    </div>
+                    <div className="text-sm">
+                      {submission.submission_data
+                        ?.whatWasYourBiggestAchievement || "No response"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {(!selectedReport?.submissions ||
+              selectedReport.submissions.length === 0) && (
+              <div className="text-center py-8 text-muted-foreground">
+                No submissions found for this week.
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
