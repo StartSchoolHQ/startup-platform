@@ -14,10 +14,10 @@ interface User {
   name: string | null;
   email: string;
   avatar_url: string | null;
-  total_xp: number;
-  total_credits: number;
+  total_xp: number | null;
+  individual_points: number | null;
   graduation_level: number | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 interface AppContextType {
@@ -51,7 +51,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { data: userProfile, error: profileError } = await supabase
         .from("users")
         .select(
-          "id, name, email, avatar_url, total_xp, total_credits, graduation_level, created_at"
+          "id, name, email, avatar_url, total_xp, individual_points, graduation_level, created_at"
         )
         .eq("id", authUser.id)
         .single();
@@ -77,7 +77,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { data: userProfile, error: profileError } = await supabase
         .from("users")
         .select(
-          "id, name, email, avatar_url, total_xp, total_credits, graduation_level, created_at"
+          "id, name, email, avatar_url, total_xp, individual_points, graduation_level, created_at"
         )
         .eq("id", user.id)
         .single();

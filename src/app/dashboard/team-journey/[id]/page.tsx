@@ -117,7 +117,7 @@ interface TeamDetails {
       avatar_url: string | null;
       graduation_level: number | null;
       total_xp: number;
-      total_credits: number;
+      individual_points: number;
     } | null;
   }[];
 }
@@ -171,7 +171,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         getUserTeamRole(teamId, user.id),
       ]);
 
-      setTeam(teamData);
+      setTeam(teamData as unknown as TeamDetails);
       setIsTeamMember(membershipStatus);
       setUserRole(role);
     } catch (error) {
@@ -262,7 +262,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           achievement_description: achievement.achievement_description,
           achievement_icon: achievement.achievement_icon,
           xp_reward: achievement.xp_reward,
-          credits_reward: achievement.credits_reward,
+          credits_reward: achievement.points_reward,
           color_theme: achievement.color_theme,
           sort_order: achievement.sort_order,
           total_tasks: Number(achievement.total_tasks),
@@ -288,7 +288,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           category: task.category,
           difficulty_level: task.difficulty_level,
           base_xp_reward: task.base_xp_reward,
-          base_credits_reward: task.base_credits_reward,
+          base_credits_reward: task.base_points_reward,
           status: task.status,
           assigned_to_user_id: task.assigned_to_user_id,
           assignee_name: task.assignee_name,
@@ -457,7 +457,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             category: task.category,
             difficulty_level: task.difficulty_level,
             base_xp_reward: task.base_xp_reward,
-            base_credits_reward: task.base_credits_reward,
+            base_credits_reward: task.base_points_reward,
             status: task.status,
             assigned_to_user_id: task.assigned_to_user_id,
             assignee_name: task.assignee_name,
@@ -732,8 +732,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {(member.users?.total_xp || 0).toLocaleString()} XP |{" "}
-                      {(member.users?.total_credits || 0).toLocaleString()}{" "}
-                      Credits
+                      {(member.users?.individual_points || 0).toLocaleString()}{" "}
+                      Points
                     </div>
                   </div>
                 </div>

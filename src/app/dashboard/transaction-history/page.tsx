@@ -11,9 +11,9 @@ interface Transaction {
   id: string;
   type: string;
   xp_change: number;
-  credits_change: number;
+  points_change: number;
   description: string | null;
-  created_at: string;
+  created_at: string | null;
   team?: { name: string } | null;
   achievement?: { name: string } | null;
   revenue_stream?: { product_name: string } | null;
@@ -83,7 +83,7 @@ export default function TransactionHistoryPage() {
 
       try {
         const data = await getUserTransactions(user.id, 50); // Get last 50 transactions
-        setTransactions(data);
+        setTransactions(data as unknown as Transaction[]);
       } catch (error) {
         console.error("Error loading transactions:", error);
       } finally {
@@ -138,7 +138,9 @@ export default function TransactionHistoryPage() {
             <Star className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{user?.total_credits || 0}</div>
+            <div className="text-2xl font-bold">
+              {user?.individual_points || 0}
+            </div>
             <p className="text-xs text-muted-foreground">
               Available startup capital
             </p>
@@ -180,16 +182,15 @@ export default function TransactionHistoryPage() {
                           {formatTransactionDescription(transaction)}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(transaction.created_at).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
+                          {new Date(
+                            transaction.created_at || ""
+                          ).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </p>
                       </div>
                     </div>
@@ -207,16 +208,16 @@ export default function TransactionHistoryPage() {
                           {transaction.xp_change} XP
                         </Badge>
                       )}
-                      {transaction.credits_change !== 0 && (
+                      {transaction.points_change !== 0 && (
                         <Badge
                           variant={
-                            transaction.credits_change > 0
+                            transaction.points_change > 0
                               ? "default"
                               : "destructive"
                           }
                         >
-                          {transaction.credits_change > 0 ? "+" : ""}
-                          {transaction.credits_change} Credits
+                          {transaction.points_change > 0 ? "+" : ""}
+                          {transaction.points_change} Credits
                         </Badge>
                       )}
                       <Badge variant="outline" className="capitalize">

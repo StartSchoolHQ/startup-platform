@@ -45,7 +45,7 @@ export function CreateTeamDialog({
     }
 
     console.log("Creating team for user:", user.id);
-    console.log("User credits:", user.total_credits);
+    console.log("User credits:", user.individual_points);
 
     // Debug auth status
     const authStatus = await debugAuthStatus();
@@ -54,7 +54,7 @@ export function CreateTeamDialog({
     setError("");
     setSuccess("");
 
-    if (user.total_credits < TEAM_CREATION_COST) {
+    if (user.individual_points && user.individual_points < TEAM_CREATION_COST) {
       setError(
         `Insufficient credits. You need ${TEAM_CREATION_COST} credits to create a team.`
       );
@@ -89,7 +89,9 @@ export function CreateTeamDialog({
     }
   };
 
-  const canAfford = user ? user.total_credits >= TEAM_CREATION_COST : false;
+  const canAfford = user
+    ? (user.individual_points ?? 0) >= TEAM_CREATION_COST
+    : false;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -158,7 +160,7 @@ export function CreateTeamDialog({
                 canAfford ? "text-primary" : "text-destructive"
               }`}
             >
-              {user?.total_credits || 0} Credits
+              {user?.individual_points || 0} Credits
             </span>
           </div>
 

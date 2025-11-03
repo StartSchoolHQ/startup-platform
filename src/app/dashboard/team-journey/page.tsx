@@ -52,11 +52,19 @@ export default function TeamJourneyPage() {
 
       // Load all products
       const allTeams = await getAllTeamsForJourney(user.id, options);
-      setAllProducts(allTeams.map(transformTeamToProduct));
+      setAllProducts(
+        allTeams.map(
+          transformTeamToProduct as unknown as (value: unknown) => Product
+        )
+      );
 
       // Load user's products
       const userTeams = await getUserTeamsForJourney(user.id, options);
-      setMyProducts(userTeams.map(transformTeamToProduct));
+      setMyProducts(
+        userTeams.map(
+          transformTeamToProduct as unknown as (value: unknown) => Product
+        )
+      );
 
       // Load archived products
       const archivedTeams = await getArchivedTeamsForJourney(user.id, {
@@ -64,7 +72,11 @@ export default function TeamJourneyPage() {
         sortBy,
         sortOrder,
       });
-      setArchivedProducts(archivedTeams.map(transformTeamToProduct));
+      setArchivedProducts(
+        archivedTeams.map(
+          transformTeamToProduct as unknown as (value: unknown) => Product
+        )
+      );
     } catch (error) {
       console.error("Error loading team data:", error);
     } finally {

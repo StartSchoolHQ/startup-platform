@@ -1,6 +1,21 @@
 import { createClient } from "@/lib/supabase/client";
 import { Product } from "@/types/team-journey";
 
+// Type for team data from relationship queries
+interface TeamRelation {
+  name: string;
+  id?: string;
+  description?: string | null;
+}
+
+// Type for user data from relationship queries
+interface UserRelation {
+  email: string;
+  name: string | null;
+  id?: string;
+  avatar_url?: string | null;
+}
+
 // Database type interfaces
 interface DatabaseTeam {
   id: string;
@@ -18,7 +33,7 @@ interface DatabaseTeam {
       name: string | null;
       avatar_url: string | null;
       total_xp: number;
-      total_credits: number;
+      individual_points: number;
     };
   }[];
   revenue_streams?: {
@@ -86,7 +101,7 @@ export async function getPeerReviewStatsFromTransactions(userId: string) {
   // Get all validation type transactions (peer review rewards)
   const { data: validationTransactions, error } = await supabase
     .from("transactions")
-    .select("xp_change, credits_change, created_at")
+    .select("xp_change, points_change, created_at")
     .eq("user_id", userId)
     .eq("type", "validation")
     .gte("xp_change", 0); // Only positive rewards (not penalties)
@@ -104,7 +119,7 @@ export async function getPeerReviewStatsFromTransactions(userId: string) {
     0
   );
   const totalPointsEarned = transactions.reduce(
-    (sum, t) => sum + (t.credits_change || 0),
+    (sum, t) => sum + (t.points_change || 0),
     0
   );
   const tasksReviewedCount = transactions.length;
@@ -120,7 +135,15 @@ export async function getPeerReviewStatsFromTransactions(userId: string) {
 export async function getTeamStrikes(teamId: string) {
   const supabase = createClient();
 
-  const { data, error } = await supabase.rpc("get_team_strikes", {
+  // Type assertion for RPC function not in generated types
+  const { data, error } = await (
+    supabase as unknown as {
+      rpc: (
+        name: string,
+        params: Record<string, unknown>
+      ) => Promise<{ data: unknown; error: unknown }>;
+    }
+  ).rpc("get_team_strikes", {
     p_team_id: teamId,
   });
 
@@ -193,9 +216,9 @@ export async function getUserTeamStats(userId: string) {
   interface RevenueStream {
     id: string;
     product_name: string;
-    mrr_amount: number;
+    mrr_amount: number | null;
     type: string;
-    verified: boolean;
+    verified: boolean | null;
   }
 
   return {
@@ -203,7 +226,7 @@ export async function getUserTeamStats(userId: string) {
     revenueStreamsCount: revenueStreams?.length || 0,
     totalMRR:
       revenueStreams?.reduce(
-        (sum: number, stream: RevenueStream) => sum + Number(stream.mrr_amount),
+        (sum: number, stream: RevenueStream) => sum + (stream.mrr_amount || 0),
         0
       ) || 0,
     verifiedStreams:
@@ -249,7 +272,9 @@ export async function createTeam(
     }
 
     if (existingMembership && existingMembership.length > 0) {
-      const teamName = existingMembership[0].teams?.name || "Unknown Team";
+      const teamName =
+        (existingMembership[0].teams as unknown as TeamRelation)?.name ||
+        "Unknown Team";
       throw new Error(
         `Cannot create team: You are already a member of "${teamName}". Each user can only be part of one team at a time.`
       );
@@ -272,7 +297,7 @@ export async function createTeam(
 
   const { data: user, error: userError } = await supabase
     .from("users")
-    .select("total_credits")
+    .select("individual_points")
     .eq("id", founderId)
     .single();
 
@@ -281,9 +306,9 @@ export async function createTeam(
     throw userError;
   }
 
-  console.log("User credits:", user?.total_credits);
+  console.log("User credits:", user?.individual_points);
 
-  if (!user || user.total_credits < TEAM_CREATION_COST) {
+  if (!user || (user.individual_points || 0) < TEAM_CREATION_COST) {
     throw new Error("Insufficient credits to create team");
   }
 
@@ -331,7 +356,9 @@ export async function createTeam(
   console.log("Updating user credits...");
   const { error: updateError } = await supabase
     .from("users")
-    .update({ total_credits: user.total_credits - TEAM_CREATION_COST })
+    .update({
+      individual_points: (user.individual_points || 0) - TEAM_CREATION_COST,
+    })
     .eq("id", founderId);
 
   if (updateError) {
@@ -346,7 +373,8 @@ export async function createTeam(
       user_id: founderId,
       team_id: team.id,
       type: "team_cost",
-      credits_change: -TEAM_CREATION_COST,
+      points_change: -TEAM_CREATION_COST,
+      points_type: "individual",
       description: `Created team: ${teamName}`,
       created_at: new Date().toISOString(),
     });
@@ -411,7 +439,7 @@ export async function getTeamDetails(teamId: string) {
         avatar_url,
         graduation_level,
         total_xp,
-        total_credits
+        individual_points
       )
     `
     )
@@ -500,7 +528,7 @@ export async function getAllTeamsForJourney(
           name,
           avatar_url,
           total_xp,
-          total_credits
+          individual_points
         )
       ),
       revenue_streams (
@@ -577,7 +605,7 @@ export async function getUserTeamsForJourney(
           name,
           avatar_url,
           total_xp,
-          total_credits
+          individual_points
         )
       ),
       revenue_streams (
@@ -655,7 +683,7 @@ export async function getArchivedTeamsForJourney(
           name,
           avatar_url,
           total_xp,
-          total_credits
+          individual_points
         )
       ),
       revenue_streams (
@@ -741,10 +769,14 @@ export async function leaveTeam(teamId: string, userId: string) {
   }
 
   // Update team member count
-  const { error: countError } = await supabase.rpc(
-    "decrement_team_member_count",
-    { team_id: teamId }
-  );
+  const { error: countError } = await (
+    supabase as unknown as {
+      rpc: (
+        name: string,
+        params: Record<string, unknown>
+      ) => Promise<{ error: unknown }>;
+    }
+  ).rpc("decrement_team_member_count", { team_id: teamId });
 
   if (countError) throw countError;
 
@@ -813,7 +845,7 @@ export function transformTeamToProduct(team: DatabaseTeam): Product {
           name: string | null;
           avatar_url: string | null;
           total_xp: number;
-          total_credits: number;
+          individual_points: number;
         };
       }) => ({
         id: member.users?.id || member.user_id,
@@ -901,7 +933,9 @@ export async function sendTeamInvitation(
     }
 
     if (existingMembership && existingMembership.length > 0) {
-      const teamName = existingMembership[0].teams?.name || "Unknown Team";
+      const teamName =
+        (existingMembership[0].teams as unknown as TeamRelation)?.name ||
+        "Unknown Team";
       const userName = invitedUser.name || invitedUser.email;
       throw new Error(
         `Cannot send invitation: ${userName} is already a member of "${teamName}". Users can only be part of one team at a time.`
@@ -990,7 +1024,7 @@ export async function getPendingInvitations(userId: string) {
         status,
         member_count
       ),
-      invited_by:users!team_invitations_invited_by_user_id_fkey (
+      invited_by:users!team_invitations_invited_by_user_id_fkey1 (
         id,
         name,
         email,
@@ -1027,7 +1061,7 @@ export async function getSentInvitations(userId: string) {
         status,
         member_count
       ),
-      invited_user:users!team_invitations_invited_user_id_fkey (
+      invited_user:users!team_invitations_invited_user_id_fkey1 (
         id,
         name,
         email,
@@ -1104,7 +1138,9 @@ export async function respondToInvitation(
       }
 
       if (existingMembership && existingMembership.length > 0) {
-        const teamName = existingMembership[0].teams?.name || "Unknown Team";
+        const teamName =
+          (existingMembership[0].teams as unknown as TeamRelation)?.name ||
+          "Unknown Team";
         throw new Error(
           `Cannot accept invitation: You are already a member of "${teamName}". You can only be part of one team at a time.`
         );
@@ -1131,12 +1167,16 @@ export async function respondToInvitation(
     if (memberError) throw memberError;
 
     // Update team member count
-    const { error: countError } = await supabase.rpc(
-      "increment_team_member_count",
-      {
-        team_id: invitation.team_id,
+    const { error: countError } = await (
+      supabase as unknown as {
+        rpc: (
+          name: string,
+          params: Record<string, unknown>
+        ) => Promise<{ error: unknown }>;
       }
-    );
+    ).rpc("increment_team_member_count", {
+      team_id: invitation.team_id,
+    });
 
     // If the RPC function doesn't exist, update manually
     if (countError) {
@@ -1574,14 +1614,14 @@ export async function getUsersWithMultipleActiveTeams() {
     (acc: Record<string, UserTeamData>, member) => {
       if (!acc[member.user_id]) {
         acc[member.user_id] = {
-          user: member.users,
+          user: member.users as unknown as UserRelation,
           teams: [],
         };
       }
       acc[member.user_id].teams.push({
         team_id: member.team_id,
-        team_name: member.teams.name,
-        joined_at: member.joined_at,
+        team_name: (member.teams as unknown as TeamRelation).name,
+        joined_at: member.joined_at || new Date().toISOString(),
       });
       return acc;
     },
@@ -1639,7 +1679,7 @@ export async function isUserInActiveTeam(userId: string): Promise<{
 
   return {
     isInTeam: !!membership,
-    teamName: membership?.teams?.name,
+    teamName: (membership?.teams as unknown as TeamRelation | undefined)?.name,
     teamId: membership?.team_id,
   };
 }
@@ -1666,7 +1706,7 @@ export async function getUserActiveTeam(userId: string) {
   if (data && data.length > 1) {
     console.warn(
       `User ${userId} has multiple active teams: ${data
-        .map((d) => d.teams.name)
+        .map((d) => (d.teams as unknown as TeamRelation).name)
         .join(", ")}`
     );
   }
@@ -1681,7 +1721,9 @@ export async function validateTeamInvitation(userId: string) {
   if (activeTeam) {
     return {
       valid: false,
-      error: `User is already a member of "${activeTeam.teams.name}". Users can only be in one active team.`,
+      error: `User is already a member of "${
+        (activeTeam.teams as unknown as TeamRelation).name
+      }". Users can only be in one active team.`,
       currentTeam: activeTeam.teams,
     };
   }
@@ -1969,7 +2011,7 @@ export async function getUserStrikes(userId: string) {
       created_at,
       explanation,
       xp_penalty,
-      credits_penalty,
+      points_penalty,
       status,
       teams!inner(name)
     `

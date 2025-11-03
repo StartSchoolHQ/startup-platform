@@ -78,8 +78,8 @@ export default function InvitationsPage() {
         getSentInvitations(user.id),
       ]);
 
-      setPendingInvitations(pending);
-      setSentInvitations(sent);
+      setPendingInvitations(pending as unknown as Invitation[]);
+      setSentInvitations(sent as unknown as Invitation[]);
     } catch (error) {
       console.error("Error loading invitations:", error);
       toast.error("Failed to load invitations");

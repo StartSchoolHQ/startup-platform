@@ -57,16 +57,26 @@ export function AddClientMeetingModal({
       const teamDetails = await getTeamDetails(teamId);
       // Map to our simpler interface
       const simplifiedMembers =
-        teamDetails.members?.map((member) => ({
-          user_id: member.user_id,
-          users: member.users
-            ? {
-                name: member.users.name,
-                email: member.users.email,
-                avatar_url: member.users.avatar_url,
-              }
-            : null,
-        })) || [];
+        teamDetails.members?.map((member: unknown) => {
+          const m = member as {
+            user_id: string;
+            users: {
+              name: string | null;
+              email: string;
+              avatar_url: string | null;
+            } | null;
+          };
+          return {
+            user_id: m.user_id,
+            users: m.users
+              ? {
+                  name: m.users.name,
+                  email: m.users.email,
+                  avatar_url: m.users.avatar_url,
+                }
+              : null,
+          };
+        }) || [];
       setTeamMembers(simplifiedMembers);
     } catch (error) {
       console.error("Error loading team members:", error);

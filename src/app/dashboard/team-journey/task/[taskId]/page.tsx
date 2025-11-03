@@ -129,20 +129,20 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
 
           if (members) {
             setTeamMembers(
-              members.map(
-                (m: {
-                  user_id: string;
+              members.map((m: unknown) => {
+                const member = m as {
                   users: {
                     id: string;
                     name: string | null;
                     avatar_url: string | null;
                   };
-                }) => ({
-                  id: m.users.id,
-                  name: m.users.name || "Unknown User",
-                  avatar_url: m.users.avatar_url || undefined,
-                })
-              )
+                };
+                return {
+                  id: member.users.id,
+                  name: member.users.name || "Unknown User",
+                  avatar_url: member.users.avatar_url || undefined,
+                };
+              })
             );
           }
         }

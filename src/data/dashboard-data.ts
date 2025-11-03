@@ -27,14 +27,14 @@ export async function getStatsCards(userId: string): Promise<StatsCard[]> {
     return [
       {
         title: "XP Earned",
-        value: userProfile.total_xp.toString(),
+        value: (userProfile.total_xp ?? 0).toString(),
         subtitle: "Total experience points",
         icon: Trophy,
         iconColor: "text-purple-500",
       },
       {
         title: "Points Earned",
-        value: userProfile.total_credits.toString(),
+        value: (userProfile.individual_points ?? 0).toString(),
         subtitle: "Available startup capital",
         icon: Star,
         iconColor: "text-orange-500",
@@ -72,13 +72,13 @@ export async function getTeamProgressData(
       joinTeamsText: "Join Teams",
       stats: [
         {
-          value: userProfile.total_credits.toString(),
+          value: (userProfile.individual_points ?? 0).toString(),
           label: "Total Points Earned", // Keep original label
           icon: Star,
           iconColor: "text-orange-500",
         },
         {
-          value: userProfile.total_xp.toString(),
+          value: (userProfile.total_xp ?? 0).toString(),
           label: "Total XP Earned",
           icon: Trophy,
           iconColor: "text-purple-500",
@@ -103,13 +103,13 @@ export async function getPersonalProgressData(
       title: "Your Personal Progress",
       stats: [
         {
-          value: userProfile.total_credits.toString(),
+          value: (userProfile.individual_points ?? 0).toString(),
           label: "Total Points Earned", // Keep original label
           icon: Star,
           iconColor: "text-orange-500",
         },
         {
-          value: userProfile.total_xp.toString(),
+          value: (userProfile.total_xp ?? 0).toString(),
           label: "Total XP Earned",
           icon: Trophy,
           iconColor: "text-purple-500",
