@@ -1798,9 +1798,9 @@ export async function getTeamClientMeetings(teamId: string) {
     }
 
     // Transform the data to match our expected interface
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (
-      (data as any)?.map((meeting: any) => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data?.map((meeting: any) => ({
         id: meeting.id,
         client_name: meeting.client_name,
         status: meeting.status,
