@@ -10,8 +10,14 @@ import {
   StatsCard,
   TeamProgressData,
   PersonalProgressData,
+  TaskWithAchievement,
+  AchievementProgress,
 } from "@/types/dashboard";
-import { getUserProfile } from "@/lib/database";
+import {
+  getUserProfile,
+  getUserAchievementProgress,
+  getTasksByAchievement,
+} from "@/lib/database";
 
 // Function to get real stats cards data
 export async function getStatsCards(userId: string): Promise<StatsCard[]> {
@@ -242,4 +248,136 @@ function getDefaultPersonalProgressData(): PersonalProgressData {
       },
     ],
   };
+}
+
+// Database result interfaces
+interface AchievementProgressRow {
+  achievement_id: string;
+  achievement_name: string;
+  achievement_description: string;
+  achievement_icon: string;
+  xp_reward: number;
+  credits_reward: number;
+  color_theme: string;
+  sort_order: number;
+  total_tasks: bigint;
+  completed_tasks: bigint;
+  status: string;
+  is_completed: boolean;
+}
+
+interface TaskRow {
+  progress_id: string;
+  task_id: string;
+  title: string;
+  description: string;
+  category: string;
+  difficulty_level: number;
+  base_xp_reward: number;
+  base_credits_reward: number;
+  status: string;
+  assigned_to_user_id?: string;
+  assignee_name?: string;
+  assignee_avatar_url?: string;
+  assigned_at?: string;
+  started_at?: string;
+  completed_at?: string;
+  is_available: boolean;
+  achievement_id?: string;
+  achievement_name?: string;
+}
+
+// Function to get achievement progress data
+export async function getAchievementProgressData(
+  userId: string
+): Promise<AchievementProgress> {
+  try {
+    const [achievements, tasks] = await Promise.all([
+      getUserAchievementProgress(userId),
+      getTasksByAchievement(), // Get all tasks by default
+    ]);
+
+    return {
+      achievements: (achievements as AchievementProgressRow[]).map(
+        (achievement) => ({
+          achievement_id: achievement.achievement_id,
+          achievement_name: achievement.achievement_name,
+          achievement_description: achievement.achievement_description,
+          achievement_icon: achievement.achievement_icon,
+          xp_reward: achievement.xp_reward,
+          credits_reward: achievement.credits_reward,
+          color_theme: achievement.color_theme,
+          sort_order: achievement.sort_order,
+          total_tasks: Number(achievement.total_tasks),
+          completed_tasks: Number(achievement.completed_tasks),
+          status: achievement.status as
+            | "completed"
+            | "in-progress"
+            | "not-started",
+          is_completed: achievement.is_completed,
+        })
+      ),
+      tasks: (tasks as TaskRow[]).map((task) => ({
+        progress_id: task.progress_id,
+        task_id: task.task_id,
+        title: task.title,
+        description: task.description,
+        category: task.category,
+        difficulty_level: task.difficulty_level,
+        base_xp_reward: task.base_xp_reward,
+        base_credits_reward: task.base_credits_reward,
+        status: task.status,
+        assigned_to_user_id: task.assigned_to_user_id,
+        assignee_name: task.assignee_name,
+        assignee_avatar_url: task.assignee_avatar_url,
+        assigned_at: task.assigned_at,
+        started_at: task.started_at,
+        completed_at: task.completed_at,
+        is_available: task.is_available,
+        achievement_id: task.achievement_id,
+        achievement_name: task.achievement_name,
+      })),
+      selectedAchievementId: null,
+    };
+  } catch (error) {
+    console.error("Error fetching achievement progress:", error);
+    return {
+      achievements: [],
+      tasks: [],
+      selectedAchievementId: null,
+    };
+  }
+}
+
+// Function to get filtered tasks by achievement
+export async function getFilteredTasksByAchievement(
+  achievementId: string | null
+): Promise<TaskWithAchievement[]> {
+  try {
+    const tasks = await getTasksByAchievement(achievementId || undefined);
+
+    return (tasks as TaskRow[]).map((task) => ({
+      progress_id: task.progress_id,
+      task_id: task.task_id,
+      title: task.title,
+      description: task.description,
+      category: task.category,
+      difficulty_level: task.difficulty_level,
+      base_xp_reward: task.base_xp_reward,
+      base_credits_reward: task.base_credits_reward,
+      status: task.status,
+      assigned_to_user_id: task.assigned_to_user_id,
+      assignee_name: task.assignee_name,
+      assignee_avatar_url: task.assignee_avatar_url,
+      assigned_at: task.assigned_at,
+      started_at: task.started_at,
+      completed_at: task.completed_at,
+      is_available: task.is_available,
+      achievement_id: task.achievement_id,
+      achievement_name: task.achievement_name,
+    }));
+  } catch (error) {
+    console.error("Error fetching filtered tasks:", error);
+    return [];
+  }
 }

@@ -84,7 +84,9 @@ export function TeamManagementModal({
 }: TeamManagementModalProps) {
   const [activeTab, setActiveTab] = useState("current-team");
   const [searchTerm, setSearchTerm] = useState("");
-  const [availableUsers, setAvailableUsers] = useState<AvailableUser[]>([]);
+  const [allAvailableUsers, setAllAvailableUsers] = useState<AvailableUser[]>(
+    []
+  );
   const [loading, setLoading] = useState(false);
   const [invitingUsers, setInvitingUsers] = useState<Set<string>>(new Set());
 
@@ -167,19 +169,31 @@ export function TeamManagementModal({
     }
   };
 
-  // Load available users for invitation
-  const loadAvailableUsers = useCallback(async () => {
+  // Load all available users for invitation (once)
+  const loadAllAvailableUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const users = await getAvailableUsersForInvitation(team.id, searchTerm);
-      setAvailableUsers(users);
+      // Fetch all users without search term to get the complete list
+      const users = await getAvailableUsersForInvitation(team.id, "");
+      setAllAvailableUsers(users);
     } catch (error) {
       console.error("Error loading available users:", error);
       toast.error("Failed to load users");
     } finally {
       setLoading(false);
     }
-  }, [team.id, searchTerm]);
+  }, [team.id]);
+
+  // Filter users locally based on search term
+  const filteredUsers = allAvailableUsers.filter((user) => {
+    if (!searchTerm.trim()) return true;
+
+    const searchLower = searchTerm.toLowerCase();
+    const nameMatch = user.name?.toLowerCase().includes(searchLower) || false;
+    const emailMatch = user.email.toLowerCase().includes(searchLower);
+
+    return nameMatch || emailMatch;
+  });
 
   // Send invitation to user
   const handleInviteUser = async (userId: string, userName: string | null) => {
@@ -189,7 +203,7 @@ export function TeamManagementModal({
       await sendTeamInvitationById(team.id, userId, "member");
       toast.success(`Invitation sent to ${userName || "user"} successfully!`);
       // Remove user from available list
-      setAvailableUsers((prev) => prev.filter((user) => user.id !== userId));
+      setAllAvailableUsers((prev) => prev.filter((user) => user.id !== userId));
       // Refresh invitation count and lists for all users
       invitationCountManager.refreshAll();
     } catch (error) {
@@ -206,23 +220,12 @@ export function TeamManagementModal({
     }
   };
 
-  // Load users when invite tab becomes active
+  // Load users once when invite tab becomes active
   useEffect(() => {
-    if (activeTab === "invite-users") {
-      loadAvailableUsers();
+    if (activeTab === "invite-users" && allAvailableUsers.length === 0) {
+      loadAllAvailableUsers();
     }
-  }, [activeTab, loadAvailableUsers]);
-
-  // Debounce search to avoid excessive API calls
-  useEffect(() => {
-    if (activeTab === "invite-users") {
-      const timeoutId = setTimeout(() => {
-        loadAvailableUsers();
-      }, 300);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [searchTerm, activeTab, loadAvailableUsers]);
+  }, [activeTab, loadAllAvailableUsers, allAvailableUsers.length]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -381,7 +384,7 @@ export function TeamManagementModal({
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">Loading users...</p>
                 </div>
-              ) : availableUsers.length === 0 ? (
+              ) : filteredUsers.length === 0 ? (
                 <Card className="p-6">
                   <div className="text-center">
                     <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -394,7 +397,7 @@ export function TeamManagementModal({
                   </div>
                 </Card>
               ) : (
-                availableUsers.map((user) => (
+                filteredUsers.map((user) => (
                   <Card key={user.id} className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">

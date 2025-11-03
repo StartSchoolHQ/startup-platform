@@ -1728,3 +1728,83 @@ export async function getMySubmittedTasksForReview(userId: string) {
 
   return data || [];
 }
+
+// Achievement System Types
+interface SupabaseRpcClient {
+  rpc(
+    fn: "get_user_achievement_progress",
+    params: { p_user_id: string }
+  ): Promise<{ data: unknown; error: unknown }>;
+  rpc(
+    fn: "get_tasks_by_achievement",
+    params: { p_achievement_id: string | null; p_team_id: string | null }
+  ): Promise<{ data: unknown; error: unknown }>;
+  rpc(
+    fn: "check_and_award_achievement",
+    params: { p_user_id: string; p_achievement_id: string }
+  ): Promise<{ data: unknown; error: unknown }>;
+}
+
+// Achievement System Functions
+export async function getUserAchievementProgress(userId: string) {
+  const supabase = createClient();
+
+  // Use proper type interface for RPC functions
+  const { data, error } = await (supabase as unknown as SupabaseRpcClient).rpc(
+    "get_user_achievement_progress",
+    { p_user_id: userId }
+  );
+
+  if (error) {
+    console.error("Error fetching user achievement progress:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+export async function getTasksByAchievement(
+  achievementId?: string,
+  teamId?: string
+) {
+  const supabase = createClient();
+
+  // Use proper type interface for RPC functions
+  const { data, error } = await (supabase as unknown as SupabaseRpcClient).rpc(
+    "get_tasks_by_achievement",
+    {
+      p_achievement_id: achievementId || null,
+      p_team_id: teamId || null,
+    }
+  );
+
+  if (error) {
+    console.error("Error fetching tasks by achievement:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+export async function checkAndAwardAchievement(
+  userId: string,
+  achievementId: string
+) {
+  const supabase = createClient();
+
+  // Use proper type interface for RPC functions
+  const { data, error } = await (supabase as unknown as SupabaseRpcClient).rpc(
+    "check_and_award_achievement",
+    {
+      p_user_id: userId,
+      p_achievement_id: achievementId,
+    }
+  );
+
+  if (error) {
+    console.error("Error checking/awarding achievement:", error);
+    throw error;
+  }
+
+  return data;
+}

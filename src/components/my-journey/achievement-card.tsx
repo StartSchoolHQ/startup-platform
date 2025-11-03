@@ -8,6 +8,7 @@ interface AchievementCardProps {
   status: "in-progress" | "finished" | "not-started";
   points: number;
   xp: number;
+  selected?: boolean;
 }
 
 export function AchievementCard({
@@ -16,27 +17,28 @@ export function AchievementCard({
   status,
   points,
   xp,
+  selected = false,
 }: AchievementCardProps) {
   const getStatusConfig = (status: AchievementCardProps["status"]) => {
     switch (status) {
       case "in-progress":
         return {
           badgeText: "In Progress",
-          badgeClass: "bg-accent/20 text-accent-foreground",
-          cardClass: "border-border bg-accent/5",
+          badgeClass: "bg-orange-100 text-orange-700 border-orange-200",
+          cardClass: "border-border bg-card",
           iconBg: "bg-muted",
         };
       case "finished":
         return {
           badgeText: "Finished",
-          badgeClass: "bg-primary/10 text-primary",
-          cardClass: "border-primary/20 bg-primary/5",
+          badgeClass: "bg-green-100 text-green-700 border-green-200",
+          cardClass: "border-green-200 bg-green-50/50",
           iconBg: "bg-muted",
         };
       case "not-started":
         return {
           badgeText: "Not Started",
-          badgeClass: "bg-muted text-muted-foreground",
+          badgeClass: "bg-gray-100 text-gray-600 border-gray-200",
           cardClass: "border-border bg-card",
           iconBg: "bg-muted",
         };
@@ -46,12 +48,16 @@ export function AchievementCard({
   const config = getStatusConfig(status);
 
   return (
-    <Card className={`${config.cardClass} transition-all hover:shadow-md p-0`}>
+    <Card
+      className={`${config.cardClass} transition-all hover:shadow-md p-0 ${
+        selected ? "border-2 border-primary" : ""
+      }`}
+    >
       <CardHeader className="pt-4 px-4">
         <div className="flex items-center justify-between">
           <Badge
-            variant="secondary"
-            className={`${config.badgeClass} px-3 py-1`}
+            variant="outline"
+            className={`${config.badgeClass} px-3 py-1 border`}
           >
             {config.badgeText}
           </Badge>

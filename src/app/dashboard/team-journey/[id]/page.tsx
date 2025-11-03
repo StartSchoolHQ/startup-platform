@@ -45,8 +45,12 @@ import { StatsCard } from "@/types/dashboard";
 import { useEffect, useState, useCallback } from "react";
 import { useAppContext } from "@/contexts/app-context";
 import { hasUserSubmittedThisWeek } from "@/lib/weekly-reports";
-import { getTeamTasks, assignTaskToMember } from "@/lib/tasks";
-import { TaskTableItem } from "@/types/team-journey";
+import { assignTaskToMember } from "@/lib/tasks";
+import {
+  getUserAchievementProgress,
+  getTasksByAchievement,
+} from "@/lib/database";
+import { Achievement, TaskWithAchievement } from "@/types/dashboard";
 
 interface ProductDetailPageProps {
   params: Promise<{
@@ -91,8 +95,13 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [memberSubmissionStatus, setMemberSubmissionStatus] = useState<
     Record<string, boolean>
   >({});
-  const [tasks, setTasks] = useState<TaskTableItem[]>([]);
-  const [loadingTasks, setLoadingTasks] = useState(false);
+  const [loadingTasks] = useState(false);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [selectedAchievementId, setSelectedAchievementId] = useState<
+    string | null
+  >(null);
+  const [filteredTasks, setFilteredTasks] = useState<TaskWithAchievement[]>([]);
+  const [loadingAchievements, setLoadingAchievements] = useState(false);
 
   // Extract ID from params
   useEffect(() => {
@@ -165,20 +174,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     }
   }, [teamId, team?.members]);
 
-  // Load team tasks from database
+  // Load team tasks from database - handled through achievements system now
   const loadTasks = useCallback(async () => {
-    if (!teamId) return;
-
-    setLoadingTasks(true);
-    try {
-      const teamTasks = await getTeamTasks(teamId);
-      setTasks(teamTasks);
-    } catch (error) {
-      console.error("Error loading tasks:", error);
-    } finally {
-      setLoadingTasks(false);
-    }
-  }, [teamId]);
+    // Tasks are now loaded through the achievements system
+  }, []);
 
   // Handle task assignment
   const handleAssignTask = useCallback(
@@ -198,6 +197,111 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     [loadTasks]
   );
 
+  // Load team achievements from database
+  const loadAchievements = useCallback(async () => {
+    if (!user?.id) return;
+
+    setLoadingAchievements(true);
+    try {
+      const achievementData = await getUserAchievementProgress(user.id);
+      const achievementArray = Array.isArray(achievementData)
+        ? achievementData
+        : [];
+
+      setAchievements(
+        achievementArray.map((achievement) => ({
+          achievement_id: achievement.achievement_id,
+          achievement_name: achievement.achievement_name,
+          achievement_description: achievement.achievement_description,
+          achievement_icon: achievement.achievement_icon,
+          xp_reward: achievement.xp_reward,
+          credits_reward: achievement.credits_reward,
+          color_theme: achievement.color_theme,
+          sort_order: achievement.sort_order,
+          total_tasks: Number(achievement.total_tasks),
+          completed_tasks: Number(achievement.completed_tasks),
+          status: achievement.status as
+            | "completed"
+            | "in-progress"
+            | "not-started",
+          is_completed: achievement.is_completed,
+        }))
+      );
+
+      // Load all tasks initially
+      const allTasks = await getTasksByAchievement();
+      const tasksArray = Array.isArray(allTasks) ? allTasks : [];
+
+      setFilteredTasks(
+        tasksArray.map((task) => ({
+          progress_id: task.progress_id,
+          task_id: task.task_id,
+          title: task.title,
+          description: task.description,
+          category: task.category,
+          difficulty_level: task.difficulty_level,
+          base_xp_reward: task.base_xp_reward,
+          base_credits_reward: task.base_credits_reward,
+          status: task.status,
+          assigned_to_user_id: task.assigned_to_user_id,
+          assignee_name: task.assignee_name,
+          assignee_avatar_url: task.assignee_avatar_url,
+          assigned_at: task.assigned_at,
+          started_at: task.started_at,
+          completed_at: task.completed_at,
+          is_available: task.is_available,
+          achievement_id: task.achievement_id,
+          achievement_name: task.achievement_name,
+        }))
+      );
+    } catch (error) {
+      console.error("Error loading achievements:", error);
+      setAchievements([]);
+      setFilteredTasks([]);
+    } finally {
+      setLoadingAchievements(false);
+    }
+  }, [user?.id]);
+
+  // Handle achievement card click for filtering
+  const handleAchievementClick = useCallback(
+    async (achievementId: string | null) => {
+      setSelectedAchievementId(achievementId);
+
+      try {
+        const tasks = await getTasksByAchievement(achievementId || undefined);
+        const tasksArray = Array.isArray(tasks) ? tasks : [];
+
+        setFilteredTasks(
+          tasksArray.map((task) => ({
+            progress_id: task.progress_id,
+            task_id: task.task_id,
+            title: task.title,
+            description: task.description,
+            category: task.category,
+            difficulty_level: task.difficulty_level,
+            base_xp_reward: task.base_xp_reward,
+            base_credits_reward: task.base_credits_reward,
+            status: task.status,
+            assigned_to_user_id: task.assigned_to_user_id,
+            assignee_name: task.assignee_name,
+            assignee_avatar_url: task.assignee_avatar_url,
+            assigned_at: task.assigned_at,
+            started_at: task.started_at,
+            completed_at: task.completed_at,
+            is_available: task.is_available,
+            achievement_id: task.achievement_id,
+            achievement_name: task.achievement_name,
+          }))
+        );
+      } catch (error) {
+        console.error("Error filtering achievements:", error);
+        setFilteredTasks([]);
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     loadTeam();
   }, [loadTeam]);
@@ -209,14 +313,16 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     if (team?.members) {
       checkAllMemberStatuses();
     }
-    // Load tasks when team is loaded
+    // Load tasks and achievements when team is loaded
     loadTasks();
+    loadAchievements();
   }, [
     isTeamMember,
     checkWeeklyReportStatus,
     checkAllMemberStatuses,
     team?.members,
     loadTasks,
+    loadAchievements,
   ]);
 
   if (loading) {
@@ -624,86 +730,153 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           </div>
 
           {/* Achievement Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* First Row */}
-            <AchievementCard
-              title="Launch Achievements"
-              description="Click to unfilter"
-              status="in-progress"
-              points={680}
-              xp={1020}
-            />
-            <AchievementCard
-              title="Topic 2"
-              description="Click to filter"
-              status="finished"
-              points={680}
-              xp={1020}
-            />
-            <AchievementCard
-              title="Topic 3"
-              description="Click to filter"
-              status="not-started"
-              points={680}
-              xp={1020}
-            />
-            <AchievementCard
-              title="Topic 4"
-              description="Click to filter"
-              status="not-started"
-              points={680}
-              xp={1020}
-            />
+          {loadingAchievements ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-gray-500">Loading achievements...</div>
+            </div>
+          ) : achievements.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No achievements available for this team
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {achievements.map((achievement) => (
+                <div
+                  key={achievement.achievement_id}
+                  onClick={() =>
+                    handleAchievementClick(
+                      selectedAchievementId === achievement.achievement_id
+                        ? null
+                        : achievement.achievement_id
+                    )
+                  }
+                  className="cursor-pointer transition-all duration-200 hover:scale-[1.02]"
+                >
+                  <AchievementCard
+                    title={achievement.achievement_name}
+                    description={
+                      selectedAchievementId === achievement.achievement_id
+                        ? "Click to show all tasks"
+                        : "Click to filter tasks"
+                    }
+                    status={
+                      achievement.status === "completed"
+                        ? "finished"
+                        : achievement.status
+                    }
+                    points={achievement.credits_reward}
+                    xp={achievement.xp_reward}
+                    selected={
+                      selectedAchievementId === achievement.achievement_id
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          )}
 
-            {/* Second Row */}
-            <AchievementCard
-              title="Topic 5"
-              description="Click to filter"
-              status="not-started"
-              points={680}
-              xp={1020}
-            />
-            <AchievementCard
-              title="Topic 6"
-              description="Click to filter"
-              status="not-started"
-              points={680}
-              xp={1020}
-            />
-            <AchievementCard
-              title="Topic 7"
-              description="Click to filter"
-              status="not-started"
-              points={680}
-              xp={1020}
-            />
-            <AchievementCard
-              title="Topic 8"
-              description="Click to filter"
-              status="not-started"
-              points={680}
-              xp={1020}
-            />
-          </div>
+          {/* Filter Status */}
+          {selectedAchievementId && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-blue-800">
+                  <span className="font-medium">Showing tasks for:</span>{" "}
+                  {
+                    achievements.find(
+                      (a) => a.achievement_id === selectedAchievementId
+                    )?.achievement_name
+                  }
+                </div>
+                <button
+                  onClick={() => handleAchievementClick(null)}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  Show All Tasks
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Tasks Table */}
-          {loadingTasks ? (
+          {loadingTasks || loadingAchievements ? (
             <div className="flex items-center justify-center py-8">
               <div className="text-gray-500">Loading tasks...</div>
             </div>
+          ) : filteredTasks.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {selectedAchievementId
+                ? "No tasks found for this achievement"
+                : "No tasks available for this team"}
+            </div>
           ) : (
-            <TasksTable
-              isTeamMember={isTeamMember}
-              tasks={tasks}
-              teamMembers={
-                team?.members?.map((member) => ({
-                  id: member.user_id,
-                  name: member.users?.name || "Unknown User",
-                  avatar: member.users?.avatar_url || "/avatars/john-doe.jpg",
-                })) || []
-              }
-              onAssignTask={handleAssignTask}
-            />
+            <div className="space-y-4">
+              {/* Task filtering info */}
+              <div className="text-sm text-muted-foreground">
+                Showing {filteredTasks.length} task
+                {filteredTasks.length !== 1 ? "s" : ""}
+                {selectedAchievementId && (
+                  <span>
+                    {" "}
+                    for{" "}
+                    {
+                      achievements.find(
+                        (a) => a.achievement_id === selectedAchievementId
+                      )?.achievement_name
+                    }
+                  </span>
+                )}
+              </div>
+
+              {/* Convert filtered tasks to TaskTableItem format */}
+              <TasksTable
+                isTeamMember={isTeamMember}
+                tasks={filteredTasks.map((task) => ({
+                  id:
+                    task.progress_id ||
+                    `${task.task_id}-${task.achievement_id}`,
+                  title: task.title,
+                  description: task.description,
+                  difficulty:
+                    task.difficulty_level === 1
+                      ? "Easy"
+                      : task.difficulty_level === 2
+                      ? "Medium"
+                      : "Hard",
+                  xp: task.base_xp_reward,
+                  points: task.base_credits_reward,
+                  status:
+                    task.status === "approved"
+                      ? "Finished"
+                      : task.status === "pending_review"
+                      ? "Peer Review"
+                      : task.status === "in_progress"
+                      ? "In Progress"
+                      : task.status === "rejected"
+                      ? "Not Accepted"
+                      : "Not Started",
+                  responsible: task.assignee_name
+                    ? {
+                        name: task.assignee_name,
+                        avatar:
+                          task.assignee_avatar_url || "/avatars/john-doe.jpg",
+                        date: task.assigned_at || new Date().toISOString(),
+                      }
+                    : undefined,
+                  action: task.status === "approved" ? "done" : "complete",
+                  isAvailable: task.is_available,
+                  assignedAt: task.assigned_at,
+                  completedAt: task.completed_at,
+                }))}
+                teamMembers={
+                  team?.members?.map((member) => ({
+                    id: member.user_id,
+                    name: member.users?.name || "Unknown User",
+                    avatar: member.users?.avatar_url || "/avatars/john-doe.jpg",
+                  })) || []
+                }
+                onAssignTask={handleAssignTask}
+              />
+            </div>
           )}
         </TabsContent>
 
