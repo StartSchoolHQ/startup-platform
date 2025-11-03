@@ -1769,6 +1769,7 @@ export async function getTeamClientMeetings(teamId: string) {
   console.log("Loading client meetings for team:", teamId);
 
   try {
+    // Using any cast since client_meetings table exists but not in generated types
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
       .from("client_meetings")
@@ -1797,7 +1798,7 @@ export async function getTeamClientMeetings(teamId: string) {
     }
 
     // Transform the data to match our expected interface
-    /* eslint-disable @typescript-eslint/no-explicit-any */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (
       (data as any)?.map((meeting: any) => ({
         id: meeting.id,
@@ -1810,11 +1811,10 @@ export async function getTeamClientMeetings(teamId: string) {
         users: {
           id: meeting.users?.id || "",
           name: meeting.users?.name || "Unknown User",
-          avatar_url: meeting.users?.avatar_url || "",
+          avatar_url: meeting.users?.avatar_url || null,
         },
       })) || []
     );
-    /* eslint-enable @typescript-eslint/no-explicit-any */
   } catch (error) {
     console.error("Error in getTeamClientMeetings:", error);
     return [];
@@ -1952,4 +1952,93 @@ export async function checkAndAwardAchievement(
   }
 
   return data;
+}
+
+// My Journey Functions - User-specific data functions
+export async function getUserStrikes(userId: string) {
+  const supabase = createClient();
+
+  // Get strikes for all teams the user belongs to
+  const { data: strikes, error } = await supabase
+    .from("team_strikes")
+    .select(
+      `
+      id,
+      title,
+      description,
+      created_at,
+      explanation,
+      xp_penalty,
+      credits_penalty,
+      status,
+      teams!inner(name)
+    `
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching user strikes:", error);
+    throw error;
+  }
+
+  return strikes || [];
+}
+
+export async function getUserWeeklyReports(userId: string) {
+  const supabase = createClient();
+
+  // Get weekly reports submitted by the user
+  const { data: reports, error } = await supabase
+    .from("weekly_reports")
+    .select(
+      `
+      id,
+      week_number,
+      week_year,
+      week_start_date,
+      week_end_date,
+      submitted_at,
+      submission_data,
+      teams!inner(name)
+    `
+    )
+    .eq("user_id", userId)
+    .order("week_year", { ascending: false })
+    .order("week_number", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("Error fetching user weekly reports:", error);
+    throw error;
+  }
+
+  return reports || [];
+}
+
+export async function getUserTaskCompletionStats(userId: string) {
+  const supabase = createClient();
+
+  // Get task completion statistics
+  const { data: stats, error } = await supabase
+    .from("team_task_progress")
+    .select("status")
+    .eq("assigned_to_user_id", userId);
+
+  if (error) {
+    console.error("Error fetching user task stats:", error);
+    throw error;
+  }
+
+  const taskStats = stats || [];
+  const total = taskStats.length;
+  const completed = taskStats.filter(
+    (task) => task.status === "approved" || task.status === "completed"
+  ).length;
+
+  return {
+    total,
+    completed,
+    completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+  };
 }

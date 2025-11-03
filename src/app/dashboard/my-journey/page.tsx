@@ -17,6 +17,7 @@ import {
   Medal,
   Settings,
   MessageSquare,
+  LucideIcon,
 } from "lucide-react";
 import { myJourneyData } from "@/data/my-journey-data";
 import { WeeklyReport, Strike } from "@/types/my-journey";
@@ -26,7 +27,12 @@ import { StatsCardComponent } from "@/components/dashboard/stats-card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { DifficultyBadge } from "@/components/ui/difficulty-badge";
 import { getUserTasks } from "@/lib/tasks";
-import { createClient } from "@/lib/supabase/client";
+import {
+  getUserProfile,
+  getUserAchievementProgress,
+  getUserTaskCompletionStats,
+} from "@/lib/database";
+import { useAppContext } from "@/contexts/app-context";
 
 // Real task row component for actual user tasks
 function RealTaskRow({ task }: { task: TaskTableItem }) {
@@ -323,44 +329,115 @@ function StrikeRow({ strike }: { strike: Strike }) {
 }
 
 export default function MyJourneyPage() {
+  const { user } = useAppContext();
   const [userTasks, setUserTasks] = useState<TaskTableItem[]>([]);
+  const [userProfile, setUserProfile] = useState<{
+    name: string | null;
+    status: string;
+    total_xp: number;
+    total_credits: number;
+  } | null>(null);
+  const [statsCards, setStatsCards] = useState<
+    {
+      title: string;
+      value: string;
+      subtitle: string;
+      icon: LucideIcon;
+      iconColor: string;
+    }[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserAndTasks = async () => {
-      const supabase = createClient();
+    const fetchUserData = async () => {
+      if (!user?.id) return;
 
-      // Get current user
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
-      if (!currentUser) return;
-
-      // Fetch user tasks
+      setLoading(true);
       try {
-        const tasks = await getUserTasks(currentUser.id);
+        // Fetch all data in parallel
+        const [profile, tasks, achievementProgress, taskStats] =
+          await Promise.all([
+            getUserProfile(user.id),
+            getUserTasks(user.id),
+            getUserAchievementProgress(user.id),
+            getUserTaskCompletionStats(user.id),
+          ]);
+
+        setUserProfile(profile);
         setUserTasks(tasks);
+
+        // Calculate dynamic stats cards
+        const totalXP = profile?.total_xp || 0;
+        const totalCredits = profile?.total_credits || 0;
+        const tasksCompleted = taskStats.completed;
+        const totalTasks = taskStats.total;
+
+        // Calculate achievement rate
+        const achievements = Array.isArray(achievementProgress)
+          ? achievementProgress
+          : [];
+        const completedAchievements = achievements.filter(
+          (a: { is_completed?: boolean }) => a.is_completed
+        ).length;
+        const achievementRate =
+          achievements.length > 0
+            ? Math.round((completedAchievements / achievements.length) * 100)
+            : 0;
+
+        const dynamicStatsCards = [
+          {
+            title: "Total XP",
+            value: totalXP.toLocaleString(),
+            subtitle: `From ${totalTasks} tasks`,
+            icon: Zap,
+            iconColor: "text-green-500",
+          },
+          {
+            title: "Total Credits",
+            value: totalCredits.toLocaleString(),
+            subtitle: "Earned credits",
+            icon: Banknote,
+            iconColor: "text-blue-500",
+          },
+          {
+            title: "Tasks Completed",
+            value: tasksCompleted.toString(),
+            subtitle: `${taskStats.completionRate}% completion rate`,
+            icon: CheckCircle,
+            iconColor: "text-primary",
+          },
+          {
+            title: "Achievement Rate",
+            value: `${achievementRate}%`,
+            subtitle: `${completedAchievements} of ${achievements.length} completed`,
+            icon: Trophy,
+            iconColor: "text-yellow-500",
+          },
+        ];
+        setStatsCards(dynamicStatsCards);
       } catch (error) {
-        console.error("Error fetching user tasks:", error);
+        console.error("Error fetching user data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserAndTasks();
-  }, []);
+    fetchUserData();
+  }, [user?.id]);
 
   return (
     <main className="p-8">
       {/* Profile Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold mb-2">{myJourneyData.user.name}</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            {loading ? "Loading..." : userProfile?.name || "User"}
+          </h1>
           <Badge
             variant="secondary"
             className="bg-primary/10 text-primary px-3 py-1"
           >
-            {myJourneyData.user.status}
+            {loading ? "Loading..." : userProfile?.status || "Active"}
           </Badge>
         </div>
         <div className="flex gap-3">
@@ -380,16 +457,25 @@ export default function MyJourneyPage() {
 
       {/* Stats Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {myJourneyData.statsCards.map((card, index) => (
-          <StatsCardComponent
-            key={index}
-            title={card.title}
-            value={card.value}
-            subtitle={card.subtitle}
-            icon={card.icon}
-            iconColor={card.iconColor}
-          />
-        ))}
+        {loading
+          ? // Loading skeleton for stats cards
+            Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="bg-card rounded-lg p-6 animate-pulse">
+                <div className="h-4 bg-muted rounded w-1/2 mb-2"></div>
+                <div className="h-8 bg-muted rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-muted rounded w-full"></div>
+              </div>
+            ))
+          : statsCards.map((card, index) => (
+              <StatsCardComponent
+                key={index}
+                title={card.title}
+                value={card.value}
+                subtitle={card.subtitle}
+                icon={card.icon}
+                iconColor={card.iconColor}
+              />
+            ))}
       </div>
 
       {/* Tabs Section */}
