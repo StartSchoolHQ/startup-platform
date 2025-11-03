@@ -55,7 +55,7 @@ export type TaskCategory =
 // Simplified Task interface - combines master task with team progress
 export interface TeamTask {
   // Progress record data
-  progress_id: string; // ID from team_task_progress table
+  progress_id: string; // ID from task_progress table
   task_id: string; // ID from tasks (master) table
 
   // Master task data (from tasks table)
@@ -94,7 +94,7 @@ export interface TeamTask {
     }>;
   };
 
-  // Team progress data (from team_task_progress table)
+  // Team progress data (from task_progress table)
   status: TaskStatus;
   assigned_to_user_id?: string;
   assignee_name?: string;

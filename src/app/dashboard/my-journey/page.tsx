@@ -26,11 +26,11 @@ import { AchievementCard } from "@/components/my-journey/achievement-card";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { DifficultyBadge } from "@/components/ui/difficulty-badge";
-import { getUserTasks } from "@/lib/tasks";
 import {
   getUserProfile,
   getUserAchievementProgress,
   getUserTaskCompletionStats,
+  getUserIndividualTasks,
 } from "@/lib/database";
 import { useAppContext } from "@/contexts/app-context";
 
@@ -331,6 +331,17 @@ function StrikeRow({ strike }: { strike: Strike }) {
 export default function MyJourneyPage() {
   const { user } = useAppContext();
   const [userTasks, setUserTasks] = useState<TaskTableItem[]>([]);
+  const [achievements, setAchievements] = useState<
+    {
+      achievement_id: string;
+      achievement_name: string;
+      status: "completed" | "in-progress" | "not-started";
+      xp_reward: number;
+      points_reward: number;
+      completed_tasks: number;
+      total_tasks: number;
+    }[]
+  >([]);
   const [userProfile, setUserProfile] = useState<{
     name: string | null;
     status: string | null;
@@ -355,16 +366,82 @@ export default function MyJourneyPage() {
       setLoading(true);
       try {
         // Fetch all data in parallel
-        const [profile, tasks, achievementProgress, taskStats] =
+        const [profile, individualTasksData, achievementProgress, taskStats] =
           await Promise.all([
             getUserProfile(user.id),
-            getUserTasks(user.id),
+            getUserIndividualTasks(user.id),
             getUserAchievementProgress(user.id),
             getUserTaskCompletionStats(user.id),
           ]);
 
         setUserProfile(profile);
-        setUserTasks(tasks);
+
+        // Process achievements from getUserAchievementProgress
+        const achievementsData = Array.isArray(achievementProgress)
+          ? achievementProgress
+          : [];
+        setAchievements(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          achievementsData.map((ach: any) => ({
+            achievement_id: ach.achievement_id,
+            achievement_name: ach.achievement_name,
+            status: ach.status as "completed" | "in-progress" | "not-started",
+            xp_reward: ach.xp_reward || 0,
+            points_reward: ach.points_reward || 0,
+            completed_tasks: ach.completed_tasks || 0,
+            total_tasks: ach.total_tasks || 0,
+          }))
+        );
+
+        // Convert individual tasks to TaskTableItem format
+        const convertedTasks: TaskTableItem[] =
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          individualTasksData.map((task: any) => {
+            const getUIStatus = (status: string): TaskTableItem["status"] => {
+              switch (status) {
+                case "approved":
+                  return "Finished";
+                case "in_progress":
+                  return "In Progress";
+                case "rejected":
+                case "revision_required":
+                  return "Not Accepted";
+                case "pending_review":
+                  return "Peer Review";
+                case "not_started":
+                default:
+                  return "Not Started";
+              }
+            };
+
+            const getDifficulty = (
+              level: number
+            ): TaskTableItem["difficulty"] => {
+              if (level >= 4) return "Hard";
+              if (level >= 3) return "Medium";
+              return "Easy";
+            };
+
+            return {
+              id: task.progress_id,
+              title: task.title,
+              description: task.description,
+              difficulty: getDifficulty(task.difficulty_level),
+              xp: task.base_xp_reward,
+              points: task.base_points_reward || task.base_xp_reward,
+              status: getUIStatus(task.status),
+              action: task.status === "approved" ? "done" : "complete",
+              isAvailable: true,
+              reviewFeedback: undefined,
+              reviewerName: undefined,
+              reviewerAvatarUrl: undefined,
+              teamName: undefined,
+              assignedAt: undefined,
+              completedAt: task.completed_at,
+            };
+          });
+
+        setUserTasks(convertedTasks);
 
         // Calculate dynamic stats cards
         const totalXP = profile?.total_xp || 0;
@@ -510,16 +587,32 @@ export default function MyJourneyPage() {
 
           {/* Achievement Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {myJourneyData.achievements.map((achievement) => (
-              <AchievementCard
-                key={achievement.id}
-                title={achievement.title}
-                description={achievement.description}
-                status={achievement.status}
-                points={achievement.points}
-                xp={achievement.xp}
-              />
-            ))}
+            {loading ? (
+              <div className="col-span-full flex items-center justify-center py-8">
+                <div className="text-muted-foreground">
+                  Loading achievements...
+                </div>
+              </div>
+            ) : achievements.length === 0 ? (
+              <div className="col-span-full text-center py-8 text-muted-foreground">
+                No achievements available yet
+              </div>
+            ) : (
+              achievements.map((achievement) => (
+                <AchievementCard
+                  key={achievement.achievement_id}
+                  title={achievement.achievement_name}
+                  description={`${achievement.completed_tasks} of ${achievement.total_tasks} tasks completed`}
+                  status={
+                    achievement.status === "completed"
+                      ? "finished"
+                      : achievement.status
+                  }
+                  points={achievement.points_reward}
+                  xp={achievement.xp_reward}
+                />
+              ))
+            )}
           </div>
 
           {/* Tasks Table */}
@@ -531,7 +624,8 @@ export default function MyJourneyPage() {
               </div>
             ) : userTasks.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No tasks assigned yet. Join a team to get started!
+                No individual tasks assigned yet. Check back later for new
+                challenges!
               </div>
             ) : (
               <div className="overflow-x-auto">

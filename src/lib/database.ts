@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import { Product } from "@/types/team-journey";
+import type { Json } from "@/types/database";
 
 // Type for team data from relationship queries
 interface TeamRelation {
@@ -1536,7 +1537,7 @@ export async function getAvailableTasksForReview(userId: string) {
   // Get tasks available for peer review (ONLY from teams user is NOT a member of)
   // External Peer Reviewer = someone from a different team than the submitting team
   let query = supabase
-    .from("team_task_progress" as never)
+    .from("task_progress" as never)
     .select(
       `
       id,
@@ -1561,6 +1562,7 @@ export async function getAvailableTasksForReview(userId: string) {
     `
     )
     .eq("status", "pending_review")
+    .eq("context", "team")
     .is("reviewer_user_id", null); // Only show tasks that don't have a reviewer assigned yet
 
   // Users can only review tasks from teams they are NOT members of
@@ -1868,7 +1870,7 @@ export async function getMySubmittedTasksForReview(userId: string) {
 
   // Get user's own tasks that have been submitted for review (includes completed, pending, approved, rejected)
   const { data, error } = await supabase
-    .from("team_task_progress" as never)
+    .from("task_progress" as never)
     .select(
       `
       id,
@@ -1905,6 +1907,7 @@ export async function getMySubmittedTasksForReview(userId: string) {
       "rejected",
       "revision_required",
     ])
+    .eq("context", "team")
     .eq("assigned_to_user_id", userId);
   // Removed completed_at filter - rejected tasks have NULL completed_at but should still show
 
@@ -2061,11 +2064,11 @@ export async function getUserWeeklyReports(userId: string) {
 export async function getUserTaskCompletionStats(userId: string) {
   const supabase = createClient();
 
-  // Get task completion statistics
+  // Get task completion statistics from task_progress (both individual and team tasks)
   const { data: stats, error } = await supabase
-    .from("team_task_progress")
+    .from("task_progress")
     .select("status")
-    .eq("assigned_to_user_id", userId);
+    .or(`user_id.eq.${userId},assigned_to_user_id.eq.${userId}`);
 
   if (error) {
     console.error("Error fetching user task stats:", error);
@@ -2083,4 +2086,135 @@ export async function getUserTaskCompletionStats(userId: string) {
     completed,
     completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
   };
+}
+
+// ============================================================================
+// INDIVIDUAL TASK FUNCTIONS (Phase 3)
+// ============================================================================
+
+/**
+ * Get all individual tasks for a user
+ */
+export async function getUserIndividualTasks(userId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("get_user_individual_tasks", {
+    p_user_id: userId,
+  });
+
+  if (error) {
+    console.error("Error fetching individual tasks:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Assign an individual task to a user
+ */
+export async function assignIndividualTask(userId: string, taskId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("assign_individual_task", {
+    p_user_id: userId,
+    p_task_id: taskId,
+  });
+
+  if (error) {
+    console.error("Error assigning individual task:", error);
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Start an individual task
+ */
+export async function startIndividualTask(progressId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("start_individual_task", {
+    p_progress_id: progressId,
+  });
+
+  if (error) {
+    console.error("Error starting individual task:", error);
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Complete an individual task and award points
+ */
+export async function completeIndividualTask(
+  progressId: string,
+  submissionData?: Record<string, unknown>,
+  submissionNotes?: string
+) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("complete_individual_task", {
+    p_progress_id: progressId,
+    p_submission_data: submissionData as Json | undefined,
+    p_submission_notes: submissionNotes,
+  });
+
+  if (error) {
+    console.error("Error completing individual task:", error);
+    throw error;
+  }
+
+  return data;
+}
+
+// ============================================================================
+// TEAM TASK FUNCTIONS (Updated for task_progress)
+// ============================================================================
+
+/**
+ * Get team tasks from task_progress table (replacement for old function)
+ */
+export async function getTeamTasksFromProgress(teamId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("get_team_tasks_from_progress", {
+    p_team_id: teamId,
+  });
+
+  if (error) {
+    console.error("Error fetching team tasks:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Assign a task to a team using task_progress table
+ */
+export async function assignTeamTaskToProgress(
+  teamId: string,
+  taskId: string,
+  assignedToUserId?: string,
+  assignedByUserId?: string
+) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("assign_team_task_to_progress", {
+    p_team_id: teamId,
+    p_task_id: taskId,
+    p_assigned_to_user_id: assignedToUserId,
+    p_assigned_by_user_id: assignedByUserId,
+  });
+
+  if (error) {
+    console.error("Error assigning team task:", error);
+    throw error;
+  }
+
+  return data;
 }

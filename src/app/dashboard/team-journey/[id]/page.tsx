@@ -49,10 +49,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useAppContext } from "@/contexts/app-context";
 import { hasUserSubmittedThisWeek } from "@/lib/weekly-reports";
 import { assignTaskToMember } from "@/lib/tasks";
-import {
-  getUserAchievementProgress,
-  getTasksByAchievement,
-} from "@/lib/database";
+import { getTasksByAchievement } from "@/lib/database";
 import { Achievement, TaskWithAchievement } from "@/types/dashboard";
 
 interface ProductDetailPageProps {
@@ -250,34 +247,47 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
     setLoadingAchievements(true);
     try {
-      const achievementData = await getUserAchievementProgress(user.id);
-      const achievementArray = Array.isArray(achievementData)
-        ? achievementData
-        : [];
-
-      setAchievements(
-        achievementArray.map((achievement) => ({
-          achievement_id: achievement.achievement_id,
-          achievement_name: achievement.achievement_name,
-          achievement_description: achievement.achievement_description,
-          achievement_icon: achievement.achievement_icon,
-          xp_reward: achievement.xp_reward,
-          credits_reward: achievement.points_reward,
-          color_theme: achievement.color_theme,
-          sort_order: achievement.sort_order,
-          total_tasks: Number(achievement.total_tasks),
-          completed_tasks: Number(achievement.completed_tasks),
-          status: achievement.status as
-            | "completed"
-            | "in-progress"
-            | "not-started",
-          is_completed: achievement.is_completed,
-        }))
-      );
-
-      // Load all tasks initially
+      // Load all tasks first - they contain achievement info
       const allTasks = await getTasksByAchievement();
       const tasksArray = Array.isArray(allTasks) ? allTasks : [];
+
+      // Extract unique achievements from tasks (SIMPLE approach - no separate query needed)
+      const achievementMap = new Map();
+      tasksArray.forEach((task) => {
+        if (task.achievement_id && !achievementMap.has(task.achievement_id)) {
+          const completedCount = tasksArray.filter(
+            (t) =>
+              t.achievement_id === task.achievement_id &&
+              t.status === "approved"
+          ).length;
+          const totalCount = tasksArray.filter(
+            (t) => t.achievement_id === task.achievement_id
+          ).length;
+
+          achievementMap.set(task.achievement_id, {
+            achievement_id: task.achievement_id,
+            achievement_name: task.achievement_name || "Unknown Achievement",
+            achievement_description: "", // Not in task data
+            achievement_icon: "", // Not in task data
+            xp_reward: 0, // Would need to sum from tasks or get from achievements table
+            credits_reward: 0, // Would need to sum from tasks or get from achievements table
+            color_theme: "", // Not in task data
+            sort_order: 0,
+            total_tasks: totalCount,
+            completed_tasks: completedCount,
+            status:
+              completedCount === totalCount
+                ? "completed"
+                : completedCount > 0
+                ? "in-progress"
+                : ("not-started" as const),
+            is_completed: completedCount === totalCount,
+          });
+        }
+      });
+
+      const achievementsArray = Array.from(achievementMap.values());
+      setAchievements(achievementsArray);
 
       setFilteredTasks(
         tasksArray.map((task) => ({
@@ -982,18 +992,20 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             <div className="flex items-center justify-center py-8">
               <div className="text-gray-500">Loading tasks...</div>
             </div>
-          ) : filteredTasks.length === 0 ? (
+          ) : filteredTasks.filter((t) => t.progress_id).length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {selectedAchievementId
-                ? "No tasks found for this achievement"
-                : "No tasks available for this team"}
+                ? "No started tasks found for this achievement"
+                : "No started tasks available for this team. Team members need to start tasks first."}
             </div>
           ) : (
             <div className="space-y-4">
               {/* Task filtering info */}
               <div className="text-sm text-muted-foreground">
-                Showing {filteredTasks.length} task
-                {filteredTasks.length !== 1 ? "s" : ""}
+                Showing {filteredTasks.filter((t) => t.progress_id).length} task
+                {filteredTasks.filter((t) => t.progress_id).length !== 1
+                  ? "s"
+                  : ""}
                 {selectedAchievementId && (
                   <span>
                     {" "}
@@ -1004,49 +1016,50 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                       )?.achievement_name
                     }
                   </span>
-                )}
+                )}{" "}
+                that have been started
               </div>
 
               {/* Convert filtered tasks to TaskTableItem format */}
               <TasksTable
                 isTeamMember={isTeamMember}
-                tasks={filteredTasks.map((task) => ({
-                  id:
-                    task.progress_id ||
-                    `${task.task_id}-${task.achievement_id}`,
-                  title: task.title,
-                  description: task.description,
-                  difficulty:
-                    task.difficulty_level === 1
-                      ? "Easy"
-                      : task.difficulty_level === 2
-                      ? "Medium"
-                      : "Hard",
-                  xp: task.base_xp_reward,
-                  points: task.base_credits_reward,
-                  status:
-                    task.status === "approved"
-                      ? "Finished"
-                      : task.status === "pending_review"
-                      ? "Peer Review"
-                      : task.status === "in_progress"
-                      ? "In Progress"
-                      : task.status === "rejected"
-                      ? "Not Accepted"
-                      : "Not Started",
-                  responsible: task.assignee_name
-                    ? {
-                        name: task.assignee_name,
-                        avatar:
-                          task.assignee_avatar_url || "/avatars/john-doe.jpg",
-                        date: task.assigned_at || new Date().toISOString(),
-                      }
-                    : undefined,
-                  action: task.status === "approved" ? "done" : "complete",
-                  isAvailable: task.is_available,
-                  assignedAt: task.assigned_at,
-                  completedAt: task.completed_at,
-                }))}
+                tasks={filteredTasks
+                  .filter((task) => task.progress_id) // Only show tasks that have been started (have progress_id)
+                  .map((task) => ({
+                    id: task.progress_id!, // Use non-null assertion since we filtered above
+                    title: task.title,
+                    description: task.description,
+                    difficulty:
+                      task.difficulty_level === 1
+                        ? "Easy"
+                        : task.difficulty_level === 2
+                        ? "Medium"
+                        : "Hard",
+                    xp: task.base_xp_reward,
+                    points: task.base_credits_reward,
+                    status:
+                      task.status === "approved"
+                        ? "Finished"
+                        : task.status === "pending_review"
+                        ? "Peer Review"
+                        : task.status === "in_progress"
+                        ? "In Progress"
+                        : task.status === "rejected"
+                        ? "Not Accepted"
+                        : "Not Started",
+                    responsible: task.assignee_name
+                      ? {
+                          name: task.assignee_name,
+                          avatar:
+                            task.assignee_avatar_url || "/avatars/john-doe.jpg",
+                          date: task.assigned_at || new Date().toISOString(),
+                        }
+                      : undefined,
+                    action: task.status === "approved" ? "done" : "complete",
+                    isAvailable: task.is_available,
+                    assignedAt: task.assigned_at,
+                    completedAt: task.completed_at,
+                  }))}
                 teamMembers={
                   team?.members?.map((member) => ({
                     id: member.user_id,

@@ -98,7 +98,7 @@ export default function PeerReviewPage() {
         const supabase = createClient();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: acceptedTasksData } = await (supabase as any)
-          .from("team_task_progress")
+          .from("task_progress")
           .select(
             `
             id,

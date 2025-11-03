@@ -451,6 +451,81 @@ export type Database = {
         };
         Relationships: [];
       };
+      task_progress: {
+        Row: {
+          assigned_at: string | null;
+          assigned_by_user_id: string | null;
+          assigned_to_user_id: string | null;
+          cancelled_at: string | null;
+          completed_at: string | null;
+          context: Database["public"]["Enums"]["task_context_type"];
+          created_at: string;
+          id: string;
+          metadata: Json | null;
+          points_awarded: number | null;
+          review_feedback: string | null;
+          reviewer_user_id: string | null;
+          started_at: string | null;
+          status: Database["public"]["Enums"]["task_status_type"];
+          submission_data: Json | null;
+          submission_notes: string | null;
+          submission_url: string | null;
+          submitted_at: string | null;
+          task_id: string;
+          team_id: string | null;
+          updated_at: string;
+          user_id: string | null;
+        };
+        Insert: {
+          assigned_at?: string | null;
+          assigned_by_user_id?: string | null;
+          assigned_to_user_id?: string | null;
+          cancelled_at?: string | null;
+          completed_at?: string | null;
+          context: Database["public"]["Enums"]["task_context_type"];
+          created_at?: string;
+          id?: string;
+          metadata?: Json | null;
+          points_awarded?: number | null;
+          review_feedback?: string | null;
+          reviewer_user_id?: string | null;
+          started_at?: string | null;
+          status?: Database["public"]["Enums"]["task_status_type"];
+          submission_data?: Json | null;
+          submission_notes?: string | null;
+          submission_url?: string | null;
+          submitted_at?: string | null;
+          task_id: string;
+          team_id?: string | null;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Update: {
+          assigned_at?: string | null;
+          assigned_by_user_id?: string | null;
+          assigned_to_user_id?: string | null;
+          cancelled_at?: string | null;
+          completed_at?: string | null;
+          context?: Database["public"]["Enums"]["task_context_type"];
+          created_at?: string;
+          id?: string;
+          metadata?: Json | null;
+          points_awarded?: number | null;
+          review_feedback?: string | null;
+          reviewer_user_id?: string | null;
+          started_at?: string | null;
+          status?: Database["public"]["Enums"]["task_status_type"];
+          submission_data?: Json | null;
+          submission_notes?: string | null;
+          submission_url?: string | null;
+          submitted_at?: string | null;
+          task_id?: string;
+          team_id?: string | null;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       team_task_progress: {
         Row: {
           assigned_at: string | null;
@@ -669,7 +744,68 @@ export type Database = {
       };
     };
     Functions: {
-      [_ in never]: never;
+      get_user_individual_tasks: {
+        Args: { p_user_id: string };
+        Returns: {
+          progress_id: string;
+          task_id: string;
+          title: string;
+          description: string;
+          category: Database["public"]["Enums"]["task_category_type"];
+          difficulty_level: number;
+          base_points_reward: number;
+          base_xp_reward: number;
+          status: Database["public"]["Enums"]["task_status_type"];
+          started_at: string | null;
+          completed_at: string | null;
+          submission_data: Json | null;
+          created_at: string;
+        }[];
+      };
+      assign_individual_task: {
+        Args: { p_user_id: string; p_task_id: string };
+        Returns: Json;
+      };
+      start_individual_task: {
+        Args: { p_progress_id: string };
+        Returns: Json;
+      };
+      complete_individual_task: {
+        Args: {
+          p_progress_id: string;
+          p_submission_data?: Json;
+          p_submission_notes?: string;
+        };
+        Returns: Json;
+      };
+      get_team_tasks_from_progress: {
+        Args: { p_team_id: string };
+        Returns: {
+          progress_id: string;
+          task_id: string;
+          title: string;
+          description: string;
+          category: Database["public"]["Enums"]["task_category_type"];
+          difficulty_level: number;
+          base_points_reward: number;
+          base_xp_reward: number;
+          status: Database["public"]["Enums"]["task_status_type"];
+          assigned_to_user_id: string | null;
+          assignee_name: string | null;
+          started_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+        }[];
+      };
+      assign_team_task_to_progress: {
+        Args: {
+          p_team_id: string;
+          p_task_id: string;
+          p_assigned_to_user_id?: string;
+          p_assigned_by_user_id?: string;
+        };
+        Returns: Json;
+      };
     };
     Enums: {
       primary_role_type: "user" | "admin";
@@ -692,6 +828,7 @@ export type Database = {
         | "testing"
         | "deployment"
         | "milestone";
+      task_context_type: "individual" | "team";
       task_priority_type: "low" | "medium" | "high" | "urgent";
       task_status_type:
         | "not_started"
@@ -824,6 +961,7 @@ export type WeeklyReport = Tables<"weekly_reports">;
 export type RevenueStream = Tables<"revenue_streams">;
 export type ClientMeeting = Tables<"client_meetings">;
 export type UserAchievement = Tables<"user_achievements">;
+export type TaskProgress = Tables<"task_progress">;
 export type TeamTaskProgress = Tables<"team_task_progress">;
 export type TeamInvitation = Tables<"team_invitations">;
 export type TeamTotalPoints = Tables<"team_total_points">;

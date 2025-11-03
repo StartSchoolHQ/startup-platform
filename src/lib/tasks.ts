@@ -1,4 +1,10 @@
-import { TeamTask, TaskTableItem, TaskStatus } from "@/types/team-journey";
+import {
+  TeamTask,
+  TaskTableItem,
+  TaskStatus,
+  TaskCategory,
+  TaskPriority,
+} from "@/types/team-journey";
 import { createClient } from "@/lib/supabase/client";
 
 // Function to convert database task to UI format for the simplified architecture
@@ -212,9 +218,10 @@ export async function getTaskById(
   try {
     const supabase = createClient();
 
+    // Fetch task_progress data first (no foreign key relationships to avoid 406 errors)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any)
-      .from("team_task_progress")
+    const { data: progressData, error: progressError } = await (supabase as any)
+      .from("task_progress")
       .select(
         `
         id,
@@ -229,81 +236,122 @@ export async function getTaskById(
         submission_data,
         submission_notes,
         reviewer_user_id,
-        tasks!task_id (
-          title,
-          description,
-          category,
-          priority,
-          difficulty_level,
-          base_xp_reward,
-          detailed_instructions,
-          tips_content,
-          peer_review_criteria,
-          learning_objectives,
-          deliverables,
-          resources
-        ),
-        teams!team_id (
-          id,
-          name
-        ),
-        users!assigned_to_user_id (
-          name,
-          avatar_url
-        ),
-        reviewer:users!reviewer_user_id (
-          name,
-          avatar_url
-        )
+        context
       `
       )
       .eq("id", progressId)
       .single();
 
-    if (error) {
-      console.error("Error fetching task:", error);
+    if (progressError) {
+      console.error("Error fetching task progress:", progressError);
       return null;
     }
 
-    if (!data) return null;
+    if (!progressData) return null;
+
+    // Manually fetch task data
+    const { data: taskData, error: taskError } = await supabase
+      .from("tasks")
+      .select(
+        `
+        title,
+        description,
+        category,
+        priority,
+        difficulty_level,
+        base_xp_reward,
+        detailed_instructions,
+        tips_content,
+        peer_review_criteria,
+        learning_objectives,
+        deliverables,
+        resources
+      `
+      )
+      .eq("id", progressData.task_id)
+      .single();
+
+    if (taskError || !taskData) {
+      console.error("Error fetching task data:", taskError);
+      return null;
+    }
+
+    // Manually fetch team data if team context
+    let teamData = null;
+    if (progressData.team_id && progressData.context === "team") {
+      const { data: team } = await supabase
+        .from("teams")
+        .select("id, name")
+        .eq("id", progressData.team_id)
+        .single();
+      teamData = team;
+    }
+
+    // Manually fetch assignee user data if exists
+    let assigneeData = null;
+    if (progressData.assigned_to_user_id) {
+      const { data: user } = await supabase
+        .from("users")
+        .select("name, avatar_url")
+        .eq("id", progressData.assigned_to_user_id)
+        .single();
+      assigneeData = user;
+    }
+
+    // Manually fetch reviewer user data if exists
+    let reviewerData = null;
+    if (progressData.reviewer_user_id) {
+      const { data: reviewer } = await supabase
+        .from("users")
+        .select("name, avatar_url")
+        .eq("id", progressData.reviewer_user_id)
+        .single();
+      reviewerData = reviewer;
+    }
 
     // Transform the data to match our TeamTask interface
     const task: TeamTask = {
-      progress_id: data.id,
-      task_id: data.task_id,
-      title: data.tasks.title,
-      description: data.tasks.description,
-      category: data.tasks.category,
-      priority: data.tasks.priority,
-      difficulty_level: data.tasks.difficulty_level,
-      base_xp_reward: data.tasks.base_xp_reward,
-      status: data.status,
-      assigned_to_user_id: data.assigned_to_user_id,
-      assignee_name: data.users?.name,
-      assignee_avatar_url: data.users?.avatar_url,
-      assigned_at: data.assigned_at,
-      started_at: data.started_at,
-      completed_at: data.completed_at,
-      updated_at: data.updated_at,
-      submission_notes: data.submission_notes,
-      is_available: data.status !== "completed",
-      reviewer_user_id: data.reviewer_user_id,
-      reviewer_name: data.reviewer?.name,
-      reviewer_avatar_url: data.reviewer?.avatar_url,
-      detailed_instructions: data.tasks.detailed_instructions,
-      tips_content: data.tasks.tips_content,
-      peer_review_criteria: data.tasks.peer_review_criteria,
-      learning_objectives: data.tasks.learning_objectives,
-      deliverables: data.tasks.deliverables,
-      resources: data.tasks.resources,
+      progress_id: progressData.id,
+      task_id: progressData.task_id,
+      title: taskData.title,
+      description: (taskData.description ?? "") as string,
+      category: (taskData.category ?? "development") as TaskCategory,
+      priority: (taskData.priority ?? "medium") as TaskPriority,
+      difficulty_level: (taskData.difficulty_level ?? 1) as number,
+      base_xp_reward: (taskData.base_xp_reward ?? 0) as number,
+      status: progressData.status as TaskStatus,
+      assigned_to_user_id: progressData.assigned_to_user_id ?? undefined,
+      assignee_name: assigneeData?.name ?? undefined,
+      assignee_avatar_url: assigneeData?.avatar_url ?? undefined,
+      assigned_at: progressData.assigned_at ?? undefined,
+      started_at: progressData.started_at ?? undefined,
+      completed_at: progressData.completed_at ?? undefined,
+      updated_at: progressData.updated_at,
+      submission_notes: progressData.submission_notes ?? undefined,
+      is_available:
+        progressData.status !== "completed" &&
+        progressData.status !== "approved",
+      reviewer_user_id: progressData.reviewer_user_id ?? undefined,
+      reviewer_name: reviewerData?.name ?? undefined,
+      reviewer_avatar_url: reviewerData?.avatar_url ?? undefined,
+      detailed_instructions: taskData.detailed_instructions ?? undefined,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      tips_content: (taskData.tips_content as any) ?? undefined,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      peer_review_criteria: (taskData.peer_review_criteria as any) ?? undefined,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      learning_objectives: (taskData.learning_objectives as any) ?? undefined,
+      deliverables: taskData.deliverables ?? undefined,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      resources: (taskData.resources as any) ?? undefined,
       // Backwards compatibility
-      id: data.id,
-      xp_reward: data.tasks.base_xp_reward,
-      team_id: data.team_id,
-      teams: data.teams
+      id: progressData.id,
+      xp_reward: (taskData.base_xp_reward ?? 0) as number,
+      team_id: progressData.team_id ?? undefined,
+      teams: teamData
         ? {
-            id: data.teams.id,
-            name: data.teams.name,
+            id: teamData.id,
+            name: teamData.name,
           }
         : undefined,
     };
