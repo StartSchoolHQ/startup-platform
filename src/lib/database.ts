@@ -1797,7 +1797,7 @@ export async function getTeamClientMeetings(teamId: string) {
     }
 
     // Transform the data to match our expected interface
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     return (
       (data as any)?.map((meeting: any) => ({
         id: meeting.id,
@@ -1814,6 +1814,7 @@ export async function getTeamClientMeetings(teamId: string) {
         },
       })) || []
     );
+    /* eslint-enable @typescript-eslint/no-explicit-any */
   } catch (error) {
     console.error("Error in getTeamClientMeetings:", error);
     return [];
