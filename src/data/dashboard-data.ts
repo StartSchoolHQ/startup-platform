@@ -34,7 +34,7 @@ export async function getStatsCards(userId: string): Promise<StatsCard[]> {
       },
       {
         title: "Points Earned",
-        value: (userProfile.individual_points ?? 0).toString(),
+        value: (userProfile.total_points ?? 0).toString(),
         subtitle: "Available startup capital",
         icon: Star,
         iconColor: "text-orange-500",
@@ -72,7 +72,7 @@ export async function getTeamProgressData(
       joinTeamsText: "Join Teams",
       stats: [
         {
-          value: (userProfile.individual_points ?? 0).toString(),
+          value: (userProfile.total_points ?? 0).toString(),
           label: "Total Points Earned", // Keep original label
           icon: Star,
           iconColor: "text-orange-500",
@@ -103,7 +103,7 @@ export async function getPersonalProgressData(
       title: "Your Personal Progress",
       stats: [
         {
-          value: (userProfile.individual_points ?? 0).toString(),
+          value: (userProfile.total_points ?? 0).toString(),
           label: "Total Points Earned", // Keep original label
           icon: Star,
           iconColor: "text-orange-500",

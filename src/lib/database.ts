@@ -34,7 +34,7 @@ interface DatabaseTeam {
       name: string | null;
       avatar_url: string | null;
       total_xp: number;
-      individual_points: number;
+      total_points: number;
     };
   }[];
   revenue_streams?: {
@@ -298,7 +298,7 @@ export async function createTeam(
 
   const { data: user, error: userError } = await supabase
     .from("users")
-    .select("individual_points")
+    .select("total_points")
     .eq("id", founderId)
     .single();
 
@@ -307,9 +307,9 @@ export async function createTeam(
     throw userError;
   }
 
-  console.log("User credits:", user?.individual_points);
+  console.log("User credits:", user?.total_points);
 
-  if (!user || (user.individual_points || 0) < TEAM_CREATION_COST) {
+  if (!user || (user.total_points || 0) < TEAM_CREATION_COST) {
     throw new Error("Insufficient credits to create team");
   }
 
@@ -358,7 +358,7 @@ export async function createTeam(
   const { error: updateError } = await supabase
     .from("users")
     .update({
-      individual_points: (user.individual_points || 0) - TEAM_CREATION_COST,
+      total_points: (user.total_points || 0) - TEAM_CREATION_COST,
     })
     .eq("id", founderId);
 
@@ -378,6 +378,7 @@ export async function createTeam(
       points_type: "individual",
       description: `Created team: ${teamName}`,
       created_at: new Date().toISOString(),
+      activity_type: "team",
     });
 
   if (transactionError) {
@@ -440,7 +441,7 @@ export async function getTeamDetails(teamId: string) {
         avatar_url,
         graduation_level,
         total_xp,
-        individual_points
+        total_points
       )
     `
     )
@@ -529,7 +530,7 @@ export async function getAllTeamsForJourney(
           name,
           avatar_url,
           total_xp,
-          individual_points
+          total_points
         )
       ),
       revenue_streams (
@@ -606,7 +607,7 @@ export async function getUserTeamsForJourney(
           name,
           avatar_url,
           total_xp,
-          individual_points
+          total_points
         )
       ),
       revenue_streams (
@@ -684,7 +685,7 @@ export async function getArchivedTeamsForJourney(
           name,
           avatar_url,
           total_xp,
-          individual_points
+          total_points
         )
       ),
       revenue_streams (
@@ -846,7 +847,7 @@ export function transformTeamToProduct(team: DatabaseTeam): Product {
           name: string | null;
           avatar_url: string | null;
           total_xp: number;
-          individual_points: number;
+          total_points: number;
         };
       }) => ({
         id: member.users?.id || member.user_id,
@@ -1894,7 +1895,7 @@ export async function getMySubmittedTasksForReview(userId: string) {
         id,
         name
       ),
-      reviewer:users!reviewer_user_id(
+      reviewer:users!task_progress_reviewer_user_id_fkey_public(
         id,
         name,
         avatar_url
@@ -1997,6 +1998,159 @@ export async function checkAndAwardAchievement(
   }
 
   return data;
+}
+
+/**
+ * Get team achievements with progress tracking
+ * Shows points/XP rewards divided by team member count for team context
+ * Since this is viewed from team journey, all achievements shown are in team context
+ */
+export async function getTeamAchievements(teamId: string) {
+  const supabase = createClient();
+
+  // Get ONLY team achievements (context='team')
+  const { data: achievements, error: achievementsError } = await supabase
+    .from("achievements")
+    .select(
+      "id, name, description, icon, xp_reward, points_reward, sort_order, context"
+    )
+    .eq("context", "team") // Filter for team achievements only
+    .order("sort_order", { ascending: true });
+
+  if (achievementsError) {
+    console.error("Error fetching achievements:", achievementsError);
+    throw achievementsError;
+  }
+
+  // Get completed team achievements for this team
+  const { data: completedTeamAchievements, error: teamAchError } =
+    await supabase
+      .from("team_achievements")
+      .select("achievement_id")
+      .eq("team_id", teamId);
+
+  if (teamAchError) {
+    console.error("Error fetching team achievements:", teamAchError);
+    throw teamAchError;
+  }
+
+  const completedTeamAchievementIds = new Set(
+    completedTeamAchievements?.map((ta) => ta.achievement_id) || []
+  );
+
+  // Get task progress for this team (only team context tasks)
+  const { data: taskProgress, error: progressError } = await supabase
+    .from("task_progress")
+    .select("task_id, status")
+    .eq("team_id", teamId)
+    .eq("context", "team"); // Only count team tasks for team achievements
+
+  if (progressError) {
+    console.error("Error fetching task progress:", progressError);
+    throw progressError;
+  }
+
+  // Get tasks to link with achievements (only team context tasks matter here)
+  const { data: allTasksWithAchievements, error: tasksAchError } =
+    await supabase.from("tasks").select("id, achievement_id");
+
+  if (tasksAchError) {
+    console.error("Error fetching tasks with achievements:", tasksAchError);
+    throw tasksAchError;
+  }
+
+  // Create task_id -> achievement_id mapping
+  const taskToAchievementMap = new Map<string, string>();
+  allTasksWithAchievements?.forEach((task) => {
+    if (task.achievement_id) {
+      taskToAchievementMap.set(task.id, task.achievement_id);
+    }
+  });
+
+  // Count tasks per achievement
+  const progressMap = new Map<string, { total: number; completed: number }>();
+
+  // Get all tasks for counting totals (all tasks, since achievements are hybrid)
+  const { data: allTasks, error: tasksError } = await supabase
+    .from("tasks")
+    .select("id, achievement_id");
+
+  if (tasksError) {
+    console.error("Error fetching tasks:", tasksError);
+    throw tasksError;
+  }
+
+  // Count total tasks per achievement
+  allTasks?.forEach((task) => {
+    if (task.achievement_id) {
+      const current = progressMap.get(task.achievement_id) || {
+        total: 0,
+        completed: 0,
+      };
+      progressMap.set(task.achievement_id, {
+        ...current,
+        total: current.total + 1,
+      });
+    }
+  });
+
+  // Count completed AND in-progress TEAM tasks from team progress
+  const inProgressMap = new Map<string, number>();
+  taskProgress?.forEach((progress) => {
+    const achievementId = taskToAchievementMap.get(progress.task_id);
+    if (achievementId) {
+      // Count completed tasks
+      if (progress.status === "approved") {
+        const current = progressMap.get(achievementId) || {
+          total: 0,
+          completed: 0,
+        };
+        progressMap.set(achievementId, {
+          ...current,
+          completed: current.completed + 1,
+        });
+      }
+      // Count in-progress tasks
+      if (progress.status === "in_progress") {
+        inProgressMap.set(
+          achievementId,
+          (inProgressMap.get(achievementId) || 0) + 1
+        );
+      }
+    }
+  });
+
+  // Transform to Achievement interface format
+  const transformedAchievements =
+    achievements?.map((ach) => {
+      const progress = progressMap.get(ach.id) || { total: 0, completed: 0 };
+      const hasInProgressTasks = (inProgressMap.get(ach.id) || 0) > 0;
+      const isInProgress =
+        hasInProgressTasks ||
+        (progress.completed > 0 && progress.completed < progress.total);
+
+      // Display TOTAL rewards (not divided) and check actual completion status from team_achievements table
+      return {
+        achievement_id: ach.id,
+        achievement_name: ach.name,
+        achievement_description: ach.description || "",
+        achievement_icon: ach.icon || "trophy",
+        xp_reward: ach.xp_reward || 0, // TOTAL value (will be split when awarded)
+        credits_reward: ach.points_reward || 0, // TOTAL value (will be split when awarded)
+        color_theme: "blue",
+        sort_order: ach.sort_order || 0,
+        total_tasks: progress.total,
+        completed_tasks: progress.completed,
+        status: completedTeamAchievementIds.has(ach.id)
+          ? ("completed" as const)
+          : isInProgress
+          ? ("in-progress" as const)
+          : ("not-started" as const),
+        is_completed: completedTeamAchievementIds.has(ach.id),
+      };
+    }) || [];
+
+  return transformedAchievements;
 }
 
 // My Journey Functions - User-specific data functions

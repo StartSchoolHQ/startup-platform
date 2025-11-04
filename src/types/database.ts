@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           active: boolean | null;
           color_theme: string | null;
+          context: Database["public"]["Enums"]["task_context_type"];
           created_at: string | null;
           description: string | null;
           icon: string | null;
@@ -30,6 +31,7 @@ export type Database = {
         Insert: {
           active?: boolean | null;
           color_theme?: string | null;
+          context?: Database["public"]["Enums"]["task_context_type"];
           created_at?: string | null;
           description?: string | null;
           icon?: string | null;
@@ -42,6 +44,7 @@ export type Database = {
         Update: {
           active?: boolean | null;
           color_theme?: string | null;
+          context?: Database["public"]["Enums"]["task_context_type"];
           created_at?: string | null;
           description?: string | null;
           icon?: string | null;
@@ -349,7 +352,7 @@ export type Database = {
           email: string;
           graduation_level: number | null;
           id: string;
-          individual_points: number;
+          total_points: number;
           name: string | null;
           primary_role: Database["public"]["Enums"]["primary_role_type"] | null;
           status: Database["public"]["Enums"]["status_state"] | null;
@@ -363,7 +366,7 @@ export type Database = {
           email: string;
           graduation_level?: number | null;
           id?: string;
-          individual_points?: number;
+          total_points?: number;
           name?: string | null;
           primary_role?:
             | Database["public"]["Enums"]["primary_role_type"]
@@ -379,7 +382,7 @@ export type Database = {
           email?: string;
           graduation_level?: number | null;
           id?: string;
-          individual_points?: number;
+          total_points?: number;
           name?: string | null;
           primary_role?:
             | Database["public"]["Enums"]["primary_role_type"]
@@ -415,6 +418,36 @@ export type Database = {
           team_id?: string;
           team_role?: Database["public"]["Enums"]["team_role_type"] | null;
           user_id?: string;
+        };
+        Relationships: [];
+      };
+      team_achievements: {
+        Row: {
+          achievement_id: string;
+          completed_at: string;
+          created_at: string;
+          id: string;
+          points_awarded: number;
+          team_id: string;
+          xp_awarded: number;
+        };
+        Insert: {
+          achievement_id: string;
+          completed_at?: string;
+          created_at?: string;
+          id?: string;
+          points_awarded?: number;
+          team_id: string;
+          xp_awarded?: number;
+        };
+        Update: {
+          achievement_id?: string;
+          completed_at?: string;
+          created_at?: string;
+          id?: string;
+          points_awarded?: number;
+          team_id?: string;
+          xp_awarded?: number;
         };
         Relationships: [];
       };

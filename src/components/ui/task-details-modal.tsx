@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { StatusBadge, TaskStatus } from "@/components/ui/status-badge";
 import { formatDate } from "@/lib/date-utils";
-import { X, Upload, Link, FileText } from "lucide-react";
+import { X, Upload, Link, FileText, CheckCircle, XCircle } from "lucide-react";
 
 // Common interfaces
 interface ExternalUrl {
@@ -332,7 +333,7 @@ export function TaskDetailsModal({
           <DialogTitle>Review Task: {taskData.tasks?.title}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 overflow-y-auto flex-1 pr-2">
+        <div className="space-y-6 overflow-y-auto flex-1 pr-4">
           {/* Task Info */}
           <div className="bg-muted/50 p-4 rounded-lg">
             <h3 className="font-medium mb-2">Task Details</h3>
@@ -385,7 +386,7 @@ export function TaskDetailsModal({
           </div>
 
           {/* Review Form */}
-          <div className="space-y-4">
+          <div className="space-y-4 px-1 pb-2">
             <div>
               <label className="text-sm font-medium mb-2 block">
                 Review Feedback
@@ -395,27 +396,77 @@ export function TaskDetailsModal({
                 onChange={(e) => setReviewFeedback(e.target.value)}
                 placeholder="Provide feedback on the task submission..."
                 rows={4}
+                className="w-full"
               />
             </div>
 
             <div className="flex gap-4">
               <Button
+                type="button"
                 variant={reviewDecision === "accepted" ? "default" : "outline"}
                 onClick={() => setReviewDecision("accepted")}
-                className="flex-1"
+                className={`flex-1 transition-all duration-200 ${
+                  reviewDecision === "accepted"
+                    ? "bg-green-600 hover:bg-green-700 text-white border-green-600"
+                    : "hover:bg-green-50 hover:border-green-300 dark:hover:bg-green-950/30"
+                }`}
               >
+                {reviewDecision === "accepted" && (
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                )}
                 Accept Task
               </Button>
               <Button
+                type="button"
                 variant={
                   reviewDecision === "rejected" ? "destructive" : "outline"
                 }
                 onClick={() => setReviewDecision("rejected")}
-                className="flex-1"
+                className={`flex-1 transition-all duration-200 ${
+                  reviewDecision === "rejected"
+                    ? ""
+                    : "hover:bg-red-50 hover:border-red-300 dark:hover:bg-red-950/30"
+                }`}
               >
+                {reviewDecision === "rejected" && (
+                  <XCircle className="h-4 w-4 mr-2" />
+                )}
                 Reject Task
               </Button>
             </div>
+
+            {/* Decision Confirmation Badge */}
+            <AnimatePresence>
+              {reviewDecision && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className={`flex items-center gap-2 p-3 rounded-lg border-2 ${
+                    reviewDecision === "accepted"
+                      ? "bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800/50"
+                      : "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800/50"
+                  }`}
+                >
+                  {reviewDecision === "accepted" ? (
+                    <>
+                      <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                      <span className="text-sm font-medium text-green-900 dark:text-green-100">
+                        You will accept this task
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+                      <span className="text-sm font-medium text-red-900 dark:text-red-100">
+                        You will reject this task
+                      </span>
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -427,9 +478,29 @@ export function TaskDetailsModal({
           <Button
             onClick={handleReviewSubmit}
             disabled={!reviewDecision || submittingReview}
-            className="flex-1"
+            className={`flex-1 transition-all duration-200 ${
+              reviewDecision === "accepted"
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : reviewDecision === "rejected"
+                ? "bg-red-600 hover:bg-red-700 text-white"
+                : ""
+            }`}
           >
-            {submittingReview ? "Submitting..." : "Submit Review"}
+            {submittingReview ? (
+              "Submitting..."
+            ) : reviewDecision === "accepted" ? (
+              <>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Submit Acceptance
+              </>
+            ) : reviewDecision === "rejected" ? (
+              <>
+                <XCircle className="h-4 w-4 mr-2" />
+                Submit Rejection
+              </>
+            ) : (
+              "Submit Review"
+            )}
           </Button>
         </div>
       </>

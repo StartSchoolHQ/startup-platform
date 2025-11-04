@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { InlineAlert } from "@/components/ui/inline-alert";
 
 import { Trophy, CheckCircle2, Users, ExternalLink, Clock } from "lucide-react";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
@@ -74,14 +75,25 @@ export default function PeerReviewPage() {
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedTaskForReview, setSelectedTaskForReview] =
     useState<AvailableTask | null>(null);
-  const [reviewFeedback, setReviewFeedback] = useState("");
-  const [reviewDecision, setReviewDecision] = useState<
-    "accepted" | "rejected" | null
-  >(null);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [selectedFeedbackTask, setSelectedFeedbackTask] =
     useState<AvailableTask | null>(null);
+
+  // Alert state for inline feedback
+  const [alertState, setAlertState] = useState<{
+    variant: "success" | "error" | "info";
+    message: string;
+    description?: string;
+  } | null>(null);
+
+  // Auto-dismiss alert after 4 seconds
+  useEffect(() => {
+    if (alertState) {
+      const timer = setTimeout(() => setAlertState(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [alertState]);
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -176,18 +188,35 @@ export default function PeerReviewPage() {
   const acceptTaskForReview = async (taskId: string) => {
     if (!user?.id) return;
 
+    // Check if user already has a task assigned for review
+    if (myAcceptedTasks.length > 0) {
+      setAlertState({
+        variant: "info",
+        message: "Review limit reached",
+        description:
+          "You can only review one task at a time. Please complete your current review first.",
+      });
+      return;
+    }
+
     setAcceptingTaskId(taskId);
 
-    try {
-      // Check if user already has a task assigned for review
-      if (myAcceptedTasks.length > 0) {
-        alert(
-          "You can only review one task at a time. Please complete or cancel your current review first."
-        );
-        setAcceptingTaskId(null);
-        return;
-      }
+    // Find the task being accepted
+    const acceptedTask = availableTasks.find((task) => task.id === taskId);
+    if (!acceptedTask) {
+      setAcceptingTaskId(null);
+      return;
+    }
 
+    // Optimistic update: Move task from available to accepted immediately
+    setMyAcceptedTasks((prev) => [...prev, acceptedTask]);
+    setAvailableTasks((prev) => prev.filter((task) => task.id !== taskId));
+    setPeerReviewStats((prev) => ({
+      ...prev,
+      availableTasksCount: prev.availableTasksCount - 1,
+    }));
+
+    try {
       const supabase = createClient();
 
       // Call the database function to accept task for review
@@ -201,27 +230,61 @@ export default function PeerReviewPage() {
 
       if (error) {
         console.error("Error accepting task for review:", error);
-        alert("Failed to accept task for review. Please try again.");
+
+        // Revert optimistic update on error
+        setMyAcceptedTasks((prev) => prev.filter((task) => task.id !== taskId));
+        setAvailableTasks((prev) => [...prev, acceptedTask]);
+        setPeerReviewStats((prev) => ({
+          ...prev,
+          availableTasksCount: prev.availableTasksCount + 1,
+        }));
+
+        setAlertState({
+          variant: "error",
+          message: "Failed to accept task for review",
+          description:
+            "Please try again or contact support if the issue persists.",
+        });
         return;
       }
 
       if (data?.success) {
-        // Move task from available to accepted
-        const acceptedTask = availableTasks.find((task) => task.id === taskId);
-        if (acceptedTask) {
-          setMyAcceptedTasks((prev) => [...prev, acceptedTask]);
-          setAvailableTasks((prev) =>
-            prev.filter((task) => task.id !== taskId)
-          );
-        }
-
-        alert('Task accepted for review! Check the "My Tests" tab.');
+        setAlertState({
+          variant: "success",
+          message: "Task accepted for review",
+          description: 'Check the "My Tests" tab to begin testing.',
+        });
       } else {
-        alert(data?.error || "Failed to accept task for review");
+        // Revert optimistic update on failure
+        setMyAcceptedTasks((prev) => prev.filter((task) => task.id !== taskId));
+        setAvailableTasks((prev) => [...prev, acceptedTask]);
+        setPeerReviewStats((prev) => ({
+          ...prev,
+          availableTasksCount: prev.availableTasksCount + 1,
+        }));
+
+        setAlertState({
+          variant: "error",
+          message: "Failed to accept task for review",
+          description: data?.error || "Please try again.",
+        });
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("An error occurred. Please try again.");
+
+      // Revert optimistic update on exception
+      setMyAcceptedTasks((prev) => prev.filter((task) => task.id !== taskId));
+      setAvailableTasks((prev) => [...prev, acceptedTask]);
+      setPeerReviewStats((prev) => ({
+        ...prev,
+        availableTasksCount: prev.availableTasksCount + 1,
+      }));
+
+      setAlertState({
+        variant: "error",
+        message: "An error occurred",
+        description: "Please try again.",
+      });
     } finally {
       setAcceptingTaskId(null);
     }
@@ -230,14 +293,39 @@ export default function PeerReviewPage() {
   const openReviewModal = (task: AvailableTask) => {
     setSelectedTaskForReview(task);
     setReviewModalOpen(true);
-    setReviewDecision(null);
-    setReviewFeedback("");
   };
 
-  const submitReview = async () => {
-    if (!selectedTaskForReview || !reviewDecision || !user?.id) return;
+  const submitReview = async (
+    feedback: string,
+    decision: "accepted" | "rejected"
+  ) => {
+    if (!selectedTaskForReview || !decision || !user?.id) return;
 
     setSubmittingReview(true);
+
+    // Calculate rewards (base values, actual values come from backend)
+    const estimatedXP = selectedTaskForReview.tasks?.base_xp_reward
+      ? Math.round(selectedTaskForReview.tasks.base_xp_reward * 0.2)
+      : 20;
+    const estimatedPoints = Math.round(estimatedXP * 0.1);
+
+    // Store original state for potential revert
+    const originalAcceptedTasks = [...myAcceptedTasks];
+    const originalStats = { ...peerReviewStats };
+
+    // Optimistic update: Remove task from accepted and update stats immediately
+    setMyAcceptedTasks((prev) =>
+      prev.filter((task) => task.id !== selectedTaskForReview.id)
+    );
+    setPeerReviewStats((prev) => ({
+      ...prev,
+      tasksReviewedByUser: prev.tasksReviewedByUser + 1,
+      totalPointsEarned: prev.totalPointsEarned + estimatedPoints,
+      totalXpEarned: prev.totalXpEarned + estimatedXP,
+    }));
+
+    // Close modal immediately for smooth UX
+    setReviewModalOpen(false);
 
     try {
       const supabase = createClient();
@@ -248,26 +336,35 @@ export default function PeerReviewPage() {
         "submit_external_peer_review",
         {
           p_progress_id: selectedTaskForReview.id,
-          p_decision: reviewDecision,
-          p_feedback: reviewFeedback || null,
+          p_decision: decision,
+          p_feedback: feedback || null,
         }
       );
 
       if (error) {
         console.error("Error submitting review:", error);
-        alert("Failed to submit review. Please try again.");
+
+        // Revert optimistic updates
+        setMyAcceptedTasks(originalAcceptedTasks);
+        setPeerReviewStats(originalStats);
+
+        setAlertState({
+          variant: "error",
+          message: "Failed to submit review",
+          description:
+            "Please try again or contact support if the issue persists.",
+        });
         return;
       }
 
       if (data?.success) {
-        // Remove task from accepted tasks
-        setMyAcceptedTasks((prev) =>
-          prev.filter((task) => task.id !== selectedTaskForReview.id)
-        );
-        setReviewModalOpen(false);
-        alert(`Review submitted! Task ${reviewDecision}.`);
+        setAlertState({
+          variant: "success",
+          message: `Review submitted successfully`,
+          description: `Task ${decision}. You earned ${estimatedXP} XP and ${estimatedPoints} points.`,
+        });
 
-        // Refresh stats after successful review
+        // Refresh actual stats from database
         try {
           const updatedStats = await getPeerReviewStatsFromTransactions(
             user.id
@@ -282,11 +379,28 @@ export default function PeerReviewPage() {
           console.error("Error refreshing stats:", error);
         }
       } else {
-        alert(data?.error || "Failed to submit review");
+        // Revert optimistic updates on failure
+        setMyAcceptedTasks(originalAcceptedTasks);
+        setPeerReviewStats(originalStats);
+
+        setAlertState({
+          variant: "error",
+          message: "Failed to submit review",
+          description: data?.error || "Please try again.",
+        });
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("An error occurred. Please try again.");
+
+      // Revert optimistic updates on exception
+      setMyAcceptedTasks(originalAcceptedTasks);
+      setPeerReviewStats(originalStats);
+
+      setAlertState({
+        variant: "error",
+        message: "An error occurred",
+        description: "Please try again.",
+      });
     } finally {
       setSubmittingReview(false);
     }
@@ -365,6 +479,15 @@ export default function PeerReviewPage() {
         </TabsList>
 
         <TabsContent value="available-tests" className="space-y-6 mt-6">
+          {alertState && (
+            <InlineAlert
+              variant={alertState.variant}
+              message={alertState.message}
+              description={alertState.description}
+              onDismiss={() => setAlertState(null)}
+            />
+          )}
+
           {myAcceptedTasks.length > 0 && (
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
               <p className="text-sm text-primary">
@@ -448,6 +571,15 @@ export default function PeerReviewPage() {
         </TabsContent>
 
         <TabsContent value="my-tests" className="space-y-6 mt-6">
+          {alertState && (
+            <InlineAlert
+              variant={alertState.variant}
+              message={alertState.message}
+              description={alertState.description}
+              onDismiss={() => setAlertState(null)}
+            />
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -499,6 +631,15 @@ export default function PeerReviewPage() {
         </TabsContent>
 
         <TabsContent value="my-tasks" className="space-y-6 mt-6">
+          {alertState && (
+            <InlineAlert
+              variant={alertState.variant}
+              message={alertState.message}
+              description={alertState.description}
+              onDismiss={() => setAlertState(null)}
+            />
+          )}
+
           {loading ? (
             <div className="text-center py-8">
               <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
@@ -582,9 +723,7 @@ export default function PeerReviewPage() {
           feedback: string,
           decision: "accepted" | "rejected"
         ) => {
-          setReviewFeedback(feedback);
-          setReviewDecision(decision);
-          await submitReview();
+          await submitReview(feedback, decision);
         }}
         submittingReview={submittingReview}
       />

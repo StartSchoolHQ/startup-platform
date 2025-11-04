@@ -346,7 +346,7 @@ export default function MyJourneyPage() {
     name: string | null;
     status: string | null;
     total_xp: number | null;
-    individual_points: number | null;
+    total_points: number | null;
   } | null>(null);
   const [statsCards, setStatsCards] = useState<
     {
@@ -445,7 +445,7 @@ export default function MyJourneyPage() {
 
         // Calculate dynamic stats cards
         const totalXP = profile?.total_xp || 0;
-        const totalCredits = profile?.individual_points || 0;
+        const totalCredits = profile?.total_points || 0;
         const tasksCompleted = taskStats.completed;
         const totalTasks = taskStats.total;
 

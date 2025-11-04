@@ -43,6 +43,7 @@ import {
   getUserTeamRole,
   getTeamStrikes,
   getTeamWeeklyReports,
+  getTeamAchievements,
 } from "@/lib/database";
 import { StatsCard } from "@/types/dashboard";
 import { useEffect, useState, useCallback } from "react";
@@ -114,7 +115,7 @@ interface TeamDetails {
       avatar_url: string | null;
       graduation_level: number | null;
       total_xp: number;
-      individual_points: number;
+      total_points: number;
     } | null;
   }[];
 }
@@ -218,76 +219,19 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     }
   }, [teamId, team?.members]);
 
-  // Load team tasks from database - handled through achievements system now
-  const loadTasks = useCallback(async () => {
-    // Tasks are now loaded through the achievements system
-  }, []);
-
-  // Handle task assignment
-  const handleAssignTask = useCallback(
-    async (taskId: string, userId: string) => {
-      try {
-        const success = await assignTaskToMember(taskId, userId);
-        if (success) {
-          // Reload tasks to show updated assignment
-          await loadTasks();
-        } else {
-          console.error("Failed to assign task");
-        }
-      } catch (error) {
-        console.error("Error assigning task:", error);
-      }
-    },
-    [loadTasks]
-  );
-
   // Load team achievements from database
   const loadAchievements = useCallback(async () => {
-    if (!user?.id) return;
+    if (!teamId) return;
 
     setLoadingAchievements(true);
     try {
-      // Load all tasks first - they contain achievement info
-      const allTasks = await getTasksByAchievement();
+      // Load achievements with progress tracking and rewards divided by team member count
+      const achievementsData = await getTeamAchievements(teamId);
+      setAchievements(achievementsData);
+
+      // Load all tasks for this team
+      const allTasks = await getTasksByAchievement(undefined, teamId);
       const tasksArray = Array.isArray(allTasks) ? allTasks : [];
-
-      // Extract unique achievements from tasks (SIMPLE approach - no separate query needed)
-      const achievementMap = new Map();
-      tasksArray.forEach((task) => {
-        if (task.achievement_id && !achievementMap.has(task.achievement_id)) {
-          const completedCount = tasksArray.filter(
-            (t) =>
-              t.achievement_id === task.achievement_id &&
-              t.status === "approved"
-          ).length;
-          const totalCount = tasksArray.filter(
-            (t) => t.achievement_id === task.achievement_id
-          ).length;
-
-          achievementMap.set(task.achievement_id, {
-            achievement_id: task.achievement_id,
-            achievement_name: task.achievement_name || "Unknown Achievement",
-            achievement_description: "", // Not in task data
-            achievement_icon: "", // Not in task data
-            xp_reward: 0, // Would need to sum from tasks or get from achievements table
-            credits_reward: 0, // Would need to sum from tasks or get from achievements table
-            color_theme: "", // Not in task data
-            sort_order: 0,
-            total_tasks: totalCount,
-            completed_tasks: completedCount,
-            status:
-              completedCount === totalCount
-                ? "completed"
-                : completedCount > 0
-                ? "in-progress"
-                : ("not-started" as const),
-            is_completed: completedCount === totalCount,
-          });
-        }
-      });
-
-      const achievementsArray = Array.from(achievementMap.values());
-      setAchievements(achievementsArray);
 
       setFilteredTasks(
         tasksArray.map((task) => ({
@@ -318,7 +262,47 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     } finally {
       setLoadingAchievements(false);
     }
-  }, [user?.id]);
+  }, [teamId]);
+
+  // Handle task assignment - optimistic update
+  const handleAssignTask = useCallback(
+    async (taskId: string, userId: string) => {
+      try {
+        // Find the member details for the UI update
+        const assignedMember = team?.members.find((m) => m.user_id === userId);
+
+        // Optimistically update the UI immediately
+        setFilteredTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task.progress_id === taskId
+              ? {
+                  ...task,
+                  assigned_to_user_id: userId,
+                  assignee_name: assignedMember?.users?.name || undefined,
+                  assignee_avatar_url:
+                    assignedMember?.users?.avatar_url || undefined,
+                  assigned_at: new Date().toISOString(),
+                }
+              : task
+          )
+        );
+
+        // Make the actual API call
+        const success = await assignTaskToMember(taskId, userId);
+
+        if (!success) {
+          // If it failed, revert the optimistic update
+          console.error("Failed to assign task - reverting");
+          await loadAchievements(); // Reload to get accurate state
+        }
+      } catch (error) {
+        console.error("Error assigning task:", error);
+        // Reload on error to ensure accurate state
+        await loadAchievements();
+      }
+    },
+    [team?.members, loadAchievements]
+  );
 
   // Load team strikes from database
   const loadStrikes = useCallback(async () => {
@@ -499,8 +483,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     if (team?.members) {
       checkAllMemberStatuses();
     }
-    // Load tasks, achievements, strikes, and weekly reports when team is loaded
-    loadTasks();
+    // Load achievements (includes tasks), strikes, and weekly reports when team is loaded
     loadAchievements();
     loadStrikes();
     loadWeeklyReports();
@@ -509,7 +492,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     checkWeeklyReportStatus,
     checkAllMemberStatuses,
     team?.members,
-    loadTasks,
     loadAchievements,
     loadStrikes,
     loadWeeklyReports,
@@ -742,7 +724,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {(member.users?.total_xp || 0).toLocaleString()} XP |{" "}
-                      {(member.users?.individual_points || 0).toLocaleString()}{" "}
+                      {(member.users?.total_points || 0).toLocaleString()}{" "}
                       Points
                     </div>
                   </div>

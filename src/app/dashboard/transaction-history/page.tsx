@@ -138,9 +138,7 @@ export default function TransactionHistoryPage() {
             <Star className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {user?.individual_points || 0}
-            </div>
+            <div className="text-2xl font-bold">{user?.total_points || 0}</div>
             <p className="text-xs text-muted-foreground">
               Available startup capital
             </p>
