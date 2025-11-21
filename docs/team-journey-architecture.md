@@ -1,0 +1,601 @@
+# Team Journey - Architecture Diagrams
+
+## System Architecture
+
+### High-Level Architecture
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         Browser / Client                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │ Team Listing │  │ Team Detail  │  │  Task Detail │          │
+│  │     Page     │  │     Page     │  │     Page     │          │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘          │
+│         │                 │                  │                   │
+│  ┌──────▼─────────────────▼──────────────────▼───────┐          │
+│  │          React Components & Hooks                  │          │
+│  │  - ProductCard  - TasksTable  - Modals           │          │
+│  └──────┬─────────────────────────────────────────────┘          │
+│         │                                                         │
+│  ┌──────▼─────────────────────────────────────────────┐          │
+│  │              AppContext (State)                     │          │
+│  └──────┬─────────────────────────────────────────────┘          │
+└─────────┼─────────────────────────────────────────────────────────┘
+          │
+┌─────────▼─────────────────────────────────────────────────────────┐
+│                    Application Layer (/lib)                        │
+│  ┌────────────┐  ┌──────────────┐  ┌─────────────────┐           │
+│  │ database.ts│  │   tasks.ts   │  │weekly-reports.ts│           │
+│  │            │  │              │  │                 │           │
+│  │ - Teams    │  │ - Task CRUD  │  │ - Submissions  │           │
+│  │ - Members  │  │ - Assignment │  │ - Validation   │           │
+│  │ - Query    │  │ - Workflow   │  │ - Checks       │           │
+│  └─────┬──────┘  └──────┬───────┘  └────────┬────────┘           │
+└────────┼─────────────────┼───────────────────┼────────────────────┘
+         │                 │                   │
+┌────────▼─────────────────▼───────────────────▼────────────────────┐
+│                    Supabase Client Layer                           │
+│  ┌────────────────────────────────────────────────────────────┐   │
+│  │              createClient() / Auth                         │   │
+│  └────────────────────────────────────────────────────────────┘   │
+└────────────────────────────┬───────────────────────────────────────┘
+                             │
+┌────────────────────────────▼───────────────────────────────────────┐
+│                        Supabase Backend                            │
+│  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐             │
+│  │ PostgreSQL  │  │ RLS Policies │  │Edge Functions│             │
+│  │  Database   │  │              │  │              │             │
+│  │  - teams    │  │ - Row Level  │  │ - Strikes    │             │
+│  │  - tasks    │  │   Security   │  │ - Automation │             │
+│  │  - progress │  │ - Auth       │  │              │             │
+│  │  - reports  │  │              │  │              │             │
+│  └─────────────┘  └──────────────┘  └──────────────┘             │
+│                                                                     │
+│  ┌─────────────┐  ┌──────────────┐                                │
+│  │  pg_cron    │  │   Storage    │                                │
+│  │  Scheduler  │  │   (Avatars)  │                                │
+│  └─────────────┘  └──────────────┘                                │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+## Data Flow
+
+### Team Listing Page Flow
+```
+┌──────────┐
+│  User    │
+│ Visits   │
+│  Page    │
+└────┬─────┘
+     │
+     ▼
+┌─────────────────────┐
+│  page.tsx Loads     │
+│  useAppContext()    │
+└────┬────────────────┘
+     │
+     ▼
+┌─────────────────────────────────┐
+│  useEffect() Triggers           │
+│  loadData() function            │
+└────┬────────────────────────────┘
+     │
+     ├─── Parallel Calls ───┐
+     │                       │
+     ▼                       ▼
+┌────────────────┐    ┌────────────────┐
+│getAllTeamsFor  │    │getUserTeamsFor │
+│   Journey()    │    │   Journey()    │
+└────┬───────────┘    └────┬───────────┘
+     │                     │
+     ▼                     ▼
+┌──────────────────────────────────┐
+│  Supabase Query with:            │
+│  - Search filter                 │
+│  - Sort order                    │
+│  - Status filter                 │
+│  - Join team_members             │
+│  - Join users                    │
+│  - Aggregate counts              │
+└────┬─────────────────────────────┘
+     │
+     ▼
+┌──────────────────────────────────┐
+│  Transform: DatabaseTeam         │
+│           → Product              │
+└────┬─────────────────────────────┘
+     │
+     ▼
+┌──────────────────────────────────┐
+│  setState() updates:             │
+│  - allProducts                   │
+│  - myProducts                    │
+│  - archivedProducts              │
+└────┬─────────────────────────────┘
+     │
+     ▼
+┌──────────────────────────────────┐
+│  React Re-renders                │
+│  - Tabs show data                │
+│  - ProductCards display          │
+│  - Loading state removed         │
+└──────────────────────────────────┘
+```
+
+### Task Assignment Flow
+```
+┌─────────────┐
+│   Leader    │
+│   Clicks    │
+│  Dropdown   │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────┐
+│  Select Team Member     │
+└──────┬──────────────────┘
+       │
+       ▼
+┌───────────────────────────────┐
+│  onAssignTask() Called        │
+│  - progressId: string         │
+│  - userId: string             │
+└──────┬────────────────────────┘
+       │
+       ▼
+┌───────────────────────────────┐
+│  Optimistic Update            │
+│  - Update filteredTasks state │
+│  - Set assignee info          │
+│  - UI updates immediately     │
+└──────┬────────────────────────┘
+       │
+       ▼
+┌───────────────────────────────┐
+│  assignTaskToMember()         │
+│  - Call Supabase RPC          │
+│  - assign_user_to_task_simple │
+└──────┬────────────────────────┘
+       │
+       ├─── Success ───┐
+       │                │
+       ▼                ▼
+┌──────────────┐  ┌────────────┐
+│   Success    │  │   Failure  │
+│  Keep UI     │  │  Revert UI │
+│  Changes     │  │  Show Error│
+└──────────────┘  └────────────┘
+```
+
+### Weekly Report Submission Flow
+```
+┌──────────────┐
+│    User      │
+│   Clicks     │
+│   Submit     │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────────────────┐
+│  Check: hasSubmitted     │
+│  ThisWeek()?             │
+└──────┬───────────────────┘
+       │
+       ├─── Yes ───┐
+       │           │
+       │           ▼
+       │     ┌──────────────┐
+       │     │  Disable     │
+       │     │  Button      │
+       │     └──────────────┘
+       │
+       └─── No ────┐
+                   │
+                   ▼
+           ┌────────────────────┐
+           │  Open Modal        │
+           │  Show Form         │
+           └──────┬─────────────┘
+                  │
+                  ▼
+           ┌────────────────────────┐
+           │  User Fills:           │
+           │  - Work done           │
+           │  - Blockers            │
+           │  - Achievement         │
+           │  - Clients #           │
+           │  - Meetings #          │
+           └──────┬─────────────────┘
+                  │
+                  ▼
+           ┌────────────────────────┐
+           │  Validate Form         │
+           └──────┬─────────────────┘
+                  │
+                  ▼
+           ┌────────────────────────┐
+           │  Submit to DB:         │
+           │  INSERT weekly_reports │
+           │  - user_id             │
+           │  - team_id             │
+           │  - week_number         │
+           │  - submission_data     │
+           └──────┬─────────────────┘
+                  │
+                  ▼
+           ┌────────────────────────┐
+           │  Update UI:            │
+           │  - Close modal         │
+           │  - Disable button      │
+           │  - Show success toast  │
+           │  - Update avatar       │
+           │    indicator           │
+           └────────────────────────┘
+```
+
+## Database Schema Diagram
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                         DATABASE SCHEMA                           │
+└──────────────────────────────────────────────────────────────────┘
+
+         ┌─────────────────┐
+         │     users       │
+         │─────────────────│
+         │ id (PK)         │
+         │ email           │
+         │ name            │
+         │ avatar_url      │
+         │ total_xp        │
+         │ total_points    │
+         └────────┬────────┘
+                  │
+                  │ 1:N
+                  │
+    ┌─────────────┼────────────────┐
+    │             │                │
+    ▼             ▼                ▼
+┌─────────┐  ┌──────────┐  ┌─────────────┐
+│ teams   │  │  team_   │  │   weekly_   │
+│         │◄─┤ members  │  │   reports   │
+│─────────│  │──────────│  │─────────────│
+│id (PK)  │  │id (PK)   │  │id (PK)      │
+│name     │  │team_id(FK│  │user_id (FK) │
+│status   │  │user_id(FK│  │team_id (FK) │
+│strikes  │  │team_role │  │week_number  │
+│founder  │  │joined_at │  │submission   │
+└────┬────┘  └──────────┘  └─────────────┘
+     │
+     │ 1:N
+     │
+     ├──────────────┬───────────────┬─────────────┐
+     │              │               │             │
+     ▼              ▼               ▼             ▼
+┌─────────┐  ┌──────────┐  ┌───────────┐  ┌──────────┐
+│ strikes │  │  task_   │  │   team_   │  │ client_  │
+│         │  │ progress │  │achievemnts│  │ meetings │
+│─────────│  │──────────│  │───────────│  │──────────│
+│id (PK)  │  │id (PK)   │  │id (PK)    │  │id (PK)   │
+│team_id  │  │task_id   │  │team_id    │  │team_id   │
+│reason   │  │team_id   │  │achievemnt │  │user_id   │
+│date     │  │assigned  │  │status     │  │client    │
+│explain  │  │status    │  │progress   │  │meeting   │
+└─────────┘  └────┬─────┘  └─────┬─────┘  └──────────┘
+                  │              │
+                  │              │
+                  │ N:1          │ N:1
+                  │              │
+                  ▼              ▼
+            ┌──────────┐  ┌─────────────┐
+            │  tasks   │  │achievements │
+            │  (master)│  │   (master)  │
+            │──────────│  │─────────────│
+            │id (PK)   │  │id (PK)      │
+            │title     │  │name         │
+            │category  │  │description  │
+            │difficulty│  │xp_reward    │
+            │base_xp   │  │credits_rew  │
+            │resources │  │requirements │
+            └──────────┘  └─────────────┘
+```
+
+## Component Hierarchy
+
+```
+TeamJourneyPage (/dashboard/team-journey)
+│
+├── Tabs
+│   ├── All Products Tab
+│   │   └── ProductCard (Grid)
+│   │       ├── CardHeader
+│   │       │   ├── Name & Description
+│   │       │   └── Status Badge
+│   │       ├── CardContent
+│   │       │   ├── Clients Metric
+│   │       │   ├── Revenue Metric
+│   │       │   └── Points Metric
+│   │       └── CardFooter
+│   │           ├── AvatarStack
+│   │           └── View Button
+│   │
+│   ├── My Products Tab
+│   │   └── (Same as All Products)
+│   │
+│   └── Archive Tab
+│       └── (Same as All Products)
+│
+├── Search Input
+├── Sort Dropdown
+└── CreateTeamDialog
+    ├── Form Fields
+    └── Submit Button
+
+─────────────────────────────────────────────────────
+
+ProductDetailPage (/dashboard/team-journey/[id])
+│
+├── Breadcrumb
+├── Header Section
+│   ├── Team Info
+│   │   ├── Name
+│   │   ├── Badges (Status, Role)
+│   │   └── Description
+│   └── Action Buttons
+│       ├── Website Link
+│       └── Submit Report Button
+│
+├── Stats Cards Grid (4 cards)
+│   ├── Revenue Card
+│   ├── Clients Card
+│   ├── Achievements Card
+│   └── Points Card
+│
+├── Two Column Layout
+│   ├── Team & Experience Card
+│   │   ├── Team Size
+│   │   ├── Total XP
+│   │   └── Member List
+│   │       └── Member Item
+│   │           ├── Avatar
+│   │           ├── Name
+│   │           └── Stats
+│   │
+│   └── Status & Progress Card
+│       ├── Date Created
+│       ├── Strikes (with dots)
+│       ├── Points Earned
+│       ├── Points Invested
+│       └── Weekly Report Status
+│           └── Avatar Stack with Indicators
+│
+└── Tabs Section
+    ├── Achievements Tab
+    │   ├── Achievement Cards Grid
+    │   │   └── AchievementCard
+    │   │       ├── Icon
+    │   │       ├── Title
+    │   │       ├── Progress
+    │   │       └── Rewards
+    │   └── TasksTable
+    │       ├── Table Header
+    │       └── Task Rows
+    │           ├── Task Info
+    │           ├── Assignee
+    │           ├── Difficulty Badge
+    │           ├── XP/Points
+    │           ├── Status Badge
+    │           └── Action/Assignment
+    │
+    ├── Weekly Reports Tab
+    │   ├── This Week Stats (4 cards)
+    │   └── WeeklyReportsTable
+    │       └── Report Rows
+    │           ├── Week Info
+    │           ├── Submission Status
+    │           ├── Metrics
+    │           └── Actions
+    │
+    ├── Client Meetings Tab
+    │   ├── Add Meeting Button
+    │   └── ClientMeetingsTable
+    │       └── Meeting Rows
+    │
+    └── Strikes Tab
+        └── StrikesTable
+            └── Strike Rows
+                ├── Reason
+                ├── Date
+                ├── Status
+                ├── Penalties
+                └── Actions
+
+─────────────────────────────────────────────────────
+
+Modals (Overlays)
+│
+├── TeamManagementModal
+│   ├── Team Info Section
+│   ├── Members Section
+│   │   └── Member List
+│   │       └── Role Dropdown
+│   ├── Add Member Section
+│   └── Archive Button
+│
+├── WeeklyReportModal
+│   └── Form
+│       ├── Work Done (textarea)
+│       ├── Blockers (textarea)
+│       ├── Achievement (textarea)
+│       ├── Clients # (number)
+│       ├── Meetings # (number)
+│       └── Submit Button
+│
+└── AddClientMeetingModal
+    └── Form
+        ├── Client Name
+        ├── Meeting Date
+        ├── Meeting Type
+        ├── Duration
+        ├── Outcome
+        ├── Notes
+        └── Submit Button
+```
+
+## Task Workflow State Machine
+
+```
+                    ┌─────────────┐
+                    │             │
+                    │ not_started │
+                    │             │
+                    └──────┬──────┘
+                           │
+                    User clicks "Start"
+                           │
+                           ▼
+                    ┌─────────────┐
+              ┌─────┤             ├─────┐
+              │     │ in_progress │     │
+              │     │             │     │
+              │     └──────┬──────┘     │
+              │            │            │
+    User/Leader     User submits    User/Leader
+    cancels                          reassigns
+              │            │            │
+              │            ▼            │
+              │     ┌─────────────┐    │
+              │     │  pending_   │    │
+              │     │   review    │    │
+              │     │             │    │
+              │     └──────┬──────┘    │
+              │            │            │
+              │      ┌─────┼─────┐     │
+              │      │     │     │     │
+              │   Approve  │  Reject   │
+              │      │     │     │     │
+              ▼      ▼     │     ▼     ▼
+       ┌───────────┐       │  ┌─────────────┐
+       │           │       │  │  rejected   │
+       │ cancelled │       │  │             │
+       │           │       │  └─────────────┘
+       └───────────┘       │
+                           │  ┌─────────────┐
+                           │  │  revision_  │
+                           └─►│  required   │
+                              │             │
+                              └──────┬──────┘
+                                     │
+                              User resubmits
+                                     │
+                              ┌──────▼──────┐
+                              │             │
+                              │ in_progress │◄─┐ Retry
+                              │             │  │
+                              └─────────────┘──┘
+                                     │
+                              Final approval
+                                     │
+                                     ▼
+                              ┌─────────────┐
+                              │             │
+                              │  approved   │
+                              │             │
+                              └─────────────┘
+```
+
+## Permission Matrix
+
+```
+┌─────────────┬─────────┬────────────┬─────────┬─────────┐
+│   Action    │ Founder │ Co-Founder │  Leader │ Member  │
+├─────────────┼─────────┼────────────┼─────────┼─────────┤
+│ View Team   │    ✓    │     ✓      │    ✓    │    ✓    │
+├─────────────┼─────────┼────────────┼─────────┼─────────┤
+│ Edit Team   │    ✓    │     ✓      │    ✓    │    ✗    │
+├─────────────┼─────────┼────────────┼─────────┼─────────┤
+│ Delete Team │    ✓    │     ✗      │    ✗    │    ✗    │
+├─────────────┼─────────┼────────────┼─────────┼─────────┤
+│ Add Members │    ✓    │     ✓      │    ✓    │    ✗    │
+├─────────────┼─────────┼────────────┼─────────┼─────────┤
+│ Remove      │    ✓    │     ✓      │    ✓    │    ✗    │
+│ Members     │         │            │         │         │
+├─────────────┼─────────┼────────────┼─────────┼─────────┤
+│ Change Roles│    ✓    │     ✓      │    ✗    │    ✗    │
+├─────────────┼─────────┼────────────┼─────────┼─────────┤
+│ Assign Tasks│    ✓    │     ✓      │    ✓    │    ✗    │
+├─────────────┼─────────┼────────────┼─────────┼─────────┤
+│ Start Tasks │    ✓    │     ✓      │    ✓    │    ✓    │
+├─────────────┼─────────┼────────────┼─────────┼─────────┤
+│ Complete    │    ✓*   │     ✓*     │    ✓*   │    ✓*   │
+│ Assigned    │         │            │         │         │
+│ Tasks       │         │            │         │         │
+├─────────────┼─────────┼────────────┼─────────┼─────────┤
+│ Cancel Tasks│    ✓    │     ✓      │    ✓    │    ✗    │
+├─────────────┼─────────┼────────────┼─────────┼─────────┤
+│ Submit      │    ✓    │     ✓      │    ✓    │    ✓    │
+│ Weekly      │         │            │         │         │
+│ Report      │         │            │         │         │
+├─────────────┼─────────┼────────────┼─────────┼─────────┤
+│ View Reports│    ✓    │     ✓      │    ✓    │    ✓    │
+├─────────────┼─────────┼────────────┼─────────┼─────────┤
+│ Log Meeting │    ✓    │     ✓      │    ✓    │    ✓    │
+├─────────────┼─────────┼────────────┼─────────┼─────────┤
+│ Explain     │    ✓    │     ✓      │    ✓    │    ✓    │
+│ Strikes     │         │            │         │         │
+└─────────────┴─────────┴────────────┴─────────┴─────────┘
+
+* Only if assigned to them
+```
+
+## API Call Flow
+
+```
+Frontend Component
+       │
+       │ 1. User Action
+       ▼
+┌─────────────────┐
+│ Event Handler   │
+│ (e.g., onClick) │
+└────────┬────────┘
+         │
+         │ 2. Call lib function
+         ▼
+┌──────────────────┐
+│ /lib/database.ts │
+│ /lib/tasks.ts    │
+└────────┬─────────┘
+         │
+         │ 3. Create Supabase client
+         ▼
+┌──────────────────┐
+│ createClient()   │
+└────────┬─────────┘
+         │
+         │ 4. Query or RPC
+         ▼
+┌──────────────────────────┐
+│ Supabase Backend         │
+│ - Check RLS policies     │
+│ - Execute query/function │
+│ - Return data            │
+└────────┬─────────────────┘
+         │
+         │ 5. Response
+         ▼
+┌──────────────────┐
+│ Transform data   │
+│ Handle errors    │
+└────────┬─────────┘
+         │
+         │ 6. Update state
+         ▼
+┌──────────────────┐
+│ setState()       │
+│ React re-render  │
+└──────────────────┘
+```
+
+---
+
+This document provides visual representations of the team-journey architecture to complement the main analysis document.
