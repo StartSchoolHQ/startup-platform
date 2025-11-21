@@ -25,6 +25,7 @@ export interface Team {
 export interface TeamProgressData {
   title: string;
   joinTeamsText: string;
+  hasTeams: boolean;
   stats: TeamStat[];
   teams: Team[];
 }

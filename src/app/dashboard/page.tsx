@@ -114,24 +114,38 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
           />
           <CardTitle className="text-lg font-semibold">{data.title}</CardTitle>
         </div>
-        <Button variant="outline" size="sm">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => (window.location.href = "/dashboard/team-journey")}
+        >
           {data.joinTeamsText}
         </Button>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Stats row */}
-        <div className="grid grid-cols-2 gap-4">
-          {data.stats.map((stat, index) => (
-            <StatItem key={index} stat={stat} />
-          ))}
-        </div>
+        {!data.hasTeams ? (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <p className="text-muted-foreground">
+              You are not a part of any team yet
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Stats row */}
+            <div className="grid grid-cols-2 gap-4">
+              {data.stats.map((stat, index) => (
+                <StatItem key={index} stat={stat} />
+              ))}
+            </div>
 
-        {/* Teams list */}
-        <div className="grid grid-cols-2 gap-4">
-          {data.teams.map((team, index) => (
-            <TeamItem key={index} team={team} />
-          ))}
-        </div>
+            {/* Teams list */}
+            <div className="grid grid-cols-2 gap-4">
+              {data.teams.map((team, index) => (
+                <TeamItem key={index} team={team} />
+              ))}
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

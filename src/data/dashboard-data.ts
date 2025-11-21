@@ -17,6 +17,7 @@ import {
   getUserProfile,
   getUserAchievementProgress,
   getTasksByAchievement,
+  getUserTeams,
 } from "@/lib/database";
 
 // Function to get real stats cards data
@@ -26,14 +27,14 @@ export async function getStatsCards(userId: string): Promise<StatsCard[]> {
 
     return [
       {
-        title: "XP Earned",
+        title: "XP Balance",
         value: (userProfile.total_xp ?? 0).toString(),
         subtitle: "Total experience points",
         icon: Trophy,
         iconColor: "text-purple-500",
       },
       {
-        title: "Points Earned",
+        title: "Points Balance",
         value: (userProfile.total_points ?? 0).toString(),
         subtitle: "Available startup capital",
         icon: Star,
@@ -65,26 +66,34 @@ export async function getTeamProgressData(
   userId: string
 ): Promise<TeamProgressData> {
   try {
-    const userProfile = await getUserProfile(userId);
+    const [userProfile, userTeams] = await Promise.all([
+      getUserProfile(userId),
+      getUserTeams(userId),
+    ]);
+
+    const hasTeams = userTeams.length > 0;
 
     return {
       title: "Your Teams Progress",
-      joinTeamsText: "Join Teams",
-      stats: [
-        {
-          value: (userProfile.total_points ?? 0).toString(),
-          label: "Total Points Earned", // Keep original label
-          icon: Star,
-          iconColor: "text-orange-500",
-        },
-        {
-          value: (userProfile.total_xp ?? 0).toString(),
-          label: "Total XP Earned",
-          icon: Trophy,
-          iconColor: "text-purple-500",
-        },
-      ],
-      teams: [], // Keep empty for now - will populate with real team data later
+      joinTeamsText: "View Products",
+      hasTeams,
+      stats: hasTeams
+        ? [
+            {
+              value: (userProfile.total_points ?? 0).toString(),
+              label: "Total Points Balance",
+              icon: Star,
+              iconColor: "text-orange-500",
+            },
+            {
+              value: (userProfile.total_xp ?? 0).toString(),
+              label: "Total XP Balance",
+              icon: Trophy,
+              iconColor: "text-purple-500",
+            },
+          ]
+        : [],
+      teams: [],
     };
   } catch (error) {
     console.error("Error fetching team progress:", error);
@@ -104,13 +113,13 @@ export async function getPersonalProgressData(
       stats: [
         {
           value: (userProfile.total_points ?? 0).toString(),
-          label: "Total Points Earned", // Keep original label
+          label: "Total Points Balance", // Keep original label
           icon: Star,
           iconColor: "text-orange-500",
         },
         {
           value: (userProfile.total_xp ?? 0).toString(),
-          label: "Total XP Earned",
+          label: "Total XP Balance",
           icon: Trophy,
           iconColor: "text-purple-500",
         },
@@ -185,21 +194,9 @@ function getDefaultStatsCards(): StatsCard[] {
 function getDefaultTeamProgressData(): TeamProgressData {
   return {
     title: "Your Teams Progress",
-    joinTeamsText: "Join Teams",
-    stats: [
-      {
-        value: "500",
-        label: "Total Points Earned",
-        icon: Star,
-        iconColor: "text-orange-500",
-      },
-      {
-        value: "0",
-        label: "Total XP Earned",
-        icon: Trophy,
-        iconColor: "text-purple-500",
-      },
-    ],
+    joinTeamsText: "View Products",
+    hasTeams: false,
+    stats: [],
     teams: [],
   };
 }
