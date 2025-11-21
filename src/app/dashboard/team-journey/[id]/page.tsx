@@ -49,7 +49,7 @@ import { StatsCard } from "@/types/dashboard";
 import { useEffect, useState, useCallback } from "react";
 import { useAppContext } from "@/contexts/app-context";
 import { hasUserSubmittedThisWeek } from "@/lib/weekly-reports";
-import { assignTaskToMember } from "@/lib/tasks";
+import { assignTaskToMember, startTask } from "@/lib/tasks";
 import { getTasksByAchievement } from "@/lib/database";
 import { Achievement, TaskWithAchievement } from "@/types/dashboard";
 
@@ -157,6 +157,93 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     extractId();
   }, [params]);
 
+  // Handle task assignment - optimistic update
+  const handleAssignTask = useCallback(
+    async (taskId: string, userId: string) => {
+      if (!team?.id || !user?.id) return;
+
+      try {
+        // Find the member details for the UI update
+        const assignedMember = team?.members.find((m) => m.user_id === userId);
+
+        // Optimistically update the UI immediately
+        setFilteredTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task.progress_id === taskId
+              ? {
+                  ...task,
+                  assigned_to_user_id: userId,
+                  assignee_name: assignedMember?.users?.name || undefined,
+                  assignee_avatar_url:
+                    assignedMember?.users?.avatar_url || undefined,
+                  assigned_at: new Date().toISOString(),
+                }
+              : task
+          )
+        );
+
+        // Make the actual API call
+        const success = await assignTaskToMember(taskId, userId);
+
+        if (!success) {
+          // If it failed, revert the optimistic update
+          console.error("Failed to assign task - reverting");
+          setRefreshTrigger((prev) => prev + 1); // Trigger reload
+        }
+      } catch (error) {
+        console.error("Error assigning task:", error);
+        setRefreshTrigger((prev) => prev + 1); // Trigger reload on error
+      }
+    },
+    [team?.id, team?.members, user?.id]
+  );
+
+  // Handle starting task (self-assign and start) - optimistic update
+  const handleStartTask = useCallback(
+    async (taskId: string) => {
+      if (!team?.id || !user?.id) return;
+
+      try {
+        // Find current user details for the UI update
+        const currentMember = team?.members.find((m) => m.user_id === user.id);
+
+        // Optimistically update the UI immediately
+        setFilteredTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task.progress_id === taskId
+              ? {
+                  ...task,
+                  assigned_to_user_id: user.id,
+                  assignee_name:
+                    currentMember?.users?.name || user.name || "You",
+                  assignee_avatar_url:
+                    currentMember?.users?.avatar_url ||
+                    user.avatar_url ||
+                    undefined,
+                  assigned_at: new Date().toISOString(),
+                  started_at: new Date().toISOString(),
+                  status: "in_progress" as const,
+                }
+              : task
+          )
+        );
+
+        // Make the actual API call - this handles both assignment and starting
+        const success = await startTask(taskId, user.id);
+
+        if (!success) {
+          // If it failed, revert the optimistic update
+          console.error("Failed to start task - reverting");
+          setRefreshTrigger((prev) => prev + 1); // Trigger reload
+        }
+      } catch (error) {
+        console.error("Error starting task:", error);
+        setRefreshTrigger((prev) => prev + 1); // Trigger reload on error
+      }
+    },
+    [team?.id, team?.members, user?.id, user?.name, user?.avatar_url]
+  );
+
   // Load team data
   const loadTeam = useCallback(async () => {
     if (!teamId || !user?.id) return;
@@ -262,46 +349,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       setLoadingAchievements(false);
     }
   }, [teamId]);
-
-  // Handle task assignment - optimistic update
-  const handleAssignTask = useCallback(
-    async (taskId: string, userId: string) => {
-      try {
-        // Find the member details for the UI update
-        const assignedMember = team?.members.find((m) => m.user_id === userId);
-
-        // Optimistically update the UI immediately
-        setFilteredTasks((prevTasks) =>
-          prevTasks.map((task) =>
-            task.progress_id === taskId
-              ? {
-                  ...task,
-                  assigned_to_user_id: userId,
-                  assignee_name: assignedMember?.users?.name || undefined,
-                  assignee_avatar_url:
-                    assignedMember?.users?.avatar_url || undefined,
-                  assigned_at: new Date().toISOString(),
-                }
-              : task
-          )
-        );
-
-        // Make the actual API call
-        const success = await assignTaskToMember(taskId, userId);
-
-        if (!success) {
-          // If it failed, revert the optimistic update
-          console.error("Failed to assign task - reverting");
-          await loadAchievements(); // Reload to get accurate state
-        }
-      } catch (error) {
-        console.error("Error assigning task:", error);
-        // Reload on error to ensure accurate state
-        await loadAchievements();
-      }
-    },
-    [team?.members, loadAchievements]
-  );
 
   // Load team strikes from database
   const loadStrikes = useCallback(async () => {
@@ -1029,6 +1076,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               {/* Convert filtered tasks to TaskTableItem format */}
               <TasksTable
                 isTeamMember={isTeamMember}
+                currentUserId={user?.id}
                 tasks={filteredTasks
                   .filter((task) => task.progress_id) // Only show tasks that have been started (have progress_id)
                   .map((task) => ({
@@ -1074,6 +1122,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   })) || []
                 }
                 onAssignTask={handleAssignTask}
+                onStartTask={handleStartTask}
               />
             </div>
           )}

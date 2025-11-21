@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Medal, CheckCircle, Zap, CreditCard } from "lucide-react";
+import { Medal, CheckCircle, Zap, CreditCard, Play } from "lucide-react";
 import { TaskTableItem } from "@/types/team-journey";
 import { useRouter } from "next/navigation";
 
@@ -17,14 +17,18 @@ interface TasksTableProps {
   tasks: TaskTableItem[];
   isTeamMember?: boolean;
   teamMembers?: Array<{ id: string; name: string; avatar: string }>;
+  currentUserId?: string;
   onAssignTask?: (taskId: string, userId: string) => void;
+  onStartTask?: (taskId: string) => void;
 }
 
 export function TasksTable({
   tasks,
   isTeamMember = false,
   teamMembers = [],
+  currentUserId,
   onAssignTask,
+  onStartTask,
 }: TasksTableProps) {
   const router = useRouter();
 
@@ -214,9 +218,24 @@ export function TasksTable({
                             Tips
                           </Button>
                         )}
+                        {/* Show Start button for unassigned available tasks */}
                         {isTeamMember &&
                         task.isAvailable &&
-                        task.responsible ? (
+                        !task.responsible &&
+                        currentUserId &&
+                        onStartTask ? (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="text-xs px-3 py-2"
+                            onClick={() => onStartTask(task.id)}
+                          >
+                            <Play className="h-3 w-3 mr-1" />
+                            Start
+                          </Button>
+                        ) : isTeamMember &&
+                          task.isAvailable &&
+                          task.responsible ? (
                           <Button
                             variant="outline"
                             size="sm"
