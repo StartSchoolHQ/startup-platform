@@ -16,7 +16,13 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   return (
-    <Card className="w-full">
+    <Card
+      className={`w-full transition-all duration-200 ${
+        product.isCurrentUserMember
+          ? "ring-2 ring-primary/20 border-primary/30 bg-primary/5"
+          : ""
+      }`}
+    >
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="space-y-1">

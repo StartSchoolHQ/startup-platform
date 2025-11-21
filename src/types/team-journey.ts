@@ -24,6 +24,7 @@ export interface Product {
   avatar: string;
   teamMembers: User[];
   category?: string;
+  isCurrentUserMember?: boolean;
 }
 
 export interface TeamJourneyData {

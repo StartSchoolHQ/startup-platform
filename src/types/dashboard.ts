@@ -16,10 +16,12 @@ export interface TeamStat {
 }
 
 export interface Team {
+  id: string;
   name: string;
-  label: string;
-  icon: LucideIcon;
-  iconColor: string;
+  totalXP: number;
+  totalPoints: number;
+  memberCount: number;
+  completedTasks: number;
 }
 
 export interface TeamProgressData {

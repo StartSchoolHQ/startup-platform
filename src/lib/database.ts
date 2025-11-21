@@ -827,7 +827,10 @@ export function subscribeToUserTransactions(
 }
 
 // Helper function to transform database teams to Product interface
-export function transformTeamToProduct(team: DatabaseTeam): Product {
+export function transformTeamToProduct(
+  team: DatabaseTeam,
+  currentUserId?: string
+): Product {
   // Calculate total revenue from revenue streams
   const totalRevenue =
     team.revenue_streams?.reduce(
@@ -866,6 +869,12 @@ export function transformTeamToProduct(team: DatabaseTeam): Product {
   // Get actual team size (number of active members)
   const actualTeamSize = team.team_members?.length || 0;
 
+  // Check if current user is a member of this team
+  const isCurrentUserMember = currentUserId
+    ? team.team_members?.some((member) => member.user_id === currentUserId) ||
+      false
+    : false;
+
   return {
     id: team.id,
     name: team.name,
@@ -885,6 +894,7 @@ export function transformTeamToProduct(team: DatabaseTeam): Product {
     },
     avatar: "/avatars/suppdocs.jpg", // Default avatar for now
     teamMembers,
+    isCurrentUserMember,
   };
 }
 

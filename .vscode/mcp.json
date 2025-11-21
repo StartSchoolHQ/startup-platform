@@ -1,25 +1,16 @@
 {
-  "inputs": [
-    {
-      "type": "promptString",
-      "id": "supabase-access-token",
-      "description": "Supabase personal access token",
-      "password": true
-    }
-  ],
-  "servers": {
-    "supabase": {
-      "command": "cmd",
-      "args": [
-        "/c",
-        "npx",
-        "-y",
-        "@supabase/mcp-server-supabase@latest",
-        "--project-ref=ksoohvygoysofvtqdumz"
-      ],
-      "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_a6e0c860ba8a0c88795741bc75f20be98d85ff9c"
-      }
-    }
-  }
+	"servers": {
+		"supabase": {
+			"type": "http",
+			"url": "https://mcp.supabase.com/mcp?project_ref=ksoohvygoysofvtqdumz&features=docs,database,debugging,development,functions,branching,storage"
+		}
+	},
+	"inputs": [
+		{
+			"type": "promptString",
+			"id": "supabase-access-token",
+			"description": "Supabase personal access token",
+			"password": true
+		}
+	]
 }

@@ -3,7 +3,14 @@
 import { useApp } from "@/contexts/app-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, WandSparkles } from "lucide-react";
+import {
+  Users,
+  FileText,
+  WandSparkles,
+  Star,
+  Trophy,
+  CheckCircle2,
+} from "lucide-react";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
 import { TeamItem } from "@/components/dashboard/team-item";
 import { ActivityItem } from "@/components/dashboard/activity-item";
@@ -103,6 +110,13 @@ export default function OverviewPage() {
 
 // Progress card component for teams
 function TeamProgressCard({ data }: { data: TeamProgressData }) {
+  // Get the first team name for the title, or use default
+  const teamName = data.teams.length > 0 ? data.teams[0].name : "Your Teams";
+  const cardTitle =
+    data.teams.length === 1
+      ? `${teamName} Team Progress`
+      : "Your Teams Progress";
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
@@ -112,7 +126,7 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
             iconColor="text-blue-600 dark:text-blue-400"
             backgroundColor="bg-blue-100 dark:bg-blue-950/20"
           />
-          <CardTitle className="text-lg font-semibold">{data.title}</CardTitle>
+          <CardTitle className="text-lg font-semibold">{cardTitle}</CardTitle>
         </div>
         <Button
           variant="outline"
@@ -131,19 +145,63 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
           </div>
         ) : (
           <>
-            {/* Stats row */}
-            <div className="grid grid-cols-2 gap-4">
-              {data.stats.map((stat, index) => (
-                <StatItem key={index} stat={stat} />
-              ))}
-            </div>
+            {/* Stats row - only show aggregate totals if multiple teams */}
+            {data.stats.length > 0 && (
+              <div className="grid grid-cols-2 gap-4">
+                {data.stats.map((stat, index) => (
+                  <StatItem key={index} stat={stat} />
+                ))}
+              </div>
+            )}
 
-            {/* Teams list */}
-            <div className="grid grid-cols-2 gap-4">
-              {data.teams.map((team, index) => (
-                <TeamItem key={index} team={team} />
-              ))}
-            </div>
+            {/* Team member stats - show for each team */}
+            {data.teams.map((team) => (
+              <div key={team.id}>
+                {data.teams.length > 1 && (
+                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground">
+                    {team.name}
+                  </h3>
+                )}
+                <div className="grid grid-cols-2 gap-4">
+                  <TeamItem
+                    team={team}
+                    stat={{
+                      value: team.memberCount.toString(),
+                      label: "Members",
+                      icon: Users,
+                      iconColor: "text-blue-600",
+                    }}
+                  />
+                  <TeamItem
+                    team={team}
+                    stat={{
+                      value: team.completedTasks.toString(),
+                      label: "Tasks Completed",
+                      icon: CheckCircle2,
+                      iconColor: "text-green-500",
+                    }}
+                  />
+                  <TeamItem
+                    team={team}
+                    stat={{
+                      value: team.totalPoints.toString(),
+                      label: "Team Points",
+                      icon: Star,
+                      iconColor: "text-orange-500",
+                    }}
+                  />
+                  <TeamItem
+                    team={team}
+                    stat={{
+                      value: team.totalXP.toString(),
+                      label: "Team XP",
+                      icon: Trophy,
+                      iconColor: "text-purple-500",
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
           </>
         )}
       </CardContent>

@@ -439,7 +439,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       setSelectedAchievementId(achievementId);
 
       try {
-        const tasks = await getTasksByAchievement(achievementId || undefined);
+        const tasks = await getTasksByAchievement(
+          achievementId || undefined,
+          teamId
+        );
         const tasksArray = Array.isArray(tasks) ? tasks : [];
 
         setFilteredTasks(
@@ -612,20 +615,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             <ExternalLink className="h-4 w-4" />
             Website
           </Button>
-          {isTeamMember && (
-            <Button
-              className="gap-2 bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => setShowWeeklyReportModal(true)}
-              disabled={checkingSubmission || hasSubmittedThisWeek}
-            >
-              <FileText className="h-4 w-4" />
-              {checkingSubmission
-                ? "Checking..."
-                : hasSubmittedThisWeek
-                ? "Report Submitted"
-                : "Submit Weekly Report"}
-            </Button>
-          )}
         </div>
       </div>
 
@@ -822,44 +811,79 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             </div>
 
             {/* Weekly Report */}
-            <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-              <div className="flex -space-x-2">
-                {team.members.slice(0, 4).map((member) => {
-                  const hasSubmitted = memberSubmissionStatus[member.user_id];
-                  const hasStatus = member.user_id in memberSubmissionStatus;
-
-                  return (
-                    <div key={member.user_id} className="relative">
-                      <Avatar className="w-8 h-8 border-2 border-white">
-                        <AvatarImage src={member.users?.avatar_url || ""} />
-                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
-                          {member.users?.name
-                            ? member.users.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")
-                                .toUpperCase()
-                            : "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      {hasStatus && (
-                        <div
-                          className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
-                            hasSubmitted ? "bg-green-500" : "bg-red-500"
-                          }`}
-                        />
-                      )}
+            {(() => {
+              const totalMembers = team.members.length;
+              const submittedCount = team.members.filter(
+                (member) => memberSubmissionStatus[member.user_id]
+              ).length;
+              const allSubmitted =
+                submittedCount === totalMembers && totalMembers > 0;
+              const bgColor = allSubmitted ? "bg-green-50" : "bg-red-50";
+              const borderColor = allSubmitted
+                ? "border-green-100"
+                : "border-red-100";
+              return (
+                <div
+                  className={`flex items-center justify-between border p-2 rounded-md ${bgColor} ${borderColor}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex -space-x-2">
+                      {team.members.slice(0, 4).map((member) => {
+                        const hasSubmitted =
+                          memberSubmissionStatus[member.user_id];
+                        const hasStatus =
+                          member.user_id in memberSubmissionStatus;
+                        return (
+                          <div key={member.user_id} className="relative">
+                            <Avatar className="w-8 h-8 border-2 border-white">
+                              <AvatarImage
+                                src={member.users?.avatar_url || ""}
+                              />
+                              <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
+                                {member.users?.name
+                                  ? member.users.name
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")
+                                      .toUpperCase()
+                                  : "U"}
+                              </AvatarFallback>
+                            </Avatar>
+                            {hasStatus && (
+                              <div
+                                className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+                                  hasSubmitted ? "bg-green-500" : "bg-red-500"
+                                }`}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
-              <div>
-                <div className="font-semibold text-sm">Weekly Report</div>
-                <div className="text-xs text-muted-foreground">
-                  Every member needs to fill out the weekly report
+                    <div>
+                      <div className="font-semibold text-sm">Weekly Report</div>
+                      <div className="text-xs text-muted-foreground">
+                        Every member needs to fill out the weekly report
+                      </div>
+                    </div>
+                  </div>
+                  {isTeamMember && (
+                    <Button
+                      className="gap-2 bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => setShowWeeklyReportModal(true)}
+                      disabled={checkingSubmission || hasSubmittedThisWeek}
+                    >
+                      <FileText className="h-4 w-4" />
+                      {checkingSubmission
+                        ? "Checking..."
+                        : hasSubmittedThisWeek
+                        ? "Report Submitted"
+                        : "Submit Weekly Report"}
+                    </Button>
+                  )}
                 </div>
-              </div>
-            </div>
+              );
+            })()}
           </CardContent>
         </Card>
       </div>

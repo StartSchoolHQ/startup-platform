@@ -66,34 +66,115 @@ export async function getTeamProgressData(
   userId: string
 ): Promise<TeamProgressData> {
   try {
-    const [userProfile, userTeams] = await Promise.all([
-      getUserProfile(userId),
+    const [userTeams] = await Promise.all([
       getUserTeams(userId),
     ]);
 
     const hasTeams = userTeams.length > 0;
 
+    // Calculate aggregated stats across all teams
+    let totalTeamXP = 0;
+    let totalTeamPoints = 0;
+    const teamsData = [];
+
+    // Fetch detailed team member data for each team
+    for (const membership of userTeams) {
+      const team = membership.teams as unknown as {
+        id: string;
+        name: string;
+        description: string | null;
+        member_count: number | null;
+        created_at: string;
+        founder_id: string;
+      } | null;
+
+      if (!team) continue;
+
+      // Fetch all team members with their stats
+      const supabase = (await import("@/lib/supabase/client")).createClient();
+      const { data: members } = await supabase
+        .from("team_members")
+        .select(
+          `
+          users (
+            total_xp,
+            total_points
+          )
+        `
+        )
+        .eq("team_id", team.id)
+        .is("left_at", null);
+
+      // Count completed team tasks (status = 'approved')
+      const { data: completedTasks, error: tasksError } = await supabase
+        .from("task_progress")
+        .select("id")
+        .eq("team_id", team.id)
+        .eq("status", "approved");
+
+      if (tasksError) {
+        console.error(
+          "Error fetching completed tasks for team:",
+          team.id,
+          tasksError
+        );
+      }
+
+      const completedTasksCount = completedTasks?.length || 0;
+
+      // Calculate team aggregates
+      let teamXP = 0;
+      let teamPoints = 0;
+      const actualMemberCount = members?.length || 0;
+
+      if (members) {
+        for (const member of members) {
+          const userData = member.users as unknown as {
+            total_xp: number;
+            total_points: number;
+          } | null;
+          if (userData) {
+            teamXP += userData.total_xp || 0;
+            teamPoints += userData.total_points || 0;
+          }
+        }
+      }
+
+      totalTeamXP += teamXP;
+      totalTeamPoints += teamPoints;
+
+      teamsData.push({
+        id: team.id,
+        name: team.name,
+        totalXP: teamXP,
+        totalPoints: teamPoints,
+        memberCount: actualMemberCount,
+        completedTasks: completedTasksCount || 0,
+      });
+    }
+
     return {
       title: "Your Teams Progress",
       joinTeamsText: "View Products",
       hasTeams,
-      stats: hasTeams
-        ? [
-            {
-              value: (userProfile.total_points ?? 0).toString(),
-              label: "Total Points Balance",
-              icon: Star,
-              iconColor: "text-orange-500",
-            },
-            {
-              value: (userProfile.total_xp ?? 0).toString(),
-              label: "Total XP Balance",
-              icon: Trophy,
-              iconColor: "text-purple-500",
-            },
-          ]
-        : [],
-      teams: [],
+      stats:
+        hasTeams && teamsData.length > 1
+          ? [
+              {
+                value: totalTeamPoints.toString(),
+                label: "Total Team Points",
+                icon: Star,
+                iconColor: "text-orange-500",
+              },
+              {
+                value: totalTeamXP.toString(),
+                label: "Total Team XP",
+                icon: Trophy,
+                iconColor: "text-purple-500",
+              },
+            ]
+          : [],
+      teams: teamsData,
     };
   } catch (error) {
     console.error("Error fetching team progress:", error);

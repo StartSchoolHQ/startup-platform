@@ -53,16 +53,16 @@ export default function TeamJourneyPage() {
       // Load all products
       const allTeams = await getAllTeamsForJourney(user.id, options);
       setAllProducts(
-        allTeams.map(
-          transformTeamToProduct as unknown as (value: unknown) => Product
+        allTeams.map((team) =>
+          transformTeamToProduct(team as unknown as any, user.id)
         )
       );
 
       // Load user's products
       const userTeams = await getUserTeamsForJourney(user.id, options);
       setMyProducts(
-        userTeams.map(
-          transformTeamToProduct as unknown as (value: unknown) => Product
+        userTeams.map((team) =>
+          transformTeamToProduct(team as unknown as any, user.id)
         )
       );
 
@@ -73,8 +73,8 @@ export default function TeamJourneyPage() {
         sortOrder,
       });
       setArchivedProducts(
-        archivedTeams.map(
-          transformTeamToProduct as unknown as (value: unknown) => Product
+        archivedTeams.map((team) =>
+          transformTeamToProduct(team as unknown as any, user.id)
         )
       );
     } catch (error) {
