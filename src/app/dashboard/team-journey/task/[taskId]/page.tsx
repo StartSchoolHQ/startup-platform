@@ -303,6 +303,10 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
             <BreadcrumbLink href="/dashboard/team-journey">
               Products
             </BreadcrumbLink>

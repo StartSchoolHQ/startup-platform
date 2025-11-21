@@ -79,7 +79,7 @@ export default function PeerReviewPage() {
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [selectedFeedbackTask, setSelectedFeedbackTask] =
     useState<AvailableTask | null>(null);
-
+  const [activeTab, setActiveTab] = useState<string>("available-tests");
   // Alert state for inline feedback
   const [alertState, setAlertState] = useState<{
     variant: "success" | "error" | "info";
@@ -215,6 +215,10 @@ export default function PeerReviewPage() {
       ...prev,
       availableTasksCount: prev.availableTasksCount - 1,
     }));
+    // Instantly switch to My Tests tab and open modal for this task
+    setActiveTab("my-tests");
+    setSelectedTaskForReview(acceptedTask);
+    setReviewModalOpen(true);
 
     try {
       const supabase = createClient();
@@ -254,6 +258,7 @@ export default function PeerReviewPage() {
           message: "Task accepted for review",
           description: 'Check the "My Tests" tab to begin testing.',
         });
+        // Already switched tab and opened modal above
       } else {
         // Revert optimistic update on failure
         setMyAcceptedTasks((prev) => prev.filter((task) => task.id !== taskId));
@@ -459,7 +464,7 @@ export default function PeerReviewPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="available-tests" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger
             value="available-tests"
@@ -689,8 +694,7 @@ export default function PeerReviewPage() {
                           task={task}
                           variant="submitted"
                           onAction={() => {
-                            setSelectedFeedbackTask(task);
-                            setFeedbackModalOpen(true);
+                            window.location.href = `/dashboard/team-journey/task/${task.id}`;
                           }}
                           actionLoading={false}
                           actionButtonText="View Feedback"
