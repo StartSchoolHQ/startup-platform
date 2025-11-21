@@ -514,7 +514,7 @@ useEffect(() => {
 ### Issue: Strikes not appearing
 **Check**:
 1. pg_cron is running
-2. Edge function deployed
+2. Edge function `weekly-strikes-automation` deployed
 3. Previous week has missing reports
 4. Team is active
 
