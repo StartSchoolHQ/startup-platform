@@ -21,6 +21,7 @@ import {
   getArchivedTeamsForJourney,
   transformTeamToProduct,
 } from "@/lib/database";
+import type { DatabaseTeam } from "@/lib/database";
 import { Product } from "@/types/team-journey";
 
 type SortOption = "name" | "date" | "status" | "revenue";
@@ -53,17 +54,23 @@ export default function TeamJourneyPage() {
       // Load all products
       const allTeams = await getAllTeamsForJourney(user.id, options);
       setAllProducts(
-        allTeams.map((team) =>
-          transformTeamToProduct(team as unknown as any, user.id)
-        )
+        allTeams
+          .filter((team) => Array.isArray(team.team_members))
+          .map((team) =>
+            transformTeamToProduct(team as unknown as DatabaseTeam, user.id)
+          )
+        // ...existing code...
       );
 
       // Load user's products
       const userTeams = await getUserTeamsForJourney(user.id, options);
       setMyProducts(
-        userTeams.map((team) =>
-          transformTeamToProduct(team as unknown as any, user.id)
-        )
+        userTeams
+          .filter((team) => Array.isArray(team.team_members))
+          .map((team) =>
+            transformTeamToProduct(team as unknown as DatabaseTeam, user.id)
+          )
+        // ...existing code...
       );
 
       // Load archived products
@@ -73,9 +80,12 @@ export default function TeamJourneyPage() {
         sortOrder,
       });
       setArchivedProducts(
-        archivedTeams.map((team) =>
-          transformTeamToProduct(team as unknown as any, user.id)
-        )
+        archivedTeams
+          .filter((team) => Array.isArray(team.team_members))
+          .map((team) =>
+            transformTeamToProduct(team as unknown as DatabaseTeam, user.id)
+          )
+        // ...existing code...
       );
     } catch (error) {
       console.error("Error loading team data:", error);

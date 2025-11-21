@@ -18,7 +18,7 @@ interface UserRelation {
 }
 
 // Database type interfaces
-interface DatabaseTeam {
+export interface DatabaseTeam {
   id: string;
   name: string;
   description: string | null;

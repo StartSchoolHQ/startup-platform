@@ -164,7 +164,6 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
                 )}
                 <div className="grid grid-cols-2 gap-4">
                   <TeamItem
-                    team={team}
                     stat={{
                       value: team.memberCount.toString(),
                       label: "Members",
@@ -173,7 +172,6 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
                     }}
                   />
                   <TeamItem
-                    team={team}
                     stat={{
                       value: team.completedTasks.toString(),
                       label: "Tasks Completed",
@@ -182,7 +180,6 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
                     }}
                   />
                   <TeamItem
-                    team={team}
                     stat={{
                       value: team.totalPoints.toString(),
                       label: "Team Points",
@@ -191,7 +188,6 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
                     }}
                   />
                   <TeamItem
-                    team={team}
                     stat={{
                       value: team.totalXP.toString(),
                       label: "Team XP",

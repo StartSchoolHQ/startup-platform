@@ -76,9 +76,8 @@ export default function PeerReviewPage() {
   const [selectedTaskForReview, setSelectedTaskForReview] =
     useState<AvailableTask | null>(null);
   const [submittingReview, setSubmittingReview] = useState(false);
-  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
-  const [selectedFeedbackTask, setSelectedFeedbackTask] =
-    useState<AvailableTask | null>(null);
+  // Removed unused feedbackModalOpen and setFeedbackModalOpen
+  // Removed unused setSelectedFeedbackTask
   const [activeTab, setActiveTab] = useState<string>("available-tests");
   // Alert state for inline feedback
   const [alertState, setAlertState] = useState<{
@@ -733,12 +732,7 @@ export default function PeerReviewPage() {
       />
 
       {/* Feedback Modal */}
-      <TaskDetailsModal
-        mode="feedback"
-        isOpen={feedbackModalOpen}
-        onClose={() => setFeedbackModalOpen(false)}
-        taskData={selectedFeedbackTask || undefined}
-      />
+      {/* Feedback modal removed: selectedFeedbackTask was unused and removed */}
     </div>
   );
 }

@@ -221,8 +221,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
   // Load team achievements from database
   const loadAchievements = useCallback(async () => {
-    if (!teamId) return;
-
+    if (!teamId) return; // Prevent DB call with null/invalid teamId
     setLoadingAchievements(true);
     try {
       // Load achievements with progress tracking and rewards divided by team member count
@@ -439,9 +438,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       setSelectedAchievementId(achievementId);
 
       try {
+        if (!teamId) return;
         const tasks = await getTasksByAchievement(
           achievementId || undefined,
-          teamId
+          teamId as string
         );
         const tasksArray = Array.isArray(tasks) ? tasks : [];
 
@@ -472,7 +472,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         setFilteredTasks([]);
       }
     },
-    []
+    [teamId]
   );
 
   useEffect(() => {

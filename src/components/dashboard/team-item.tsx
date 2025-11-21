@@ -1,10 +1,8 @@
-import { Team } from "@/types/dashboard";
 import { BorderedContainer } from "./bordered-container";
 import { IconContainer } from "./icon-container";
-import { Star, Trophy, Users, LucideIcon } from "lucide-react";
+import { LucideIcon } from "lucide-react";
 
 interface TeamItemProps {
-  team: Team;
   stat: {
     value: string;
     label: string;
@@ -13,7 +11,7 @@ interface TeamItemProps {
   };
 }
 
-export function TeamItem({ team, stat }: TeamItemProps) {
+export function TeamItem({ stat }: TeamItemProps) {
   return (
     <BorderedContainer>
       <IconContainer
