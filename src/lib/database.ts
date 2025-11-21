@@ -99,13 +99,16 @@ export async function getUserTransactions(userId: string, limit = 10) {
 export async function getPeerReviewStatsFromTransactions(userId: string) {
   const supabase = createClient();
 
-  // Get all validation type transactions (peer review rewards)
+  // Get validation type transactions (peer review rewards) from after the system was fixed
+  // Only count transactions from Nov 21, 2025 onwards (when we fixed the peer review rewards)
   const { data: validationTransactions, error } = await supabase
     .from("transactions")
-    .select("xp_change, points_change, created_at")
+    .select("xp_change, points_change, created_at, metadata")
     .eq("user_id", userId)
     .eq("type", "validation")
-    .gte("xp_change", 0); // Only positive rewards (not penalties)
+    .eq("activity_type", "team")
+    .gte("xp_change", 0) // Only positive rewards (not penalties)
+    .gte("created_at", "2025-11-21T13:00:00.000Z"); // Only count recent transactions with correct 10% calculation
 
   if (error) {
     console.error("Error fetching peer review transactions:", error);
@@ -113,6 +116,53 @@ export async function getPeerReviewStatsFromTransactions(userId: string) {
   }
 
   const transactions = validationTransactions || [];
+
+  // Filter to ensure we only count legitimate peer review rewards (should be around 10% of task rewards)
+  // Peer review rewards should typically be small amounts (1-50 XP range for most tasks)
+  const legitTransactions = transactions.filter((t) => {
+    const xp = t.xp_change || 0;
+    const points = t.points_change || 0;
+
+    // Only count transactions that look like proper 10% peer review rewards
+    // (typically 1-50 XP range, not full task rewards of 100+ XP)
+    return xp > 0 && xp <= 50 && points > 0 && points <= 10;
+  });
+
+  // Calculate totals
+  const totalXpEarned = legitTransactions.reduce(
+    (sum, t) => sum + (t.xp_change || 0),
+    0
+  );
+  const totalPointsEarned = legitTransactions.reduce(
+    (sum, t) => sum + (t.points_change || 0),
+    0
+  );
+  const tasksReviewedCount = legitTransactions.length;
+
+  return {
+    tasksReviewedByUser: tasksReviewedCount,
+    totalXpEarned,
+    totalPointsEarned,
+  };
+}
+
+export async function getIndividualActivityStats(userId: string) {
+  const supabase = createClient();
+
+  // Get all individual activity transactions (meetings, achievements, etc.)
+  const { data: individualTransactions, error } = await supabase
+    .from("transactions")
+    .select("xp_change, points_change, created_at, type, description")
+    .eq("user_id", userId)
+    .eq("activity_type", "individual")
+    .gte("xp_change", 0); // Only positive gains
+
+  if (error) {
+    console.error("Error fetching individual activity transactions:", error);
+    throw error;
+  }
+
+  const transactions = individualTransactions || [];
 
   // Calculate totals
   const totalXpEarned = transactions.reduce(
@@ -123,12 +173,18 @@ export async function getPeerReviewStatsFromTransactions(userId: string) {
     (sum, t) => sum + (t.points_change || 0),
     0
   );
-  const tasksReviewedCount = transactions.length;
+  const totalActivities = transactions.length;
+
+  // Count by activity type
+  const meetingsCount = transactions.filter(t => t.type === 'meeting').length;
+  const achievementsCount = transactions.filter(t => t.type === 'achievement').length;
 
   return {
-    tasksReviewedByUser: tasksReviewedCount,
     totalXpEarned,
     totalPointsEarned,
+    totalActivities,
+    meetingsCompleted: meetingsCount,
+    achievementsEarned: achievementsCount,
   };
 }
 
@@ -1563,6 +1619,7 @@ export async function getAvailableTasksForReview(userId: string) {
         description,
         difficulty_level,
         base_xp_reward,
+        base_points_reward,
         category,
         peer_review_criteria
       ),
@@ -1837,6 +1894,10 @@ export async function getTeamClientMeetings(teamId: string) {
         completed_at,
         cancelled_at,
         responsible_user_id,
+        client_type,
+        call_type,
+        how_it_went,
+        new_things_learned,
         users:responsible_user_id (
           id,
           name,
@@ -1863,6 +1924,10 @@ export async function getTeamClientMeetings(teamId: string) {
         completed_at: meeting.completed_at,
         cancelled_at: meeting.cancelled_at,
         responsible_user_id: meeting.responsible_user_id,
+        client_type: meeting.client_type,
+        call_type: meeting.call_type,
+        how_it_went: meeting.how_it_went,
+        new_things_learned: meeting.new_things_learned,
         users: {
           id: meeting.users?.id || "",
           name: meeting.users?.name || "Unknown User",
@@ -1899,6 +1964,7 @@ export async function getMySubmittedTasksForReview(userId: string) {
         description,
         difficulty_level,
         base_xp_reward,
+        base_points_reward,
         category
       ),
       teams!inner(
@@ -2381,4 +2447,53 @@ export async function assignTeamTaskToProgress(
   }
 
   return data;
+}
+
+/**
+ * Get completed peer reviews given by the user
+ */
+export async function getCompletedPeerReviews(userId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("task_progress" as never)
+    .select(
+      `
+      id,
+      task_id,
+      team_id,
+      assigned_to_user_id,
+      completed_at,
+      updated_at,
+      submission_data,
+      submission_notes,
+      status,
+      review_feedback,
+      tasks(
+        id,
+        title,
+        description,
+        difficulty_level,
+        base_xp_reward,
+        base_points_reward,
+        category
+      ),
+      teams(
+        id,
+        name
+      )
+    `
+    )
+    .eq("reviewer_user_id", userId)
+    .eq("context", "team")
+    .in("status", ["approved", "rejected"])
+    .not("review_feedback", "is", null)
+    .order("updated_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching completed peer reviews:", error);
+    throw error;
+  }
+
+  return data || [];
 }

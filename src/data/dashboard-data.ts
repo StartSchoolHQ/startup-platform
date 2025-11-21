@@ -18,12 +18,31 @@ import {
   getUserAchievementProgress,
   getTasksByAchievement,
   getUserTeams,
+  getUserTaskCompletionStats,
+  getPeerReviewStatsFromTransactions,
+  getUserStrikes,
+  getIndividualActivityStats,
 } from "@/lib/database";
 
 // Function to get real stats cards data
 export async function getStatsCards(userId: string): Promise<StatsCard[]> {
   try {
-    const userProfile = await getUserProfile(userId);
+    const [userProfile, taskStats, achievementProgress] = await Promise.all([
+      getUserProfile(userId),
+      getUserTaskCompletionStats(userId),
+      getUserAchievementProgress(userId),
+    ]);
+
+    // Calculate achievement stats
+    const achievements = achievementProgress as Array<{
+      is_completed: boolean;
+      total_tasks: number;
+    }>;
+
+    const completedAchievements = achievements.filter(
+      (ach) => ach.is_completed
+    ).length;
+    const totalAchievements = achievements.length;
 
     return [
       {
@@ -42,14 +61,14 @@ export async function getStatsCards(userId: string): Promise<StatsCard[]> {
       },
       {
         title: "Achievements",
-        value: "0/25", // Keep original mock format - will update later
+        value: `${completedAchievements}/${totalAchievements}`,
         subtitle: "Achievements unlocked",
         icon: Target,
         iconColor: "text-yellow-500",
       },
       {
         title: "Tasks",
-        value: "0/150", // Keep original mock format - will update later
+        value: `${taskStats.completed}/${taskStats.total}`,
         subtitle: "Tasks completed",
         icon: Users,
         iconColor: "text-green-500",
@@ -66,9 +85,7 @@ export async function getTeamProgressData(
   userId: string
 ): Promise<TeamProgressData> {
   try {
-    const [userTeams] = await Promise.all([
-      getUserTeams(userId),
-    ]);
+    const [userTeams] = await Promise.all([getUserTeams(userId)]);
 
     const hasTeams = userTeams.length > 0;
 
@@ -187,46 +204,50 @@ export async function getPersonalProgressData(
   userId: string
 ): Promise<PersonalProgressData> {
   try {
-    const userProfile = await getUserProfile(userId);
+    const [individualStats, peerReviewStats, userStrikes] = await Promise.all([
+      getIndividualActivityStats(userId),
+      getPeerReviewStatsFromTransactions(userId),
+      getUserStrikes(userId),
+    ]);
 
     return {
       title: "Your Personal Progress",
       stats: [
         {
-          value: (userProfile.total_points ?? 0).toString(),
-          label: "Total Points Balance", // Keep original label
+          value: individualStats.totalPointsEarned.toString(),
+          label: "Points from Individual Activities",
           icon: Star,
           iconColor: "text-orange-500",
         },
         {
-          value: (userProfile.total_xp ?? 0).toString(),
-          label: "Total XP Balance",
+          value: individualStats.totalXpEarned.toString(),
+          label: "XP from Individual Activities",
           icon: Trophy,
           iconColor: "text-purple-500",
         },
       ],
       activities: [
         {
-          name: "Strikes", // Keep original
-          icon: AlertTriangle, // Use correct original icon
+          name: `${userStrikes.length} Strikes`,
+          icon: AlertTriangle,
           iconColor: "text-red-500",
-          indicators: "••", // Keep original indicators
+          indicators: userStrikes.length > 0 ? "••" : "",
         },
         {
-          name: "30 Tests", // Keep original
-          label: "How Much Tests Done", // Keep original label
+          name: `${peerReviewStats.tasksReviewedByUser} Reviews`,
+          label: "Peer Reviews Completed",
           icon: FileText,
           iconColor: "text-pink-500",
         },
       ],
       actions: [
         {
-          text: "Submit Weekly Report", // Keep original
+          text: "Submit Weekly Report",
           icon: FileText,
           variant: "outline",
         },
         {
-          text: "View Progress", // Keep original
+          text: "View Progress",
           icon: FileText,
           variant: "default",
         },
@@ -287,28 +308,28 @@ function getDefaultPersonalProgressData(): PersonalProgressData {
     title: "Your Personal Progress",
     stats: [
       {
-        value: "500",
-        label: "Total Points Earned",
+        value: "0",
+        label: "Points from Individual Activities",
         icon: Star,
         iconColor: "text-orange-500",
       },
       {
         value: "0",
-        label: "Total XP Earned",
+        label: "XP from Individual Activities",
         icon: Trophy,
         iconColor: "text-purple-500",
       },
     ],
     activities: [
       {
-        name: "Strikes",
+        name: "0 Strikes",
         icon: AlertTriangle,
         iconColor: "text-red-500",
-        indicators: "••",
+        indicators: "",
       },
       {
-        name: "30 Tests",
-        label: "How Much Tests Done",
+        name: "0 Reviews",
+        label: "Peer Reviews Completed",
         icon: FileText,
         iconColor: "text-pink-500",
       },

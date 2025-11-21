@@ -5,20 +5,35 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { InlineAlert } from "@/components/ui/inline-alert";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DifficultyBadge } from "@/components/ui/difficulty-badge";
 
-import { Trophy, CheckCircle2, Users, ExternalLink, Clock } from "lucide-react";
+import {
+  Trophy,
+  CheckCircle2,
+  Users,
+  ExternalLink,
+  Clock,
+  History,
+  Medal,
+  Zap,
+  FileText,
+  User,
+  CreditCard,
+} from "lucide-react";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
 import {
   getAvailableTasksForReview,
   getMySubmittedTasksForReview,
   getPeerReviewStatsFromTransactions,
+  getCompletedPeerReviews,
 } from "@/lib/database";
 import { useApp } from "@/contexts/app-context";
 import { createClient } from "@/lib/supabase/client";
 import { TaskRow } from "@/components/tasks/task-row";
 
 import { TaskDetailsModal } from "@/components/ui/task-details-modal";
-import { FileText, User, Zap, CreditCard } from "lucide-react";
 
 interface PeerReviewStats {
   availableTasksCount: number;
@@ -47,6 +62,7 @@ interface AvailableTask {
     description: string;
     difficulty_level: number;
     base_xp_reward: number;
+    base_points_reward: number;
     category: string;
     peer_review_criteria?: Array<{
       category: string;
@@ -59,11 +75,40 @@ interface AvailableTask {
   } | null;
 }
 
+interface CompletedReview {
+  id: string;
+  task_id: string;
+  team_id: string;
+  assigned_to_user_id: string | null;
+  completed_at: string;
+  updated_at: string;
+  submission_data: Record<string, unknown>;
+  submission_notes?: string;
+  status: "approved" | "rejected";
+  review_feedback?: string;
+  tasks: {
+    id: string;
+    title: string;
+    description: string;
+    difficulty_level: number;
+    base_xp_reward: number;
+    base_points_reward: number;
+    category: string;
+  } | null;
+  teams: {
+    id: string;
+    name: string;
+  } | null;
+}
+
 export default function PeerReviewPage() {
   const { user } = useApp();
   const [availableTasks, setAvailableTasks] = useState<AvailableTask[]>([]);
   const [myTasks, setMyTasks] = useState<AvailableTask[]>([]);
   const [myAcceptedTasks, setMyAcceptedTasks] = useState<AvailableTask[]>([]);
+  const [completedReviews, setCompletedReviews] = useState<CompletedReview[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
   const [peerReviewStats, setPeerReviewStats] = useState<PeerReviewStats>({
     availableTasksCount: 0,
@@ -104,6 +149,15 @@ export default function PeerReviewPage() {
           getMySubmittedTasksForReview(user.id),
           getPeerReviewStatsFromTransactions(user.id),
         ]);
+
+        // Try to load completed peer reviews separately
+        let completedPeerReviews: CompletedReview[] = [];
+        try {
+          completedPeerReviews = await getCompletedPeerReviews(user.id);
+        } catch (reviewError) {
+          console.error("Error loading completed peer reviews:", reviewError);
+          // Continue without reviews - don't break the whole page
+        }
 
         // Load tasks that current user has accepted for review
         const supabase = createClient();
@@ -166,6 +220,9 @@ export default function PeerReviewPage() {
           console.error("Invalid accepted tasks data:", acceptedTasksData);
           setMyAcceptedTasks([]);
         }
+
+        // Set completed reviews (already typed correctly)
+        setCompletedReviews(completedPeerReviews);
 
         // Update peer review stats
         setPeerReviewStats({
@@ -307,11 +364,10 @@ export default function PeerReviewPage() {
 
     setSubmittingReview(true);
 
-    // Calculate rewards (base values, actual values come from backend)
-    const estimatedXP = selectedTaskForReview.tasks?.base_xp_reward
-      ? Math.round(selectedTaskForReview.tasks.base_xp_reward * 0.2)
-      : 20;
-    const estimatedPoints = Math.round(estimatedXP * 0.1);
+    // Calculate rewards (10% of task rewards, actual values come from backend)
+    const taskXP = selectedTaskForReview.tasks?.base_xp_reward || 20;
+    const estimatedXP = Math.max(1, Math.round(taskXP * 0.1));
+    const estimatedPoints = Math.max(1, Math.round(taskXP * 0.1)); // Assume points = XP for estimation
 
     // Store original state for potential revert
     const originalAcceptedTasks = [...myAcceptedTasks];
@@ -365,7 +421,7 @@ export default function PeerReviewPage() {
         setAlertState({
           variant: "success",
           message: `Review submitted successfully`,
-          description: `Task ${decision}. You earned ${estimatedXP} XP and ${estimatedPoints} points.`,
+          description: `Task ${decision}. You earned ${estimatedXP} XP and ${estimatedPoints} points (10% of task rewards).`,
         });
 
         // Refresh actual stats from database
@@ -464,7 +520,7 @@ export default function PeerReviewPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger
             value="available-tests"
             className="flex items-center gap-2"
@@ -479,6 +535,10 @@ export default function PeerReviewPage() {
           <TabsTrigger value="my-tasks" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             My Tasks
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            History
           </TabsTrigger>
         </TabsList>
 
@@ -524,7 +584,10 @@ export default function PeerReviewPage() {
                       Difficulty
                     </th>
                     <th className="text-left py-4 px-4 font-medium text-muted-foreground">
-                      XP Reward
+                      Reviewer XP (10%)
+                    </th>
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                      Reviewer Points (10%)
                     </th>
                     <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                       Submitted
@@ -538,10 +601,10 @@ export default function PeerReviewPage() {
                   {availableTasks.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="text-center py-8 text-muted-foreground"
                       >
-                        No tasks available for review
+                        No submitted tasks for review
                       </td>
                     </tr>
                   ) : (
@@ -554,6 +617,7 @@ export default function PeerReviewPage() {
                           variant="available"
                           onAction={() => acceptTaskForReview(task.id)}
                           actionLoading={acceptingTaskId === task.id}
+                          reviewerReward={true}
                           actionButtonText={
                             acceptingTaskId === task.id
                               ? "Accepting..."
@@ -598,7 +662,10 @@ export default function PeerReviewPage() {
                     Difficulty
                   </th>
                   <th className="text-left py-4 px-4 font-medium text-muted-foreground">
-                    XP Reward
+                    Reviewer XP (10%)
+                  </th>
+                  <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    Reviewer Points (10%)
                   </th>
                   <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                     Submitted
@@ -612,7 +679,7 @@ export default function PeerReviewPage() {
                 {myAcceptedTasks.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="text-center py-8 text-muted-foreground"
                     >
                       No tasks accepted for review yet
@@ -624,6 +691,7 @@ export default function PeerReviewPage() {
                       key={task.id}
                       task={task}
                       variant="review"
+                      reviewerReward={true}
                       onAction={() => openReviewModal(task)}
                       actionButtonText="Review Task"
                     />
@@ -678,7 +746,7 @@ export default function PeerReviewPage() {
                   {myTasks.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="text-center py-8 text-muted-foreground"
                       >
                         You haven&apos;t submitted any tasks for review
@@ -707,6 +775,186 @@ export default function PeerReviewPage() {
                           actionButtonVariant="outline"
                           showStatus={true}
                         />
+                      ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-6 mt-6">
+          {loading ? (
+            <div className="text-center py-8">
+              <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-muted-foreground">Loading review history...</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                      Task Reviewed
+                    </th>
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                      Team
+                    </th>
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                      Assignee
+                    </th>
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                      Difficulty
+                    </th>
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                      XP Earned
+                    </th>
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                      Points Earned
+                    </th>
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                      Status
+                    </th>
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                      Reviewed
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {completedReviews.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={8}
+                        className="text-center py-8 text-muted-foreground"
+                      >
+                        You haven&apos;t completed any peer reviews yet
+                      </td>
+                    </tr>
+                  ) : (
+                    completedReviews
+                      .filter((review) => review.tasks && review.teams) // Filter out reviews with null relations
+                      .map((review) => (
+                        <tr
+                          key={review.id}
+                          className="border-b border-border/50"
+                        >
+                          {/* Task Name */}
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
+                                <Medal className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <div className="font-medium text-sm">
+                                  {review.tasks?.title}
+                                </div>
+                                <div className="text-xs text-muted-foreground max-w-xs truncate">
+                                  {review.tasks?.description}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Team */}
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span className="text-sm font-medium">
+                                {review.teams?.name}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Assignee */}
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2">
+                              <Avatar className="w-6 h-6">
+                                <AvatarImage
+                                  src="/avatars/john-doe.jpg"
+                                  alt="Team Member"
+                                />
+                                <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-primary-foreground font-bold text-xs">
+                                  TM
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm font-medium">
+                                Team Member
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Difficulty */}
+                          <td className="py-4 px-4">
+                            <DifficultyBadge
+                              level={review.tasks?.difficulty_level || 1}
+                            />
+                          </td>
+
+                          {/* XP Earned */}
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-1">
+                              <Zap className="h-4 w-4 text-primary" />
+                              <span className="text-sm font-medium">
+                                {Math.max(
+                                  1,
+                                  Math.round(
+                                    (review.tasks?.base_xp_reward || 0) * 0.1
+                                  )
+                                )}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Points Earned */}
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-1">
+                              <Medal className="h-4 w-4 text-amber-500" />
+                              <span className="text-sm font-medium">
+                                {Math.max(
+                                  1,
+                                  Math.round(
+                                    (review.tasks?.base_points_reward || 0) *
+                                      0.1
+                                  )
+                                )}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Status */}
+                          <td className="py-4 px-4">
+                            <Badge
+                              variant={
+                                review.status === "approved"
+                                  ? "default"
+                                  : "destructive"
+                              }
+                              className={
+                                review.status === "approved"
+                                  ? "bg-green-100 text-green-800"
+                                  : ""
+                              }
+                            >
+                              {review.status === "approved"
+                                ? "Approved"
+                                : "Rejected"}
+                            </Badge>
+                          </td>
+
+                          {/* Reviewed Date */}
+                          <td className="py-4 px-4">
+                            <div className="text-sm text-muted-foreground">
+                              {new Date(review.updated_at).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )}
+                            </div>
+                          </td>
+                        </tr>
                       ))
                   )}
                 </tbody>

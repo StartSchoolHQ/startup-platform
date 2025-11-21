@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -50,6 +51,10 @@ export function AddClientMeetingModal({
   const [formData, setFormData] = useState({
     clientName: "",
     responsibleUserId: "",
+    howItWent: "",
+    clientType: "",
+    callType: "",
+    newThingsLearned: "",
   });
 
   const loadTeamMembers = useCallback(async () => {
@@ -105,6 +110,10 @@ export function AddClientMeetingModal({
         p_team_id: teamId,
         p_client_name: formData.clientName,
         p_responsible_user_id: formData.responsibleUserId,
+        p_how_it_went: formData.howItWent,
+        p_client_type: formData.clientType,
+        p_call_type: formData.callType,
+        p_new_things_learned: formData.newThingsLearned,
       });
 
       if (error) {
@@ -124,6 +133,10 @@ export function AddClientMeetingModal({
       setFormData({
         clientName: "",
         responsibleUserId: "",
+        howItWent: "",
+        clientType: "",
+        callType: "",
+        newThingsLearned: "",
       });
     } catch (error) {
       console.error("Error creating client meeting:", error);
@@ -144,7 +157,7 @@ export function AddClientMeetingModal({
           <DialogTitle>Add Client Meeting</DialogTitle>
           <DialogDescription>
             Schedule a new client meeting for your team. Complete it to earn 50
-            XP + 25 points!
+            XP + 25 points (split evenly among team members)!
           </DialogDescription>
         </DialogHeader>
 
@@ -190,6 +203,100 @@ export function AddClientMeetingModal({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="clientType">Client Type</Label>
+            <Select
+              value={formData.clientType}
+              onValueChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  clientType: value,
+                }))
+              }
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select client type..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="new">New Client</SelectItem>
+                <SelectItem value="returning">Returning Client</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="callType">Type of Call</Label>
+            <Select
+              value={formData.callType}
+              onValueChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  callType: value,
+                }))
+              }
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select call type..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="discovery">Discovery Call</SelectItem>
+                <SelectItem value="demo">Product Demo</SelectItem>
+                <SelectItem value="follow_up">Follow-up Call</SelectItem>
+                <SelectItem value="consultation">Consultation</SelectItem>
+                <SelectItem value="proposal">Proposal Presentation</SelectItem>
+                <SelectItem value="check_in">Check-in Meeting</SelectItem>
+                <SelectItem value="support">Support Call</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="howItWent">How It Went</Label>
+            <Select
+              value={formData.howItWent}
+              onValueChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  howItWent: value,
+                }))
+              }
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select outcome..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="excellent">
+                  Excellent - Exceeded expectations
+                </SelectItem>
+                <SelectItem value="good">Good - Met expectations</SelectItem>
+                <SelectItem value="average">
+                  Average - Some challenges
+                </SelectItem>
+                <SelectItem value="poor">Poor - Major issues</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="newThingsLearned">New Things You Learned</Label>
+            <Textarea
+              id="newThingsLearned"
+              placeholder="Share insights, client feedback, or lessons learned from this meeting..."
+              value={formData.newThingsLearned}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  newThingsLearned: e.target.value,
+                }))
+              }
+              rows={3}
+            />
           </div>
 
           <DialogFooter>

@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { AppProvider } from "@/contexts/app-context";
-import { DashboardLayoutClient } from "../../components/dashboard-layout-client";
+import { DashboardLayoutWrapper } from "./dashboard-layout-wrapper";
 
 export default async function DashboardLayout({
   children,
@@ -20,9 +19,5 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  return (
-    <AppProvider>
-      <DashboardLayoutClient>{children}</DashboardLayoutClient>
-    </AppProvider>
-  );
+  return <DashboardLayoutWrapper>{children}</DashboardLayoutWrapper>;
 }

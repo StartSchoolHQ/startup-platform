@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import {
   Building2,
   Zap,
@@ -8,11 +7,13 @@ import {
   CheckCircle,
   X,
   Calendar,
+  Eye,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getTeamClientMeetings } from "@/lib/database";
 import { toast } from "sonner";
+import { ViewClientMeetingModal } from "./view-client-meeting-modal";
 
 interface DatabaseClientMeeting {
   id: string;
@@ -22,6 +23,10 @@ interface DatabaseClientMeeting {
   completed_at: string | null;
   cancelled_at: string | null;
   responsible_user_id: string;
+  client_type?: string;
+  call_type?: string;
+  how_it_went?: string;
+  new_things_learned?: string;
   users: {
     id: string;
     name: string | null;
@@ -50,6 +55,9 @@ export function ClientMeetingsTable({
   const [cancellingMeetings, setCancellingMeetings] = useState<Set<string>>(
     new Set()
   );
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedMeeting, setSelectedMeeting] =
+    useState<DatabaseClientMeeting | null>(null);
 
   const loadMeetings = useCallback(async () => {
     try {
@@ -85,7 +93,9 @@ export function ClientMeetingsTable({
         throw new Error(`Failed to complete meeting: ${error.message}`);
       }
 
-      toast.success("Meeting completed! You earned 50 XP + 25 points! 🎉");
+      toast.success(
+        "Meeting completed! Team earned 50 XP + 25 points (split evenly)! 🎉"
+      );
 
       // Refresh the meetings data
       await loadMeetings();
@@ -151,29 +161,6 @@ export function ClientMeetingsTable({
     }
   };
 
-  const getStatusBadge = (meeting: DatabaseClientMeeting) => {
-    switch (meeting.status) {
-      case "completed":
-        return (
-          <Badge variant="default" className="bg-green-100 text-green-800">
-            Completed
-          </Badge>
-        );
-      case "cancelled":
-        return (
-          <Badge variant="secondary" className="bg-gray-100 text-gray-800">
-            Cancelled
-          </Badge>
-        );
-      default:
-        return (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700">
-            Pending
-          </Badge>
-        );
-    }
-  };
-
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "Not set";
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -185,11 +172,14 @@ export function ClientMeetingsTable({
   };
 
   const canManageMeeting = (meeting: DatabaseClientMeeting) => {
-    return (
-      isTeamMember &&
-      userId === meeting.responsible_user_id &&
-      (meeting.status === "pending" || meeting.status === "scheduled")
-    );
+    // Since meetings are logged post-factum, they are always completed
+    // No management actions needed
+    return false;
+  };
+
+  const handleViewMeeting = (meeting: DatabaseClientMeeting) => {
+    setSelectedMeeting(meeting);
+    setViewModalOpen(true);
   };
 
   if (loading) {
@@ -227,9 +217,6 @@ export function ClientMeetingsTable({
                 Responsible
               </th>
               <th className="text-left py-4 px-4 font-medium text-muted-foreground">
-                Status
-              </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
                 Rewards
               </th>
               <th className="text-right py-4 px-4 font-medium text-muted-foreground">
@@ -260,6 +247,7 @@ export function ClientMeetingsTable({
                     </div>
                   </div>
                 </td>
+
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-2">
                     <Avatar className="w-8 h-8">
@@ -282,17 +270,11 @@ export function ClientMeetingsTable({
                         {meeting.users?.name || "Unknown User"}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {meeting.status === "completed" && meeting.completed_at
-                          ? `Completed ${formatDate(meeting.completed_at)}`
-                          : meeting.status === "cancelled" &&
-                            meeting.cancelled_at
-                          ? `Cancelled ${formatDate(meeting.cancelled_at)}`
-                          : "Responsible person"}
+                        {formatDate(meeting.created_at)}
                       </div>
                     </div>
                   </div>
                 </td>
-                <td className="py-4 px-4">{getStatusBadge(meeting)}</td>
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1">
@@ -307,45 +289,15 @@ export function ClientMeetingsTable({
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex justify-end gap-2">
-                    {canManageMeeting(meeting) ? (
-                      <>
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="text-xs bg-green-600 hover:bg-green-700"
-                          onClick={() => handleCompleteMeeting(meeting.id)}
-                          disabled={completingMeetings.has(meeting.id)}
-                        >
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          {completingMeetings.has(meeting.id)
-                            ? "Completing..."
-                            : "Complete"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs"
-                          onClick={() => handleCancelMeeting(meeting.id)}
-                          disabled={cancellingMeetings.has(meeting.id)}
-                        >
-                          <X className="h-3 w-3 mr-1" />
-                          {cancellingMeetings.has(meeting.id)
-                            ? "Cancelling..."
-                            : "Cancel"}
-                        </Button>
-                      </>
-                    ) : (
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {meeting.status === "completed"
-                          ? "Completed"
-                          : meeting.status === "cancelled"
-                          ? "Cancelled"
-                          : meeting.status === "scheduled"
-                          ? "Scheduled"
-                          : "Pending"}
-                      </div>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => handleViewMeeting(meeting)}
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      View
+                    </Button>
                   </div>
                 </td>
               </tr>
@@ -353,6 +305,18 @@ export function ClientMeetingsTable({
           </tbody>
         </table>
       </div>
+
+      {/* View Meeting Modal */}
+      {selectedMeeting && (
+        <ViewClientMeetingModal
+          isOpen={viewModalOpen}
+          onClose={() => {
+            setViewModalOpen(false);
+            setSelectedMeeting(null);
+          }}
+          meeting={selectedMeeting}
+        />
+      )}
     </div>
   );
 }

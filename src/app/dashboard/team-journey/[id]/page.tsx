@@ -1270,9 +1270,17 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           onOpenChange={setShowWeeklyReportModal}
           teamId={team.id}
           userId={user.id}
-          onSuccess={() => {
-            checkWeeklyReportStatus();
-            checkAllMemberStatuses();
+          onSuccess={async () => {
+            // Refresh both user's submission status, all member statuses, and weekly reports data
+            try {
+              await Promise.all([
+                checkWeeklyReportStatus(),
+                checkAllMemberStatuses(),
+                loadWeeklyReports(),
+              ]);
+            } catch (error) {
+              console.error("Error refreshing weekly report status:", error);
+            }
           }}
         />
       )}

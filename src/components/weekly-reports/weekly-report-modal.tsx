@@ -37,8 +37,6 @@ export function WeeklyReportModal({
     whatDidYouDoThisWeek: "",
     whatWereYourBlockers: "",
     whatWasYourBiggestAchievement: "",
-    clientsContacted: 0,
-    meetingsHeld: 0,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,8 +58,6 @@ export function WeeklyReportModal({
         whatDidYouDoThisWeek: formData.whatDidYouDoThisWeek,
         whatWereYourBlockers: formData.whatWereYourBlockers,
         whatWasYourBiggestAchievement: formData.whatWasYourBiggestAchievement,
-        clientsContacted: formData.clientsContacted,
-        meetingsHeld: formData.meetingsHeld,
         submittedAt: new Date().toISOString(),
       };
 
@@ -101,8 +97,6 @@ export function WeeklyReportModal({
         whatDidYouDoThisWeek: "",
         whatWereYourBlockers: "",
         whatWasYourBiggestAchievement: "",
-        clientsContacted: 0,
-        meetingsHeld: 0,
       });
     } catch (error) {
       console.error("Error submitting weekly report:", error);
@@ -182,42 +176,6 @@ export function WeeklyReportModal({
               required
               rows={3}
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="clientsContacted">Clients Contacted</Label>
-              <Input
-                id="clientsContacted"
-                type="number"
-                min="0"
-                placeholder="0"
-                value={formData.clientsContacted}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    clientsContacted: parseInt(e.target.value) || 0,
-                  }))
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="meetingsHeld">Meetings Held</Label>
-              <Input
-                id="meetingsHeld"
-                type="number"
-                min="0"
-                placeholder="0"
-                value={formData.meetingsHeld}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    meetingsHeld: parseInt(e.target.value) || 0,
-                  }))
-                }
-              />
-            </div>
           </div>
 
           <DialogFooter>

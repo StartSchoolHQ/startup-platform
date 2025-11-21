@@ -14,6 +14,7 @@ interface Task {
     description: string;
     difficulty_level: number;
     base_xp_reward: number;
+    base_points_reward: number;
   } | null;
   teams?: {
     id: string;
@@ -32,6 +33,7 @@ interface TaskRowProps {
   actionButtonDisabled?: boolean;
   actionButtonVariant?: "default" | "outline" | "destructive";
   showStatus?: boolean;
+  reviewerReward?: boolean; // Show 10% of XP as reviewer reward
 }
 
 export function TaskRow({
@@ -43,6 +45,7 @@ export function TaskRow({
   actionButtonDisabled = false,
   actionButtonVariant = "default",
   showStatus = false,
+  reviewerReward = false,
 }: TaskRowProps) {
   if (!task.tasks || !task.teams) {
     return null; // Skip tasks with null relations
@@ -94,7 +97,29 @@ export function TaskRow({
           <div className="flex items-center gap-1">
             <Zap className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium">
-              {task.tasks.base_xp_reward}
+              {reviewerReward
+                ? Math.max(
+                    1,
+                    Math.round((task.tasks.base_xp_reward || 0) * 0.1)
+                  )
+                : task.tasks.base_xp_reward || 0}
+            </span>
+          </div>
+        </td>
+      )}
+
+      {/* Points Reward (only show if not showing status) */}
+      {!showStatus && (
+        <td className="py-4 px-4">
+          <div className="flex items-center gap-1">
+            <Medal className="h-4 w-4 text-amber-500" />
+            <span className="text-sm font-medium">
+              {reviewerReward
+                ? Math.max(
+                    1,
+                    Math.round((task.tasks.base_points_reward || 0) * 0.1)
+                  )
+                : task.tasks.base_points_reward || 0}
             </span>
           </div>
         </td>
