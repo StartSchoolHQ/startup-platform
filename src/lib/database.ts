@@ -176,8 +176,10 @@ export async function getIndividualActivityStats(userId: string) {
   const totalActivities = transactions.length;
 
   // Count by activity type
-  const meetingsCount = transactions.filter(t => t.type === 'meeting').length;
-  const achievementsCount = transactions.filter(t => t.type === 'achievement').length;
+  const meetingsCount = transactions.filter((t) => t.type === "meeting").length;
+  const achievementsCount = transactions.filter(
+    (t) => t.type === "achievement"
+  ).length;
 
   return {
     totalXpEarned,
