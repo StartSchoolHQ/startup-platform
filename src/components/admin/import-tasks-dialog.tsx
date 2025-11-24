@@ -81,10 +81,22 @@ export function ImportTasksDialog() {
       for (let i = 0; i < parsedTasks.length; i++) {
         const task = parsedTasks[i];
         try {
+          // Convert semicolon-separated strings to arrays
+          const learningObjectives = task.learning_objectives
+            ? task.learning_objectives.split(';').map(s => s.trim()).filter(s => s)
+            : undefined;
+          const deliverables = task.deliverables
+            ? task.deliverables.split(';').map(s => s.trim()).filter(s => s)
+            : undefined;
+          const tags = task.tags
+            ? task.tags.split(';').map(s => s.trim()).filter(s => s)
+            : undefined;
+
           const result = await createTask({
             templateCode: task.template_code,
             title: task.title,
             description: task.description,
+            detailedInstructions: task.detailed_instructions,
             category: task.category,
             priority: task.priority,
             difficultyLevel: task.difficulty_level,
@@ -93,6 +105,11 @@ export function ImportTasksDialog() {
             basePointsReward: task.base_points_reward,
             requiresReview: task.requires_review,
             autoAssignToNewTeams: task.auto_assign_to_new_teams,
+            taskContext: "team", // Default to team for Excel imports
+            learningObjectives,
+            deliverables,
+            reviewInstructions: task.review_instructions,
+            tags,
           });
 
           // Parse the JSON response from the database function
@@ -231,9 +248,9 @@ export function ImportTasksDialog() {
                       {task.template_code}: {task.title}
                     </div>
                     <div className="text-muted-foreground">
-                      Category: {task.category} | Priority: {task.priority} |
-                      XP: {task.base_xp_reward} | Points:{" "}
-                      {task.base_points_reward}
+                      Category: {task.category} | Priority: {task.priority} | Difficulty: {task.difficulty_level} |
+                      XP: {task.base_xp_reward} | Points: {task.base_points_reward}
+                      {task.tags && <span> | Tags: {task.tags}</span>}
                     </div>
                   </div>
                 ))}
