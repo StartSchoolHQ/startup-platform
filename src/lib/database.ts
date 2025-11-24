@@ -2457,8 +2457,9 @@ export async function assignTeamTaskToProgress(
 export async function getCompletedPeerReviews(userId: string) {
   const supabase = createClient();
 
-  const { data, error } = await supabase
-    .from("task_progress" as never)
+  // First, get the task progress data without the user join
+  const { data: taskProgressData, error } = await supabase
+    .from("task_progress")
     .select(
       `
       id,
@@ -2497,5 +2498,143 @@ export async function getCompletedPeerReviews(userId: string) {
     throw error;
   }
 
-  return data || [];
+  if (!taskProgressData || taskProgressData.length === 0) {
+    return [];
+  }
+
+  // Get all unique assigned user IDs
+  const assignedUserIds = [
+    ...new Set(
+      taskProgressData
+        .map((task) => task.assigned_to_user_id)
+        .filter((id) => id !== null)
+    ),
+  ];
+
+  // Fetch user data separately
+  let usersData: Array<{ id: string; name: string | null; avatar_url: string | null }> = [];
+  if (assignedUserIds.length > 0) {
+    const { data: users, error: usersError } = await supabase
+      .from("users")
+      .select("id, name, avatar_url")
+      .in("id", assignedUserIds);
+
+    if (usersError) {
+      console.error("Error fetching users:", usersError);
+    } else {
+      usersData = users || [];
+    }
+  }
+
+  // Combine the data
+  const combinedData = taskProgressData.map((task) => ({
+    ...task,
+    assigned_user: task.assigned_to_user_id
+      ? usersData.find((user) => user.id === task.assigned_to_user_id) || null
+      : null,
+  }));
+
+  return combinedData;
+}
+
+// Rich content interfaces
+interface TipContent {
+  title: string;
+  content: string;
+}
+
+interface PeerReviewCriteria {
+  category: string;
+  points: string[];
+}
+
+interface ResourceItem {
+  title: string;
+  description: string;
+  type: "documentation" | "video" | "article" | "tool" | "example";
+  url?: string;
+}
+
+// Task creation types
+interface CreateTaskParams {
+  templateCode: string;
+  title: string;
+  description?: string;
+  detailedInstructions?: string;
+  category?:
+    | "onboarding"
+    | "development"
+    | "design"
+    | "marketing"
+    | "business"
+    | "testing"
+    | "deployment"
+    | "milestone";
+  priority?: "low" | "medium" | "high" | "urgent";
+  difficultyLevel?: number;
+  estimatedHours?: number;
+  baseXpReward?: number;
+  basePointsReward?: number;
+  requiresReview?: boolean;
+  autoAssignToNewTeams?: boolean;
+  achievementId?: string;
+  taskContext?: "individual" | "team";
+  // Rich content fields
+  tipsContent?: TipContent[];
+  peerReviewCriteria?: PeerReviewCriteria[];
+  learningObjectives?: string[];
+  deliverables?: string[];
+  resources?: ResourceItem[];
+  reviewInstructions?: string;
+  tags?: string[];
+  sortOrder?: number;
+  prerequisiteTemplateCodes?: string[];
+  minimumTeamLevel?: number;
+}
+
+/**
+ * Create a new task and assign it to all existing teams or users based on context
+ */
+export async function createTask(params: CreateTaskParams) {
+  const supabase = createClient();
+
+  // Use different RPC functions based on task context
+  const rpcFunction =
+    params.taskContext === "individual"
+      ? "create_individual_task_and_assign_to_users"
+      : "create_task_and_assign_to_all_teams";
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.rpc as any)(rpcFunction, {
+    p_template_code: params.templateCode,
+    p_title: params.title,
+    p_description: params.description || null,
+    p_detailed_instructions: params.detailedInstructions || null,
+    p_category: params.category || "development",
+    p_priority: params.priority || "medium",
+    p_difficulty_level: params.difficultyLevel || 1,
+    p_estimated_hours: params.estimatedHours || 0,
+    p_base_xp_reward: params.baseXpReward || 0,
+    p_base_points_reward: params.basePointsReward || 0,
+    p_requires_review: params.requiresReview || false,
+    p_tips_content: params.tipsContent || [],
+    p_peer_review_criteria: params.peerReviewCriteria || [],
+    p_learning_objectives: params.learningObjectives || null,
+    p_deliverables: params.deliverables || null,
+    p_resources: params.resources || [],
+    p_review_instructions: params.reviewInstructions || null,
+    p_tags: params.tags || null,
+    p_sort_order: params.sortOrder || 0,
+    p_prerequisite_template_codes: params.prerequisiteTemplateCodes || null,
+    p_minimum_team_level: params.minimumTeamLevel || 1,
+    p_auto_assign_to_new_teams: params.autoAssignToNewTeams !== false,
+    p_achievement_id: params.achievementId || null,
+  });
+
+  if (error) {
+    console.error("Error creating task:", error);
+    throw error;
+  }
+
+  return data;
 }

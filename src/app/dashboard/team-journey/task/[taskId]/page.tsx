@@ -484,25 +484,33 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                       </h3>
                       <div className="grid gap-3">
                         {task.resources.map((resource, index) => (
-                          <div
+                          <a
                             key={index}
-                            className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50"
+                            href={resource.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 hover:border-blue-300 transition-colors group cursor-pointer"
                           >
-                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 group-hover:bg-blue-200">
                               <FileText className="h-4 w-4 text-blue-600" />
                             </div>
                             <div className="flex-1">
-                              <div className="font-medium">
+                              <div className="font-medium text-blue-700 group-hover:text-blue-800">
                                 {resource.title}
                               </div>
-                              <div className="text-sm text-gray-600">
-                                {resource.description}
-                              </div>
+                              {resource.description && (
+                                <div className="text-sm text-gray-600">
+                                  {resource.description}
+                                </div>
+                              )}
                               <div className="text-xs text-blue-600 capitalize">
-                                {resource.type}
+                                {resource.type} • Click to open
+                              </div>
+                              <div className="text-xs text-gray-400 mt-1 truncate">
+                                {resource.url}
                               </div>
                             </div>
-                          </div>
+                          </a>
                         ))}
                       </div>
                     </div>

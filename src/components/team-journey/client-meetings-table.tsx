@@ -1,16 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Building2,
-  Zap,
-  CreditCard,
-  CheckCircle,
-  X,
-  Calendar,
-  Eye,
-} from "lucide-react";
+import { Building2, Zap, CreditCard, Eye } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { getTeamClientMeetings } from "@/lib/database";
 import { toast } from "sonner";
 import { ViewClientMeetingModal } from "./view-client-meeting-modal";
@@ -37,24 +28,15 @@ interface DatabaseClientMeeting {
 interface ClientMeetingsTableProps {
   teamId: string;
   isTeamMember: boolean;
-  userId?: string;
   onDataChange?: () => void; // For refreshing parent component
 }
 
 export function ClientMeetingsTable({
   teamId,
   isTeamMember,
-  userId,
-  onDataChange,
 }: ClientMeetingsTableProps) {
   const [meetings, setMeetings] = useState<DatabaseClientMeeting[]>([]);
   const [loading, setLoading] = useState(true);
-  const [completingMeetings, setCompletingMeetings] = useState<Set<string>>(
-    new Set()
-  );
-  const [cancellingMeetings, setCancellingMeetings] = useState<Set<string>>(
-    new Set()
-  );
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] =
     useState<DatabaseClientMeeting | null>(null);
@@ -77,90 +59,6 @@ export function ClientMeetingsTable({
     loadMeetings();
   }, [loadMeetings]);
 
-  const handleCompleteMeeting = async (meetingId: string) => {
-    setCompletingMeetings((prev) => new Set(prev).add(meetingId));
-
-    try {
-      const supabase = createClient();
-
-      // Call our RPC function to complete the meeting
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.rpc as any)("complete_client_meeting", {
-        p_meeting_id: meetingId,
-      });
-
-      if (error) {
-        throw new Error(`Failed to complete meeting: ${error.message}`);
-      }
-
-      toast.success(
-        "Meeting completed! Team earned 50 XP + 25 points (split evenly)! 🎉"
-      );
-
-      // Refresh the meetings data
-      await loadMeetings();
-
-      // Notify parent to refresh if needed
-      if (onDataChange) {
-        onDataChange();
-      }
-    } catch (error) {
-      console.error("Error completing meeting:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to complete meeting. Please try again."
-      );
-    } finally {
-      setCompletingMeetings((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(meetingId);
-        return newSet;
-      });
-    }
-  };
-
-  const handleCancelMeeting = async (meetingId: string) => {
-    setCancellingMeetings((prev) => new Set(prev).add(meetingId));
-
-    try {
-      const supabase = createClient();
-
-      // Call our RPC function to cancel the meeting
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.rpc as any)("cancel_client_meeting", {
-        p_meeting_id: meetingId,
-      });
-
-      if (error) {
-        throw new Error(`Failed to cancel meeting: ${error.message}`);
-      }
-
-      toast.success("Meeting cancelled successfully");
-
-      // Refresh the meetings data
-      await loadMeetings();
-
-      // Notify parent to refresh if needed
-      if (onDataChange) {
-        onDataChange();
-      }
-    } catch (error) {
-      console.error("Error cancelling meeting:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to cancel meeting. Please try again."
-      );
-    } finally {
-      setCancellingMeetings((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(meetingId);
-        return newSet;
-      });
-    }
-  };
-
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "Not set";
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -169,12 +67,6 @@ export function ClientMeetingsTable({
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
-
-  const canManageMeeting = (meeting: DatabaseClientMeeting) => {
-    // Since meetings are logged post-factum, they are always completed
-    // No management actions needed
-    return false;
   };
 
   const handleViewMeeting = (meeting: DatabaseClientMeeting) => {

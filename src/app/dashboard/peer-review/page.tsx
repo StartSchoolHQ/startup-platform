@@ -78,14 +78,14 @@ interface AvailableTask {
 interface CompletedReview {
   id: string;
   task_id: string;
-  team_id: string;
+  team_id: string | null;
   assigned_to_user_id: string | null;
-  completed_at: string;
+  completed_at: string | null;
   updated_at: string;
-  submission_data: Record<string, unknown>;
-  submission_notes?: string;
-  status: "approved" | "rejected";
-  review_feedback?: string;
+  submission_data: unknown;
+  submission_notes: string | null;
+  status: "not_started" | "in_progress" | "completed" | "cancelled" | "pending_review" | "approved" | "rejected" | "revision_required";
+  review_feedback: string | null;
   tasks: {
     id: string;
     title: string;
@@ -94,10 +94,15 @@ interface CompletedReview {
     base_xp_reward: number;
     base_points_reward: number;
     category: string;
-  } | null;
+  } | null | unknown;
   teams: {
     id: string;
     name: string;
+  } | null | unknown;
+  assigned_user: {
+    id: string;
+    name: string | null;
+    avatar_url: string | null;
   } | null;
 }
 
@@ -365,7 +370,7 @@ export default function PeerReviewPage() {
     setSubmittingReview(true);
 
     // Calculate rewards (10% of task rewards, actual values come from backend)
-    const taskXP = selectedTaskForReview.tasks?.base_xp_reward || 20;
+    const taskXP = (selectedTaskForReview.tasks && typeof selectedTaskForReview.tasks === 'object' && 'base_xp_reward' in selectedTaskForReview.tasks) ? Number(selectedTaskForReview.tasks.base_xp_reward) || 20 : 20;
     const estimatedXP = Math.max(1, Math.round(taskXP * 0.1));
     const estimatedPoints = Math.max(1, Math.round(taskXP * 0.1)); // Assume points = XP for estimation
 
@@ -846,10 +851,10 @@ export default function PeerReviewPage() {
                               </div>
                               <div>
                                 <div className="font-medium text-sm">
-                                  {review.tasks?.title}
+                                  {(review.tasks && typeof review.tasks === 'object' && 'title' in review.tasks) ? String(review.tasks.title) : 'Unknown Task'}
                                 </div>
                                 <div className="text-xs text-muted-foreground max-w-xs truncate">
-                                  {review.tasks?.description}
+                                  {(review.tasks && typeof review.tasks === 'object' && 'description' in review.tasks) ? String(review.tasks.description) : ''}
                                 </div>
                               </div>
                             </div>
@@ -860,7 +865,7 @@ export default function PeerReviewPage() {
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                               <span className="text-sm font-medium">
-                                {review.teams?.name}
+                                {(review.teams && typeof review.teams === 'object' && 'name' in review.teams) ? String(review.teams.name) : 'Unknown Team'}
                               </span>
                             </div>
                           </td>
@@ -870,15 +875,20 @@ export default function PeerReviewPage() {
                             <div className="flex items-center gap-2">
                               <Avatar className="w-6 h-6">
                                 <AvatarImage
-                                  src="/avatars/john-doe.jpg"
-                                  alt="Team Member"
+                                  src={
+                                    review.assigned_user?.avatar_url ||
+                                    "/avatars/default.jpg"
+                                  }
+                                  alt={review.assigned_user?.name || "User"}
                                 />
                                 <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-primary-foreground font-bold text-xs">
-                                  TM
+                                  {review.assigned_user?.name
+                                    ?.charAt(0)
+                                    .toUpperCase() || "U"}
                                 </AvatarFallback>
                               </Avatar>
                               <span className="text-sm font-medium">
-                                Team Member
+                                {review.assigned_user?.name || "Unknown User"}
                               </span>
                             </div>
                           </td>
@@ -886,7 +896,7 @@ export default function PeerReviewPage() {
                           {/* Difficulty */}
                           <td className="py-4 px-4">
                             <DifficultyBadge
-                              level={review.tasks?.difficulty_level || 1}
+                              level={(review.tasks && typeof review.tasks === 'object' && 'difficulty_level' in review.tasks) ? Number(review.tasks.difficulty_level) || 1 : 1}
                             />
                           </td>
 
@@ -898,7 +908,7 @@ export default function PeerReviewPage() {
                                 {Math.max(
                                   1,
                                   Math.round(
-                                    (review.tasks?.base_xp_reward || 0) * 0.1
+                                    ((review.tasks && typeof review.tasks === 'object' && 'base_xp_reward' in review.tasks) ? Number(review.tasks.base_xp_reward) || 0 : 0) * 0.1
                                   )
                                 )}
                               </span>
@@ -913,7 +923,7 @@ export default function PeerReviewPage() {
                                 {Math.max(
                                   1,
                                   Math.round(
-                                    (review.tasks?.base_points_reward || 0) *
+                                    ((review.tasks && typeof review.tasks === 'object' && 'base_points_reward' in review.tasks) ? Number(review.tasks.base_points_reward) || 0 : 0) *
                                       0.1
                                   )
                                 )}

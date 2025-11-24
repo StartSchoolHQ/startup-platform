@@ -195,7 +195,7 @@ export default function TeamJourneyPage() {
                 No products found
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
                 {allProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -210,7 +210,7 @@ export default function TeamJourneyPage() {
                 Product&quot; to get started!
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
                 {myProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -224,7 +224,7 @@ export default function TeamJourneyPage() {
                 No archived products
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
                 {archivedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}

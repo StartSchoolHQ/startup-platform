@@ -9,6 +9,7 @@ import {
   Users,
   FileText,
   Command,
+  Settings,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -54,6 +55,18 @@ const navMainItems = [
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useApp();
 
+  // Create navigation items based on user role
+  const navigationItems = [...navMainItems];
+
+  // Add admin section if user is admin
+  if (user?.primary_role === "admin") {
+    navigationItems.push({
+      title: "Admin",
+      url: "/dashboard/admin",
+      icon: Settings,
+    });
+  }
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -76,7 +89,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMainItems} />
+        <NavMain items={navigationItems} />
       </SidebarContent>
       <SidebarFooter>
         {user && (

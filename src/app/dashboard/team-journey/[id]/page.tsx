@@ -24,7 +24,6 @@ import { AddClientMeetingModal } from "@/components/team-journey/add-client-meet
 import {
   ExternalLink,
   FileText,
-  DollarSign,
   Users,
   Trophy,
   Zap,
@@ -562,21 +561,31 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   // Calculate real team stats
   const actualMemberCount = team.members?.length || 0;
 
+  // Calculate total team points and XP
+  const totalTeamPoints = team.members.reduce(
+    (sum, member) => sum + (member.users?.total_points || 0),
+    0
+  );
+  const totalTeamXP = team.members.reduce(
+    (sum, member) => sum + (member.users?.total_xp || 0),
+    0
+  );
+
   // Stats cards data for this team
   const statsCards: StatsCard[] = [
     {
-      title: "Total Revenue",
-      value: "$2,131.86",
-      subtitle: "+20% from last month",
-      icon: DollarSign,
-      iconColor: "text-green-500",
+      title: "Total Points",
+      value: totalTeamPoints.toLocaleString(),
+      subtitle: "All team members combined",
+      icon: Trophy,
+      iconColor: "text-amber-500",
     },
     {
-      title: "Clients",
-      value: "2",
-      subtitle: "+10% from last month",
-      icon: Users,
-      iconColor: "text-blue-500",
+      title: "Total XP",
+      value: totalTeamXP.toLocaleString(),
+      subtitle: "All team members combined",
+      icon: Zap,
+      iconColor: "text-purple-500",
     },
     {
       title: "Achievements",
@@ -1218,7 +1227,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               key={refreshTrigger}
               teamId={team.id}
               isTeamMember={isTeamMember}
-              userId={user?.id}
               onDataChange={() => {
                 // Refresh any dependent data when meetings change
                 loadWeeklyReports(); // This will refresh weekly reports if needed

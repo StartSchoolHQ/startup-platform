@@ -14,6 +14,7 @@ interface User {
   name: string | null;
   email: string;
   avatar_url: string | null;
+  primary_role: string | null;
   total_xp: number | null;
   total_points: number | null;
   graduation_level: number | null;
@@ -51,7 +52,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { data: userProfile, error: profileError } = await supabase
         .from("users")
         .select(
-          "id, name, email, avatar_url, total_xp, total_points, graduation_level, created_at"
+          "id, name, email, avatar_url, primary_role, total_xp, total_points, graduation_level, created_at"
         )
         .eq("id", authUser.id)
         .single();
@@ -77,7 +78,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { data: userProfile, error: profileError } = await supabase
         .from("users")
         .select(
-          "id, name, email, avatar_url, total_xp, total_points, graduation_level, created_at"
+          "id, name, email, avatar_url, primary_role, total_xp, total_points, graduation_level, created_at"
         )
         .eq("id", user.id)
         .single();

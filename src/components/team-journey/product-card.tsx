@@ -17,7 +17,7 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   return (
     <Card
-      className={`w-full transition-all duration-200 ${
+      className={`w-full h-full flex flex-col transition-all duration-200 ${
         product.isCurrentUserMember
           ? "ring-2 ring-primary/20 border-primary/30 bg-primary/5"
           : ""
@@ -25,11 +25,22 @@ export function ProductCard({ product }: ProductCardProps) {
     >
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
-          <div className="space-y-1">
+          <div className="space-y-1 flex-1 mr-3">
             <h3 className="font-semibold text-lg">{product.name}</h3>
-            <p className="text-sm text-muted-foreground">
-              {product.description}
-            </p>
+            <div className="h-10 overflow-hidden">
+              <p
+                className="text-sm text-muted-foreground leading-5"
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {product.description}
+              </p>
+            </div>
           </div>
           <Badge
             variant={product.status === "Active" ? "default" : "secondary"}
@@ -44,7 +55,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4 pb-4">
+      <CardContent className="space-y-4 pb-4 flex-grow">
         {/* Metrics */}
         <div className="space-y-4">
           {/* Clients */}
@@ -90,7 +101,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </CardContent>
 
-      <CardFooter className="pt-0 flex items-center justify-between">
+      <CardFooter className="pt-0 flex items-center justify-between mt-auto">
         {/* Team Members Avatar Stack */}
         <AvatarStack users={product.teamMembers} maxVisible={4} size="md" />
 
