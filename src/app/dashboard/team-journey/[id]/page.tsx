@@ -43,12 +43,13 @@ import {
   getTeamStrikes,
   getTeamWeeklyReports,
   getTeamAchievements,
+  getTeamTasksVisible,
 } from "@/lib/database";
 import { StatsCard } from "@/types/dashboard";
 import { useEffect, useState, useCallback } from "react";
 import { useAppContext } from "@/contexts/app-context";
 import { hasUserSubmittedThisWeek } from "@/lib/weekly-reports";
-import { assignTaskToMember, startTask } from "@/lib/tasks";
+import { assignTaskToMember, startTask, startTaskLazy } from "@/lib/tasks";
 import { getTasksByAchievement } from "@/lib/database";
 import { Achievement, TaskWithAchievement } from "@/types/dashboard";
 
@@ -159,16 +160,22 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   // Handle task assignment - optimistic update
   const handleAssignTask = useCallback(
     async (taskId: string, userId: string) => {
-      if (!team?.id || !user?.id) return;
+      if (!team?.id || !user?.id) {
+        console.error("Missing team ID or user ID for assignment");
+        return;
+      }
+
+      console.log("Assigning task:", { taskId, userId, teamId: team.id });
 
       try {
         // Find the member details for the UI update
         const assignedMember = team?.members.find((m) => m.user_id === userId);
 
         // Optimistically update the UI immediately
+        // Handle both progress_id and task_id matches
         setFilteredTasks((prevTasks) =>
           prevTasks.map((task) =>
-            task.progress_id === taskId
+            task.progress_id === taskId || task.task_id === taskId
               ? {
                   ...task,
                   assigned_to_user_id: userId,
@@ -181,8 +188,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           )
         );
 
-        // Make the actual API call
-        const success = await assignTaskToMember(taskId, userId);
+        // Make the actual API call with team ID for lazy progress creation
+        const success = await assignTaskToMember(taskId, userId, team.id);
 
         if (!success) {
           // If it failed, revert the optimistic update
@@ -206,10 +213,18 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         // Find current user details for the UI update
         const currentMember = team?.members.find((m) => m.user_id === user.id);
 
+        // For new lazy progress model: taskId might be task_id (for new tasks) or progress_id (for existing tasks)
+        // Check if this is a task_id (new task) or progress_id (existing progress)
+        const isNewTask = !filteredTasks.find((t) => t.progress_id === taskId);
+        const actualTaskId = isNewTask
+          ? taskId
+          : filteredTasks.find((t) => t.progress_id === taskId)?.task_id ||
+            taskId;
+
         // Optimistically update the UI immediately
         setFilteredTasks((prevTasks) =>
           prevTasks.map((task) =>
-            task.progress_id === taskId
+            task.progress_id === taskId || task.task_id === taskId
               ? {
                   ...task,
                   assigned_to_user_id: user.id,
@@ -222,25 +237,38 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   assigned_at: new Date().toISOString(),
                   started_at: new Date().toISOString(),
                   status: "in_progress" as const,
+                  progress_id: task.progress_id || "temp-" + Date.now(), // Generate temp ID for new tasks
                 }
               : task
           )
         );
 
-        // Make the actual API call - this handles both assignment and starting
-        const success = await startTask(taskId, user.id);
+        // PHASE 2: Use lazy progress creation for new tasks without existing progress
+        const success = isNewTask
+          ? await startTaskLazy(actualTaskId, team.id, user.id, "team")
+          : await startTask(taskId, user.id);
 
         if (!success) {
           // If it failed, revert the optimistic update
           console.error("Failed to start task - reverting");
           setRefreshTrigger((prev) => prev + 1); // Trigger reload
+        } else if (isNewTask) {
+          // For newly created progress entries, refresh to get the real progress_id
+          setTimeout(() => setRefreshTrigger((prev) => prev + 1), 500);
         }
       } catch (error) {
         console.error("Error starting task:", error);
         setRefreshTrigger((prev) => prev + 1); // Trigger reload on error
       }
     },
-    [team?.id, team?.members, user?.id, user?.name, user?.avatar_url]
+    [
+      team?.id,
+      team?.members,
+      user?.id,
+      user?.name,
+      user?.avatar_url,
+      filteredTasks,
+    ]
   );
 
   // Load team data
@@ -314,28 +342,28 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       const achievementsData = await getTeamAchievements(teamId);
       setAchievements(achievementsData);
 
-      // Load all tasks for this team
-      const allTasks = await getTasksByAchievement(undefined, teamId);
+      // PHASE 2: Use new visible tasks approach - shows ALL active tasks with lazy progress
+      const allTasks = await getTeamTasksVisible(teamId);
       const tasksArray = Array.isArray(allTasks) ? allTasks : [];
 
       setFilteredTasks(
         tasksArray.map((task) => ({
           progress_id: task.progress_id,
           task_id: task.task_id,
-          title: task.title,
-          description: task.description,
+          title: task.task_title, // Fixed: use task_title from function response
+          description: task.task_description, // Fixed: use task_description from function response
           category: task.category,
           difficulty_level: task.difficulty_level,
           base_xp_reward: task.base_xp_reward,
           base_credits_reward: task.base_points_reward,
-          status: task.status,
+          status: task.progress_status || "not_started", // Fixed: use progress_status from function response
           assigned_to_user_id: task.assigned_to_user_id,
           assignee_name: task.assignee_name,
           assignee_avatar_url: task.assignee_avatar_url,
           assigned_at: task.assigned_at,
           started_at: task.started_at,
           completed_at: task.completed_at,
-          is_available: task.is_available,
+          is_available: task.is_available !== false, // Default to true for template visibility
           achievement_id: task.achievement_id,
           achievement_name: task.achievement_name,
         }))
@@ -485,30 +513,34 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
       try {
         if (!teamId) return;
-        const tasks = await getTasksByAchievement(
-          achievementId || undefined,
-          teamId as string
-        );
+
+        // PHASE 2: Use new visible tasks approach and filter client-side by achievement
+        const tasks = await getTeamTasksVisible(teamId);
         const tasksArray = Array.isArray(tasks) ? tasks : [];
 
+        // Filter by achievement if specified
+        const filteredTasksArray = achievementId
+          ? tasksArray.filter((task) => task.achievement_id === achievementId)
+          : tasksArray;
+
         setFilteredTasks(
-          tasksArray.map((task) => ({
+          filteredTasksArray.map((task) => ({
             progress_id: task.progress_id,
             task_id: task.task_id,
-            title: task.title,
-            description: task.description,
+            title: task.task_title, // Fixed: use task_title from function response
+            description: task.task_description, // Fixed: use task_description from function response
             category: task.category,
             difficulty_level: task.difficulty_level,
             base_xp_reward: task.base_xp_reward,
             base_credits_reward: task.base_points_reward,
-            status: task.status,
+            status: task.progress_status || "not_started", // Fixed: use progress_status from function response
             assigned_to_user_id: task.assigned_to_user_id,
             assignee_name: task.assignee_name,
             assignee_avatar_url: task.assignee_avatar_url,
             assigned_at: task.assigned_at,
             started_at: task.started_at,
             completed_at: task.completed_at,
-            is_available: task.is_available,
+            is_available: task.is_available !== false, // Default to true for template visibility
             achievement_id: task.achievement_id,
             achievement_name: task.achievement_name,
           }))
@@ -1054,20 +1086,18 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             <div className="flex items-center justify-center py-8">
               <div className="text-gray-500">Loading tasks...</div>
             </div>
-          ) : filteredTasks.filter((t) => t.progress_id).length === 0 ? (
+          ) : filteredTasks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {selectedAchievementId
-                ? "No started tasks found for this achievement"
-                : "No started tasks available for this team. Team members need to start tasks first."}
+                ? "No tasks found for this achievement"
+                : "No tasks available for this team."}
             </div>
           ) : (
             <div className="space-y-4">
               {/* Task filtering info */}
               <div className="text-sm text-muted-foreground">
-                Showing {filteredTasks.filter((t) => t.progress_id).length} task
-                {filteredTasks.filter((t) => t.progress_id).length !== 1
-                  ? "s"
-                  : ""}
+                Showing {filteredTasks.length} task
+                {filteredTasks.length !== 1 ? "s" : ""}
                 {selectedAchievementId && (
                   <span>
                     {" "}
@@ -1079,50 +1109,48 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     }
                   </span>
                 )}{" "}
-                that have been started
+                available to this team
               </div>
 
               {/* Convert filtered tasks to TaskTableItem format */}
               <TasksTable
                 isTeamMember={isTeamMember}
                 currentUserId={user?.id}
-                tasks={filteredTasks
-                  .filter((task) => task.progress_id) // Only show tasks that have been started (have progress_id)
-                  .map((task) => ({
-                    id: task.progress_id!, // Use non-null assertion since we filtered above
-                    title: task.title,
-                    description: task.description,
-                    difficulty:
-                      task.difficulty_level === 1
-                        ? "Easy"
-                        : task.difficulty_level === 2
-                        ? "Medium"
-                        : "Hard",
-                    xp: task.base_xp_reward,
-                    points: task.base_credits_reward,
-                    status:
-                      task.status === "approved"
-                        ? "Finished"
-                        : task.status === "pending_review"
-                        ? "Peer Review"
-                        : task.status === "in_progress"
-                        ? "In Progress"
-                        : task.status === "rejected"
-                        ? "Not Accepted"
-                        : "Not Started",
-                    responsible: task.assignee_name
-                      ? {
-                          name: task.assignee_name,
-                          avatar:
-                            task.assignee_avatar_url || "/avatars/john-doe.jpg",
-                          date: task.assigned_at || new Date().toISOString(),
-                        }
-                      : undefined,
-                    action: task.status === "approved" ? "done" : "complete",
-                    isAvailable: task.is_available,
-                    assignedAt: task.assigned_at,
-                    completedAt: task.completed_at,
-                  }))}
+                tasks={filteredTasks.map((task) => ({
+                  id: task.progress_id || task.task_id, // Use progress_id if exists, otherwise task_id
+                  title: task.title,
+                  description: task.description,
+                  difficulty:
+                    task.difficulty_level === 1
+                      ? "Easy"
+                      : task.difficulty_level === 2
+                      ? "Medium"
+                      : "Hard",
+                  xp: task.base_xp_reward,
+                  points: task.base_credits_reward,
+                  status:
+                    task.status === "approved"
+                      ? "Finished"
+                      : task.status === "pending_review"
+                      ? "Peer Review"
+                      : task.status === "in_progress"
+                      ? "In Progress"
+                      : task.status === "rejected"
+                      ? "Not Accepted"
+                      : "Not Started",
+                  responsible: task.assignee_name
+                    ? {
+                        name: task.assignee_name,
+                        avatar:
+                          task.assignee_avatar_url || "/avatars/john-doe.jpg",
+                        date: task.assigned_at || new Date().toISOString(),
+                      }
+                    : undefined,
+                  action: task.status === "approved" ? "done" : "complete",
+                  isAvailable: task.is_available,
+                  assignedAt: task.assigned_at,
+                  completedAt: task.completed_at,
+                }))}
                 teamMembers={
                   team?.members?.map((member) => ({
                     id: member.user_id,

@@ -51,8 +51,10 @@ export function generateTaskTemplate(
           {
             template_code: "DEV-SKILL-01",
             title: "Learn React Hooks",
-            description: "Master React hooks including useState, useEffect, and custom hooks",
-            detailed_instructions: "## Step-by-step Instructions\n\n1. **Set up** a new React project\n2. Create components using `useState`\n3. Implement `useEffect` for side effects\n4. Build a custom hook\n\n### Resources\n- [React Hooks Documentation](https://react.dev/reference/react)",
+            description:
+              "Master React hooks including useState, useEffect, and custom hooks",
+            detailed_instructions:
+              "## Step-by-step Instructions\n\n1. **Set up** a new React project\n2. Create components using `useState`\n3. Implement `useEffect` for side effects\n4. Build a custom hook\n\n### Resources\n- [React Hooks Documentation](https://react.dev/reference/react)",
             category: "development",
             priority: "medium",
             difficulty_level: 2,
@@ -61,8 +63,10 @@ export function generateTaskTemplate(
             base_points_reward: 15,
             requires_review: false,
             auto_assign_to_new_teams: true,
-            learning_objectives: "Understand React hooks;Master useState and useEffect;Create custom hooks",
-            deliverables: "Working React app;Custom hook implementation;Code documentation",
+            learning_objectives:
+              "Understand React hooks;Master useState and useEffect;Create custom hooks",
+            deliverables:
+              "Working React app;Custom hook implementation;Code documentation",
             review_instructions: "",
             tags: "react;hooks;frontend;development",
           },
@@ -70,8 +74,10 @@ export function generateTaskTemplate(
           {
             template_code: "BIZ-FUND-01",
             title: "Market Analysis Fundamentals",
-            description: "Learn market research and competitive analysis techniques",
-            detailed_instructions: "## Market Research Process\n\n1. **Define** your target market\n2. **Research** industry trends\n3. **Analyze** competitors\n4. **Document** findings\n\n### Deliverables Format\n- Use templates provided in resources section",
+            description:
+              "Learn market research and competitive analysis techniques",
+            detailed_instructions:
+              "## Market Research Process\n\n1. **Define** your target market\n2. **Research** industry trends\n3. **Analyze** competitors\n4. **Document** findings\n\n### Deliverables Format\n- Use templates provided in resources section",
             category: "business",
             priority: "medium",
             difficulty_level: 2,
@@ -80,8 +86,10 @@ export function generateTaskTemplate(
             base_points_reward: 12,
             requires_review: false,
             auto_assign_to_new_teams: true,
-            learning_objectives: "Understand market analysis;Learn competitor research methods;Master research documentation",
-            deliverables: "Market analysis report;Competitor comparison chart;Industry trends summary",
+            learning_objectives:
+              "Understand market analysis;Learn competitor research methods;Master research documentation",
+            deliverables:
+              "Market analysis report;Competitor comparison chart;Industry trends summary",
             review_instructions: "",
             tags: "business;market;analysis;research",
           },
@@ -89,8 +97,10 @@ export function generateTaskTemplate(
           {
             template_code: "DES-SKILL-01",
             title: "Design Principles Fundamentals",
-            description: "Learn core design principles: contrast, alignment, repetition, proximity",
-            detailed_instructions: "## Design Principles Overview\n\n### The 4 Core Principles:\n1. **Contrast** - Make different elements obviously different\n2. **Alignment** - Every element should have visual connection\n3. **Repetition** - Repeat visual elements throughout design\n4. **Proximity** - Group related items together\n\n### Practice Exercise\nCreate 3 designs demonstrating each principle",
+            description:
+              "Learn core design principles: contrast, alignment, repetition, proximity",
+            detailed_instructions:
+              "## Design Principles Overview\n\n### The 4 Core Principles:\n1. **Contrast** - Make different elements obviously different\n2. **Alignment** - Every element should have visual connection\n3. **Repetition** - Repeat visual elements throughout design\n4. **Proximity** - Group related items together\n\n### Practice Exercise\nCreate 3 designs demonstrating each principle",
             category: "design",
             priority: "high",
             difficulty_level: 2,
@@ -99,8 +109,10 @@ export function generateTaskTemplate(
             base_points_reward: 14,
             requires_review: false,
             auto_assign_to_new_teams: true,
-            learning_objectives: "Master design principles;Apply contrast effectively;Understand visual hierarchy",
-            deliverables: "Design examples;Principle explanations;Before/after comparisons",
+            learning_objectives:
+              "Master design principles;Apply contrast effectively;Understand visual hierarchy",
+            deliverables:
+              "Design examples;Principle explanations;Before/after comparisons",
             review_instructions: "",
             tags: "design;principles;visual;fundamentals",
           },
@@ -108,8 +120,10 @@ export function generateTaskTemplate(
           {
             template_code: "MKT-SKILL-01",
             title: "Social Media Strategy Basics",
-            description: "Learn to create effective social media content strategies",
-            detailed_instructions: "## Social Media Strategy Framework\n\n### 1. Platform Analysis\n- Research target audience on each platform\n- Understand platform-specific best practices\n\n### 2. Content Planning\n- Develop content calendar\n- Create engaging post templates\n\n### 3. Engagement Strategy\n- Plan community interaction approach",
+            description:
+              "Learn to create effective social media content strategies",
+            detailed_instructions:
+              "## Social Media Strategy Framework\n\n### 1. Platform Analysis\n- Research target audience on each platform\n- Understand platform-specific best practices\n\n### 2. Content Planning\n- Develop content calendar\n- Create engaging post templates\n\n### 3. Engagement Strategy\n- Plan community interaction approach",
             category: "marketing",
             priority: "medium",
             difficulty_level: 2,
@@ -118,8 +132,10 @@ export function generateTaskTemplate(
             base_points_reward: 13,
             requires_review: false,
             auto_assign_to_new_teams: true,
-            learning_objectives: "Understand social media platforms;Create content strategies;Plan engagement tactics",
-            deliverables: "Platform analysis;Content calendar template;Engagement strategy document",
+            learning_objectives:
+              "Understand social media platforms;Create content strategies;Plan engagement tactics",
+            deliverables:
+              "Platform analysis;Content calendar template;Engagement strategy document",
             review_instructions: "",
             tags: "marketing;social;media;strategy;content",
           },
@@ -127,8 +143,10 @@ export function generateTaskTemplate(
           {
             template_code: "ONB-FUND-01",
             title: "Platform Navigation Training",
-            description: "Learn to navigate and use all platform features effectively",
-            detailed_instructions: "## Platform Overview\n\n### Key Areas to Explore:\n1. **Dashboard** - Your main workspace\n2. **Team Journey** - Collaborate with team members\n3. **My Journey** - Track personal progress\n4. **Leaderboard** - See rankings and achievements\n\n### Practice Tasks\n- Complete profile setup\n- Join first team activity\n- Submit first task",
+            description:
+              "Learn to navigate and use all platform features effectively",
+            detailed_instructions:
+              "## Platform Overview\n\n### Key Areas to Explore:\n1. **Dashboard** - Your main workspace\n2. **Team Journey** - Collaborate with team members\n3. **My Journey** - Track personal progress\n4. **Leaderboard** - See rankings and achievements\n\n### Practice Tasks\n- Complete profile setup\n- Join first team activity\n- Submit first task",
             category: "onboarding",
             priority: "high",
             difficulty_level: 1,
@@ -137,8 +155,10 @@ export function generateTaskTemplate(
             base_points_reward: 8,
             requires_review: false,
             auto_assign_to_new_teams: true,
-            learning_objectives: "Navigate platform interface;Understand feature locations;Complete basic interactions",
-            deliverables: "Completed profile;First team interaction;Platform tour completion",
+            learning_objectives:
+              "Navigate platform interface;Understand feature locations;Complete basic interactions",
+            deliverables:
+              "Completed profile;First team interaction;Platform tour completion",
             review_instructions: "",
             tags: "onboarding;platform;navigation;basics",
           },
@@ -147,7 +167,8 @@ export function generateTaskTemplate(
             template_code: "TEST-SKILL-01",
             title: "Manual Testing Fundamentals",
             description: "Learn systematic approach to manual software testing",
-            detailed_instructions: "## Testing Methodology\n\n### Test Case Development\n1. **Understand** requirements\n2. **Design** test scenarios\n3. **Execute** tests systematically\n4. **Document** findings\n\n### Bug Report Format\n- Clear reproduction steps\n- Expected vs actual behavior\n- Screenshots/evidence",
+            detailed_instructions:
+              "## Testing Methodology\n\n### Test Case Development\n1. **Understand** requirements\n2. **Design** test scenarios\n3. **Execute** tests systematically\n4. **Document** findings\n\n### Bug Report Format\n- Clear reproduction steps\n- Expected vs actual behavior\n- Screenshots/evidence",
             category: "testing",
             priority: "medium",
             difficulty_level: 2,
@@ -156,8 +177,10 @@ export function generateTaskTemplate(
             base_points_reward: 11,
             requires_review: false,
             auto_assign_to_new_teams: true,
-            learning_objectives: "Understand testing process;Create effective test cases;Write clear bug reports",
-            deliverables: "Test case examples;Bug report template;Testing checklist",
+            learning_objectives:
+              "Understand testing process;Create effective test cases;Write clear bug reports",
+            deliverables:
+              "Test case examples;Bug report template;Testing checklist",
             review_instructions: "",
             tags: "testing;manual;qa;process;documentation",
           },
@@ -167,8 +190,10 @@ export function generateTaskTemplate(
           {
             template_code: "TEAM-PROD-01",
             title: "Build MVP Landing Page",
-            description: "Create and deploy a professional landing page for your startup",
-            detailed_instructions: "## Landing Page Requirements\n\n### Core Sections:\n1. **Hero Section** - Clear value proposition\n2. **Features** - Key product benefits\n3. **About** - Team and mission\n4. **Contact** - Get in touch form\n\n### Technical Requirements\n- Responsive design (mobile-first)\n- Fast loading (< 3 seconds)\n- SEO optimized\n- Analytics tracking\n\n### Deployment\n- Use modern hosting platform\n- Set up custom domain\n- Enable SSL certificate",
+            description:
+              "Create and deploy a professional landing page for your startup",
+            detailed_instructions:
+              "## Landing Page Requirements\n\n### Core Sections:\n1. **Hero Section** - Clear value proposition\n2. **Features** - Key product benefits\n3. **About** - Team and mission\n4. **Contact** - Get in touch form\n\n### Technical Requirements\n- Responsive design (mobile-first)\n- Fast loading (< 3 seconds)\n- SEO optimized\n- Analytics tracking\n\n### Deployment\n- Use modern hosting platform\n- Set up custom domain\n- Enable SSL certificate",
             category: "development",
             priority: "high",
             difficulty_level: 3,
@@ -177,17 +202,22 @@ export function generateTaskTemplate(
             base_points_reward: 25,
             requires_review: true,
             auto_assign_to_new_teams: true,
-            learning_objectives: "Web development skills;Responsive design;Deployment process;SEO basics",
-            deliverables: "Live landing page;Source code repository;Analytics setup;Performance report",
-            review_instructions: "Check responsiveness across devices, loading speed, SEO elements, and overall design quality. Verify all links work and forms function properly.",
+            learning_objectives:
+              "Web development skills;Responsive design;Deployment process;SEO basics",
+            deliverables:
+              "Live landing page;Source code repository;Analytics setup;Performance report",
+            review_instructions:
+              "Check responsiveness across devices, loading speed, SEO elements, and overall design quality. Verify all links work and forms function properly.",
             tags: "development;web;mvp;landing;design;deployment",
           },
           // Team Customer Tasks (TEAM-CUST-XX) - Marketing focused
           {
             template_code: "TEAM-CUST-01",
             title: "Customer Discovery Campaign",
-            description: "Research target market and validate product-market fit through customer interviews",
-            detailed_instructions: "## Customer Discovery Process\n\n### Phase 1: Research (Week 1)\n- Define target customer personas\n- Research market size and trends\n- Identify key pain points\n\n### Phase 2: Interviews (Week 2-3)\n- Conduct 15-20 customer interviews\n- Use structured interview guide\n- Document insights systematically\n\n### Phase 3: Analysis (Week 4)\n- Analyze interview data\n- Validate/refine personas\n- Identify product opportunities",
+            description:
+              "Research target market and validate product-market fit through customer interviews",
+            detailed_instructions:
+              "## Customer Discovery Process\n\n### Phase 1: Research (Week 1)\n- Define target customer personas\n- Research market size and trends\n- Identify key pain points\n\n### Phase 2: Interviews (Week 2-3)\n- Conduct 15-20 customer interviews\n- Use structured interview guide\n- Document insights systematically\n\n### Phase 3: Analysis (Week 4)\n- Analyze interview data\n- Validate/refine personas\n- Identify product opportunities",
             category: "marketing",
             priority: "high",
             difficulty_level: 4,
@@ -196,36 +226,46 @@ export function generateTaskTemplate(
             base_points_reward: 30,
             requires_review: true,
             auto_assign_to_new_teams: true,
-            learning_objectives: "Customer research methods;Interview techniques;Market validation;Data analysis",
-            deliverables: "Customer personas;Interview summaries;Market insights report;Product recommendations",
-            review_instructions: "Evaluate quality of research methodology, depth of customer insights, and actionable recommendations for product development.",
+            learning_objectives:
+              "Customer research methods;Interview techniques;Market validation;Data analysis",
+            deliverables:
+              "Customer personas;Interview summaries;Market insights report;Product recommendations",
+            review_instructions:
+              "Evaluate quality of research methodology, depth of customer insights, and actionable recommendations for product development.",
             tags: "marketing;customer;research;interviews;validation;market",
           },
-          // Team Growth Tasks (TEAM-GROW-XX) - Business/Milestone focused  
+          // Team Growth Tasks (TEAM-GROW-XX) - Business/Milestone focused
           {
             template_code: "TEAM-GROW-01",
             title: "Business Model Canvas",
-            description: "Develop comprehensive business model using the Business Model Canvas framework",
-            detailed_instructions: "## Business Model Canvas Structure\n\n### The 9 Building Blocks:\n\n#### Value Creation\n1. **Value Propositions** - What value do you deliver?\n2. **Key Activities** - Most important activities\n3. **Key Resources** - Most important assets\n4. **Key Partners** - Network of suppliers/partners\n\n#### Customer Interface\n5. **Customer Segments** - Who are you creating value for?\n6. **Channels** - How do you reach customers?\n7. **Customer Relationships** - What type of relationship?\n\n#### Financial Aspects\n8. **Cost Structure** - Most important costs\n9. **Revenue Streams** - How do you make money?\n\n### Validation Process\n- Test key assumptions\n- Gather market feedback\n- Iterate based on learnings",
+            description:
+              "Develop comprehensive business model using the Business Model Canvas framework",
+            detailed_instructions:
+              "## Business Model Canvas Structure\n\n### The 9 Building Blocks:\n\n#### Value Creation\n1. **Value Propositions** - What value do you deliver?\n2. **Key Activities** - Most important activities\n3. **Key Resources** - Most important assets\n4. **Key Partners** - Network of suppliers/partners\n\n#### Customer Interface\n5. **Customer Segments** - Who are you creating value for?\n6. **Channels** - How do you reach customers?\n7. **Customer Relationships** - What type of relationship?\n\n#### Financial Aspects\n8. **Cost Structure** - Most important costs\n9. **Revenue Streams** - How do you make money?\n\n### Validation Process\n- Test key assumptions\n- Gather market feedback\n- Iterate based on learnings",
             category: "business",
-            priority: "high", 
+            priority: "high",
             difficulty_level: 4,
             estimated_hours: 20,
             base_xp_reward: 300,
             base_points_reward: 35,
             requires_review: true,
             auto_assign_to_new_teams: true,
-            learning_objectives: "Business model design;Strategic thinking;Market positioning;Revenue planning",
-            deliverables: "Completed Business Model Canvas;Assumption testing plan;Market validation results;Financial projections",
-            review_instructions: "Assess completeness of all 9 blocks, logical consistency between elements, evidence of market validation, and feasibility of revenue model.",
+            learning_objectives:
+              "Business model design;Strategic thinking;Market positioning;Revenue planning",
+            deliverables:
+              "Completed Business Model Canvas;Assumption testing plan;Market validation results;Financial projections",
+            review_instructions:
+              "Assess completeness of all 9 blocks, logical consistency between elements, evidence of market validation, and feasibility of revenue model.",
             tags: "business;strategy;model;canvas;planning;revenue",
           },
           // Team Onboarding Tasks (TEAM-ONB-XX)
           {
-            template_code: "TEAM-ONB-01", 
+            template_code: "TEAM-ONB-01",
             title: "Team Formation & Charter",
-            description: "Establish team identity, roles, and working agreements",
-            detailed_instructions: "## Team Charter Development\n\n### Team Identity\n- Choose team name and create logo\n- Define mission and vision\n- Establish team values\n\n### Role Definition\n- Assign primary roles (CEO, CTO, CMO, etc.)\n- Define responsibilities and accountabilities\n- Create backup role assignments\n\n### Working Agreements\n- Meeting schedule and format\n- Communication protocols\n- Decision-making process\n- Conflict resolution approach\n\n### Success Metrics\n- Define team success criteria\n- Set initial milestone goals\n- Establish review checkpoints",
+            description:
+              "Establish team identity, roles, and working agreements",
+            detailed_instructions:
+              "## Team Charter Development\n\n### Team Identity\n- Choose team name and create logo\n- Define mission and vision\n- Establish team values\n\n### Role Definition\n- Assign primary roles (CEO, CTO, CMO, etc.)\n- Define responsibilities and accountabilities\n- Create backup role assignments\n\n### Working Agreements\n- Meeting schedule and format\n- Communication protocols\n- Decision-making process\n- Conflict resolution approach\n\n### Success Metrics\n- Define team success criteria\n- Set initial milestone goals\n- Establish review checkpoints",
             category: "onboarding",
             priority: "urgent",
             difficulty_level: 2,
@@ -234,9 +274,12 @@ export function generateTaskTemplate(
             base_points_reward: 20,
             requires_review: true,
             auto_assign_to_new_teams: true,
-            learning_objectives: "Team dynamics;Role clarity;Communication skills;Goal setting",
-            deliverables: "Team charter document;Role assignment matrix;Meeting schedule;Communication guidelines",
-            review_instructions: "Verify all team members have clear roles, communication protocols are practical, and success metrics are measurable and realistic.",
+            learning_objectives:
+              "Team dynamics;Role clarity;Communication skills;Goal setting",
+            deliverables:
+              "Team charter document;Role assignment matrix;Meeting schedule;Communication guidelines",
+            review_instructions:
+              "Verify all team members have clear roles, communication protocols are practical, and success metrics are measurable and realistic.",
             tags: "onboarding;team;charter;roles;communication;planning",
           },
         ];
@@ -296,7 +339,7 @@ export function generateTaskTemplate(
     ["Template Code Structure:"],
     ["Individual Tasks:"],
     ["- ONB-FUND-XX (Onboarding Fundamentals)"],
-    ["- DEV-SKILL-XX (Development Skills)"], 
+    ["- DEV-SKILL-XX (Development Skills)"],
     ["- DES-SKILL-XX (Design Skills)"],
     ["- MKT-SKILL-XX (Marketing Skills)"],
     ["- BIZ-FUND-XX (Business Fundamentals)"],
@@ -311,7 +354,9 @@ export function generateTaskTemplate(
     ["- TEAM-GROW-XX (Team Growth: Business/Milestones)"],
     [""],
     ["Required Fields:"],
-    ["- template_code: Use format above with sequential number (e.g., TEAM-PROD-05)"],
+    [
+      "- template_code: Use format above with sequential number (e.g., TEAM-PROD-05)",
+    ],
     ["- title: Task name"],
     [""],
     ["Optional Fields:"],

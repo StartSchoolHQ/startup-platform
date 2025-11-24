@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useApp } from "@/contexts/app-context";
 import { redirect } from "next/navigation";
 import { Download } from "lucide-react";
@@ -22,11 +21,11 @@ import {
 } from "@/components/ui/select";
 import { CreateTaskDialog } from "@/components/admin/create-task-dialog";
 import { ImportTasksDialog } from "@/components/admin/import-tasks-dialog";
+import { AdminTasksTable } from "@/components/admin/admin-tasks-table";
 import { downloadTaskTemplate } from "@/lib/excel-utils";
 
 export default function AdminPage() {
   const { user, loading } = useApp();
-  const [taskContext, setTaskContext] = useState<"individual" | "team">("team");
 
   // Redirect if not admin
   if (!loading && (!user || user.primary_role !== "admin")) {
@@ -56,85 +55,74 @@ export default function AdminPage() {
         </TabsList>
 
         <TabsContent value="tasks" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Task Templates</CardTitle>
-              <CardDescription>
-                Create and manage task templates that can be assigned to teams
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Add new tasks that will be automatically assigned to all
-                  existing teams and new teams.
-                </p>
-                <div className="flex gap-2">
-                  <CreateTaskDialog />
-                </div>
-              </div>
+          <Tabs defaultValue="team-tasks" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="team-tasks">Team Tasks</TabsTrigger>
+              <TabsTrigger value="individual-tasks">
+                Individual Tasks
+              </TabsTrigger>
+            </TabsList>
 
-              <div className="mt-6 space-y-4">
-                {/* Bulk Import Section */}
-                <div className="rounded-lg border p-4">
-                  <div className="p-4 border rounded-lg space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium">Bulk Import from Excel</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Import multiple tasks at once using an Excel template
-                        </p>
-                      </div>
+            {/* Team Tasks Tab */}
+            <TabsContent value="team-tasks" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Team Task Templates</CardTitle>
+                      <CardDescription>
+                        Manage collaborative tasks assigned to teams
+                      </CardDescription>
                     </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="space-y-1">
-                          <label className="text-sm font-medium">
-                            Task Context:
-                          </label>
-                          <Select
-                            value={taskContext}
-                            onValueChange={(value: "individual" | "team") =>
-                              setTaskContext(value)
-                            }
-                          >
-                            <SelectTrigger className="w-40">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="team">Team Tasks</SelectItem>
-                              <SelectItem value="individual">
-                                Individual Tasks
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => downloadTaskTemplate(taskContext)}
-                        >
-                          <Download className="mr-2 h-4 w-4" />
-                          Download Template
-                        </Button>
-                        <ImportTasksDialog />
-                      </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => downloadTaskTemplate("team")}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Template
+                      </Button>
+                      <ImportTasksDialog />
+                      <CreateTaskDialog defaultTaskType="team" />
                     </div>
                   </div>
-                </div>
+                </CardHeader>
+                <CardContent>
+                  <AdminTasksTable activityType="team" />
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-                {/* Task list will go here */}
-                <div className="rounded-md border p-4">
-                  <p className="text-sm text-muted-foreground text-center">
-                    Task list and management will be implemented here
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Individual Tasks Tab */}
+            <TabsContent value="individual-tasks" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Individual Task Templates</CardTitle>
+                      <CardDescription>
+                        Manage personal learning and skill-building tasks
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => downloadTaskTemplate("individual")}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Template
+                      </Button>
+                      <ImportTasksDialog />
+                      <CreateTaskDialog defaultTaskType="individual" />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <AdminTasksTable activityType="individual" />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent value="users" className="space-y-4">

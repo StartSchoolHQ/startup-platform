@@ -24,12 +24,15 @@ import { useEffect, useState, useCallback } from "react";
 import { TeamTask } from "@/types/team-journey";
 import {
   getTaskById,
+  getTaskByIdLazy,
   startTask,
+  startTaskLazy,
   completeTask,
   cancelTask,
   retryTask,
   checkTaskPermission,
   reassignTask,
+  assignTaskToMember,
 } from "@/lib/tasks";
 import { useAppContext } from "@/contexts/app-context";
 import { createClient } from "@/lib/supabase/client";
@@ -81,36 +84,58 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
     extractId();
   }, [params]);
 
-  // Load task data
+  // Load task data using lazy progress model
   const loadTask = useCallback(async () => {
     if (!taskId || !user?.id) return;
 
     setLoading(true);
     try {
-      const taskData = await getTaskById(taskId);
+      // Use new lazy progress function that handles both task_id and progress_id
+      const taskData = await getTaskByIdLazy(taskId, user.id);
       setTask(taskData);
 
       // Load permissions and team members if task data is available
-      if (taskData?.progress_id && taskData?.team_id) {
-        const [startPerm, completePerm, cancelPerm, reassignPerm] =
-          await Promise.all([
-            checkTaskPermission(taskData.progress_id, user.id, "start"),
-            checkTaskPermission(taskData.progress_id, user.id, "complete"),
-            checkTaskPermission(taskData.progress_id, user.id, "cancel"),
-            checkTaskPermission(taskData.progress_id, user.id, "reassign"),
-          ]);
+      // For lazy progress: taskData.progress_id might be null for new tasks
+      if (taskData && taskData.team_id) {
+        let hasReassignPermission = false;
 
-        setPermissions({
-          canStart: startPerm.canManage,
-          canComplete: completePerm.canManage,
-          canCancel: cancelPerm.canManage,
-          canReassign: reassignPerm.canManage,
-          userRole: startPerm.userRole,
-          isAssignedUser: startPerm.isAssignedUser,
-        });
+        if (taskData.progress_id && taskData.progress_id !== "none") {
+          // Task has progress - check existing permissions
+          const [startPerm, completePerm, cancelPerm, reassignPerm] =
+            await Promise.all([
+              checkTaskPermission(taskData.progress_id, user.id, "start"),
+              checkTaskPermission(taskData.progress_id, user.id, "complete"),
+              checkTaskPermission(taskData.progress_id, user.id, "cancel"),
+              checkTaskPermission(taskData.progress_id, user.id, "reassign"),
+            ]);
+
+          hasReassignPermission = reassignPerm.canManage;
+
+          setPermissions({
+            canStart: startPerm.canManage,
+            canComplete: completePerm.canManage,
+            canCancel: cancelPerm.canManage,
+            canReassign: reassignPerm.canManage,
+            userRole: startPerm.userRole,
+            isAssignedUser: startPerm.isAssignedUser,
+          });
+        } else {
+          // New task without progress - set default permissions
+          // Any team member can start an unassigned task
+          hasReassignPermission = false; // Can't reassign unassigned task
+
+          setPermissions({
+            canStart: true, // Anyone can start a new task
+            canComplete: false, // Can't complete what hasn't been started
+            canCancel: false, // Can't cancel what hasn't been started
+            canReassign: false, // Can't reassign unassigned task
+            userRole: "member", // Default role
+            isAssignedUser: false, // No one assigned yet
+          });
+        }
 
         // Load team members for reassign functionality
-        if (reassignPerm.canManage) {
+        if (hasReassignPermission) {
           const supabase = createClient();
           const { data: members } = await supabase
             .from("team_members")
@@ -159,24 +184,6 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   }, [loadTask]);
 
   // Task action handlers
-  const handleStartTask = async () => {
-    if (!task?.progress_id || !user?.id) return;
-
-    setActionLoading(true);
-    try {
-      const success = await startTask(task.progress_id, user.id);
-      if (success) {
-        await loadTask(); // Reload task to get updated status
-      } else {
-        console.error("Failed to start task");
-      }
-    } catch (error) {
-      console.error("Error starting task:", error);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   const handleCompleteTask = async () => {
     setShowSubmissionModal(true);
   };
@@ -257,6 +264,38 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
       }
     } catch (error) {
       console.error("Error retrying task:", error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleStartTask = async () => {
+    if (!task || !user?.id) return;
+
+    setActionLoading(true);
+    try {
+      let success = false;
+
+      if (task.progress_id && task.progress_id !== "none") {
+        // Task already has progress entry - use existing startTask
+        success = await startTask(task.progress_id, user.id);
+      } else {
+        // New task without progress - use lazy progress creation
+        success = await startTaskLazy(
+          task.task_id,
+          task.team_id || undefined,
+          user.id,
+          "team" // Assuming team context for team journey pages
+        );
+      }
+
+      if (success) {
+        await loadTask(); // Reload task to get updated status
+      } else {
+        console.error("Failed to start task");
+      }
+    } catch (error) {
+      console.error("Error starting task:", error);
     } finally {
       setActionLoading(false);
     }
@@ -402,6 +441,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
 
                   {/* Learning Objectives */}
                   {task.learning_objectives &&
+                    Array.isArray(task.learning_objectives) &&
                     task.learning_objectives.length > 0 && (
                       <div>
                         <h3 className="text-lg font-semibold mb-3">
@@ -419,21 +459,23 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                     )}
 
                   {/* Deliverables */}
-                  {task.deliverables && task.deliverables.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3">
-                        Expected Deliverables
-                      </h3>
-                      <ul className="space-y-2 text-gray-700">
-                        {task.deliverables.map((deliverable, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                            {deliverable}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  {task.deliverables &&
+                    Array.isArray(task.deliverables) &&
+                    task.deliverables.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-3">
+                          Expected Deliverables
+                        </h3>
+                        <ul className="space-y-2 text-gray-700">
+                          {task.deliverables.map((deliverable, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                              {deliverable}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -449,7 +491,9 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                   </Button>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {task.tips_content && task.tips_content.length > 0 ? (
+                  {task.tips_content &&
+                  Array.isArray(task.tips_content) &&
+                  task.tips_content.length > 0 ? (
                     task.tips_content.map((tip, index) => (
                       <div
                         key={index}
@@ -477,44 +521,46 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                   )}
 
                   {/* Resources */}
-                  {task.resources && task.resources.length > 0 && (
-                    <div className="border-t pt-6">
-                      <h3 className="text-lg font-semibold mb-3">
-                        Helpful Resources
-                      </h3>
-                      <div className="grid gap-3">
-                        {task.resources.map((resource, index) => (
-                          <a
-                            key={index}
-                            href={resource.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 hover:border-blue-300 transition-colors group cursor-pointer"
-                          >
-                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 group-hover:bg-blue-200">
-                              <FileText className="h-4 w-4 text-blue-600" />
-                            </div>
-                            <div className="flex-1">
-                              <div className="font-medium text-blue-700 group-hover:text-blue-800">
-                                {resource.title}
+                  {task.resources &&
+                    Array.isArray(task.resources) &&
+                    task.resources.length > 0 && (
+                      <div className="border-t pt-6">
+                        <h3 className="text-lg font-semibold mb-3">
+                          Helpful Resources
+                        </h3>
+                        <div className="grid gap-3">
+                          {task.resources.map((resource, index) => (
+                            <a
+                              key={index}
+                              href={resource.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 hover:border-blue-300 transition-colors group cursor-pointer"
+                            >
+                              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 group-hover:bg-blue-200">
+                                <FileText className="h-4 w-4 text-blue-600" />
                               </div>
-                              {resource.description && (
-                                <div className="text-sm text-gray-600">
-                                  {resource.description}
+                              <div className="flex-1">
+                                <div className="font-medium text-blue-700 group-hover:text-blue-800">
+                                  {resource.title}
                                 </div>
-                              )}
-                              <div className="text-xs text-blue-600 capitalize">
-                                {resource.type} • Click to open
+                                {resource.description && (
+                                  <div className="text-sm text-gray-600">
+                                    {resource.description}
+                                  </div>
+                                )}
+                                <div className="text-xs text-blue-600 capitalize">
+                                  {resource.type} • Click to open
+                                </div>
+                                <div className="text-xs text-gray-400 mt-1 truncate">
+                                  {resource.url}
+                                </div>
                               </div>
-                              <div className="text-xs text-gray-400 mt-1 truncate">
-                                {resource.url}
-                              </div>
-                            </div>
-                          </a>
-                        ))}
+                            </a>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -531,6 +577,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {task.peer_review_criteria &&
+                  Array.isArray(task.peer_review_criteria) &&
                   task.peer_review_criteria.length > 0 ? (
                     task.peer_review_criteria.map((criteria, index) => (
                       <div key={index}>

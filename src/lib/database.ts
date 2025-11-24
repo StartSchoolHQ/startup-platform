@@ -2512,7 +2512,11 @@ export async function getCompletedPeerReviews(userId: string) {
   ];
 
   // Fetch user data separately
-  let usersData: Array<{ id: string; name: string | null; avatar_url: string | null }> = [];
+  let usersData: Array<{
+    id: string;
+    name: string | null;
+    avatar_url: string | null;
+  }> = [];
   if (assignedUserIds.length > 0) {
     const { data: users, error: usersError } = await supabase
       .from("users")
@@ -2593,46 +2597,250 @@ interface CreateTaskParams {
 }
 
 /**
- * Create a new task and assign it to all existing teams or users based on context
+ * Create a new task template (lazy progress architecture - NO pre-assignment)
  */
 export async function createTask(params: CreateTaskParams) {
   const supabase = createClient();
 
-  // Use different RPC functions based on task context
-  const rpcFunction =
-    params.taskContext === "individual"
-      ? "create_individual_task_and_assign_to_users"
-      : "create_task_and_assign_to_all_teams";
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase.rpc as any)(rpcFunction, {
-    p_template_code: params.templateCode,
-    p_title: params.title,
-    p_description: params.description || null,
-    p_detailed_instructions: params.detailedInstructions || null,
-    p_category: params.category || "development",
-    p_priority: params.priority || "medium",
-    p_difficulty_level: params.difficultyLevel || 1,
-    p_estimated_hours: params.estimatedHours || 0,
-    p_base_xp_reward: params.baseXpReward || 0,
-    p_base_points_reward: params.basePointsReward || 0,
-    p_requires_review: params.requiresReview || false,
-    p_tips_content: params.tipsContent || [],
-    p_peer_review_criteria: params.peerReviewCriteria || [],
-    p_learning_objectives: params.learningObjectives || null,
-    p_deliverables: params.deliverables || null,
-    p_resources: params.resources || [],
-    p_review_instructions: params.reviewInstructions || null,
-    p_tags: params.tags || null,
-    p_sort_order: params.sortOrder || 0,
-    p_prerequisite_template_codes: params.prerequisiteTemplateCodes || null,
-    p_minimum_team_level: params.minimumTeamLevel || 1,
-    p_auto_assign_to_new_teams: params.autoAssignToNewTeams !== false,
-    p_achievement_id: params.achievementId || null,
-  });
+  // Create task directly in tasks table WITHOUT pre-assignment
+  const { data, error } = await supabase
+    .from("tasks")
+    .insert({
+      template_code: params.templateCode,
+      title: params.title,
+      description: params.description || null,
+      detailed_instructions: params.detailedInstructions || null,
+      category: params.category || "development",
+      priority: params.priority || "medium",
+      difficulty_level: params.difficultyLevel || 1,
+      estimated_hours: params.estimatedHours || 0,
+      base_xp_reward: params.baseXpReward || 0,
+      base_points_reward: params.basePointsReward || 0,
+      requires_review: params.requiresReview || false,
+      tips_content: params.tipsContent || [],
+      peer_review_criteria: params.peerReviewCriteria || [],
+      learning_objectives: params.learningObjectives || null,
+      deliverables: params.deliverables || null,
+      resources: params.resources || [],
+      review_instructions: params.reviewInstructions || null,
+      tags: params.tags || null,
+      sort_order: params.sortOrder || 0,
+      prerequisite_template_codes: params.prerequisiteTemplateCodes || null,
+      minimum_team_level: params.minimumTeamLevel || 1,
+      auto_assign_to_new_teams: params.autoAssignToNewTeams !== false,
+      achievement_id: params.achievementId || null,
+      activity_type: params.taskContext || "team", // Key field for lazy progress
+      is_active: true,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     console.error("Error creating task:", error);
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Delete a task template (admin only)
+ */
+export async function deleteTask(taskId: string) {
+  const supabase = createClient();
+
+  // Delete the task (this will cascade to related progress entries)
+  const { error } = await supabase.from("tasks").delete().eq("id", taskId);
+
+  if (error) {
+    console.error("Error deleting task:", error);
+    throw error;
+  }
+
+  return true;
+}
+
+/**
+ * Update a task template (admin only)
+ */
+export async function updateTask(
+  taskId: string,
+  params: Partial<CreateTaskParams>
+) {
+  const supabase = createClient();
+
+  const updateData: Record<string, any> = {};
+
+  // Map parameters to database columns
+  if (params.templateCode !== undefined)
+    updateData.template_code = params.templateCode;
+  if (params.title !== undefined) updateData.title = params.title;
+  if (params.description !== undefined)
+    updateData.description = params.description;
+  if (params.detailedInstructions !== undefined)
+    updateData.detailed_instructions = params.detailedInstructions;
+  if (params.category !== undefined) updateData.category = params.category;
+  if (params.priority !== undefined) updateData.priority = params.priority;
+  if (params.difficultyLevel !== undefined)
+    updateData.difficulty_level = params.difficultyLevel;
+  if (params.estimatedHours !== undefined)
+    updateData.estimated_hours = params.estimatedHours;
+  if (params.baseXpReward !== undefined)
+    updateData.base_xp_reward = params.baseXpReward;
+  if (params.basePointsReward !== undefined)
+    updateData.base_points_reward = params.basePointsReward;
+  if (params.requiresReview !== undefined)
+    updateData.requires_review = params.requiresReview;
+  if (params.tipsContent !== undefined)
+    updateData.tips_content = params.tipsContent;
+  if (params.peerReviewCriteria !== undefined)
+    updateData.peer_review_criteria = params.peerReviewCriteria;
+  if (params.learningObjectives !== undefined)
+    updateData.learning_objectives = params.learningObjectives;
+  if (params.deliverables !== undefined)
+    updateData.deliverables = params.deliverables;
+  if (params.resources !== undefined) updateData.resources = params.resources;
+  if (params.reviewInstructions !== undefined)
+    updateData.review_instructions = params.reviewInstructions;
+  if (params.tags !== undefined) updateData.tags = params.tags;
+  if (params.sortOrder !== undefined) updateData.sort_order = params.sortOrder;
+  if (params.prerequisiteTemplateCodes !== undefined)
+    updateData.prerequisite_template_codes = params.prerequisiteTemplateCodes;
+  if (params.minimumTeamLevel !== undefined)
+    updateData.minimum_team_level = params.minimumTeamLevel;
+  if (params.autoAssignToNewTeams !== undefined)
+    updateData.auto_assign_to_new_teams = params.autoAssignToNewTeams;
+  if (params.achievementId !== undefined)
+    updateData.achievement_id = params.achievementId;
+  if (params.taskContext !== undefined)
+    updateData.activity_type = params.taskContext;
+
+  updateData.updated_at = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .update(updateData)
+    .eq("id", taskId)
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("Error updating task:", error);
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Get full task details for editing (includes all rich content fields)
+ */
+export async function getTaskForEdit(taskId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .select(
+      `
+      id,
+      title,
+      description,
+      detailed_instructions,
+      category,
+      priority,
+      difficulty_level,
+      estimated_hours,
+      base_xp_reward,
+      base_points_reward,
+      tips_content,
+      peer_review_criteria,
+      learning_objectives,
+      deliverables,
+      resources,
+      review_instructions,
+      tags,
+      created_at,
+      updated_at
+    `
+    )
+    .eq("id", taskId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching task for edit:", error);
+    throw error;
+  }
+
+  return data;
+}
+
+// ============================================================================
+// NEW VISIBLE TASK FUNCTIONS (Phase 1 - Lazy Progress Model)
+// ============================================================================
+
+/**
+ * Get team tasks using the new visible architecture (alongside existing functions)
+ * Shows ALL active team tasks with lazy progress - only creates progress when needed
+ */
+export async function getTeamTasksVisible(teamId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("get_team_tasks_visible", {
+    p_team_id: teamId,
+  });
+
+  if (error) {
+    console.error("Error fetching team tasks visible:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Get user tasks using the new visible architecture (alongside existing functions)
+ * Shows ALL active individual tasks with lazy progress - only creates progress when needed
+ */
+export async function getUserTasksVisible(userId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("get_user_tasks_visible", {
+    p_user_id: userId,
+  });
+
+  if (error) {
+    console.error("Error fetching user tasks visible:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Helper function to create progress entry if needed (lazy creation)
+ * Returns the progress_id (existing or newly created)
+ */
+export async function createProgressIfNeededDB(
+  taskId: string,
+  teamId?: string,
+  userId?: string,
+  context: "team" | "individual" = "team"
+): Promise<string | null> {
+  const supabase = createClient();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).rpc(
+    "create_progress_if_needed_v2",
+    {
+      p_task_id: taskId,
+      p_team_id: teamId || null,
+      p_user_id: userId || null,
+      p_context: context,
+    }
+  );
+
+  if (error) {
+    console.error("Error creating progress if needed:", error);
     throw error;
   }
 

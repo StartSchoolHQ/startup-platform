@@ -30,12 +30,19 @@ import {
   getUserProfile,
   getUserAchievementProgress,
   getUserTaskCompletionStats,
-  getUserIndividualTasks,
+  getUserTasksVisible,
 } from "@/lib/database";
+import { startTaskLazy } from "@/lib/tasks";
 import { useAppContext } from "@/contexts/app-context";
 
 // Real task row component for actual user tasks
-function RealTaskRow({ task }: { task: TaskTableItem }) {
+function RealTaskRow({
+  task,
+  onStartTask,
+}: {
+  task: TaskTableItem;
+  onStartTask?: (taskId: string) => void;
+}) {
   const getStatusButtonConfig = (status: TaskTableItem["status"]) => {
     switch (status) {
       case "Finished":
@@ -148,6 +155,19 @@ function RealTaskRow({ task }: { task: TaskTableItem }) {
               disabled={
                 task.status === "Peer Review" || task.status === "Finished"
               }
+              onClick={() => {
+                if (
+                  task.status === "Not Started" &&
+                  onStartTask &&
+                  task.task_id
+                ) {
+                  // Use task_id for starting new tasks (lazy progress creation)
+                  onStartTask(task.task_id);
+                } else if (task.status === "In Progress") {
+                  // Navigate to task detail page for continuing/submitting
+                  window.location.href = `/dashboard/my-journey/task/${task.id}`;
+                }
+              }}
             >
               {statusButtonConfig.icon}
               {statusButtonConfig.buttonText}
@@ -359,146 +379,177 @@ export default function MyJourneyPage() {
   >([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!user?.id) return;
+  // Task interaction handlers using new lazy progress architecture
+  const handleStartTask = async (taskId: string) => {
+    if (!user?.id) return;
 
-      setLoading(true);
-      try {
-        // Fetch all data in parallel
-        const [profile, individualTasksData, achievementProgress, taskStats] =
-          await Promise.all([
-            getUserProfile(user.id),
-            getUserIndividualTasks(user.id),
-            getUserAchievementProgress(user.id),
-            getUserTaskCompletionStats(user.id),
-          ]);
+    try {
+      console.log("Starting individual task:", taskId);
+      const success = await startTaskLazy(
+        taskId,
+        undefined, // no teamId for individual context
+        user.id,
+        "individual"
+      );
 
-        setUserProfile(profile);
-
-        // Process achievements from getUserAchievementProgress
-        const achievementsData = Array.isArray(achievementProgress)
-          ? achievementProgress
-          : [];
-        setAchievements(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          achievementsData.map((ach: any) => ({
-            achievement_id: ach.achievement_id,
-            achievement_name: ach.achievement_name,
-            status: ach.status as "completed" | "in-progress" | "not-started",
-            xp_reward: ach.xp_reward || 0,
-            points_reward: ach.points_reward || 0,
-            completed_tasks: ach.completed_tasks || 0,
-            total_tasks: ach.total_tasks || 0,
-          }))
-        );
-
-        // Convert individual tasks to TaskTableItem format
-        const convertedTasks: TaskTableItem[] =
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          individualTasksData.map((task: any) => {
-            const getUIStatus = (status: string): TaskTableItem["status"] => {
-              switch (status) {
-                case "approved":
-                  return "Finished";
-                case "in_progress":
-                  return "In Progress";
-                case "rejected":
-                case "revision_required":
-                  return "Not Accepted";
-                case "pending_review":
-                  return "Peer Review";
-                case "not_started":
-                default:
-                  return "Not Started";
-              }
-            };
-
-            const getDifficulty = (
-              level: number
-            ): TaskTableItem["difficulty"] => {
-              if (level >= 4) return "Hard";
-              if (level >= 3) return "Medium";
-              return "Easy";
-            };
-
-            return {
-              id: task.progress_id,
-              title: task.title,
-              description: task.description,
-              difficulty: getDifficulty(task.difficulty_level),
-              xp: task.base_xp_reward,
-              points: task.base_points_reward || task.base_xp_reward,
-              status: getUIStatus(task.status),
-              action: task.status === "approved" ? "done" : "complete",
-              isAvailable: true,
-              reviewFeedback: undefined,
-              reviewerName: undefined,
-              reviewerAvatarUrl: undefined,
-              teamName: undefined,
-              assignedAt: undefined,
-              completedAt: task.completed_at,
-            };
-          });
-
-        setUserTasks(convertedTasks);
-
-        // Calculate dynamic stats cards
-        const totalXP = profile?.total_xp || 0;
-        const totalCredits = profile?.total_points || 0;
-        const tasksCompleted = taskStats.completed;
-        const totalTasks = taskStats.total;
-
-        // Calculate achievement rate
-        const achievements = Array.isArray(achievementProgress)
-          ? achievementProgress
-          : [];
-        const completedAchievements = achievements.filter(
-          (a: { is_completed?: boolean }) => a.is_completed
-        ).length;
-        const achievementRate =
-          achievements.length > 0
-            ? Math.round((completedAchievements / achievements.length) * 100)
-            : 0;
-
-        const dynamicStatsCards = [
-          {
-            title: "Total XP",
-            value: totalXP.toLocaleString(),
-            subtitle: `From ${totalTasks} tasks`,
-            icon: Zap,
-            iconColor: "text-green-500",
-          },
-          {
-            title: "Total Credits",
-            value: totalCredits.toLocaleString(),
-            subtitle: "Earned credits",
-            icon: Banknote,
-            iconColor: "text-blue-500",
-          },
-          {
-            title: "Tasks Completed",
-            value: tasksCompleted.toString(),
-            subtitle: `${taskStats.completionRate}% completion rate`,
-            icon: CheckCircle,
-            iconColor: "text-primary",
-          },
-          {
-            title: "Achievement Rate",
-            value: `${achievementRate}%`,
-            subtitle: `${completedAchievements} of ${achievements.length} completed`,
-            icon: Trophy,
-            iconColor: "text-yellow-500",
-          },
-        ];
-        setStatsCards(dynamicStatsCards);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      } finally {
-        setLoading(false);
+      if (success) {
+        console.log("Task started successfully, refreshing data...");
+        // Refresh the task data to show updated status
+        await fetchUserData();
+      } else {
+        console.error("Failed to start task");
+        alert("Failed to start task. Please try again.");
       }
-    };
+    } catch (error) {
+      console.error("Error starting task:", error);
+      alert("Failed to start task. Please try again.");
+    }
+  };
 
+  const fetchUserData = async () => {
+    if (!user?.id) return;
+
+    setLoading(true);
+    try {
+      // Fetch all data in parallel
+      const [profile, individualTasksData, achievementProgress, taskStats] =
+        await Promise.all([
+          getUserProfile(user.id),
+          getUserTasksVisible(user.id),
+          getUserAchievementProgress(user.id),
+          getUserTaskCompletionStats(user.id),
+        ]);
+
+      setUserProfile(profile);
+
+      // Process achievements from getUserAchievementProgress
+      const achievementsData = Array.isArray(achievementProgress)
+        ? achievementProgress
+        : [];
+      setAchievements(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        achievementsData.map((ach: any) => ({
+          achievement_id: ach.achievement_id,
+          achievement_name: ach.achievement_name,
+          status: ach.status as "completed" | "in-progress" | "not-started",
+          xp_reward: ach.xp_reward || 0,
+          points_reward: ach.points_reward || 0,
+          completed_tasks: ach.completed_tasks || 0,
+          total_tasks: ach.total_tasks || 0,
+        }))
+      );
+
+      // Convert individual tasks to TaskTableItem format
+      const convertedTasks: TaskTableItem[] =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        individualTasksData.map((task: any) => {
+          const getUIStatus = (
+            status: string | null
+          ): TaskTableItem["status"] => {
+            if (!status) return "Not Started";
+            switch (status) {
+              case "approved":
+                return "Finished";
+              case "in_progress":
+                return "In Progress";
+              case "rejected":
+              case "revision_required":
+                return "Not Accepted";
+              case "pending_review":
+                return "Peer Review";
+              case "not_started":
+              default:
+                return "Not Started";
+            }
+          };
+
+          const getDifficulty = (
+            level: number
+          ): TaskTableItem["difficulty"] => {
+            if (level >= 4) return "Hard";
+            if (level >= 3) return "Medium";
+            return "Easy";
+          };
+
+          return {
+            id: task.progress_id || task.task_id, // Use progress_id if exists, otherwise task_id for new lazy approach
+            title: task.task_title || task.title,
+            description: task.task_description || task.description,
+            difficulty: getDifficulty(task.difficulty_level),
+            xp: task.base_xp_reward,
+            points: task.base_points_reward || task.base_xp_reward,
+            status: getUIStatus(task.progress_status),
+            action: task.progress_status === "approved" ? "done" : "complete",
+            isAvailable: true,
+            reviewFeedback: task.reviewer_notes,
+            reviewerName: undefined,
+            reviewerAvatarUrl: undefined,
+            teamName: undefined,
+            assignedAt: task.assigned_at,
+            completedAt: task.completed_at,
+            task_id: task.task_id, // Store original task_id for starting new tasks
+          };
+        });
+
+      setUserTasks(convertedTasks);
+
+      // Calculate dynamic stats cards
+      const totalXP = profile?.total_xp || 0;
+      const totalCredits = profile?.total_points || 0;
+      const tasksCompleted = taskStats.completed;
+      const totalTasks = taskStats.total;
+
+      // Calculate achievement rate
+      const achievements = Array.isArray(achievementProgress)
+        ? achievementProgress
+        : [];
+      const completedAchievements = achievements.filter(
+        (a: { is_completed?: boolean }) => a.is_completed
+      ).length;
+      const achievementRate =
+        achievements.length > 0
+          ? Math.round((completedAchievements / achievements.length) * 100)
+          : 0;
+
+      const dynamicStatsCards = [
+        {
+          title: "Total XP",
+          value: totalXP.toLocaleString(),
+          subtitle: `From ${totalTasks} tasks`,
+          icon: Zap,
+          iconColor: "text-green-500",
+        },
+        {
+          title: "Total Credits",
+          value: totalCredits.toLocaleString(),
+          subtitle: "Earned credits",
+          icon: Banknote,
+          iconColor: "text-blue-500",
+        },
+        {
+          title: "Tasks Completed",
+          value: tasksCompleted.toString(),
+          subtitle: `${taskStats.completionRate}% completion rate`,
+          icon: CheckCircle,
+          iconColor: "text-primary",
+        },
+        {
+          title: "Achievement Rate",
+          value: `${achievementRate}%`,
+          subtitle: `${completedAchievements} of ${achievements.length} completed`,
+          icon: Trophy,
+          iconColor: "text-yellow-500",
+        },
+      ];
+      setStatsCards(dynamicStatsCards);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchUserData();
   }, [user?.id]);
 
@@ -654,7 +705,11 @@ export default function MyJourneyPage() {
                   </thead>
                   <tbody>
                     {userTasks.map((task) => (
-                      <RealTaskRow key={task.id} task={task} />
+                      <RealTaskRow
+                        key={task.id}
+                        task={task}
+                        onStartTask={handleStartTask}
+                      />
                     ))}
                   </tbody>
                 </table>

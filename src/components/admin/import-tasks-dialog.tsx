@@ -83,13 +83,22 @@ export function ImportTasksDialog() {
         try {
           // Convert semicolon-separated strings to arrays
           const learningObjectives = task.learning_objectives
-            ? task.learning_objectives.split(';').map(s => s.trim()).filter(s => s)
+            ? task.learning_objectives
+                .split(";")
+                .map((s) => s.trim())
+                .filter((s) => s)
             : undefined;
           const deliverables = task.deliverables
-            ? task.deliverables.split(';').map(s => s.trim()).filter(s => s)
+            ? task.deliverables
+                .split(";")
+                .map((s) => s.trim())
+                .filter((s) => s)
             : undefined;
           const tags = task.tags
-            ? task.tags.split(';').map(s => s.trim()).filter(s => s)
+            ? task.tags
+                .split(";")
+                .map((s) => s.trim())
+                .filter((s) => s)
             : undefined;
 
           const result = await createTask({
@@ -248,8 +257,9 @@ export function ImportTasksDialog() {
                       {task.template_code}: {task.title}
                     </div>
                     <div className="text-muted-foreground">
-                      Category: {task.category} | Priority: {task.priority} | Difficulty: {task.difficulty_level} |
-                      XP: {task.base_xp_reward} | Points: {task.base_points_reward}
+                      Category: {task.category} | Priority: {task.priority} |
+                      Difficulty: {task.difficulty_level} | XP:{" "}
+                      {task.base_xp_reward} | Points: {task.base_points_reward}
                       {task.tags && <span> | Tags: {task.tags}</span>}
                     </div>
                   </div>

@@ -55,7 +55,13 @@ interface ResourceItem {
   url?: string;
 }
 
-export function CreateTaskDialog() {
+interface CreateTaskDialogProps {
+  defaultTaskType?: "team" | "individual";
+}
+
+export function CreateTaskDialog({
+  defaultTaskType = "team",
+}: CreateTaskDialogProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -63,7 +69,9 @@ export function CreateTaskDialog() {
   const [activeTab, setActiveTab] = useState("basic");
 
   // Basic form state
-  const [taskContext, setTaskContext] = useState<"individual" | "team">("team");
+  const [taskContext, setTaskContext] = useState<"individual" | "team">(
+    defaultTaskType
+  );
   const [templateCode, setTemplateCode] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -125,7 +133,8 @@ export function CreateTaskDialog() {
       }
     };
 
-    const shouldRequireReview = taskContext === "team"; // Team tasks always require peer review
+    // Enforce business rules: team tasks always require review, individual tasks never do
+    const shouldRequireReview = taskContext === "team";
     setRequiresReview(shouldRequireReview);
 
     generateCode();
@@ -318,7 +327,7 @@ export function CreateTaskDialog() {
       setSuccess("Task created successfully!");
 
       // Reset form
-      setTaskContext("team");
+      setTaskContext(defaultTaskType);
       setTemplateCode("");
       setTitle("");
       setDescription("");
@@ -380,15 +389,19 @@ export function CreateTaskDialog() {
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
-          Add New Task
+          Add New {defaultTaskType === "team" ? "Team" : "Individual"} Task
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl h-[80vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Create New Task Template</DialogTitle>
+          <DialogTitle>
+            Create New {taskContext === "team" ? "Team" : "Individual"} Task
+            Template
+          </DialogTitle>
           <DialogDescription>
-            Create a new task template that will be assigned to all existing
-            teams and automatically assigned to new teams.
+            {taskContext === "team"
+              ? "Create a new team task template for collaborative project work. Team tasks always require peer review."
+              : "Create a new individual task template for personal learning and skill building. Individual tasks are completed solo without peer review."}
           </DialogDescription>
         </DialogHeader>
 
@@ -410,11 +423,17 @@ export function CreateTaskDialog() {
             onValueChange={setActiveTab}
             className="flex flex-col flex-1 min-h-0"
           >
-            <TabsList className="grid w-full grid-cols-5 flex-shrink-0">
+            <TabsList
+              className={`grid w-full ${
+                taskContext === "individual" ? "grid-cols-4" : "grid-cols-5"
+              } flex-shrink-0`}
+            >
               <TabsTrigger value="basic">Basic</TabsTrigger>
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="tips">Tips</TabsTrigger>
-              <TabsTrigger value="review">Review</TabsTrigger>
+              {taskContext === "team" && (
+                <TabsTrigger value="review">Review</TabsTrigger>
+              )}
               <TabsTrigger value="preview">Preview</TabsTrigger>
             </TabsList>
 
@@ -433,33 +452,25 @@ export function CreateTaskDialog() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Task Type Selection */}
+                  {/* Task Type Display */}
                   <div className="space-y-2">
-                    <Label htmlFor="taskContext">Task Type</Label>
-                    <Select
-                      value={taskContext}
-                      onValueChange={(value: "individual" | "team") =>
-                        setTaskContext(value)
-                      }
-                      disabled={isSubmitting}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select task type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="team">
-                          Team Task - Collaborative project work
-                        </SelectItem>
-                        <SelectItem value="individual">
-                          Individual Task - Personal learning/skill building
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">
-                      {taskContext === "team"
-                        ? "Assigned to teams for collaborative execution"
-                        : "Assigned to individual users for personal development"}
-                    </p>
+                    <Label>Task Type</Label>
+                    <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                      <Badge
+                        variant={
+                          taskContext === "team" ? "default" : "secondary"
+                        }
+                      >
+                        {taskContext === "team"
+                          ? "Team Task"
+                          : "Individual Task"}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        {taskContext === "team"
+                          ? "Collaborative project work assigned to teams"
+                          : "Personal learning/skill building assigned to individuals"}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Template Code and Title */}
@@ -695,57 +706,6 @@ export function CreateTaskDialog() {
                     <p className="text-xs text-muted-foreground">
                       Leave as 0 if you don&apos;t want to track time estimates
                     </p>
-                  </div>
-
-                  {/* Switches */}
-                  <div className="space-y-4">
-                    <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <Label className="text-base">Requires Review</Label>
-                          {taskContext === "team" && (
-                            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                              Always Required
-                            </span>
-                          )}
-                          {taskContext === "individual" && (
-                            <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
-                              Optional
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {taskContext === "team"
-                            ? "Team tasks always require peer review for collaboration"
-                            : "Individual tasks can optionally require admin review"}
-                        </p>
-                      </div>
-                      <Switch
-                        checked={requiresReview}
-                        onCheckedChange={setRequiresReview}
-                        disabled={isSubmitting || taskContext === "team"}
-                      />
-                    </div>
-
-                    <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <Label className="text-base">
-                          {taskContext === "team"
-                            ? "Auto-Assign to New Teams"
-                            : "Auto-Assign to New Users"}
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          {taskContext === "team"
-                            ? "Automatically assign this task to newly created teams"
-                            : "Automatically assign this task to new users when they join"}
-                        </p>
-                      </div>
-                      <Switch
-                        checked={autoAssignToNewTeams}
-                        onCheckedChange={setAutoAssignToNewTeams}
-                        disabled={isSubmitting}
-                      />
-                    </div>
                   </div>
 
                   {/* Template Loading */}

@@ -220,21 +220,33 @@ export function TaskDetailsModal({
 
     // Validate required fields
     const errors: string[] = [];
-    schema.fields.forEach((field) => {
-      if (field.required) {
-        if (field.name === "external_urls" && externalUrls.length === 0) {
-          errors.push(`${field.label} is required`);
-        } else if (field.name === "screenshots" && uploadedFiles.length === 0) {
-          errors.push(`${field.label} is required`);
-        } else if (
-          !formData[field.name] &&
-          field.type !== "url_list" &&
-          field.type !== "file"
-        ) {
-          errors.push(`${field.label} is required`);
+
+    if (schema?.fields) {
+      // Validate custom schema fields
+      schema.fields.forEach((field) => {
+        if (field.required) {
+          if (field.name === "external_urls" && externalUrls.length === 0) {
+            errors.push(`${field.label} is required`);
+          } else if (
+            field.name === "screenshots" &&
+            uploadedFiles.length === 0
+          ) {
+            errors.push(`${field.label} is required`);
+          } else if (
+            !formData[field.name] &&
+            field.type !== "url_list" &&
+            field.type !== "file"
+          ) {
+            errors.push(`${field.label} is required`);
+          }
         }
+      });
+    } else {
+      // Validate default form fields (description is required)
+      if (!formData.description?.trim()) {
+        errors.push("Task Completion Description is required");
       }
-    });
+    }
 
     if (errors.length > 0) {
       alert(errors.join("\n"));
@@ -299,7 +311,138 @@ export function TaskDetailsModal({
       </DialogHeader>
 
       <form onSubmit={handleSubmissionSubmit} className="space-y-6">
-        {schema.fields.map(renderFormField)}
+        {schema?.fields?.length > 0 ? (
+          schema.fields.map(renderFormField)
+        ) : (
+          // Default submission form when no schema is defined
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="description">Task Completion Description *</Label>
+              <Textarea
+                id="description"
+                name="description"
+                placeholder="Describe what you completed and how you approached this task..."
+                value={formData.description || ""}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                className="min-h-[100px]"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>External URLs (Optional)</Label>
+              <div className="space-y-2">
+                {externalUrls.map((urlItem, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      placeholder="URL title"
+                      value={urlItem.title}
+                      onChange={(e) => {
+                        const newUrls = [...externalUrls];
+                        newUrls[index].title = e.target.value;
+                        setExternalUrls(newUrls);
+                      }}
+                      className="flex-1"
+                    />
+                    <Input
+                      placeholder="https://example.com"
+                      value={urlItem.url}
+                      onChange={(e) => {
+                        const newUrls = [...externalUrls];
+                        newUrls[index].url = e.target.value;
+                        setExternalUrls(newUrls);
+                      }}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        const newUrls = externalUrls.filter(
+                          (_, i) => i !== index
+                        );
+                        setExternalUrls(newUrls);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    setExternalUrls([
+                      ...externalUrls,
+                      { url: "", title: "", type: "link" },
+                    ])
+                  }
+                  className="w-full"
+                >
+                  <Link className="h-4 w-4 mr-2" />
+                  Add URL
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>File Attachments (Optional)</Label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                <input
+                  type="file"
+                  multiple
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setUploadedFiles(Array.from(e.target.files));
+                    }
+                  }}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="flex flex-col items-center justify-center cursor-pointer"
+                >
+                  <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                  <span className="text-sm text-gray-600">
+                    Click to upload files or drag and drop
+                  </span>
+                </label>
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {uploadedFiles.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                      >
+                        <span className="text-sm">{file.name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const newFiles = uploadedFiles.filter(
+                              (_, i) => i !== index
+                            );
+                            setUploadedFiles(newFiles);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </form>
 
       <DialogFooter>
@@ -360,6 +503,7 @@ export function TaskDetailsModal({
           <div className="bg-muted/50 p-4 rounded-lg">
             <h3 className="font-medium mb-3">Peer Review Criteria</h3>
             {taskData.tasks?.peer_review_criteria &&
+            Array.isArray(taskData.tasks.peer_review_criteria) &&
             taskData.tasks.peer_review_criteria.length > 0 ? (
               <div className="space-y-4">
                 {taskData.tasks.peer_review_criteria.map((criteria, index) => (
@@ -674,27 +818,29 @@ export function TaskDetailsModal({
             <div>
               <span className="font-medium text-sm">External URLs:</span>
               <div className="mt-2 space-y-2">
-                {submission.external_urls.map((url: unknown, index: number) => (
-                  <div
-                    key={index}
-                    className="border rounded-lg p-3 bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <Link className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-800">
-                        External Link
-                      </span>
-                    </div>
-                    <a
-                      href={String(url)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm break-all underline"
+                {(submission.external_urls || []).map(
+                  (url: unknown, index: number) => (
+                    <div
+                      key={index}
+                      className="border rounded-lg p-3 bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
                     >
-                      {String(url)}
-                    </a>
-                  </div>
-                ))}
+                      <div className="flex items-center gap-2 mb-1">
+                        <Link className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-800">
+                          External Link
+                        </span>
+                      </div>
+                      <a
+                        href={String(url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-sm break-all underline"
+                      >
+                        {String(url)}
+                      </a>
+                    </div>
+                  )
+                )}
               </div>
             </div>
           )}

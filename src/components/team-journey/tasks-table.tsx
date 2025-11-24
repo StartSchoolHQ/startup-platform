@@ -233,38 +233,21 @@ export function TasksTable({
                             <Play className="h-3 w-3 mr-1" />
                             Start
                           </Button>
-                        ) : isTeamMember &&
-                          task.isAvailable &&
-                          task.responsible ? (
+                        ) : task.responsible ? (
+                          // Task is assigned - everyone sees View Info button
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            className="text-xs"
+                            className="text-xs px-3 py-2"
                             onClick={() =>
                               router.push(
                                 `/dashboard/team-journey/task/${task.id}`
                               )
                             }
                           >
-                            {task.status === "In Progress" ? "Submit" : "Start"}
+                            View Info
                           </Button>
-                        ) : (
-                          // Only show "View Info" if task has someone assigned (has progress to view)
-                          task.responsible && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-xs px-3 py-2"
-                              onClick={() =>
-                                router.push(
-                                  `/dashboard/team-journey/task/${task.id}`
-                                )
-                              }
-                            >
-                              View Info
-                            </Button>
-                          )
-                        )}
+                        ) : null}
                       </>
                     )}
                   </div>

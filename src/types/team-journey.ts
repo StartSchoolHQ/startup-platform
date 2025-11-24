@@ -41,7 +41,8 @@ export type TaskStatus =
   | "approved"
   | "rejected"
   | "revision_required"
-  | "cancelled";
+  | "cancelled"
+  | "template";
 export type TaskPriority = "low" | "medium" | "high";
 export type TaskCategory =
   | "onboarding"
@@ -56,7 +57,7 @@ export type TaskCategory =
 // Simplified Task interface - combines master task with team progress
 export interface TeamTask {
   // Progress record data
-  progress_id: string; // ID from task_progress table
+  progress_id: string | null; // ID from task_progress table (null for lazy progress)
   task_id: string; // ID from tasks (master) table
 
   // Master task data (from tasks table)
@@ -148,4 +149,16 @@ export interface TaskTableItem {
   teamName?: string;
   assignedAt?: string;
   completedAt?: string;
+  // For lazy progress system - original task ID for starting new tasks
+  task_id?: string;
+}
+
+// Admin-specific task interface for task management
+export interface AdminTaskItem extends TaskTableItem {
+  category?: string;
+  priority?: string;
+  activity_type?: string;
+  created_at?: string;
+  updated_at?: string;
+  difficulty_level?: number;
 }
