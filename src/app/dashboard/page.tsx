@@ -11,6 +11,8 @@ import {
   Trophy,
   CheckCircle2,
 } from "lucide-react";
+import { IndividualWeeklyReportModal } from "@/components/weekly-reports/individual-weekly-report-modal";
+import { hasUserSubmittedThisWeekIndividual } from "@/lib/weekly-reports";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
 import { TeamItem } from "@/components/dashboard/team-item";
 import { ActivityItem } from "@/components/dashboard/activity-item";
@@ -22,7 +24,7 @@ import {
   getTeamProgressData,
   getPersonalProgressData,
 } from "@/data/dashboard-data";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   StatsCard,
   TeamProgressData,
@@ -37,30 +39,36 @@ export default function OverviewPage() {
   const [personalProgressData, setPersonalProgressData] =
     useState<PersonalProgressData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isIndividualReportModalOpen, setIsIndividualReportModalOpen] =
+    useState(false);
+  const [hasSubmittedThisWeek, setHasSubmittedThisWeek] = useState(false);
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      if (!user?.id) return;
+  const loadDashboardData = useCallback(async () => {
+    if (!user?.id) return;
 
-      try {
-        const [stats, teamData, personalData] = await Promise.all([
+    try {
+      const [stats, teamData, personalData, submissionStatus] =
+        await Promise.all([
           getStatsCards(user.id),
           getTeamProgressData(user.id),
           getPersonalProgressData(user.id),
+          hasUserSubmittedThisWeekIndividual(user.id),
         ]);
 
-        setStatsCards(stats);
-        setTeamProgressData(teamData);
-        setPersonalProgressData(personalData);
-      } catch (error) {
-        console.error("Error loading dashboard data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadDashboardData();
+      setStatsCards(stats);
+      setTeamProgressData(teamData);
+      setPersonalProgressData(personalData);
+      setHasSubmittedThisWeek(submissionStatus);
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [user?.id]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   if (loading) {
     return (
@@ -101,9 +109,23 @@ export default function OverviewPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {teamProgressData && <TeamProgressCard data={teamProgressData} />}
         {personalProgressData && (
-          <PersonalProgressCard data={personalProgressData} />
+          <PersonalProgressCard
+            data={personalProgressData}
+            hasSubmittedThisWeek={hasSubmittedThisWeek}
+            onOpenReportModal={() => setIsIndividualReportModalOpen(true)}
+          />
         )}
       </div>
+
+      {/* Individual Weekly Report Modal */}
+      {user?.id && (
+        <IndividualWeeklyReportModal
+          open={isIndividualReportModalOpen}
+          onOpenChange={setIsIndividualReportModalOpen}
+          userId={user.id}
+          onSuccess={loadDashboardData}
+        />
+      )}
     </div>
   );
 }
@@ -206,7 +228,15 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
 }
 
 // Progress card component for personal
-function PersonalProgressCard({ data }: { data: PersonalProgressData }) {
+function PersonalProgressCard({
+  data,
+  hasSubmittedThisWeek,
+  onOpenReportModal,
+}: {
+  data: PersonalProgressData;
+  hasSubmittedThisWeek: boolean;
+  onOpenReportModal: () => void;
+}) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
@@ -237,13 +267,20 @@ function PersonalProgressCard({ data }: { data: PersonalProgressData }) {
 
         {/* Action buttons */}
         <BorderedContainer className="justify-center w-full">
-          <Button variant="outline" size="sm" className="h-10 grow">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 grow"
+            disabled={hasSubmittedThisWeek}
+            onClick={onOpenReportModal}
+          >
             <FileText className="h-4 w-4 mr-2" />
-            Submit Weekly Report
+            {hasSubmittedThisWeek ? "Report Submitted" : "Submit Weekly Report"}
           </Button>
           <Button
             size="sm"
             className="bg-foreground text-background hover:bg-foreground/90 h-10 grow"
+            onClick={() => (window.location.href = "/dashboard/my-journey")}
           >
             <WandSparkles className="h-4 w-4 mr-2" />
             View Progress

@@ -13,10 +13,11 @@ import {
   TaskWithAchievement,
   AchievementProgress,
 } from "@/types/dashboard";
+import type { Database } from "@/types/database";
 import {
   getUserProfile,
   getUserAchievementProgress,
-  getTasksByAchievement,
+  getUserTasksVisible,
   getUserTeams,
   getUserTaskCompletionStats,
   getPeerReviewStatsFromTransactions,
@@ -365,26 +366,8 @@ interface AchievementProgressRow {
   is_completed: boolean;
 }
 
-interface TaskRow {
-  progress_id: string;
-  task_id: string;
-  title: string;
-  description: string;
-  category: string;
-  difficulty_level: number;
-  base_xp_reward: number;
-  base_credits_reward: number;
-  status: string;
-  assigned_to_user_id?: string;
-  assignee_name?: string;
-  assignee_avatar_url?: string;
-  assigned_at?: string;
-  started_at?: string;
-  completed_at?: string;
-  is_available: boolean;
-  achievement_id?: string;
-  achievement_name?: string;
-}
+
+
 
 // Function to get achievement progress data
 export async function getAchievementProgressData(
@@ -393,7 +376,7 @@ export async function getAchievementProgressData(
   try {
     const [achievements, tasks] = await Promise.all([
       getUserAchievementProgress(userId),
-      getTasksByAchievement(), // Get all tasks by default
+      getUserTasksVisible(userId), // Get user's visible tasks with lazy progress
     ]);
 
     return {
@@ -416,26 +399,29 @@ export async function getAchievementProgressData(
           is_completed: achievement.is_completed,
         })
       ),
-      tasks: (tasks as TaskRow[]).map((task) => ({
-        progress_id: task.progress_id,
-        task_id: task.task_id,
-        title: task.title,
-        description: task.description,
-        category: task.category,
-        difficulty_level: task.difficulty_level,
-        base_xp_reward: task.base_xp_reward,
-        base_credits_reward: task.base_credits_reward,
-        status: task.status,
-        assigned_to_user_id: task.assigned_to_user_id,
-        assignee_name: task.assignee_name,
-        assignee_avatar_url: task.assignee_avatar_url,
-        assigned_at: task.assigned_at,
-        started_at: task.started_at,
-        completed_at: task.completed_at,
-        is_available: task.is_available,
-        achievement_id: task.achievement_id,
-        achievement_name: task.achievement_name,
-      })),
+      tasks: (tasks as Database['public']['Functions']['get_user_tasks_visible']['Returns']).map((task) => {
+        const taskData = task;
+        return {
+          progress_id: taskData.progress_id,
+          task_id: taskData.task_id,
+          title: taskData.task_title,
+          description: taskData.task_description,
+          category: taskData.category,
+          difficulty_level: taskData.difficulty_level,
+          base_xp_reward: taskData.base_xp_reward,
+          base_credits_reward: taskData.base_points_reward,
+          status: taskData.progress_status,
+          assigned_to_user_id: taskData.assigned_to_user_id,
+          assignee_name: taskData.assignee_name,
+          assignee_avatar_url: taskData.assignee_avatar_url,
+          assigned_at: taskData.assigned_at,
+          started_at: taskData.started_at,
+          completed_at: taskData.completed_at,
+          is_available: taskData.is_available,
+          achievement_id: taskData.achievement_id,
+          achievement_name: taskData.achievement_name,
+        };
+      }),
       selectedAchievementId: null,
     };
   } catch (error) {
@@ -448,33 +434,42 @@ export async function getAchievementProgressData(
   }
 }
 
-// Function to get filtered tasks by achievement
+// Function to get filtered tasks by achievement using lazy progress architecture
 export async function getFilteredTasksByAchievement(
-  achievementId: string | null
+  achievementId: string | null,
+  userId: string
 ): Promise<TaskWithAchievement[]> {
   try {
-    const tasks = await getTasksByAchievement(achievementId || undefined);
+    const tasks = await getUserTasksVisible(userId);
 
-    return (tasks as TaskRow[]).map((task) => ({
-      progress_id: task.progress_id,
-      task_id: task.task_id,
-      title: task.title,
-      description: task.description,
-      category: task.category,
-      difficulty_level: task.difficulty_level,
-      base_xp_reward: task.base_xp_reward,
-      base_credits_reward: task.base_credits_reward,
-      status: task.status,
-      assigned_to_user_id: task.assigned_to_user_id,
-      assignee_name: task.assignee_name,
-      assignee_avatar_url: task.assignee_avatar_url,
-      assigned_at: task.assigned_at,
-      started_at: task.started_at,
-      completed_at: task.completed_at,
-      is_available: task.is_available,
-      achievement_id: task.achievement_id,
-      achievement_name: task.achievement_name,
-    }));
+    // Filter by achievement if specified
+    const filteredTasks = achievementId
+      ? (tasks as Database['public']['Functions']['get_user_tasks_visible']['Returns']).filter((task) => task.achievement_id === achievementId)
+      : tasks;
+
+    return (filteredTasks as Database['public']['Functions']['get_user_tasks_visible']['Returns']).map((task) => {
+      const taskData = task;
+      return {
+        progress_id: taskData.progress_id,
+        task_id: taskData.task_id,
+        title: taskData.task_title,
+        description: taskData.task_description,
+        category: taskData.category,
+        difficulty_level: taskData.difficulty_level,
+        base_xp_reward: taskData.base_xp_reward,
+        base_credits_reward: taskData.base_points_reward,
+        status: taskData.progress_status,
+        assigned_to_user_id: taskData.assigned_to_user_id,
+        assignee_name: taskData.assignee_name,
+        assignee_avatar_url: taskData.assignee_avatar_url,
+        assigned_at: taskData.assigned_at,
+        started_at: taskData.started_at,
+        completed_at: taskData.completed_at,
+        is_available: taskData.is_available,
+        achievement_id: taskData.achievement_id,
+        achievement_name: taskData.achievement_name,
+      };
+    });
   } catch (error) {
     console.error("Error fetching filtered tasks:", error);
     return [];

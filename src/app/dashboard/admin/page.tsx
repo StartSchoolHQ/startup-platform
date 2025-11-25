@@ -12,13 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+// Select components removed - not currently used
 import { CreateTaskDialog } from "@/components/admin/create-task-dialog";
 import { ImportTasksDialog } from "@/components/admin/import-tasks-dialog";
 import { AdminTasksTable } from "@/components/admin/admin-tasks-table";

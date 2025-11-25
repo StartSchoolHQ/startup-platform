@@ -23,7 +23,6 @@ import {
 import { useEffect, useState, useCallback } from "react";
 import { TeamTask } from "@/types/team-journey";
 import {
-  getTaskById,
   getTaskByIdLazy,
   startTask,
   startTaskLazy,
@@ -32,7 +31,6 @@ import {
   retryTask,
   checkTaskPermission,
   reassignTask,
-  assignTaskToMember,
 } from "@/lib/tasks";
 import { useAppContext } from "@/contexts/app-context";
 import { createClient } from "@/lib/supabase/client";

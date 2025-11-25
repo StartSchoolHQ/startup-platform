@@ -9,7 +9,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Medal, CheckCircle, Zap, CreditCard, Play } from "lucide-react";
+import {
+  Medal,
+  CheckCircle,
+  Zap,
+  CreditCard,
+  Play,
+  Loader2,
+} from "lucide-react";
 import { TaskTableItem } from "@/types/team-journey";
 import { useRouter } from "next/navigation";
 
@@ -194,18 +201,29 @@ export function TasksTable({
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Done
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs px-3 py-2"
-                          onClick={() =>
-                            router.push(
-                              `/dashboard/team-journey/task/${task.id}`
-                            )
-                          }
-                        >
-                          View Info
-                        </Button>
+                        {task.id && task.id.toString().startsWith("temp-") ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs px-3 py-2"
+                            disabled
+                          >
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs px-3 py-2"
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/team-journey/task/${task.id}`
+                              )
+                            }
+                          >
+                            View Info
+                          </Button>
+                        )}
                       </>
                     ) : (
                       <>
@@ -235,18 +253,29 @@ export function TasksTable({
                           </Button>
                         ) : task.responsible ? (
                           // Task is assigned - everyone sees View Info button
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-xs px-3 py-2"
-                            onClick={() =>
-                              router.push(
-                                `/dashboard/team-journey/task/${task.id}`
-                              )
-                            }
-                          >
-                            View Info
-                          </Button>
+                          task.id && task.id.toString().startsWith("temp-") ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs px-3 py-2"
+                              disabled
+                            >
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs px-3 py-2"
+                              onClick={() =>
+                                router.push(
+                                  `/dashboard/team-journey/task/${task.id}`
+                                )
+                              }
+                            >
+                              View Info
+                            </Button>
+                          )
                         ) : null}
                       </>
                     )}

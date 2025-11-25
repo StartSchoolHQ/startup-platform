@@ -46,11 +46,11 @@ import {
   getTeamTasksVisible,
 } from "@/lib/database";
 import { StatsCard } from "@/types/dashboard";
+import type { Database } from "@/types/database";
 import { useEffect, useState, useCallback } from "react";
 import { useAppContext } from "@/contexts/app-context";
 import { hasUserSubmittedThisWeek } from "@/lib/weekly-reports";
 import { assignTaskToMember, startTask, startTaskLazy } from "@/lib/tasks";
-import { getTasksByAchievement } from "@/lib/database";
 import { Achievement, TaskWithAchievement } from "@/types/dashboard";
 
 interface ProductDetailPageProps {
@@ -237,7 +237,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   assigned_at: new Date().toISOString(),
                   started_at: new Date().toISOString(),
                   status: "in_progress" as const,
-                  progress_id: task.progress_id || "temp-" + Date.now(), // Generate temp ID for new tasks
+                  progress_id: task.progress_id || `temp-${Date.now()}`, // Generate temp ID for new tasks
                 }
               : task
           )
@@ -253,8 +253,35 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           console.error("Failed to start task - reverting");
           setRefreshTrigger((prev) => prev + 1); // Trigger reload
         } else if (isNewTask) {
-          // For newly created progress entries, refresh to get the real progress_id
-          setTimeout(() => setRefreshTrigger((prev) => prev + 1), 500);
+          // For newly created progress entries, get the real progress_id smoothly
+          setTimeout(async () => {
+            try {
+              // Use the existing function that handles RLS correctly
+              const freshTasks = await getTeamTasksVisible(team.id);
+              const freshTask = (freshTasks as Database['public']['Functions']['get_team_tasks_visible']['Returns']).find(
+                (t) =>
+                  t.task_id === actualTaskId &&
+                  t.assigned_to_user_id === user.id
+              );
+
+              if (freshTask?.progress_id) {
+                // Smoothly update just this task's progress_id
+                setFilteredTasks((prevTasks) =>
+                  prevTasks.map((task) =>
+                    task.progress_id &&
+                    task.progress_id.startsWith("temp-") &&
+                    task.task_id === actualTaskId
+                      ? { ...task, progress_id: freshTask.progress_id }
+                      : task
+                  )
+                );
+              }
+            } catch (error) {
+              console.error("Error fetching real progress_id:", error);
+              // Fallback to full reload if targeted update fails
+              setRefreshTrigger((prev) => prev + 1);
+            }
+          }, 500);
         }
       } catch (error) {
         console.error("Error starting task:", error);
@@ -347,26 +374,29 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       const tasksArray = Array.isArray(allTasks) ? allTasks : [];
 
       setFilteredTasks(
-        tasksArray.map((task) => ({
-          progress_id: task.progress_id,
-          task_id: task.task_id,
-          title: task.task_title, // Fixed: use task_title from function response
-          description: task.task_description, // Fixed: use task_description from function response
-          category: task.category,
-          difficulty_level: task.difficulty_level,
-          base_xp_reward: task.base_xp_reward,
-          base_credits_reward: task.base_points_reward,
-          status: task.progress_status || "not_started", // Fixed: use progress_status from function response
-          assigned_to_user_id: task.assigned_to_user_id,
-          assignee_name: task.assignee_name,
-          assignee_avatar_url: task.assignee_avatar_url,
-          assigned_at: task.assigned_at,
-          started_at: task.started_at,
-          completed_at: task.completed_at,
-          is_available: task.is_available !== false, // Default to true for template visibility
-          achievement_id: task.achievement_id,
-          achievement_name: task.achievement_name,
-        }))
+        (tasksArray as Database['public']['Functions']['get_team_tasks_visible']['Returns']).map((task) => {
+          const taskData = task;
+          return {
+            progress_id: taskData.progress_id,
+            task_id: taskData.task_id,
+            title: taskData.task_title, // Fixed: use task_title from function response
+            description: taskData.task_description, // Fixed: use task_description from function response
+            category: taskData.category,
+            difficulty_level: taskData.difficulty_level,
+            base_xp_reward: taskData.base_xp_reward,
+            base_credits_reward: taskData.base_points_reward,
+            status: taskData.progress_status || "not_started", // Fixed: use progress_status from function response
+            assigned_to_user_id: taskData.assigned_to_user_id,
+            assignee_name: taskData.assignee_name,
+            assignee_avatar_url: taskData.assignee_avatar_url,
+            assigned_at: taskData.assigned_at,
+            started_at: taskData.started_at,
+            completed_at: taskData.completed_at,
+            is_available: taskData.is_available !== false, // Default to true for template visibility
+            achievement_id: taskData.achievement_id,
+            achievement_name: taskData.achievement_name,
+          };
+        })
       );
     } catch (error) {
       console.error("Error loading achievements:", error);
@@ -520,30 +550,33 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
         // Filter by achievement if specified
         const filteredTasksArray = achievementId
-          ? tasksArray.filter((task) => task.achievement_id === achievementId)
+          ? (tasksArray as Database['public']['Functions']['get_team_tasks_visible']['Returns']).filter((task) => task.achievement_id === achievementId)
           : tasksArray;
 
         setFilteredTasks(
-          filteredTasksArray.map((task) => ({
-            progress_id: task.progress_id,
-            task_id: task.task_id,
-            title: task.task_title, // Fixed: use task_title from function response
-            description: task.task_description, // Fixed: use task_description from function response
-            category: task.category,
-            difficulty_level: task.difficulty_level,
-            base_xp_reward: task.base_xp_reward,
-            base_credits_reward: task.base_points_reward,
-            status: task.progress_status || "not_started", // Fixed: use progress_status from function response
-            assigned_to_user_id: task.assigned_to_user_id,
-            assignee_name: task.assignee_name,
-            assignee_avatar_url: task.assignee_avatar_url,
-            assigned_at: task.assigned_at,
-            started_at: task.started_at,
-            completed_at: task.completed_at,
-            is_available: task.is_available !== false, // Default to true for template visibility
-            achievement_id: task.achievement_id,
-            achievement_name: task.achievement_name,
-          }))
+          (filteredTasksArray as Database['public']['Functions']['get_team_tasks_visible']['Returns']).map((task) => {
+            const taskData = task;
+            return {
+              progress_id: taskData.progress_id,
+              task_id: taskData.task_id,
+              title: taskData.task_title, // Fixed: use task_title from function response
+              description: taskData.task_description, // Fixed: use task_description from function response
+              category: taskData.category,
+              difficulty_level: taskData.difficulty_level,
+              base_xp_reward: taskData.base_xp_reward,
+              base_credits_reward: taskData.base_points_reward,
+              status: taskData.progress_status || "not_started", // Fixed: use progress_status from function response
+              assigned_to_user_id: taskData.assigned_to_user_id,
+              assignee_name: taskData.assignee_name,
+              assignee_avatar_url: taskData.assignee_avatar_url,
+              assigned_at: taskData.assigned_at,
+              started_at: taskData.started_at,
+              completed_at: taskData.completed_at,
+              is_available: taskData.is_available !== false, // Default to true for template visibility
+              achievement_id: taskData.achievement_id,
+              achievement_name: taskData.achievement_name,
+            };
+          })
         );
       } catch (error) {
         console.error("Error filtering achievements:", error);
@@ -603,6 +636,21 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     0
   );
 
+  // Calculate dynamic achievement progress
+  const completedAchievements = achievements.filter(
+    (a) => a.status === "completed"
+  ).length;
+  const totalAchievements = achievements.length;
+  const achievementProgress =
+    totalAchievements > 0
+      ? `${completedAchievements}/${totalAchievements}`
+      : "0/0";
+
+  // Calculate points earned from completed team tasks
+  const teamPointsEarned = filteredTasks
+    .filter((task) => task.status === "approved")
+    .reduce((sum, task) => sum + (task.base_credits_reward || 0), 0);
+
   // Stats cards data for this team
   const statsCards: StatsCard[] = [
     {
@@ -621,15 +669,15 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     },
     {
       title: "Achievements",
-      value: "8/25",
-      subtitle: "+19% from last month",
+      value: achievementProgress,
+      subtitle: `${completedAchievements} completed`,
       icon: Trophy,
       iconColor: "text-yellow-500",
     },
     {
-      title: "Points Earned",
-      value: "9504",
-      subtitle: "+201 since last hour",
+      title: "Points Earned as Team",
+      value: teamPointsEarned.toLocaleString(),
+      subtitle: "From completed team tasks",
       icon: Zap,
       iconColor: "text-purple-500",
     },
@@ -877,7 +925,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   <CreditCard className="h-4 w-4 text-green-600" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm">24040</div>
+                  <div className="font-semibold text-sm">
+                    {teamPointsEarned.toLocaleString()}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     Total Points Earned
                   </div>

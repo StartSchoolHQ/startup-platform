@@ -51,6 +51,7 @@ interface TaskSubmissionModalProps {
   taskTitle: string;
   formSchema?: FormSchema;
   isLoading?: boolean;
+  isIndividualTask?: boolean;
 }
 
 export function TaskSubmissionModal({
@@ -60,6 +61,7 @@ export function TaskSubmissionModal({
   taskTitle,
   formSchema,
   isLoading = false,
+  isIndividualTask = false,
 }: TaskSubmissionModalProps) {
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [externalUrls, setExternalUrls] = useState<ExternalUrl[]>([]);
@@ -95,7 +97,8 @@ export function TaskSubmissionModal({
     ],
   };
 
-  const schema = formSchema || defaultSchema;
+  // Ensure we have a valid schema with fields array
+  const schema = formSchema?.fields?.length ? formSchema : defaultSchema;
 
   const detectUrlType = (url: string): string => {
     if (url.includes("docs.google.com/spreadsheets")) return "google_sheets";
@@ -147,7 +150,7 @@ export function TaskSubmissionModal({
 
     // Validate required fields
     const errors: string[] = [];
-    schema.fields.forEach((field) => {
+    (schema?.fields || []).forEach((field) => {
       if (field.required) {
         if (field.name === "external_urls" && externalUrls.length === 0) {
           errors.push(`${field.label} is required`);
@@ -336,15 +339,21 @@ export function TaskSubmissionModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Submit Task for Review</DialogTitle>
+          <DialogTitle>
+            {isIndividualTask ? "Submit Task" : "Submit Task for Review"}
+          </DialogTitle>
           <DialogDescription>
-            Complete your submission for <strong>{taskTitle}</strong>. This will
-            be sent for peer review once submitted.
+            Complete your submission for <strong>{taskTitle}</strong>.{" "}
+            {isIndividualTask
+              ? "This will be automatically approved once submitted."
+              : "This will be sent for peer review once submitted."}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {schema.fields.map(renderField)}
+          {schema?.fields?.map(renderField) || (
+            <div>No form fields defined</div>
+          )}
         </form>
 
         <DialogFooter>
@@ -357,7 +366,11 @@ export function TaskSubmissionModal({
             Cancel
           </Button>
           <Button type="submit" onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? "Submitting..." : "Submit for Review"}
+            {isLoading
+              ? "Submitting..."
+              : isIndividualTask
+              ? "Submit Task"
+              : "Submit for Review"}
           </Button>
         </DialogFooter>
       </DialogContent>

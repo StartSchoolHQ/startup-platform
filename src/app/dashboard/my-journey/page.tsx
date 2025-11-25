@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Trophy,
   FileText,
-  Calendar,
   AlertTriangle,
   ExternalLink,
   CheckCircle,
@@ -20,18 +19,21 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { myJourneyData } from "@/data/my-journey-data";
-import { WeeklyReport, Strike } from "@/types/my-journey";
+import { Strike } from "@/types/my-journey";
 import { TaskTableItem } from "@/types/team-journey";
 import { AchievementCard } from "@/components/my-journey/achievement-card";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { DifficultyBadge } from "@/components/ui/difficulty-badge";
+import { IndividualWeeklyReportsTable } from "@/components/weekly-reports/individual-weekly-reports-table";
+import { IndividualWeeklyReportModal } from "@/components/weekly-reports/individual-weekly-report-modal";
 import {
   getUserProfile,
   getUserAchievementProgress,
   getUserTaskCompletionStats,
   getUserTasksVisible,
 } from "@/lib/database";
+import { hasUserSubmittedThisWeekIndividual } from "@/lib/weekly-reports";
 import { startTaskLazy } from "@/lib/tasks";
 import { useAppContext } from "@/contexts/app-context";
 
@@ -148,30 +150,51 @@ function RealTaskRow({
           </div>
         </td>
         <td className="py-4 px-4">
-          <div className="flex justify-end">
-            <Button
-              size="sm"
-              className={`h-8 ${statusButtonConfig.buttonClass}`}
-              disabled={
-                task.status === "Peer Review" || task.status === "Finished"
-              }
-              onClick={() => {
-                if (
-                  task.status === "Not Started" &&
-                  onStartTask &&
-                  task.task_id
-                ) {
-                  // Use task_id for starting new tasks (lazy progress creation)
-                  onStartTask(task.task_id);
-                } else if (task.status === "In Progress") {
-                  // Navigate to task detail page for continuing/submitting
-                  window.location.href = `/dashboard/my-journey/task/${task.id}`;
-                }
-              }}
-            >
-              {statusButtonConfig.icon}
-              {statusButtonConfig.buttonText}
-            </Button>
+          <div className="flex justify-end gap-2">
+            {task.status === "Finished" ? (
+              <>
+                <Button
+                  size="sm"
+                  className="h-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                  disabled
+                >
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Done
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs px-3 py-2"
+                  onClick={() => {
+                    window.location.href = `/dashboard/my-journey/task/${task.id}`;
+                  }}
+                >
+                  View Info
+                </Button>
+              </>
+            ) : (
+              <Button
+                size="sm"
+                className={`h-8 ${statusButtonConfig.buttonClass}`}
+                disabled={task.status === "Peer Review"}
+                onClick={() => {
+                  if (
+                    task.status === "Not Started" &&
+                    onStartTask &&
+                    task.task_id
+                  ) {
+                    // Use task_id for starting new tasks (lazy progress creation)
+                    onStartTask(task.task_id);
+                  } else if (task.status === "In Progress") {
+                    // Navigate to task detail page for continuing/submitting
+                    window.location.href = `/dashboard/my-journey/task/${task.id}`;
+                  }
+                }}
+              >
+                {statusButtonConfig.icon}
+                {statusButtonConfig.buttonText}
+              </Button>
+            )}
           </div>
         </td>
       </tr>
@@ -200,73 +223,6 @@ function RealTaskRow({
 }
 
 // Task row component (kept for legacy data)
-// Weekly report row component
-function WeeklyReportRow({ report }: { report: WeeklyReport }) {
-  const getActionConfig = (status: WeeklyReport["status"]) => {
-    switch (status) {
-      case "complete":
-        return {
-          buttonText: "Complete",
-          buttonClass:
-            "bg-background border border-border text-foreground hover:bg-accent",
-          icon: <Clock className="h-3 w-3 mr-1" />,
-        };
-      case "done":
-        return {
-          buttonText: "Done",
-          buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
-          icon: <CheckCircle className="h-3 w-3 mr-1" />,
-        };
-      case "missed":
-        return {
-          buttonText: "Missed",
-          buttonClass:
-            "bg-destructive text-destructive-foreground hover:bg-destructive/80",
-          icon: <AlertTriangle className="h-3 w-3 mr-1" />,
-        };
-    }
-  };
-
-  const actionConfig = getActionConfig(report.status);
-
-  return (
-    <tr className="border-b border-border hover:bg-muted/50">
-      <td className="py-4 px-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">
-            W
-          </div>
-          <div>
-            <div className="font-medium text-sm">{report.week}</div>
-            <div className="text-xs text-muted-foreground">
-              {report.dateRange}
-            </div>
-          </div>
-        </div>
-      </td>
-      <td className="py-4 px-4">
-        <div className="text-sm text-muted-foreground">{report.dateFilled}</div>
-      </td>
-      <td className="py-4 px-4">
-        <div className="flex items-center gap-2">
-          <Calendar
-            className={`h-4 w-4 ${
-              report.iconColor === "green" ? "text-green-600" : "text-red-600"
-            }`}
-          />
-        </div>
-      </td>
-      <td className="py-4 px-4">
-        <div className="flex justify-end">
-          <Button size="sm" className={`h-8  ${actionConfig.buttonClass}`}>
-            {actionConfig.icon}
-            {actionConfig.buttonText}
-          </Button>
-        </div>
-      </td>
-    </tr>
-  );
-}
 
 // Strike row component
 function StrikeRow({ strike }: { strike: Strike }) {
@@ -378,6 +334,10 @@ export default function MyJourneyPage() {
     }[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [isIndividualReportModalOpen, setIsIndividualReportModalOpen] =
+    useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [hasSubmittedThisWeek, setHasSubmittedThisWeek] = useState(false);
 
   // Task interaction handlers using new lazy progress architecture
   const handleStartTask = async (taskId: string) => {
@@ -406,19 +366,27 @@ export default function MyJourneyPage() {
     }
   };
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     if (!user?.id) return;
 
     setLoading(true);
     try {
       // Fetch all data in parallel
-      const [profile, individualTasksData, achievementProgress, taskStats] =
-        await Promise.all([
-          getUserProfile(user.id),
-          getUserTasksVisible(user.id),
-          getUserAchievementProgress(user.id),
-          getUserTaskCompletionStats(user.id),
-        ]);
+      const [
+        profile,
+        individualTasksData,
+        achievementProgress,
+        taskStats,
+        submissionStatus,
+      ] = await Promise.all([
+        getUserProfile(user.id),
+        getUserTasksVisible(user.id),
+        getUserAchievementProgress(user.id),
+        getUserTaskCompletionStats(user.id),
+        hasUserSubmittedThisWeekIndividual(user.id),
+      ]);
+
+      setHasSubmittedThisWeek(submissionStatus);
 
       setUserProfile(profile);
 
@@ -442,7 +410,7 @@ export default function MyJourneyPage() {
       // Convert individual tasks to TaskTableItem format
       const convertedTasks: TaskTableItem[] =
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        individualTasksData.map((task: any) => {
+        (individualTasksData as any[]).map((task: any) => {
           const getUIStatus = (
             status: string | null
           ): TaskTableItem["status"] => {
@@ -547,11 +515,11 @@ export default function MyJourneyPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     fetchUserData();
-  }, [user?.id]);
+  }, [fetchUserData]);
 
   return (
     <main className="p-8">
@@ -576,9 +544,11 @@ export default function MyJourneyPage() {
           <Button
             size="sm"
             className="bg-foreground text-background hover:bg-foreground/80"
+            onClick={() => setIsIndividualReportModalOpen(true)}
+            disabled={hasSubmittedThisWeek}
           >
             <FileText className="h-4 w-4 mr-2" />
-            Submit Weekly Report
+            {hasSubmittedThisWeek ? "Report Submitted" : "Submit Weekly Report"}
           </Button>
         </div>
       </div>
@@ -719,44 +689,10 @@ export default function MyJourneyPage() {
         </TabsContent>
 
         <TabsContent value="weekly-reports" className="space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">This Week Progress</h2>
-            <Button variant="outline" className="gap-2">
-              <ExternalLink className="h-4 w-4" />
-              Read About Weekly Reports
-            </Button>
-          </div>
-
-          {/* Weekly Reports Table */}
-          <div className="bg-card rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Weekly Reports</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
-                      Week
-                    </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
-                      Date Filled
-                    </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
-                      Status
-                    </th>
-                    <th className="text-right py-4 px-4 font-medium text-muted-foreground">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {myJourneyData.weeklyReports.map((report) => (
-                    <WeeklyReportRow key={report.id} report={report} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          {/* Individual Weekly Reports */}
+          {user?.id && (
+            <IndividualWeeklyReportsTable key={refreshKey} userId={user.id} />
+          )}
         </TabsContent>
 
         <TabsContent value="strikes" className="space-y-6">
@@ -803,6 +739,21 @@ export default function MyJourneyPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Individual Weekly Report Modal */}
+      {user?.id && (
+        <IndividualWeeklyReportModal
+          open={isIndividualReportModalOpen}
+          onOpenChange={setIsIndividualReportModalOpen}
+          userId={user.id}
+          onSuccess={() => {
+            // Trigger refresh of the reports table and submission status
+            setRefreshKey((prev) => prev + 1);
+            fetchUserData(); // Refresh all data including submission status
+            console.log("Weekly report submitted successfully");
+          }}
+        />
+      )}
     </main>
   );
 }

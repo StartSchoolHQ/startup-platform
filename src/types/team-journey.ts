@@ -124,15 +124,15 @@ export interface TeamTask {
 export interface TaskTableItem {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   responsible?: {
     name: string;
     avatar: string;
     date: string;
   };
   difficulty: "Easy" | "Medium" | "Hard";
-  xp: number;
-  points: number;
+  xp: number | null;
+  points: number | null;
   status:
     | "Finished"
     | "In Progress"
@@ -141,14 +141,14 @@ export interface TaskTableItem {
     | "Not Started";
   action: "complete" | "done";
   hasTips?: boolean;
-  isAvailable?: boolean;
+  isAvailable?: boolean | null;
   // Additional fields for My Journey view
   reviewFeedback?: string | null;
   reviewerName?: string | null;
   reviewerAvatarUrl?: string | null;
   teamName?: string;
-  assignedAt?: string;
-  completedAt?: string;
+  assignedAt?: string | null;
+  completedAt?: string | null;
   // For lazy progress system - original task ID for starting new tasks
   task_id?: string;
 }

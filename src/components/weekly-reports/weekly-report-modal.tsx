@@ -68,6 +68,7 @@ export function WeeklyReportModal({
         .insert({
           user_id: userId,
           team_id: teamId,
+          context: "team",
           week_start_date: currentWeek.week_start,
           week_end_date: currentWeek.week_end,
           week_number: currentWeek.week_number,

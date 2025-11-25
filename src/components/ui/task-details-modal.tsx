@@ -125,7 +125,7 @@ export function TaskDetailsModal({
   submittingReview = false,
 }: TaskDetailsModalProps) {
   // Submission mode state
-  const [formData, setFormData] = useState<Record<string, unknown>>({});
+  const [formData, setFormData] = useState<Record<string, string | string[]>>({});
   const [externalUrls, setExternalUrls] = useState<ExternalUrl[]>([]);
   const [currentUrl, setCurrentUrl] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -243,7 +243,7 @@ export function TaskDetailsModal({
       });
     } else {
       // Validate default form fields (description is required)
-      if (!formData.description?.trim()) {
+      if (typeof formData.description === 'string' && !formData.description?.trim()) {
         errors.push("Task Completion Description is required");
       }
     }
@@ -322,7 +322,7 @@ export function TaskDetailsModal({
                 id="description"
                 name="description"
                 placeholder="Describe what you completed and how you approached this task..."
-                value={formData.description || ""}
+                value={(formData.description as string) || ""}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,

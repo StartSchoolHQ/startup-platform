@@ -55,6 +55,7 @@ export async function hasUserSubmittedThisWeek(
       .select("id")
       .eq("user_id", userId)
       .eq("team_id", teamId)
+      .eq("context", "team")
       .eq("week_number", weekBoundaries.week_number)
       .eq("week_year", weekBoundaries.week_year)
       .limit(1);
@@ -91,4 +92,56 @@ export function formatWeekPeriod(weekBoundaries: WeekBoundaries): string {
   );
 
   return `Week ${weekBoundaries.week_number}: ${startDate} - ${endDate}`;
+}
+
+// Individual context functions
+export async function hasUserSubmittedThisWeekIndividual(
+  userId: string
+): Promise<boolean> {
+  try {
+    const weekBoundaries = await getCurrentWeekBoundaries();
+    if (!weekBoundaries) return false;
+
+    const supabase = createClient();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from("weekly_reports")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("context", "individual")
+      .is("team_id", null)
+      .eq("week_number", weekBoundaries.week_number)
+      .eq("week_year", weekBoundaries.week_year)
+      .limit(1);
+
+    if (error) {
+      console.error("Error checking individual submission status:", error);
+      return false;
+    }
+
+    return data && data.length > 0;
+  } catch (error) {
+    console.error("Error in hasUserSubmittedThisWeekIndividual:", error);
+    return false;
+  }
+}
+
+export async function getUserIndividualWeeklyReports(userId: string) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("weekly_reports")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("context", "individual")
+    .is("team_id", null)
+    .order("week_year", { ascending: false })
+    .order("week_number", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching individual weekly reports:", error);
+    return [];
+  }
+
+  return data || [];
 }

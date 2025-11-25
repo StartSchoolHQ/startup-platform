@@ -106,7 +106,7 @@ export async function getPeerReviewStatsFromTransactions(userId: string) {
     .select("xp_change, points_change, created_at, metadata")
     .eq("user_id", userId)
     .eq("type", "validation")
-    .eq("activity_type", "team")
+    .not("team_id", "is", null) // Team activities have team_id set (not NULL)
     .gte("xp_change", 0) // Only positive rewards (not penalties)
     .gte("created_at", "2025-11-21T13:00:00.000Z"); // Only count recent transactions with correct 10% calculation
 
@@ -154,7 +154,7 @@ export async function getIndividualActivityStats(userId: string) {
     .from("transactions")
     .select("xp_change, points_change, created_at, type, description")
     .eq("user_id", userId)
-    .eq("activity_type", "individual")
+    .is("team_id", null) // Individual activities have team_id = NULL
     .gte("xp_change", 0); // Only positive gains
 
   if (error) {
@@ -187,6 +187,51 @@ export async function getIndividualActivityStats(userId: string) {
     totalActivities,
     meetingsCompleted: meetingsCount,
     achievementsEarned: achievementsCount,
+  };
+}
+
+// Get team activity statistics from transactions
+export async function getTeamActivityStats(userId: string, teamId: string) {
+  const supabase = createClient();
+
+  // Get all team activity transactions for this user in this team
+  const { data: teamTransactions, error } = await supabase
+    .from("transactions")
+    .select("xp_change, points_change, created_at, type, description")
+    .eq("user_id", userId)
+    .eq("team_id", teamId) // Team activities have team_id set
+    .gte("xp_change", 0); // Only positive gains
+
+  if (error) {
+    console.error("Error fetching team activity transactions:", error);
+    throw error;
+  }
+
+  const transactions = teamTransactions || [];
+
+  // Calculate totals
+  const totalXpEarned = transactions.reduce(
+    (sum, t) => sum + (t.xp_change || 0),
+    0
+  );
+  const totalPointsEarned = transactions.reduce(
+    (sum, t) => sum + (t.points_change || 0),
+    0
+  );
+  const totalActivities = transactions.length;
+
+  // Count by activity type
+  const tasksCompleted = transactions.filter((t) => t.type === "task").length;
+  const validationsCompleted = transactions.filter(
+    (t) => t.type === "validation"
+  ).length;
+
+  return {
+    totalXpEarned,
+    totalPointsEarned,
+    totalActivities,
+    tasksCompleted,
+    validationsCompleted,
   };
 }
 
@@ -237,6 +282,7 @@ export async function getTeamWeeklyReports(teamId: string) {
     `
     )
     .eq("team_id", teamId)
+    .eq("context", "team")
     .order("week_year", { ascending: false })
     .order("week_number", { ascending: false });
 
@@ -431,12 +477,13 @@ export async function createTeam(
     .insert({
       user_id: founderId,
       team_id: team.id,
+      activity_type: "team_formation",
       type: "team_cost",
       points_change: -TEAM_CREATION_COST,
+      xp_change: 0,
       points_type: "individual",
       description: `Created team: ${teamName}`,
       created_at: new Date().toISOString(),
-      activity_type: "team",
     });
 
   if (transactionError) {
@@ -2265,7 +2312,7 @@ export async function getUserStrikes(userId: string) {
 export async function getUserWeeklyReports(userId: string) {
   const supabase = createClient();
 
-  // Get weekly reports submitted by the user
+  // Get weekly reports submitted by the user for teams
   const { data: reports, error } = await supabase
     .from("weekly_reports")
     .select(
@@ -2281,6 +2328,7 @@ export async function getUserWeeklyReports(userId: string) {
     `
     )
     .eq("user_id", userId)
+    .eq("context", "team")
     .order("week_year", { ascending: false })
     .order("week_number", { ascending: false })
     .limit(10);
@@ -2429,6 +2477,8 @@ export async function getTeamTasksFromProgress(teamId: string) {
  * Assign a task to a team using task_progress table
  */
 export async function assignTeamTaskToProgress(
+  progressId: string,
+  userId: string,
   teamId: string,
   taskId: string,
   assignedToUserId?: string,
@@ -2437,6 +2487,8 @@ export async function assignTeamTaskToProgress(
   const supabase = createClient();
 
   const { data, error } = await supabase.rpc("assign_team_task_to_progress", {
+    p_progress_id: progressId,
+    p_user_id: userId,
     p_team_id: teamId,
     p_task_id: taskId,
     p_assigned_to_user_id: assignedToUserId,
@@ -2603,35 +2655,37 @@ export async function createTask(params: CreateTaskParams) {
   const supabase = createClient();
 
   // Create task directly in tasks table WITHOUT pre-assignment
+  const taskInsert = {
+    template_code: params.templateCode,
+    activity_type: params.taskContext || "team",
+    title: params.title,
+    description: params.description || null,
+    detailed_instructions: params.detailedInstructions || null,
+    category: params.category || "development",
+    priority: params.priority || "medium",
+    difficulty_level: params.difficultyLevel || 1,
+    estimated_hours: params.estimatedHours || 0,
+    base_xp_reward: params.baseXpReward || 0,
+    base_points_reward: params.basePointsReward || 0,
+    requires_review: params.requiresReview || false,
+    tips_content: (params.tipsContent || []) as unknown as Json,
+    peer_review_criteria: (params.peerReviewCriteria || []) as unknown as Json,
+    learning_objectives: params.learningObjectives || null,
+    deliverables: params.deliverables || null,
+    resources: (params.resources || []) as unknown as Json,
+    review_instructions: params.reviewInstructions || null,
+    tags: params.tags || null,
+    sort_order: params.sortOrder || 0,
+    prerequisite_template_codes: params.prerequisiteTemplateCodes || null,
+    minimum_team_level: params.minimumTeamLevel || 1,
+    auto_assign_to_new_teams: params.autoAssignToNewTeams !== false,
+    achievement_id: params.achievementId || null,
+    is_active: true,
+  };
+  
   const { data, error } = await supabase
     .from("tasks")
-    .insert({
-      template_code: params.templateCode,
-      title: params.title,
-      description: params.description || null,
-      detailed_instructions: params.detailedInstructions || null,
-      category: params.category || "development",
-      priority: params.priority || "medium",
-      difficulty_level: params.difficultyLevel || 1,
-      estimated_hours: params.estimatedHours || 0,
-      base_xp_reward: params.baseXpReward || 0,
-      base_points_reward: params.basePointsReward || 0,
-      requires_review: params.requiresReview || false,
-      tips_content: params.tipsContent || [],
-      peer_review_criteria: params.peerReviewCriteria || [],
-      learning_objectives: params.learningObjectives || null,
-      deliverables: params.deliverables || null,
-      resources: params.resources || [],
-      review_instructions: params.reviewInstructions || null,
-      tags: params.tags || null,
-      sort_order: params.sortOrder || 0,
-      prerequisite_template_codes: params.prerequisiteTemplateCodes || null,
-      minimum_team_level: params.minimumTeamLevel || 1,
-      auto_assign_to_new_teams: params.autoAssignToNewTeams !== false,
-      achievement_id: params.achievementId || null,
-      activity_type: params.taskContext || "team", // Key field for lazy progress
-      is_active: true,
-    })
+    .insert(taskInsert)
     .select("id")
     .single();
 
@@ -2669,7 +2723,7 @@ export async function updateTask(
 ) {
   const supabase = createClient();
 
-  const updateData: Record<string, any> = {};
+  const updateData: Record<string, unknown> = {};
 
   // Map parameters to database columns
   if (params.templateCode !== undefined)

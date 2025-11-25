@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Edit,
   Trash2,
@@ -56,11 +56,7 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    loadTasks();
-  }, [activityType, sortBy, sortOrder]);
-
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getAllTasks(activityType, sortBy, sortOrder);
@@ -70,7 +66,11 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activityType, sortBy, sortOrder]);
+
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
 
   const handleSort = (column: typeof sortBy) => {
     if (sortBy === column) {
@@ -165,7 +165,7 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
           No {activityType} tasks found
         </div>
         <div className="text-sm text-muted-foreground">
-          Create your first {activityType} task using the "Add Task" button
+          Create your first {activityType} task using the &quot;Add Task&quot; button
           above
         </div>
       </div>

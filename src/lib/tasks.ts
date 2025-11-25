@@ -7,6 +7,20 @@ import {
   TaskPriority,
 } from "@/types/team-journey";
 import { createClient } from "@/lib/supabase/client";
+import type { Json } from "@/types/database";
+
+// Type for partial progress data returned from database queries
+type PartialProgressData = {
+  team_id?: string | null;
+  assigned_to_user_id?: string | null;
+  assigned_at?: string | null;
+  status?: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+  updated_at?: string;
+  submission_notes?: string | null;
+  reviewer_user_id?: string | null;
+} | null;
 
 // Function to convert database task to UI format for the simplified architecture
 export function convertTeamTaskToTableItem(task: TeamTask): TaskTableItem {
@@ -36,7 +50,7 @@ export function convertTeamTaskToTableItem(task: TeamTask): TaskTableItem {
   };
 
   return {
-    id: task.progress_id, // Use progress_id as the main ID for UI
+    id: task.progress_id || '', // Use progress_id as the main ID for UI
     title: task.title,
     description: task.description,
     responsible: task.assignee_name
@@ -565,7 +579,7 @@ export async function getTaskByIdLazy(
     }
 
     // Fetch progress data if it exists
-    let progressData: any = null;
+    let progressData: PartialProgressData = null;
     if (progressId) {
       const { data: progress } = await supabase
         .from("task_progress")
@@ -596,45 +610,44 @@ export async function getTaskByIdLazy(
 
     // Build the TeamTask object
     const task: TeamTask = {
+      id: progressId || actualTaskId, // Use progress_id if available, otherwise task_id
       progress_id: progressId || "none", // Use "none" for tasks without progress yet
       task_id: actualTaskId,
       title: taskData.title,
       description: taskData.description || "",
-      category: taskData.category,
-      priority: taskData.priority,
+      category: (taskData.category as TaskCategory) || "development",
+      priority: (taskData.priority as TaskPriority) || "medium",
       difficulty_level: taskData.difficulty_level || 1,
       base_xp_reward: taskData.base_xp_reward || 0,
-      detailed_instructions: taskData.detailed_instructions,
-      tips_content: taskData.tips_content,
-      peer_review_criteria: taskData.peer_review_criteria,
-      learning_objectives: taskData.learning_objectives,
-      deliverables: taskData.deliverables,
-      resources: taskData.resources,
-      submission_form_schema: taskData.submission_form_schema,
+      xp_reward: taskData.base_xp_reward || 0, // xp_reward maps to base_xp_reward
+      detailed_instructions: taskData.detailed_instructions || undefined,
+      tips_content: (taskData.tips_content as Array<{ title: string; content: string; }>) || undefined,
+      peer_review_criteria: (taskData.peer_review_criteria as Array<{ category: string; points: string[]; }>) || undefined,
+      learning_objectives: taskData.learning_objectives || undefined,
+      deliverables: taskData.deliverables || undefined,
+      resources: (taskData.resources as Array<{ title: string; type: string; url: string; description: string; }>) || undefined,
+      submission_form_schema: (taskData.submission_form_schema as { fields: Array<{ name: string; type: "text" | "textarea" | "url_list" | "file"; label: string; placeholder?: string; required?: boolean; multiple?: boolean; accept?: string; }>; }) || undefined,
 
       // Progress-specific fields (null if no progress exists)
-      team_id: progressData?.team_id || teamId || null,
-      assigned_to_user_id: progressData?.assigned_to_user_id || null,
-      assigned_at: progressData?.assigned_at || null,
-      status: progressData?.status || "not_started",
-      started_at: progressData?.started_at || null,
-      completed_at: progressData?.completed_at || null,
-      updated_at: progressData?.updated_at || taskData.created_at,
-      submission_data: progressData?.submission_data || null,
-      submission_notes: progressData?.submission_notes || null,
-      reviewer_user_id: progressData?.reviewer_user_id || null,
+      team_id: progressData?.team_id || teamId || undefined,
+      assigned_to_user_id: progressData?.assigned_to_user_id || undefined,
+      assigned_at: progressData?.assigned_at || undefined,
+      status: (progressData?.status as TaskStatus) || "not_started",
+      started_at: progressData?.started_at || undefined,
+      completed_at: progressData?.completed_at || undefined,
+      updated_at: progressData?.updated_at || new Date().toISOString(),
+      // submission_data is handled separately - not part of TeamTask interface
+      submission_notes: progressData?.submission_notes || undefined,
+      reviewer_user_id: progressData?.reviewer_user_id || undefined,
 
-      // Computed fields
-      base_credits_reward:
-        taskData.base_points_reward || taskData.base_xp_reward || 0,
-      requires_review: taskData.requires_review || false,
-      review_instructions: taskData.review_instructions,
+      // Computed fields - base_credits_reward is mapped from base_points_reward in UI components
+      // requires_review and review_instructions are part of the database schema but not the TypeScript interface
 
       // Additional fields for UI
-      assignee_name: null, // Will be populated separately if needed
-      assignee_avatar_url: null,
-      reviewer_name: null,
-      reviewer_avatar_url: null,
+      assignee_name: undefined, // Will be populated separately if needed
+      assignee_avatar_url: undefined,
+      reviewer_name: undefined,
+      reviewer_avatar_url: undefined,
     };
 
     // Populate assignee info if task is assigned
@@ -646,8 +659,8 @@ export async function getTaskByIdLazy(
         .single();
 
       if (assigneeData) {
-        task.assignee_name = assigneeData.name;
-        task.assignee_avatar_url = assigneeData.avatar_url;
+        task.assignee_name = assigneeData.name || undefined;
+        task.assignee_avatar_url = assigneeData.avatar_url || undefined;
       }
     }
 
@@ -660,8 +673,8 @@ export async function getTaskByIdLazy(
         .single();
 
       if (reviewerData) {
-        task.reviewer_name = reviewerData.name;
-        task.reviewer_avatar_url = reviewerData.avatar_url;
+        task.reviewer_name = reviewerData.name || undefined;
+        task.reviewer_avatar_url = reviewerData.avatar_url || undefined;
       }
     }
 
@@ -1032,6 +1045,33 @@ export async function retryTask(
   }
 }
 
+// Individual task completion - auto-approve without peer review
+export async function completeIndividualTask(
+  progressId: string,
+  submissionData: Record<string, unknown>
+): Promise<boolean> {
+  try {
+    const supabase = createClient();
+
+    // Use existing complete_individual_task RPC function
+    const { data, error } = await supabase.rpc("complete_individual_task", {
+      p_progress_id: progressId,
+      p_submission_data: submissionData as Json,
+      p_submission_notes: (submissionData.notes as string) || undefined,
+    });
+
+    if (error) {
+      console.error("Error completing individual task:", error);
+      return false;
+    }
+
+    return data?.[0]?.success || true;
+  } catch (error) {
+    console.error("Error in completeIndividualTask:", error);
+    return false;
+  }
+}
+
 // Get all tasks for admin management (separated by activity_type)
 export async function getAllTasks(
   activityType?: "individual" | "team",
@@ -1092,11 +1132,11 @@ export async function getAllTasks(
           status: "Not Started" as AdminTaskItem["status"],
           action: "complete" as "complete" | "done",
           // Admin-specific additional fields
-          category: task.category,
-          priority: task.priority,
+          category: task.category || undefined,
+          priority: task.priority || undefined,
           activity_type: task.activity_type,
-          created_at: task.created_at,
-          updated_at: task.updated_at || task.created_at,
+          created_at: task.created_at || undefined,
+          updated_at: task.updated_at || task.created_at || undefined,
           difficulty_level: task.difficulty_level || 1,
         })
       ) || []

@@ -289,7 +289,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
 
   if (!task) return null;
 
-  const taskContext = task.activity_type || "team";
+  const taskContext = (task as { activity_type?: string }).activity_type || "team";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

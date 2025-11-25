@@ -77,24 +77,24 @@ export interface Achievement {
 }
 
 export interface TaskWithAchievement {
-  progress_id: string;
+  progress_id: string | null;
   task_id: string;
   title: string;
-  description: string;
-  category: string;
-  difficulty_level: number;
-  base_xp_reward: number;
-  base_credits_reward: number;
-  status: string;
-  assigned_to_user_id?: string;
-  assignee_name?: string;
-  assignee_avatar_url?: string;
-  assigned_at?: string;
-  started_at?: string;
-  completed_at?: string;
-  is_available: boolean;
-  achievement_id?: string;
-  achievement_name?: string;
+  description: string | null;
+  category: string | null;
+  difficulty_level: number | null;
+  base_xp_reward: number | null;
+  base_credits_reward: number | null;
+  status: string | null;
+  assigned_to_user_id?: string | null;
+  assignee_name?: string | null;
+  assignee_avatar_url?: string | null;
+  assigned_at?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  is_available: boolean | null;
+  achievement_id?: string | null;
+  achievement_name?: string | null;
 }
 
 export interface AchievementProgress {
