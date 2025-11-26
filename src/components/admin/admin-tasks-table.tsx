@@ -165,8 +165,8 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
           No {activityType} tasks found
         </div>
         <div className="text-sm text-muted-foreground">
-          Create your first {activityType} task using the &quot;Add Task&quot; button
-          above
+          Create your first {activityType} task using the &quot;Add Task&quot;
+          button above
         </div>
       </div>
     );

@@ -366,9 +366,6 @@ interface AchievementProgressRow {
   is_completed: boolean;
 }
 
-
-
-
 // Function to get achievement progress data
 export async function getAchievementProgressData(
   userId: string
@@ -399,7 +396,9 @@ export async function getAchievementProgressData(
           is_completed: achievement.is_completed,
         })
       ),
-      tasks: (tasks as Database['public']['Functions']['get_user_tasks_visible']['Returns']).map((task) => {
+      tasks: (
+        tasks as Database["public"]["Functions"]["get_user_tasks_visible"]["Returns"]
+      ).map((task) => {
         const taskData = task;
         return {
           progress_id: taskData.progress_id,
@@ -444,10 +443,14 @@ export async function getFilteredTasksByAchievement(
 
     // Filter by achievement if specified
     const filteredTasks = achievementId
-      ? (tasks as Database['public']['Functions']['get_user_tasks_visible']['Returns']).filter((task) => task.achievement_id === achievementId)
+      ? (
+          tasks as Database["public"]["Functions"]["get_user_tasks_visible"]["Returns"]
+        ).filter((task) => task.achievement_id === achievementId)
       : tasks;
 
-    return (filteredTasks as Database['public']['Functions']['get_user_tasks_visible']['Returns']).map((task) => {
+    return (
+      filteredTasks as Database["public"]["Functions"]["get_user_tasks_visible"]["Returns"]
+    ).map((task) => {
       const taskData = task;
       return {
         progress_id: taskData.progress_id,

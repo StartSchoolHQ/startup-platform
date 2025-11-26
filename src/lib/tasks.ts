@@ -50,7 +50,7 @@ export function convertTeamTaskToTableItem(task: TeamTask): TaskTableItem {
   };
 
   return {
-    id: task.progress_id || '', // Use progress_id as the main ID for UI
+    id: task.progress_id || "", // Use progress_id as the main ID for UI
     title: task.title,
     description: task.description,
     responsible: task.assignee_name
@@ -621,12 +621,35 @@ export async function getTaskByIdLazy(
       base_xp_reward: taskData.base_xp_reward || 0,
       xp_reward: taskData.base_xp_reward || 0, // xp_reward maps to base_xp_reward
       detailed_instructions: taskData.detailed_instructions || undefined,
-      tips_content: (taskData.tips_content as Array<{ title: string; content: string; }>) || undefined,
-      peer_review_criteria: (taskData.peer_review_criteria as Array<{ category: string; points: string[]; }>) || undefined,
+      tips_content:
+        (taskData.tips_content as Array<{ title: string; content: string }>) ||
+        undefined,
+      peer_review_criteria:
+        (taskData.peer_review_criteria as Array<{
+          category: string;
+          points: string[];
+        }>) || undefined,
       learning_objectives: taskData.learning_objectives || undefined,
       deliverables: taskData.deliverables || undefined,
-      resources: (taskData.resources as Array<{ title: string; type: string; url: string; description: string; }>) || undefined,
-      submission_form_schema: (taskData.submission_form_schema as { fields: Array<{ name: string; type: "text" | "textarea" | "url_list" | "file"; label: string; placeholder?: string; required?: boolean; multiple?: boolean; accept?: string; }>; }) || undefined,
+      resources:
+        (taskData.resources as Array<{
+          title: string;
+          type: string;
+          url: string;
+          description: string;
+        }>) || undefined,
+      submission_form_schema:
+        (taskData.submission_form_schema as {
+          fields: Array<{
+            name: string;
+            type: "text" | "textarea" | "url_list" | "file";
+            label: string;
+            placeholder?: string;
+            required?: boolean;
+            multiple?: boolean;
+            accept?: string;
+          }>;
+        }) || undefined,
 
       // Progress-specific fields (null if no progress exists)
       team_id: progressData?.team_id || teamId || undefined,

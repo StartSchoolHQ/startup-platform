@@ -125,7 +125,9 @@ export function TaskDetailsModal({
   submittingReview = false,
 }: TaskDetailsModalProps) {
   // Submission mode state
-  const [formData, setFormData] = useState<Record<string, string | string[]>>({});
+  const [formData, setFormData] = useState<Record<string, string | string[]>>(
+    {}
+  );
   const [externalUrls, setExternalUrls] = useState<ExternalUrl[]>([]);
   const [currentUrl, setCurrentUrl] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -243,7 +245,10 @@ export function TaskDetailsModal({
       });
     } else {
       // Validate default form fields (description is required)
-      if (typeof formData.description === 'string' && !formData.description?.trim()) {
+      if (
+        typeof formData.description === "string" &&
+        !formData.description?.trim()
+      ) {
         errors.push("Task Completion Description is required");
       }
     }

@@ -2682,7 +2682,7 @@ export async function createTask(params: CreateTaskParams) {
     achievement_id: params.achievementId || null,
     is_active: true,
   };
-  
+
   const { data, error } = await supabase
     .from("tasks")
     .insert(taskInsert)

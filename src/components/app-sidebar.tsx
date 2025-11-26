@@ -39,6 +39,7 @@ const navMainItems = [
     title: "My Journey",
     url: "/dashboard/my-journey",
     icon: User,
+    hidden: true,
   },
   {
     title: "Team Journey",
@@ -56,7 +57,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useApp();
 
   // Create navigation items based on user role
-  const navigationItems = [...navMainItems];
+  const navigationItems = navMainItems.filter((item) => !item.hidden);
 
   // Add admin section if user is admin
   if (user?.primary_role === "admin") {

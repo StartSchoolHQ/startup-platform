@@ -258,7 +258,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             try {
               // Use the existing function that handles RLS correctly
               const freshTasks = await getTeamTasksVisible(team.id);
-              const freshTask = (freshTasks as Database['public']['Functions']['get_team_tasks_visible']['Returns']).find(
+              const freshTask = (
+                freshTasks as Database["public"]["Functions"]["get_team_tasks_visible"]["Returns"]
+              ).find(
                 (t) =>
                   t.task_id === actualTaskId &&
                   t.assigned_to_user_id === user.id
@@ -374,7 +376,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       const tasksArray = Array.isArray(allTasks) ? allTasks : [];
 
       setFilteredTasks(
-        (tasksArray as Database['public']['Functions']['get_team_tasks_visible']['Returns']).map((task) => {
+        (
+          tasksArray as Database["public"]["Functions"]["get_team_tasks_visible"]["Returns"]
+        ).map((task) => {
           const taskData = task;
           return {
             progress_id: taskData.progress_id,
@@ -550,11 +554,15 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
         // Filter by achievement if specified
         const filteredTasksArray = achievementId
-          ? (tasksArray as Database['public']['Functions']['get_team_tasks_visible']['Returns']).filter((task) => task.achievement_id === achievementId)
+          ? (
+              tasksArray as Database["public"]["Functions"]["get_team_tasks_visible"]["Returns"]
+            ).filter((task) => task.achievement_id === achievementId)
           : tasksArray;
 
         setFilteredTasks(
-          (filteredTasksArray as Database['public']['Functions']['get_team_tasks_visible']['Returns']).map((task) => {
+          (
+            filteredTasksArray as Database["public"]["Functions"]["get_team_tasks_visible"]["Returns"]
+          ).map((task) => {
             const taskData = task;
             return {
               progress_id: taskData.progress_id,
