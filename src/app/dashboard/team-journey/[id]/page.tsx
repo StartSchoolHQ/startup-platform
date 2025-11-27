@@ -491,14 +491,13 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       const reportsArray = Array.isArray(reportsData) ? reportsData : [];
 
       // Calculate total clients contacted across all weekly reports
-      const totalClients = reportsArray.reduce(
-        (total: number, report) => {
-          const submissionData = report.submission_data as { clientsContacted?: number } | null;
-          const clientsContacted = Number(submissionData?.clientsContacted) || 0;
-          return total + clientsContacted;
-        },
-        0
-      );
+      const totalClients = reportsArray.reduce((total: number, report) => {
+        const submissionData = report.submission_data as {
+          clientsContacted?: number;
+        } | null;
+        const clientsContacted = Number(submissionData?.clientsContacted) || 0;
+        return total + clientsContacted;
+      }, 0);
       setTotalClientsContacted(totalClients);
 
       // Group reports by week to show team submission status
