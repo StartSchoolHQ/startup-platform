@@ -1,258 +1,406 @@
-# Startup Platform - Development Plan
+# 🎯 **HACKATHON OPTIMIZATION PLAN**
 
-## Current Status
+## **PHASE 1: MANDATORY INFRASTRUCTURE** ⚡
 
-- Basic platform structure implemented
-- User authentication working
-- Team creation and management functional
-- Task system with progress tracking
-- Achievement system basic implementation
-- Excel import/export for tasks implemented
+### Timeline: 24-48 hours before event
 
-## MAJOR REFACTORING: Task System Architecture Overhaul
+### **1.1 Supabase Pro Upgrade**
 
-### Problem Identified
+- **Action**: Upgrade to Pro plan ($25/month)
+- **Impact**: 60 → 200+ concurrent connections, automatic connection pooling
+- **Time**: 15 minutes
+- **Risk**: Zero (can downgrade after)
+- **Success Metric**: Connection limit increased 3x
 
-Current system pre-assigns all tasks to all teams via `task_progress` entries, creating:
+### **1.2 Database Index Creation**
 
-- Database bloat (300 records where only 30 represent real activity)
-- Inefficient queries
-- Complex task content updates
-- Poor analytics due to noise from unused assignments
+```sql
+-- Critical indexes for hackathon load patterns
+CREATE INDEX CONCURRENTLY idx_team_members_active
+ON team_members(user_id, left_at) WHERE left_at IS NULL;
 
-### Solution: Pure Template + Lazy Progress Model
+CREATE INDEX CONCURRENTLY idx_transactions_user_team_time
+ON transactions(user_id, team_id, created_at DESC);
 
-**Core Concept**: Teams see ALL active tasks from `tasks` table directly. Create `task_progress` entries ONLY when teams actually interact with tasks.
+CREATE INDEX CONCURRENTLY idx_task_progress_team_status
+ON task_progress(team_id, status, context);
 
-**Benefits**:
+CREATE INDEX CONCURRENTLY idx_teams_status_created
+ON teams(status, created_at DESC);
 
-- ✅ Edit task content once → applies to all teams instantly
-- ✅ 80-90% reduction in `task_progress` records
-- ✅ Cleaner analytics (real engagement data only)
-- ✅ Better performance
-- ✅ Maintains ALL existing functionality (peer reviews, assignments, tracking)
+CREATE INDEX CONCURRENTLY idx_team_invitations_pending
+ON team_invitations(invited_user_id, status) WHERE status = 'pending';
+```
 
----
-
-## 🗓️ PHASED MIGRATION PLAN
-
-### **PHASE 1: Foundation Setup** (1-2 days) - ✅ **COMPLETED**
-
-**Goal:** Create new functions alongside existing ones
-
-**Database Changes:**
-
-- [x] ✅ Create `get_team_tasks_visible(p_team_id)` RPC function
-- [x] ✅ Create `get_user_tasks_visible(p_user_id)` RPC function
-- [x] ✅ Create `create_progress_if_needed(task_id, team_id, user_id, context)` helper
-- [ ] Add database indexes for new query patterns (defer to Phase 6)
-
-**TypeScript Functions:**
-
-- [x] ✅ Create `getTeamTasksVisible()` alongside existing `getTeamTasks()` in `tasks.ts`
-- [x] ✅ Create `getUserTasksVisible()` alongside existing `getUserTasks()` in `tasks.ts`
-- [x] ✅ Create `startTaskLazy()` helper function in `tasks.ts`
-- [x] ✅ Create `getTeamTasksVisible()` in `database.ts` for consistency
-- [x] ✅ Create `getUserTasksVisible()` in `database.ts` for consistency
-- [x] ✅ Create `createProgressIfNeededDB()` in `database.ts` for consistency
-- [x] ✅ Keep ALL existing functions untouched
-
-**Testing:** ✅ COMPLETED
-
-- [x] ✅ Test new functions return same data as old ones - PASSED
-- [x] ✅ Verify no performance regressions - PASSED (shows 91 tasks vs only pre-assigned)
-- [x] ✅ Test lazy progress creation works - FIXED & WORKING
-
-**Result:** ✅ Foundation successfully established and tested. All new lazy progress architecture functions working correctly with proper constraint handling. Ready for Phase 2 component testing.
+- **Impact**: Query speed 5-10x faster under load
+- **Time**: 30 minutes to create, 2 hours to build (runs in background)
+- **Risk**: Zero (only improves performance)
 
 ---
 
-### **PHASE 2: Single Component Migration** (2-3 days) - ✅ **COMPLETED**
+## **PHASE 2: CODE OPTIMIZATIONS** 🔧
 
-**Goal:** Migrate ONE component to validate approach
+### Timeline: 12-24 hours before event
 
-**Target Component:**
+### **2.1 Team Creation Optimization**
 
-- [x] ✅ Choose **Team Tasks Table** (`/dashboard/team-journey/[id]/page.tsx`)
-- [x] ✅ Replace `getTasksByAchievement()` with `getTeamTasksVisible()`
-- [x] ✅ Update task interaction handlers to use lazy progress creation
-- [x] ✅ Fixed database constraint issues with `activity_type` and context validation
-- [x] ✅ Keep fallback to old function if issues arise
+**Current Issue**: 6 sequential database calls during team creation
 
-**Validation:**
+```typescript
+// Optimize createTeam function with transaction batching
+export async function createTeamOptimized(founderId, teamName, description) {
+  const supabase = createClient();
 
-- [x] ✅ Verify task display works correctly - Shows ALL 91 tasks instead of only pre-assigned
-- [x] ✅ Test task assignment flow - Working with optimistic updates
-- [x] ✅ Test task starting/completion - Fixed lazy progress creation with proper constraints
-- [x] ✅ Verify peer review system unaffected - Maintained compatibility
-- [x] ✅ Test with multiple teams - Database functions working correctly
+  // Use database function for atomic team creation
+  const { data, error } = await supabase.rpc("create_team_atomic", {
+    p_founder_id: founderId,
+    p_team_name: teamName,
+    p_description: description,
+    p_cost: 100,
+  });
 
-**Result:** ✅ Phase 2 successfully completed! Team Tasks Table now uses lazy progress architecture. Teams see all available tasks, lazy progress creation works correctly, and all existing functionality is preserved.
+  if (error) throw error;
+  return data;
+}
+```
 
----
+- **Impact**: Eliminates race conditions during team formation rush
+- **Time**: 2 hours
+- **Risk**: Low (fallback to current method)
 
-### **PHASE 3: Individual Tasks Migration** (2-3 days) - ✅ **COMPLETED**
+### **2.2 Query Batching for Team Journey**
 
-**Goal:** Migrate My Journey page
+**Current Issue**: Multiple separate API calls per page load
 
-**Target Component:**
+```typescript
+// Replace multiple calls with single optimized query
+export async function getTeamDashboardData(teamId, userId) {
+  const supabase = createClient();
 
-- [x] ✅ Migrate **My Journey page** (`/dashboard/my-journey/page.tsx`)
-- [x] ✅ Replace individual task functions with visible variants
-- [x] ✅ Update individual task interaction flows
-- [x] ✅ Add `activity_type` field to tasks table for clean separation
-- [x] ✅ Fixed database function column name issues
+  const { data, error } = await supabase
+    .from("teams")
+    .select(
+      `
+      id, name, description, status, member_count,
+      team_members!inner (
+        user_id, team_role,
+        users (name, avatar_url, total_xp)
+      ),
+      transactions (
+        type, points_change, xp_change, created_at
+      ),
+      task_progress (
+        status, task_id,
+        tasks (title, difficulty_level)
+      )
+    `
+    )
+    .eq("id", teamId)
+    .single();
 
-**Validation:**
+  return transformDashboardData(data);
+}
+```
 
-- [x] ✅ Verify individual task display - Shows only 3 individual tasks (no team task confusion)
-- [x] ✅ Test individual task progress tracking - Lazy progress creation working
-- [x] ✅ Verify achievement system unaffected - Maintained compatibility
-- [x] ✅ Test user onboarding flow - Clean task separation implemented
+- **Impact**: 3-4 API calls → 1 API call per page
+- **Time**: 3 hours
+- **Risk**: Medium (need to update UI data handling)
 
-**Result:** ✅ Phase 3 successfully completed! My Journey page now uses lazy progress architecture with clean task separation. Individual users see only individual tasks (3 tasks) while team users see only team tasks (88 tasks). All task interaction functionality preserved.
+### **2.3 Real-time Subscription Throttling**
 
----
+**Current Issue**: Too frequent real-time updates under load
 
-### **PHASE 4: Admin Interface Update** (1-2 days) - ✅ **COMPLETED**
+```typescript
+// Throttle subscription updates
+export function subscribeToUserUpdatesThrottled(userId, callback) {
+  const supabase = createClient();
 
-**Goal:** Update task creation to use new system
+  let lastUpdate = 0;
+  const THROTTLE_MS = 2000; // Max 1 update per 2 seconds
 
-**Changes:**
+  return supabase
+    .channel("user_updates")
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "users",
+        filter: `id=eq.${userId}`,
+      },
+      (payload) => {
+        const now = Date.now();
+        if (now - lastUpdate > THROTTLE_MS) {
+          lastUpdate = now;
+          callback(payload);
+        }
+      }
+    )
+    .subscribe();
+}
+```
 
-- [x] ✅ Built complete admin interface with individual/team task tabs
-- [x] ✅ Implemented full CRUD operations (Create/Read/Update/Delete) for task templates
-- [x] ✅ Added rich content editing (Content & Tips tabs with detailed instructions, learning objectives, deliverables, resources)
-- [x] ✅ Added context-aware task creation (team vs individual)
-- [x] ✅ Implemented task sorting and filtering functionality
-- [x] ✅ Fixed modal state management and focus trap issues
-
-**Validation:**
-
-- [x] ✅ Test task creation flow - Works for both individual and team tasks
-- [x] ✅ Test task editing applies to all teams - Template system working correctly
-- [x] ✅ Verify new tasks are visible to all teams - Lazy progress architecture confirmed
-- [x] ✅ Fixed task detail page JSON array validation issues
-- [x] ✅ Added default task submission forms for tasks without custom schemas
-
-**Result:** ✅ Phase 4 successfully completed! Admin interface fully functional with complete task template management. Task creation uses template system (no pre-assignment), task editing applies globally to all teams, and all critical bugs fixed.
-
----
-
-### **PHASE 5: Peer Review System Verification** (1-2 days) - ✅ **COMPLETED - NO CHANGES NEEDED**
-
-**Goal:** Ensure peer review system fully compatible
-
-**Critical Analysis Result:**
-
-- [x] ✅ **PEER REVIEW SYSTEM IS FULLY COMPATIBLE** - No migration required
-- [x] ✅ Peer reviews operate on `task_progress` entries, which our lazy progress creates when tasks are submitted
-- [x] ✅ All existing RPC functions (`accept_external_task_for_review`, `submit_external_peer_review`) work unchanged
-- [x] ✅ Cross-team review logic intact - reviewers from different teams can review submissions
-- [x] ✅ Status transitions (`pending_review` → `approved`/`rejected`) work identically
-- [x] ✅ Fixed peer review criteria array validation issues in task detail modals
-
-**Validation:**
-
-- [x] ✅ Verified peer review functions work with lazy progress - Compatible by design
-- [x] ✅ Tested submission → review → approval flow - Works with lazy progress entries
-- [x] ✅ Confirmed reviewer assignment works - Uses existing `task_progress` records
-- [x] ✅ No database query updates needed - Existing queries work perfectly
-
-**Result:** ✅ Phase 5 completed with ZERO code changes needed! Peer review system already compatible with lazy progress architecture. Only bug fixes applied for array validation.
-
----
-
-### **PHASE 6: Remaining Components** (3-4 days) - 🟡 LOW RISK
-
-**Goal:** Migrate all remaining task-related components
-
-**Components to Migrate:**
-
-- [ ] Dashboard overview task widgets
-- [ ] Achievement system task queries
-- [ ] Analytics and reporting functions
-- [ ] Team management task views
-- [ ] Any remaining task-related UI
-
-**Validation:**
-
-- [ ] Full system testing
-- [ ] Performance benchmarking
-- [ ] User acceptance testing
-- [ ] Cross-component integration testing
+- **Impact**: Reduces real-time channel pressure
+- **Time**: 1 hour
+- **Risk**: Low (just slows updates slightly)
 
 ---
 
-### **PHASE 7: Cleanup & Optimization** (2-3 days) - 🟠 MEDIUM RISK
+## **PHASE 3: RESILIENCE FEATURES** 🛡️
 
-**Goal:** Remove old functions and optimize
+### Timeline: 6-12 hours before event
 
-**Database Cleanup:**
+### **3.1 Connection Retry Logic**
 
-- [ ] Remove orphaned `task_progress` entries (status='not_started' with no interaction)
-- [ ] Drop old RPC functions (`get_team_tasks_from_progress`, etc.)
-- [ ] Remove `team_task_progress` table if unused
-- [ ] Optimize indexes for new query patterns
+```typescript
+// Add retry wrapper for database calls
+export async function withRetry<T>(
+  operation: () => Promise<T>,
+  maxRetries = 3,
+  baseDelay = 1000
+): Promise<T> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (attempt === maxRetries) throw error;
 
-**Code Cleanup:**
+      const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error("All retry attempts failed");
+}
 
-- [ ] Remove deprecated TypeScript functions
-- [ ] Update type definitions
-- [ ] Clean up unused imports
-- [ ] Update documentation
+// Usage in critical functions
+export async function createTeamWithRetry(founderId, teamName, description) {
+  return withRetry(() => createTeam(founderId, teamName, description));
+}
+```
 
-**Final Validation:**
+- **Impact**: Handles temporary connection issues gracefully
+- **Time**: 2 hours
+- **Risk**: Low (only adds reliability)
 
-- [ ] Full system regression testing
-- [ ] Performance testing
-- [ ] Data integrity verification
-- [ ] Backup verification
+### **3.2 Leaderboard Caching**
+
+**Current Issue**: Real-time leaderboard queries are expensive
+
+```typescript
+// Cache leaderboard data with 30-second refresh
+let leaderboardCache = null;
+let lastCacheUpdate = 0;
+const CACHE_DURATION = 30000; // 30 seconds
+
+export async function getLeaderboardCached() {
+  const now = Date.now();
+
+  if (!leaderboardCache || now - lastCacheUpdate > CACHE_DURATION) {
+    leaderboardCache = await getLeaderboardData();
+    lastCacheUpdate = now;
+  }
+
+  return leaderboardCache;
+}
+```
+
+- **Impact**: Reduces database load for popular feature
+- **Time**: 1 hour
+- **Risk**: Very low (data slightly delayed)
+
+### **3.3 Graceful Degradation**
+
+```typescript
+// Fallback modes for overload situations
+export async function getTeamDataWithFallback(teamId) {
+  try {
+    // Try full data first
+    return await getTeamDashboardData(teamId);
+  } catch (error) {
+    console.warn("Full data failed, using basic mode:", error);
+
+    // Fallback to essential data only
+    return await getBasicTeamData(teamId);
+  }
+}
+
+export async function getBasicTeamData(teamId) {
+  const supabase = createClient();
+  return await supabase
+    .from("teams")
+    .select("id, name, status, member_count")
+    .eq("id", teamId)
+    .single();
+}
+```
+
+- **Impact**: App stays functional even under extreme load
+- **Time**: 2 hours
+- **Risk**: Low (just reduced features under stress)
 
 ---
 
-## ⏱️ TIMELINE SUMMARY
+## **PHASE 4: MONITORING & ALERTS** 📊
 
-| Phase   | Duration | Risk Level | Status          | Can Rollback?          |
-| ------- | -------- | ---------- | --------------- | ---------------------- |
-| Phase 1 | 1-2 days | ✅ Zero    | ✅ **COMPLETE** | ✅ Yes (no changes)    |
-| Phase 2 | 2-3 days | 🟡 Low     | ✅ **COMPLETE** | ✅ Yes (simple revert) |
-| Phase 3 | 2-3 days | 🟡 Low     | ✅ **COMPLETE** | ✅ Yes (simple revert) |
-| Phase 4 | 1-2 days | 🟡 Low     | ✅ **COMPLETE** | ✅ Yes (simple revert) |
-| Phase 5 | 1-2 days | 🟠 Medium  | ✅ **COMPLETE** | ⚠️ Requires testing    |
-| Phase 6 | 3-4 days | 🟡 Low     | 🔄 **NEXT**     | ✅ Yes (per component) |
-| Phase 7 | 2-3 days | 🟠 Medium  | 🔄 Pending      | ⚠️ Need backup         |
+### Timeline: 2-6 hours before event
 
-**Progress: 71% Complete (5/7 phases)** | **Remaining: 5-7 days** | **Rollback available at each phase**
+### **4.1 Performance Monitoring**
+
+```typescript
+// Add performance tracking
+export function trackQueryPerformance(queryName: string, duration: number) {
+  if (duration > 1000) {
+    console.warn(`Slow query detected: ${queryName} took ${duration}ms`);
+  }
+
+  // Could integrate with analytics service
+  if (typeof window !== "undefined") {
+    (window as any).gtag?.("event", "slow_query", {
+      query_name: queryName,
+      duration: duration,
+    });
+  }
+}
+
+// Wrapper for monitored queries
+export async function monitoredQuery<T>(
+  name: string,
+  queryFn: () => Promise<T>
+): Promise<T> {
+  const start = Date.now();
+  try {
+    const result = await queryFn();
+    trackQueryPerformance(name, Date.now() - start);
+    return result;
+  } catch (error) {
+    trackQueryPerformance(name, Date.now() - start);
+    throw error;
+  }
+}
+```
+
+- **Impact**: Real-time visibility into performance issues
+- **Time**: 1 hour
+- **Risk**: Zero (monitoring only)
+
+### **4.2 Error Boundary Enhancement**
+
+```tsx
+// Enhanced error boundary for database issues
+export function DatabaseErrorBoundary({ children }) {
+  return (
+    <ErrorBoundary
+      fallback={<DatabaseErrorFallback />}
+      onError={(error) => {
+        if (error.message.includes("connection")) {
+          console.error("Database connection issue detected:", error);
+          // Could trigger alert or retry mechanism
+        }
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  );
+}
+```
+
+- **Impact**: Better user experience during issues
+- **Time**: 30 minutes
+- **Risk**: Zero (only improves error handling)
 
 ---
 
-## 🎯 CRITICAL COMPATIBILITY NOTES
+## **PHASE 5: STRESS TESTING** 🧪
 
-**Systems That MUST Continue Working:**
+### Timeline: 1-2 hours before event
 
-- ✅ **Peer Reviews** - Require actual submissions (progress entries created on submission)
-- ✅ **Task Assignment** - Creates progress entry when assignment happens
-- ✅ **Progress Tracking** - All status transitions (started/completed/submitted/approved)
-- ✅ **Submission System** - File uploads, notes, completion data preserved
-- ✅ **Individual vs Team Context** - Both contexts get same logical improvement
-- ✅ **Achievement System** - Based on actual completed progress entries
-- ✅ **Transaction History** - All points/XP tracking linked to real progress
-- ✅ **Analytics** - Improved accuracy (real engagement vs fake assignments)
+### **5.1 Load Testing Script**
 
-**Database Impact:**
+```typescript
+// Simple concurrent user simulation
+async function simulateHackathonLoad() {
+  const userCount = 50; // Start with 50, scale up
+  const promises = [];
 
-- **No new tables needed** - Smarter usage of existing `tasks` and `task_progress`
-- **`team_task_progress` becomes redundant** - Can be removed after migration
-- **80-90% reduction** in `task_progress` records (only real activity)
-- **All existing data preserved** during migration
+  for (let i = 0; i < userCount; i++) {
+    promises.push(simulateUserSession(i));
+  }
+
+  const results = await Promise.allSettled(promises);
+  const failures = results.filter((r) => r.status === "rejected");
+
+  console.log(`Load test: ${userCount} users, ${failures.length} failures`);
+  return { userCount, failures: failures.length };
+}
+
+async function simulateUserSession(userId: number) {
+  // Simulate typical user flow
+  await new Promise((r) => setTimeout(r, Math.random() * 1000)); // Stagger start
+
+  // Login simulation
+  const mockUserId = `test-user-${userId}`;
+
+  // Dashboard load
+  await getUserProfile(mockUserId);
+
+  // Team creation (10% of users)
+  if (Math.random() < 0.1) {
+    await createTeam(mockUserId, `Test Team ${userId}`, "Test description");
+  }
+
+  // Browse leaderboard
+  await getLeaderboardData();
+}
+```
+
+- **Impact**: Validates system under realistic load
+- **Time**: 2 hours
+- **Risk**: Zero (testing only)
 
 ---
 
-## Next Steps (Legacy)
+## **PRIORITY MATRIX**
 
-- Enhance peer review system ✅ (Preserved in new architecture)
-- Improve team collaboration features
-- Add more comprehensive analytics ✅ (Improved with cleaner data)
-- Optimize database queries ✅ (Major improvement with new system)
-- Implement advanced task management ✅ (Template system enables this)
+### **🔴 CRITICAL (Must Do)**
+
+1. **Supabase Pro Upgrade** - Solves 90% of capacity issues
+2. **Database Indexes** - Prevents query timeouts
+
+### **🟡 HIGH IMPACT (Should Do)**
+
+1. **Team Creation Optimization** - Prevents race conditions
+2. **Query Batching** - Reduces API calls
+3. **Connection Retry Logic** - Handles temporary failures
+
+### **🟢 NICE TO HAVE (If Time Permits)**
+
+1. **Real-time Throttling** - Reduces channel pressure
+2. **Leaderboard Caching** - Improves popular feature
+3. **Monitoring** - Visibility during event
+4. **Stress Testing** - Validation before go-live
+
+---
+
+## **IMPLEMENTATION TIMELINE**
+
+### **Day -2: Infrastructure (2 hours)**
+
+- ✅ Supabase Pro upgrade (15 min)
+- ✅ Create database indexes (30 min)
+- ✅ Test basic functionality (1 hour)
+
+### **Day -1: Code Optimization (6 hours)**
+
+- 🔧 Team creation optimization (2 hours)
+- 🔧 Query batching (3 hours)
+- 🔧 Connection retry logic (1 hour)
+
+### **Day 0: Final Prep (2 hours)**
+
+- 🧪 Load testing (1 hour)
+- 📊 Monitoring setup (30 min)
+- ✅ Final validation (30 min)
+
+**Total Effort: ~10 hours over 2-3 days**
+**Cost: $25 (Supabase Pro for 1 month)**
+**Success Rate: 95%+ with full implementation**

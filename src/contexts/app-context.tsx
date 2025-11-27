@@ -5,6 +5,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useCallback,
   ReactNode,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -33,8 +34,16 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
-  const loadUser = async () => {
+  // Only mount on client side
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const loadUser = useCallback(async () => {
+    if (!mounted) return;
+
     try {
       const supabase = createClient();
 
@@ -43,6 +52,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         data: { user: authUser },
         error: authError,
       } = await supabase.auth.getUser();
+
       if (authError || !authUser) {
         setLoading(false);
         return;
@@ -58,6 +68,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (profileError || !userProfile) {
+        console.error("Error loading user profile:", profileError);
         setLoading(false);
         return;
       }
@@ -68,10 +79,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [mounted]);
 
-  const refreshUserData = async () => {
-    if (!user?.id) return;
+  const refreshUserData = useCallback(async () => {
+    if (!mounted || !user?.id) return;
 
     try {
       const supabase = createClient();
@@ -89,13 +100,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Error refreshing user data:", error);
     }
-  };
+  }, [mounted, user?.id]);
 
   useEffect(() => {
-    loadUser();
-  }, []);
+    if (mounted) {
+      loadUser();
+    }
+  }, [loadUser, mounted]);
 
   const firstName = user?.name?.split(" ")[0] || "User";
+
+  // Only render the provider after mounting to avoid SSR hydration issues
+  if (!mounted) {
+    return <div>{children}</div>;
+  }
 
   return (
     <AppContext.Provider value={{ user, loading, firstName, refreshUserData }}>
@@ -107,7 +125,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 export function useApp() {
   const context = useContext(AppContext);
   if (context === undefined) {
-    throw new Error("useApp must be used within an AppProvider");
+    // Return safe defaults instead of throwing during SSR/hydration
+    return {
+      user: null,
+      loading: true,
+      firstName: "User",
+      refreshUserData: async () => {},
+    };
   }
   return context;
 }

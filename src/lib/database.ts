@@ -2,6 +2,50 @@ import { createClient } from "@/lib/supabase/client";
 import { Product } from "@/types/team-journey";
 import type { Json } from "@/types/database";
 
+// ============================================================================
+// RETRY LOGIC UTILITY
+// ============================================================================
+
+/**
+ * Retry wrapper for database operations with exponential backoff
+ * Handles temporary connection issues gracefully
+ */
+export async function withRetry<T>(
+  operation: () => Promise<T>,
+  maxRetries = 3,
+  baseDelay = 1000
+): Promise<T> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      // Don't retry on certain error types
+      if (error && typeof error === "object" && "code" in error) {
+        const dbError = error as { code?: string };
+        // Don't retry on authentication, permission, or constraint violations
+        if (
+          dbError.code === "PGRST301" || // Authentication required
+          dbError.code === "PGRST116" || // Permission denied
+          dbError.code === "23514" || // Check constraint violation
+          dbError.code === "23505"
+        ) {
+          // Unique constraint violation
+          throw error;
+        }
+      }
+
+      if (attempt === maxRetries) throw error;
+
+      const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+      console.log(
+        `Database operation failed, retrying in ${delay}ms (attempt ${attempt}/${maxRetries})`
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error("All retry attempts failed");
+}
+
 // Type for team data from relationship queries
 interface TeamRelation {
   name: string;
@@ -106,7 +150,7 @@ export async function getPeerReviewStatsFromTransactions(userId: string) {
     .select("xp_change, points_change, created_at, metadata")
     .eq("user_id", userId)
     .eq("type", "validation")
-    .not("team_id", "is", null) // Team activities have team_id set (not NULL)
+    .is("team_id", null) // Peer review rewards are personal (team_id is NULL)
     .gte("xp_change", 0) // Only positive rewards (not penalties)
     .gte("created_at", "2025-11-21T13:00:00.000Z"); // Only count recent transactions with correct 10% calculation
 
@@ -188,6 +232,86 @@ export async function getIndividualActivityStats(userId: string) {
     meetingsCompleted: meetingsCount,
     achievementsEarned: achievementsCount,
   };
+}
+
+// Get team points invested (total negative point transactions for team activities)
+export async function getTeamPointsInvested(teamId: string) {
+  const supabase = createClient();
+
+  // Get all negative point transactions related to this team (investments/costs)
+  const { data: investmentTransactions, error } = await supabase
+    .from("transactions")
+    .select("points_change")
+    .eq("team_id", teamId)
+    .lt("points_change", 0); // Only negative transactions (investments)
+
+  if (error) {
+    console.error("Error fetching team investment transactions:", error);
+    return 0;
+  }
+
+  const transactions = investmentTransactions || [];
+
+  // Sum up all negative point changes (convert to positive for display)
+  const totalInvested = transactions.reduce(
+    (sum, t) => sum + Math.abs(t.points_change || 0),
+    0
+  );
+
+  return totalInvested;
+}
+
+// Get total team points earned from all team activities (tasks, meetings, etc.)
+export async function getTeamPointsEarned(teamId: string) {
+  const supabase = createClient();
+
+  // Get all positive point transactions related to this team
+  const { data: earnedTransactions, error } = await supabase
+    .from("transactions")
+    .select("points_change")
+    .eq("team_id", teamId)
+    .gt("points_change", 0); // Only positive transactions (earnings)
+
+  if (error) {
+    console.error("Error fetching team earned transactions:", error);
+    return 0;
+  }
+
+  const transactions = earnedTransactions || [];
+
+  // Sum up all positive point changes
+  const totalEarned = transactions.reduce(
+    (sum, t) => sum + (t.points_change || 0),
+    0
+  );
+
+  return totalEarned;
+}
+
+export async function getTeamXPEarned(teamId: string) {
+  const supabase = createClient();
+
+  // Get all positive XP transactions related to this team
+  const { data: earnedTransactions, error } = await supabase
+    .from("transactions")
+    .select("xp_change")
+    .eq("team_id", teamId)
+    .gt("xp_change", 0); // Only positive transactions (earnings)
+
+  if (error) {
+    console.error("Error fetching team earned XP transactions:", error);
+    return 0;
+  }
+
+  const transactions = earnedTransactions || [];
+
+  // Sum up all positive XP changes
+  const totalEarned = transactions.reduce(
+    (sum, t) => sum + (t.xp_change || 0),
+    0
+  );
+
+  return totalEarned;
 }
 
 // Get team activity statistics from transactions
@@ -477,7 +601,7 @@ export async function createTeam(
     .insert({
       user_id: founderId,
       team_id: team.id,
-      activity_type: "team_formation",
+      activity_type: "team",
       type: "team_cost",
       points_change: -TEAM_CREATION_COST,
       xp_change: 0,
@@ -2868,6 +2992,60 @@ export async function getUserTasksVisible(userId: string) {
   }
 
   return data || [];
+}
+
+// ============================================================================
+// RETRY WRAPPER FUNCTIONS - SAFE READ-ONLY OPERATIONS
+// ============================================================================
+
+/**
+ * Retry wrapper for getUserProfile - safe for retries (read-only)
+ */
+export async function getUserProfileWithRetry(userId: string) {
+  return withRetry(() => getUserProfile(userId));
+}
+
+/**
+ * Retry wrapper for getUserTransactions - safe for retries (read-only)
+ */
+export async function getUserTransactionsWithRetry(userId: string, limit = 10) {
+  return withRetry(() => getUserTransactions(userId, limit));
+}
+
+/**
+ * Retry wrapper for getTeamDetails - safe for retries (read-only)
+ */
+export async function getTeamDetailsWithRetry(teamId: string) {
+  return withRetry(() => getTeamDetails(teamId));
+}
+
+// ============================================================================
+// RETRY WRAPPER FUNCTIONS - SAFE WRITE OPERATIONS
+// ============================================================================
+
+/**
+ * Retry wrapper for createTeam - safe for retries (has built-in duplicate prevention)
+ */
+export async function createTeamWithRetry(
+  founderId: string,
+  teamName: string,
+  description: string
+) {
+  return withRetry(() => createTeam(founderId, teamName, description));
+}
+
+/**
+ * Retry wrapper for sendTeamInvitation - safe for retries (database constraints prevent duplicates)
+ */
+export async function sendTeamInvitationWithRetry(
+  teamId: string,
+  invitedUserEmail: string,
+  inviterUserId: string,
+  role: "member" | "leader" | "co_founder" = "member"
+) {
+  return withRetry(() =>
+    sendTeamInvitation(teamId, invitedUserEmail, inviterUserId, role)
+  );
 }
 
 /**

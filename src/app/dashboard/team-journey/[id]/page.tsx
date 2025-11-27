@@ -30,10 +30,7 @@ import {
   Calendar,
   AlertTriangle,
   CreditCard,
-  CheckCircle,
-  TrendingUp,
   UserCheck,
-  MessageSquare,
   Plus,
 } from "lucide-react";
 import {
@@ -44,6 +41,8 @@ import {
   getTeamWeeklyReports,
   getTeamAchievements,
   getTeamTasksVisible,
+  getTeamPointsInvested,
+  getTeamPointsEarned,
 } from "@/lib/database";
 import { StatsCard } from "@/types/dashboard";
 import type { Database } from "@/types/database";
@@ -121,7 +120,7 @@ interface TeamDetails {
 }
 
 export default function ProductDetailPage({ params }: ProductDetailPageProps) {
-  const { user } = useAppContext();
+  const { user, loading: userLoading } = useAppContext();
   const [team, setTeam] = useState<TeamDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [teamId, setTeamId] = useState<string | null>(null);
@@ -147,6 +146,12 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [weeklyReports, setWeeklyReports] = useState<WeeklyReport[]>([]);
   const [loadingWeeklyReports, setLoadingWeeklyReports] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [teamPointsInvested, setTeamPointsInvested] = useState(0);
+  const [loadingPointsInvested, setLoadingPointsInvested] = useState(false);
+  const [teamPointsEarnedFromActivities, setTeamPointsEarnedFromActivities] =
+    useState(0);
+  const [loadingPointsEarned, setLoadingPointsEarned] = useState(false);
+  const [totalClientsContacted, setTotalClientsContacted] = useState(0);
 
   // Extract ID from params
   useEffect(() => {
@@ -444,6 +449,38 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     }
   }, [teamId]);
 
+  // Load team points invested from database
+  const loadTeamPointsInvested = useCallback(async () => {
+    if (!teamId) return;
+
+    setLoadingPointsInvested(true);
+    try {
+      const pointsInvested = await getTeamPointsInvested(teamId);
+      setTeamPointsInvested(pointsInvested);
+    } catch (error) {
+      console.error("Error loading team points invested:", error);
+      setTeamPointsInvested(0);
+    } finally {
+      setLoadingPointsInvested(false);
+    }
+  }, [teamId]);
+
+  // Load team points earned from all activities (tasks, meetings, etc.)
+  const loadTeamPointsEarned = useCallback(async () => {
+    if (!teamId) return;
+
+    setLoadingPointsEarned(true);
+    try {
+      const pointsEarned = await getTeamPointsEarned(teamId);
+      setTeamPointsEarnedFromActivities(pointsEarned);
+    } catch (error) {
+      console.error("Error loading team points earned:", error);
+      setTeamPointsEarnedFromActivities(0);
+    } finally {
+      setLoadingPointsEarned(false);
+    }
+  }, [teamId]);
+
   // Load team weekly reports from database
   const loadWeeklyReports = useCallback(async () => {
     if (!teamId) return;
@@ -452,6 +489,17 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     try {
       const reportsData = await getTeamWeeklyReports(teamId);
       const reportsArray = Array.isArray(reportsData) ? reportsData : [];
+
+      // Calculate total clients contacted across all weekly reports
+      const totalClients = reportsArray.reduce(
+        (total: number, report) => {
+          const submissionData = report.submission_data as { clientsContacted?: number } | null;
+          const clientsContacted = Number(submissionData?.clientsContacted) || 0;
+          return total + clientsContacted;
+        },
+        0
+      );
+      setTotalClientsContacted(totalClients);
 
       // Group reports by week to show team submission status
       const weeklyReportsMap = new Map();
@@ -595,8 +643,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   );
 
   useEffect(() => {
-    loadTeam();
-  }, [loadTeam]);
+    if (!userLoading) {
+      loadTeam();
+    }
+  }, [loadTeam, userLoading]);
 
   useEffect(() => {
     if (isTeamMember) {
@@ -605,10 +655,12 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     if (team?.members) {
       checkAllMemberStatuses();
     }
-    // Load achievements (includes tasks), strikes, and weekly reports when team is loaded
+    // Load achievements (includes tasks), strikes, weekly reports, and points when team is loaded
     loadAchievements();
     loadStrikes();
     loadWeeklyReports();
+    loadTeamPointsInvested();
+    loadTeamPointsEarned();
   }, [
     isTeamMember,
     checkWeeklyReportStatus,
@@ -617,9 +669,12 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     loadAchievements,
     loadStrikes,
     loadWeeklyReports,
+    loadTeamPointsInvested,
+    loadTeamPointsEarned,
   ]);
 
-  if (loading) {
+  // Handle loading and error states in the render return
+  if (loading || userLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">Loading...</div>
@@ -634,11 +689,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   // Calculate real team stats
   const actualMemberCount = team.members?.length || 0;
 
-  // Calculate total team points and XP
-  const totalTeamPoints = team.members.reduce(
-    (sum, member) => sum + (member.users?.total_points || 0),
-    0
-  );
+  // Calculate total team XP
   const totalTeamXP = team.members.reduce(
     (sum, member) => sum + (member.users?.total_xp || 0),
     0
@@ -654,20 +705,11 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       ? `${completedAchievements}/${totalAchievements}`
       : "0/0";
 
-  // Calculate points earned from completed team tasks
-  const teamPointsEarned = filteredTasks
-    .filter((task) => task.status === "approved")
-    .reduce((sum, task) => sum + (task.base_credits_reward || 0), 0);
+  // Use comprehensive team points earned (includes tasks, meetings, all team activities)
+  const teamPointsEarned = teamPointsEarnedFromActivities;
 
   // Stats cards data for this team
   const statsCards: StatsCard[] = [
-    {
-      title: "Total Points",
-      value: totalTeamPoints.toLocaleString(),
-      subtitle: "All team members combined",
-      icon: Trophy,
-      iconColor: "text-amber-500",
-    },
     {
       title: "Total XP",
       value: totalTeamXP.toLocaleString(),
@@ -676,18 +718,25 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       iconColor: "text-purple-500",
     },
     {
+      title: "Points Earned as Team",
+      value: teamPointsEarned.toLocaleString(),
+      subtitle: "From completed team tasks",
+      icon: CreditCard,
+      iconColor: "text-green-500",
+    },
+    {
+      title: "Total Clients",
+      value: totalClientsContacted.toString(),
+      subtitle: "Clients contacted via weekly reports",
+      icon: UserCheck,
+      iconColor: "text-blue-500",
+    },
+    {
       title: "Achievements",
       value: achievementProgress,
       subtitle: `${completedAchievements} completed`,
       icon: Trophy,
       iconColor: "text-yellow-500",
-    },
-    {
-      title: "Points Earned as Team",
-      value: teamPointsEarned.toLocaleString(),
-      subtitle: "From completed team tasks",
-      icon: Zap,
-      iconColor: "text-purple-500",
     },
   ];
 
@@ -824,7 +873,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   <Zap className="h-4 w-4 text-purple-600" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm">9,504</div>
+                  <div className="font-semibold text-sm">
+                    {totalTeamXP.toLocaleString()}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     Total Experience Earned
                   </div>
@@ -934,7 +985,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 </div>
                 <div>
                   <div className="font-semibold text-sm">
-                    {teamPointsEarned.toLocaleString()}
+                    {loadingPointsEarned
+                      ? "..."
+                      : teamPointsEarned.toLocaleString()}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     Total Points Earned
@@ -948,7 +1001,11 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   <CreditCard className="h-4 w-4 text-red-600" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm">4200</div>
+                  <div className="font-semibold text-sm">
+                    {loadingPointsInvested
+                      ? "..."
+                      : teamPointsInvested.toLocaleString()}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     Total Points Invested
                   </div>
@@ -1233,45 +1290,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             </Button>
           </div>
 
-          {/* This Week Progress Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="p-4 text-center">
-              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-lg bg-primary/10">
-                <TrendingUp className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900">92%</div>
-              <div className="text-sm text-muted-foreground">Productivity</div>
-            </Card>
-
-            <Card className="p-4 text-center">
-              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-lg bg-primary/10">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900">24</div>
-              <div className="text-sm text-muted-foreground">
-                Tasks Completed
-              </div>
-            </Card>
-
-            <Card className="p-4 text-center">
-              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-lg bg-purple-100">
-                <MessageSquare className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900">8</div>
-              <div className="text-sm text-muted-foreground">Meetings</div>
-            </Card>
-
-            <Card className="p-4 text-center">
-              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-lg bg-cyan-100">
-                <UserCheck className="h-6 w-6 text-cyan-600" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900">1</div>
-              <div className="text-sm text-muted-foreground">
-                Clients Acquired
-              </div>
-            </Card>
-          </div>
-
           {/* Weekly Reports Table */}
           {loadingWeeklyReports ? (
             <div className="flex items-center justify-center py-8">
@@ -1316,6 +1334,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               onDataChange={() => {
                 // Refresh any dependent data when meetings change
                 loadWeeklyReports(); // This will refresh weekly reports if needed
+                loadTeamPointsEarned(); // Refresh points earned to include meeting rewards
               }}
             />
           )}
@@ -1386,8 +1405,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           onOpenChange={setShowAddMeetingModal}
           teamId={team.id}
           onSuccess={() => {
-            // Trigger a refresh of the client meetings table
+            // Trigger a refresh of the client meetings table and points earned
             setRefreshTrigger((prev) => prev + 1);
+            loadTeamPointsEarned(); // Refresh points to include new meeting rewards
           }}
         />
       )}

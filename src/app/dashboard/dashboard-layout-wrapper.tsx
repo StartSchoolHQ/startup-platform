@@ -2,6 +2,7 @@
 
 import { AppProvider } from "@/contexts/app-context";
 import { DashboardLayoutClient } from "../../components/dashboard-layout-client";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 export function DashboardLayoutWrapper({
   children,
@@ -9,8 +10,10 @@ export function DashboardLayoutWrapper({
   children: React.ReactNode;
 }) {
   return (
-    <AppProvider>
-      <DashboardLayoutClient>{children}</DashboardLayoutClient>
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <DashboardLayoutClient>{children}</DashboardLayoutClient>
+      </AppProvider>
+    </ErrorBoundary>
   );
 }

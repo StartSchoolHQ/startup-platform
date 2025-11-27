@@ -71,12 +71,12 @@ export function CreateTeamDialog({
       setTeamName("");
       setDescription("");
 
-      // Call callback to refresh parent data
+      // Close dialog immediately and call callback to refresh parent data
+      onOpenChange(false);
       onTeamCreated?.();
 
-      // Close dialog after 2 seconds
+      // Clear success message after a short delay
       setTimeout(() => {
-        onOpenChange(false);
         setSuccess("");
       }, 2000);
     } catch (error) {

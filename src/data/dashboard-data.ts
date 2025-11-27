@@ -23,6 +23,8 @@ import {
   getPeerReviewStatsFromTransactions,
   getUserStrikes,
   getIndividualActivityStats,
+  getTeamPointsEarned,
+  getTeamXPEarned,
 } from "@/lib/database";
 
 // Function to get real stats cards data
@@ -108,18 +110,11 @@ export async function getTeamProgressData(
 
       if (!team) continue;
 
-      // Fetch all team members with their stats
+      // Get team member count and completed tasks
       const supabase = (await import("@/lib/supabase/client")).createClient();
       const { data: members } = await supabase
         .from("team_members")
-        .select(
-          `
-          users (
-            total_xp,
-            total_points
-          )
-        `
-        )
+        .select("user_id")
         .eq("team_id", team.id)
         .is("left_at", null);
 
@@ -139,24 +134,13 @@ export async function getTeamProgressData(
       }
 
       const completedTasksCount = completedTasks?.length || 0;
-
-      // Calculate team aggregates
-      let teamXP = 0;
-      let teamPoints = 0;
       const actualMemberCount = members?.length || 0;
 
-      if (members) {
-        for (const member of members) {
-          const userData = member.users as unknown as {
-            total_xp: number;
-            total_points: number;
-          } | null;
-          if (userData) {
-            teamXP += userData.total_xp || 0;
-            teamPoints += userData.total_points || 0;
-          }
-        }
-      }
+      // Calculate team-scoped points and XP (only from team activities)
+      const [teamPoints, teamXP] = await Promise.all([
+        getTeamPointsEarned(team.id),
+        getTeamXPEarned(team.id),
+      ]);
 
       totalTeamXP += teamXP;
       totalTeamPoints += teamPoints;
