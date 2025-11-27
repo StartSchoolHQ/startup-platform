@@ -2628,12 +2628,12 @@ export async function assignTeamTaskToProgress(
 }
 
 /**
- * Get completed peer reviews given by the user
+ * Get completed peer reviews given by the user (all individual review attempts)
  */
 export async function getCompletedPeerReviews(userId: string) {
   const supabase = createClient();
 
-  // First, get the task progress data without the user join
+  // Get all tasks where the user appears in peer_review_history with completed reviews
   const { data: taskProgressData, error } = await supabase
     .from("task_progress")
     .select(
@@ -2648,6 +2648,7 @@ export async function getCompletedPeerReviews(userId: string) {
       submission_notes,
       status,
       review_feedback,
+      peer_review_history,
       tasks(
         id,
         title,
@@ -2663,10 +2664,8 @@ export async function getCompletedPeerReviews(userId: string) {
       )
     `
     )
-    .eq("reviewer_user_id", userId)
     .eq("context", "team")
-    .in("status", ["approved", "rejected"])
-    .not("review_feedback", "is", null)
+    .not("peer_review_history", "is", null)
     .order("updated_at", { ascending: false });
 
   if (error) {
@@ -2678,11 +2677,88 @@ export async function getCompletedPeerReviews(userId: string) {
     return [];
   }
 
+  // Extract individual review entries from peer_review_history
+  interface PeerReviewHistoryEntry {
+    event_type: string;
+    reviewer_id: string;
+    feedback: string;
+    decision: "approved" | "rejected";
+    timestamp: string;
+    reviewer_name: string;
+    reviewer_avatar_url: string;
+  }
+
+  const individualReviews: Array<{
+    id: string;
+    task_id: string;
+    team_id: string | null;
+    assigned_to_user_id: string | null;
+    completed_at: string;
+    updated_at: string;
+    submission_data: unknown;
+    submission_notes: string | null;
+    status: "approved" | "rejected";
+    review_feedback: string;
+    tasks: unknown;
+    teams: unknown;
+    review_index: number;
+    total_reviews: number;
+    reviewer_name: string;
+    reviewer_avatar_url: string;
+  }> = [];
+
+  taskProgressData.forEach((task) => {
+    if (task.peer_review_history && Array.isArray(task.peer_review_history)) {
+      // Find all completed reviews by this user
+      const userReviews = (task.peer_review_history as unknown as PeerReviewHistoryEntry[]).filter(
+        (historyEntry: PeerReviewHistoryEntry) =>
+          historyEntry.event_type === "review_completed" &&
+          historyEntry.reviewer_id === userId &&
+          historyEntry.feedback
+      );
+
+      // Create a separate entry for each review
+      userReviews.forEach(
+        (
+          reviewEntry: PeerReviewHistoryEntry,
+          index: number
+        ) => {
+          individualReviews.push({
+            // Use unique ID combining task ID and review timestamp
+            id: `${task.id}_${reviewEntry.timestamp}`,
+            task_id: task.task_id,
+            team_id: task.team_id,
+            assigned_to_user_id: task.assigned_to_user_id,
+            completed_at: reviewEntry.timestamp,
+            updated_at: reviewEntry.timestamp,
+            submission_data: task.submission_data,
+            submission_notes: task.submission_notes,
+            status: reviewEntry.decision, // 'approved' or 'rejected'
+            review_feedback: reviewEntry.feedback,
+            tasks: task.tasks,
+            teams: task.teams,
+            // Additional metadata for this specific review
+            review_index: index,
+            total_reviews: userReviews.length,
+            reviewer_name: reviewEntry.reviewer_name,
+            reviewer_avatar_url: reviewEntry.reviewer_avatar_url,
+          });
+        }
+      );
+    }
+  });
+
+  // Sort by review timestamp (most recent first)
+  individualReviews.sort(
+    (a, b) =>
+      new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime()
+  );
+
   // Get all unique assigned user IDs
   const assignedUserIds = [
     ...new Set(
-      taskProgressData
-        .map((task) => task.assigned_to_user_id)
+      individualReviews
+        .map((review) => review.assigned_to_user_id)
         .filter((id) => id !== null)
     ),
   ];
@@ -2706,11 +2782,11 @@ export async function getCompletedPeerReviews(userId: string) {
     }
   }
 
-  // Combine the data
-  const combinedData = taskProgressData.map((task) => ({
-    ...task,
-    assigned_user: task.assigned_to_user_id
-      ? usersData.find((user) => user.id === task.assigned_to_user_id) || null
+  // Combine the data with assigned user info
+  const combinedData = individualReviews.map((review) => ({
+    ...review,
+    assigned_user: review.assigned_to_user_id
+      ? usersData.find((user) => user.id === review.assigned_to_user_id) || null
       : null,
   }));
 

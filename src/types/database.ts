@@ -202,6 +202,7 @@ export type Database = {
           created_at: string;
           id: string;
           metadata: Json | null;
+          peer_review_history: Json | null;
           points_awarded: number | null;
           review_feedback: string | null;
           reviewer_user_id: string | null;
@@ -227,6 +228,7 @@ export type Database = {
           created_at?: string;
           id?: string;
           metadata?: Json | null;
+          peer_review_history?: Json | null;
           points_awarded?: number | null;
           review_feedback?: string | null;
           reviewer_user_id?: string | null;
@@ -252,6 +254,7 @@ export type Database = {
           created_at?: string;
           id?: string;
           metadata?: Json | null;
+          peer_review_history?: Json | null;
           points_awarded?: number | null;
           review_feedback?: string | null;
           reviewer_user_id?: string | null;

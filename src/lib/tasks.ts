@@ -20,6 +20,8 @@ type PartialProgressData = {
   updated_at?: string;
   submission_notes?: string | null;
   reviewer_user_id?: string | null;
+  review_feedback?: string | null;
+  peer_review_history?: unknown;
 } | null;
 
 // Function to convert database task to UI format for the simplified architecture
@@ -598,6 +600,8 @@ export async function getTaskByIdLazy(
           submission_data,
           submission_notes,
           reviewer_user_id,
+          review_feedback,
+          peer_review_history,
           context,
           activity_type
         `
@@ -662,6 +666,20 @@ export async function getTaskByIdLazy(
       // submission_data is handled separately - not part of TeamTask interface
       submission_notes: progressData?.submission_notes || undefined,
       reviewer_user_id: progressData?.reviewer_user_id || undefined,
+      review_feedback: progressData?.review_feedback || undefined,
+      peer_review_history:
+        (progressData?.peer_review_history as Array<{
+          timestamp: string;
+          event_type:
+            | "submitted_for_review"
+            | "reviewer_assigned"
+            | "review_completed";
+          reviewer_id?: string;
+          reviewer_name?: string;
+          reviewer_avatar_url?: string;
+          decision?: "approved" | "rejected";
+          feedback?: string;
+        }>) || [],
 
       // Computed fields - base_credits_reward is mapped from base_points_reward in UI components
       // requires_review and review_instructions are part of the database schema but not the TypeScript interface
@@ -733,6 +751,8 @@ export async function getTaskById(
         submission_data,
         submission_notes,
         reviewer_user_id,
+        review_feedback,
+        peer_review_history,
         context
       `
       )
@@ -831,6 +851,20 @@ export async function getTaskById(
       reviewer_user_id: progressData.reviewer_user_id ?? undefined,
       reviewer_name: reviewerData?.name ?? undefined,
       reviewer_avatar_url: reviewerData?.avatar_url ?? undefined,
+      review_feedback: progressData.review_feedback ?? undefined,
+      peer_review_history:
+        (progressData.peer_review_history as Array<{
+          timestamp: string;
+          event_type:
+            | "submitted_for_review"
+            | "reviewer_assigned"
+            | "review_completed";
+          reviewer_id?: string;
+          reviewer_name?: string;
+          reviewer_avatar_url?: string;
+          decision?: "approved" | "rejected";
+          feedback?: string;
+        }>) || [],
       detailed_instructions: taskData.detailed_instructions ?? undefined,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       tips_content: (taskData.tips_content as any) ?? undefined,

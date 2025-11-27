@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -688,8 +689,217 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                           This task is currently being reviewed by a peer.
                           Results will appear here once the review is complete.
                         </p>
+                        {task.reviewer_name && (
+                          <p className="text-sm text-yellow-700 mt-2">
+                            Being reviewed by {task.reviewer_name}
+                          </p>
+                        )}
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              ) : (task.status === "approved" || task.status === "rejected") &&
+                task.reviewer_name ? (
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                    <CardTitle className="text-lg font-semibold">
+                      Peer Review Completed
+                    </CardTitle>
+                    <StatusBadge
+                      status={task.status as TaskStatus}
+                      variant="journey"
+                    />
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Reviewer Information */}
+                    <div className="flex items-center gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                      <Avatar className="w-10 h-10">
+                        {task.reviewer_avatar_url ? (
+                          <AvatarImage src={task.reviewer_avatar_url} />
+                        ) : null}
+                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold">
+                          {task.reviewer_name
+                            ? task.reviewer_name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()
+                            : "PR"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">
+                            {task.reviewer_name}
+                          </span>
+                          <Badge
+                            variant="secondary"
+                            className={`${
+                              task.status === "approved"
+                                ? "bg-green-100 text-green-800 border-green-200"
+                                : "bg-red-100 text-red-800 border-red-200"
+                            }`}
+                          >
+                            {task.status === "approved"
+                              ? "Approved"
+                              : "Rejected"}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Reviewed on{" "}
+                          {task.updated_at
+                            ? formatDate(task.updated_at)
+                            : "Recently"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Review Feedback - Show only once */}
+                    {(task.review_feedback ||
+                      (task.submission_notes &&
+                        task.submission_notes.includes("Peer Review:"))) && (
+                      <div className="bg-gray-50 border rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <User className="h-4 w-4 text-gray-600" />
+                          <span className="text-sm font-medium text-gray-800">
+                            Review Feedback:
+                          </span>
+                        </div>
+                        <p className="text-gray-700 leading-relaxed">
+                          {task.review_feedback ||
+                            task.submission_notes
+                              ?.split("Peer Review:")
+                              ?.pop()
+                              ?.trim() ||
+                            "No feedback provided"}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Complete Peer Review History */}
+                    {task.peer_review_history &&
+                      task.peer_review_history.length > 0 && (
+                        <div className="mt-6">
+                          <h4 className="text-sm font-medium text-gray-800 mb-3">
+                            Review History
+                          </h4>
+                          <div className="space-y-3">
+                            {task.peer_review_history
+                              .sort(
+                                (a, b) =>
+                                  new Date(a.timestamp).getTime() -
+                                  new Date(b.timestamp).getTime()
+                              )
+                              .map((event, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-start gap-3 p-3 border rounded-lg bg-white"
+                                >
+                                  <div
+                                    className={`flex items-center justify-center w-6 h-6 rounded-full mt-1 ${
+                                      event.event_type ===
+                                      "submitted_for_review"
+                                        ? "bg-blue-500"
+                                        : event.event_type ===
+                                          "reviewer_assigned"
+                                        ? "bg-indigo-500"
+                                        : event.decision === "approved"
+                                        ? "bg-green-500"
+                                        : "bg-red-500"
+                                    }`}
+                                  >
+                                    {event.event_type ===
+                                      "submitted_for_review" && (
+                                      <FileText className="w-3 h-3 text-white" />
+                                    )}
+                                    {event.event_type ===
+                                      "reviewer_assigned" && (
+                                      <User className="w-3 h-3 text-white" />
+                                    )}
+                                    {event.event_type === "review_completed" &&
+                                      event.decision === "approved" && (
+                                        <CheckCircle className="w-3 h-3 text-white" />
+                                      )}
+                                    {event.event_type === "review_completed" &&
+                                      event.decision === "rejected" && (
+                                        <AlertCircle className="w-3 h-3 text-white" />
+                                      )}
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <p className="font-medium text-sm">
+                                        {event.event_type ===
+                                          "submitted_for_review" &&
+                                          "Submitted for Review"}
+                                        {event.event_type ===
+                                          "reviewer_assigned" &&
+                                          "Reviewer Assigned"}
+                                        {event.event_type ===
+                                          "review_completed" &&
+                                          `Review ${
+                                            event.decision || "Completed"
+                                          }`}
+                                      </p>
+                                      {event.decision && (
+                                        <Badge
+                                          variant="secondary"
+                                          className={`text-xs ${
+                                            event.decision === "approved"
+                                              ? "bg-green-100 text-green-800 border-green-200"
+                                              : "bg-red-100 text-red-800 border-red-200"
+                                          }`}
+                                        >
+                                          {event.decision === "approved"
+                                            ? "Approved"
+                                            : "Rejected"}
+                                        </Badge>
+                                      )}
+                                    </div>
+
+                                    {event.reviewer_name && (
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Avatar className="w-4 h-4">
+                                          {event.reviewer_avatar_url ? (
+                                            <AvatarImage
+                                              src={event.reviewer_avatar_url}
+                                            />
+                                          ) : null}
+                                          <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white text-[10px] font-bold">
+                                            {event.reviewer_name
+                                              ?.split(" ")
+                                              .map((n) => n[0])
+                                              .join("")
+                                              .toUpperCase() || "R"}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <p className="text-xs text-muted-foreground">
+                                          {event.reviewer_name}
+                                        </p>
+                                      </div>
+                                    )}
+
+                                    <p className="text-xs text-muted-foreground">
+                                      {formatDate(event.timestamp)}
+                                    </p>
+
+                                    {/* Show feedback for review completed events */}
+                                    {event.event_type === "review_completed" &&
+                                      event.feedback && (
+                                        <div className="bg-gray-50 border rounded p-2 mt-2">
+                                          <p className="text-xs font-medium text-gray-800 mb-1">
+                                            Review Feedback:
+                                          </p>
+                                          <p className="text-xs text-gray-700">
+                                            {event.feedback}
+                                          </p>
+                                        </div>
+                                      )}
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
                   </CardContent>
                 </Card>
               ) : (
@@ -724,105 +934,283 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {task.assigned_at && (
-                      <div className="flex items-start gap-3 p-3 border rounded-lg">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
-                        <div className="flex-1">
-                          <p className="font-medium">Task assigned</p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDate(task.assigned_at)}
-                          </p>
-                          {task.assignee_name && (
+                    {/* Create a comprehensive timeline from all available events */}
+                    {(() => {
+                      // Collect all timeline events
+                      const timelineEvents: Array<{
+                        timestamp: string;
+                        type: string;
+                        title: string;
+                        description?: string;
+                        color: string;
+                        icon?: React.ReactNode;
+                        reviewer?: {
+                          name: string;
+                          avatar_url?: string;
+                        };
+                        status?: "approved" | "rejected";
+                        feedback?: string;
+                      }> = [];
+
+                      // Add assignment event
+                      if (task.assigned_at) {
+                        timelineEvents.push({
+                          timestamp: task.assigned_at,
+                          type: "assigned",
+                          title: "Task assigned",
+                          description: task.assignee_name
+                            ? `Assigned to ${task.assignee_name}`
+                            : undefined,
+                          color: "purple",
+                        });
+                      }
+
+                      // Add start event
+                      if (task.started_at) {
+                        timelineEvents.push({
+                          timestamp: task.started_at,
+                          type: "started",
+                          title: "Work started",
+                          color: "yellow",
+                        });
+                      }
+
+                      // Add peer review history events (if available)
+                      if (
+                        task.peer_review_history &&
+                        task.peer_review_history.length > 0
+                      ) {
+                        task.peer_review_history.forEach((event) => {
+                          if (event.event_type === "submitted_for_review") {
+                            timelineEvents.push({
+                              timestamp: event.timestamp,
+                              type: "submitted_for_review",
+                              title: "Task submitted for review",
+                              description:
+                                "Ready for peer review by external team members",
+                              color: "blue",
+                            });
+                          } else if (event.event_type === "reviewer_assigned") {
+                            timelineEvents.push({
+                              timestamp: event.timestamp,
+                              type: "reviewer_assigned",
+                              title: "Reviewer assigned",
+                              description: event.reviewer_name
+                                ? `${event.reviewer_name} accepted this task for review`
+                                : "External reviewer assigned",
+                              color: "indigo",
+                              reviewer: {
+                                name: event.reviewer_name || "Reviewer",
+                                avatar_url: event.reviewer_avatar_url,
+                              },
+                            });
+                          } else if (event.event_type === "review_completed") {
+                            timelineEvents.push({
+                              timestamp: event.timestamp,
+                              type: "review_completed",
+                              title: `Peer review ${
+                                event.decision || "completed"
+                              }`,
+                              color:
+                                event.decision === "approved" ? "green" : "red",
+                              icon:
+                                event.decision === "approved" ? (
+                                  <CheckCircle className="w-4 h-4 text-white bg-green-500 rounded-full" />
+                                ) : (
+                                  <AlertCircle className="w-4 h-4 text-white bg-red-500 rounded-full" />
+                                ),
+                              reviewer: {
+                                name: event.reviewer_name || "Reviewer",
+                                avatar_url: event.reviewer_avatar_url,
+                              },
+                              status: event.decision,
+                            });
+                          }
+                        });
+                      } else {
+                        // Fallback: use legacy data if no peer_review_history
+                        if (task.completed_at) {
+                          timelineEvents.push({
+                            timestamp: task.completed_at,
+                            type: "submitted_for_review",
+                            title: "Task submitted for review",
+                            description:
+                              "Ready for peer review by external team members",
+                            color: "blue",
+                          });
+                        }
+
+                        // Legacy review completion event
+                        if (
+                          (task.status === "approved" ||
+                            task.status === "rejected") &&
+                          task.reviewer_name
+                        ) {
+                          timelineEvents.push({
+                            timestamp:
+                              task.updated_at ||
+                              task.completed_at ||
+                              new Date().toISOString(),
+                            type: "review_completed",
+                            title: `Peer review ${task.status}`,
+                            color: task.status === "approved" ? "green" : "red",
+                            icon:
+                              task.status === "approved" ? (
+                                <CheckCircle className="w-4 h-4 text-white bg-green-500 rounded-full" />
+                              ) : (
+                                <AlertCircle className="w-4 h-4 text-white bg-red-500 rounded-full" />
+                              ),
+                            reviewer: {
+                              name: task.reviewer_name,
+                              avatar_url: task.reviewer_avatar_url,
+                            },
+                            feedback:
+                              task.review_feedback ||
+                              (task.submission_notes?.includes("Peer Review:")
+                                ? task.submission_notes
+                                    .split("Peer Review:")
+                                    .pop()
+                                    ?.trim()
+                                : undefined),
+                            status: task.status as "approved" | "rejected",
+                          });
+                        }
+                      }
+
+                      // Sort events by timestamp
+                      timelineEvents.sort(
+                        (a, b) =>
+                          new Date(a.timestamp).getTime() -
+                          new Date(b.timestamp).getTime()
+                      );
+
+                      // Render timeline events
+                      return timelineEvents.map((event, index) => (
+                        <div
+                          key={index}
+                          className="flex items-start gap-3 p-3 border rounded-lg"
+                        >
+                          <div
+                            className={`flex items-center justify-center ${
+                              event.icon ? "w-6 h-6" : "w-2 h-2"
+                            } ${
+                              event.color === "purple"
+                                ? "bg-purple-500"
+                                : event.color === "yellow"
+                                ? "bg-yellow-500"
+                                : event.color === "blue"
+                                ? "bg-blue-500"
+                                : event.color === "indigo"
+                                ? "bg-indigo-500"
+                                : event.color === "green"
+                                ? "bg-green-500"
+                                : event.color === "red"
+                                ? "bg-red-500"
+                                : "bg-gray-500"
+                            } rounded-full ${
+                              event.icon
+                                ? "border-2 border-white shadow-sm"
+                                : ""
+                            } ${!event.icon ? "mt-2" : "mt-1"}`}
+                          >
+                            {event.icon || null}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="font-medium">{event.title}</p>
+                              {event.status && (
+                                <Badge
+                                  variant="secondary"
+                                  className={`text-xs ${
+                                    event.status === "approved"
+                                      ? "bg-green-100 text-green-800 border-green-200"
+                                      : "bg-red-100 text-red-800 border-red-200"
+                                  }`}
+                                >
+                                  {event.status === "approved"
+                                    ? "Approved"
+                                    : "Rejected"}
+                                </Badge>
+                              )}
+                            </div>
+
+                            {event.reviewer && (
+                              <div className="flex items-center gap-2 mb-2">
+                                <Avatar className="w-5 h-5">
+                                  {event.reviewer.avatar_url ? (
+                                    <AvatarImage
+                                      src={event.reviewer.avatar_url}
+                                    />
+                                  ) : null}
+                                  <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white text-xs font-bold">
+                                    {event.reviewer.name
+                                      ?.split(" ")
+                                      .map((n) => n[0])
+                                      .join("")
+                                      .toUpperCase() || "PR"}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <p className="text-sm text-muted-foreground">
+                                  {event.type === "reviewer_assigned"
+                                    ? "Reviewer: "
+                                    : "Reviewed by "}
+                                  <span className="font-medium">
+                                    {event.reviewer.name}
+                                  </span>
+                                </p>
+                              </div>
+                            )}
+
                             <p className="text-sm text-muted-foreground">
-                              Assigned to {task.assignee_name}
+                              {formatDate(event.timestamp)}
                             </p>
-                          )}
+
+                            {event.description && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {event.description}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {task.started_at && (
-                      <div className="flex items-start gap-3 p-3 border rounded-lg">
-                        <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
-                        <div className="flex-1">
-                          <p className="font-medium">Work started</p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDate(task.started_at)}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {task.completed_at && (
-                      <div className="flex items-start gap-3 p-3 border rounded-lg">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                        <div className="flex-1">
-                          <p className="font-medium">
-                            {task.status === "pending_review"
-                              ? "Task submitted for review"
-                              : "Task completed"}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDate(task.completed_at)}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                      ));
+                    })()}
+
+                    {/* Legacy support: Multiple review attempts from submission_notes */}
                     {(task.status === "approved" ||
                       task.status === "rejected") &&
-                      task.reviewer_name && (
+                      task.reviewer_name &&
+                      !task.review_feedback &&
+                      task.submission_notes &&
+                      task.submission_notes.split("Peer Review:").length >
+                        2 && (
                         <>
                           {/* Parse multiple review attempts from submission_notes */}
-                          {task.submission_notes &&
-                            (() => {
-                              const reviewParts = task.submission_notes
-                                .split("Peer Review:")
-                                .filter((part) => part.trim());
+                          {(() => {
+                            const reviewParts = task.submission_notes
+                              .split("Peer Review:")
+                              .filter((part) => part.trim())
+                              .slice(0, -1); // Exclude the last one (already shown above)
 
-                              return reviewParts.map(
-                                (reviewFeedback, index) => {
-                                  const isLastReview =
-                                    index === reviewParts.length - 1;
-                                  const currentStatus = isLastReview
-                                    ? task.status
-                                    : "rejected";
-
-                                  return (
-                                    <div
-                                      key={index}
-                                      className="flex items-start gap-3 p-3 border rounded-lg"
-                                    >
-                                      <div
-                                        className={`w-2 h-2 rounded-full mt-2 ${
-                                          currentStatus === "approved"
-                                            ? "bg-green-500"
-                                            : "bg-red-500"
-                                        }`}
-                                      ></div>
-                                      <div className="flex-1">
-                                        <p className="font-medium">
-                                          Peer review{" "}
-                                          {currentStatus === "approved"
-                                            ? "approved"
-                                            : "rejected"}
-                                          {!isLastReview &&
-                                            " (attempt " + (index + 1) + ")"}
-                                        </p>
-                                        <p className="text-sm text-muted-foreground">
-                                          Reviewed by {task.reviewer_name}
-                                        </p>
-                                        {isLastReview && task.updated_at && (
-                                          <p className="text-sm text-muted-foreground">
-                                            {formatDate(task.updated_at)}
-                                          </p>
-                                        )}
-                                        <p className="text-sm text-muted-foreground mt-1 italic">
-                                          &ldquo;{reviewFeedback.trim()}&rdquo;
-                                        </p>
-                                      </div>
-                                    </div>
-                                  );
-                                }
-                              );
-                            })()}
+                            return reviewParts.map((reviewFeedback, index) => (
+                              <div
+                                key={index}
+                                className="flex items-start gap-3 p-3 border rounded-lg opacity-75"
+                              >
+                                <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
+                                <div className="flex-1">
+                                  <p className="font-medium">
+                                    Peer review rejected (attempt {index + 1})
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Reviewed by {task.reviewer_name}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground mt-1 italic">
+                                    &ldquo;{reviewFeedback.trim()}&rdquo;
+                                  </p>
+                                </div>
+                              </div>
+                            ));
+                          })()}
                         </>
                       )}
                     {task.status === "pending_review" && (

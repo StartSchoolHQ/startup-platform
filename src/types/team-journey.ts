@@ -110,6 +110,19 @@ export interface TeamTask {
   reviewer_user_id?: string;
   reviewer_name?: string;
   reviewer_avatar_url?: string;
+  review_feedback?: string;
+  peer_review_history?: Array<{
+    timestamp: string;
+    event_type:
+      | "submitted_for_review"
+      | "reviewer_assigned"
+      | "review_completed";
+    reviewer_id?: string;
+    reviewer_name?: string;
+    reviewer_avatar_url?: string;
+    decision?: "approved" | "rejected";
+    feedback?: string;
+  }>;
 
   // For backwards compatibility and convenience
   id: string; // Maps to progress_id for existing code

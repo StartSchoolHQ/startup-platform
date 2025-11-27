@@ -84,16 +84,13 @@ interface CompletedReview {
   updated_at: string;
   submission_data: unknown;
   submission_notes: string | null;
-  status:
-    | "not_started"
-    | "in_progress"
-    | "completed"
-    | "cancelled"
-    | "pending_review"
-    | "approved"
-    | "rejected"
-    | "revision_required";
+  status: "approved" | "rejected"; // Now only approved/rejected since these are completed reviews
   review_feedback: string | null;
+  // Additional metadata for individual reviews
+  review_index?: number;
+  total_reviews?: number;
+  reviewer_name?: string;
+  reviewer_avatar_url?: string;
   tasks:
     | {
         id: string;
@@ -869,12 +866,24 @@ export default function PeerReviewPage() {
                                 <Medal className="h-4 w-4" />
                               </div>
                               <div>
-                                <div className="font-medium text-sm">
-                                  {review.tasks &&
-                                  typeof review.tasks === "object" &&
-                                  "title" in review.tasks
-                                    ? String(review.tasks.title)
-                                    : "Unknown Task"}
+                                <div className="flex items-center gap-2">
+                                  <div className="font-medium text-sm">
+                                    {review.tasks &&
+                                    typeof review.tasks === "object" &&
+                                    "title" in review.tasks
+                                      ? String(review.tasks.title)
+                                      : "Unknown Task"}
+                                  </div>
+                                  {review.total_reviews &&
+                                    review.total_reviews > 1 && (
+                                      <Badge
+                                        variant="secondary"
+                                        className="text-xs"
+                                      >
+                                        Review {(review.review_index || 0) + 1}/
+                                        {review.total_reviews}
+                                      </Badge>
+                                    )}
                                 </div>
                                 <div className="text-xs text-muted-foreground max-w-xs truncate">
                                   {review.tasks &&
