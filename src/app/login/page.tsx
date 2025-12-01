@@ -91,14 +91,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden p-4 bg-[#09090b]">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden p-4 bg-[#0000ff]">
       {/* Grid background - always dark theme styling */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgb(255_255_255/0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgb(255_255_255/0.03)_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
 
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
-          className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl"
+          className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#ff78c8]/10 rounded-full blur-3xl"
           animate={{
             y: [0, -20, 0],
             x: [0, 10, 0],
@@ -110,7 +110,7 @@ export default function LoginPage() {
           }}
         />
         <motion.div
-          className="absolute top-3/4 right-1/4 w-96 h-96 bg-purple-400/5 rounded-full blur-3xl"
+          className="absolute top-3/4 right-1/4 w-96 h-96 bg-[#ff78c8]/5 rounded-full blur-3xl"
           animate={{
             y: [0, 20, 0],
             x: [0, -15, 0],
@@ -129,7 +129,7 @@ export default function LoginPage() {
           {[...Array(15)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute w-1 h-1 bg-purple-400/30 rounded-full"
+              className="absolute w-1 h-1 bg-[#ff78c8]/30 rounded-full"
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
@@ -163,7 +163,7 @@ export default function LoginPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
+              <CardTitle className="text-2xl font-bold text-[#ff78c8]">
                 Welcome Back
               </CardTitle>
               <CardDescription className="text-zinc-400 mt-2">
@@ -204,7 +204,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
                   required
-                  className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-400 focus:border-purple-500 focus:ring-purple-500/20 transition-all duration-200"
+                  className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-400 focus:border-[#ff78c8] focus:ring-[#ff78c8]/20 transition-all duration-200"
                 />
               </motion.div>
 
@@ -228,7 +228,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}
                   required
-                  className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-400 focus:border-purple-500 focus:ring-purple-500/20 transition-all duration-200"
+                  className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-400 focus:border-[#ff78c8] focus:ring-[#ff78c8]/20 transition-all duration-200"
                 />
               </motion.div>
 
@@ -240,7 +240,7 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full group relative overflow-hidden bg-purple-600 hover:bg-purple-700 text-white py-6 text-base font-semibold rounded-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-purple-600/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="w-full group relative overflow-hidden bg-[#ff78c8] hover:bg-[#ff60b8] text-white py-6 text-base font-semibold rounded-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#ff78c8]/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   <span className="relative z-10">
                     {loading ? "Signing in..." : "Sign In"}
@@ -256,20 +256,6 @@ export default function LoginPage() {
                 </Button>
               </motion.div>
             </form>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-              className="text-center"
-            >
-              <p className="text-sm text-zinc-400">
-                Don&apos;t have an account?{" "}
-                <span className="text-purple-400 hover:text-purple-300 cursor-pointer transition-colors">
-                  Sign up
-                </span>
-              </p>
-            </motion.div>
           </CardContent>
         </Card>
       </motion.div>
