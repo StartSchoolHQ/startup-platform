@@ -3154,3 +3154,243 @@ export async function createProgressIfNeededDB(
 
   return data;
 }
+
+// ============================================================================
+// SMART SNAPSHOT LEADERBOARD SYSTEM (Phase 2)
+// ============================================================================
+
+/**
+ * Type definition for leaderboard entry returned by database function
+ */
+export interface LeaderboardEntry {
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  user_avatar_url: string | null;
+  total_xp: number;
+  total_points: number;
+  achievements_count: number;
+  tasks_completed: number;
+  team_count: number;
+  rank_position: number;
+  xp_change: number;
+  points_change: number;
+  achievements_change: number;
+  tasks_change: number;
+  rank_change: number;
+}
+
+/**
+ * Get current leaderboard data with change indicators from previous week
+ * Uses smart snapshot system for efficient weekly comparisons
+ * 
+ * @param limit - Number of top users to return (default: 50)
+ * @param weekNumber - Specific week to view (optional, defaults to current week)
+ * @param weekYear - Specific year to view (optional, defaults to current year)
+ */
+export async function getLeaderboardData(
+  limit: number = 50,
+  weekNumber?: number,
+  weekYear?: number
+): Promise<LeaderboardEntry[]> {
+  const supabase = createClient();
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc("get_leaderboard_data", {
+      p_limit: limit,
+      p_week_number: weekNumber || null,
+      p_week_year: weekYear || null,
+    });
+
+    if (error) {
+      console.error("Error fetching leaderboard data:", error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in getLeaderboardData:", error);
+    throw error;
+  }
+}
+
+/**
+ * Generate weekly leaderboard snapshots for all users
+ * This is typically run automatically but can be triggered manually
+ * 
+ * @param weekNumber - Week number to generate snapshots for (optional, defaults to current week)
+ * @param weekYear - Week year to generate snapshots for (optional, defaults to current year)
+ */
+export async function generateWeeklyLeaderboardSnapshots(
+  weekNumber?: number,
+  weekYear?: number
+): Promise<{ success: boolean; message: string; usersProcessed: number }> {
+  const supabase = createClient();
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc("generate_weekly_leaderboard_snapshots", {
+      p_week_number: weekNumber || null,
+      p_week_year: weekYear || null,
+    });
+
+    if (error) {
+      console.error("Error generating weekly snapshots:", error);
+      throw error;
+    }
+
+    return data || { success: false, message: "Unknown error", usersProcessed: 0 };
+  } catch (error) {
+    console.error("Error in generateWeeklyLeaderboardSnapshots:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get available weeks for leaderboard viewing
+ * Returns list of weeks that have snapshot data
+ */
+export async function getAvailableLeaderboardWeeks(): Promise<Array<{
+  week_number: number;
+  week_year: number;
+  week_start: string;
+  week_end: string;
+  user_count: number;
+}>> {
+  const supabase = createClient();
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from("leaderboard_snapshots")
+      .select("week_number, week_year, created_at")
+      .order("week_year", { ascending: false })
+      .order("week_number", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching available weeks:", error);
+      throw error;
+    }
+
+    if (!data) return [];
+
+    // Group by week and count users
+    const weekMap = new Map<string, {
+      week_number: number;
+      week_year: number;
+      user_count: number;
+      created_at: string;
+    }>();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data.forEach((snapshot: any) => {
+      const key = `${snapshot.week_year}-${snapshot.week_number}`;
+      if (!weekMap.has(key)) {
+        weekMap.set(key, {
+          week_number: snapshot.week_number,
+          week_year: snapshot.week_year,
+          user_count: 0,
+          created_at: snapshot.created_at || "",
+        });
+      }
+      weekMap.get(key)!.user_count++;
+    });
+
+    // Get week boundaries for each week
+    const weeks = Array.from(weekMap.values());
+    const weekBoundaries = await Promise.all(
+      weeks.map(async (week) => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: boundaries, error: boundariesError } = await (supabase as any).rpc(
+            "get_riga_week_boundaries",
+            { 
+              input_date: `${week.week_year}-01-01` // Use year start to get week boundaries
+            }
+          );
+
+          if (boundariesError || !boundaries || boundaries.length === 0) {
+            // Fallback calculation if function fails
+            const startOfYear = new Date(week.week_year, 0, 1);
+            const daysOffset = (week.week_number - 1) * 7;
+            const weekStart = new Date(startOfYear.getTime() + daysOffset * 24 * 60 * 60 * 1000);
+            const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+
+            return {
+              ...week,
+              week_start: weekStart.toISOString().split('T')[0],
+              week_end: weekEnd.toISOString().split('T')[0],
+            };
+          }
+
+          // Find the matching week from boundaries
+          const matchingWeek = boundaries.find(
+            (b: { week_number: number; week_year: number }) =>
+              b.week_number === week.week_number && b.week_year === week.week_year
+          );
+
+          if (matchingWeek) {
+            return {
+              ...week,
+              week_start: matchingWeek.week_start,
+              week_end: matchingWeek.week_end,
+            };
+          }
+
+          // Fallback if no matching week found
+          return {
+            ...week,
+            week_start: `${week.week_year}-01-01`,
+            week_end: `${week.week_year}-01-07`,
+          };
+        } catch (error) {
+          console.error("Error getting week boundaries:", error);
+          return {
+            ...week,
+            week_start: `${week.week_year}-01-01`,
+            week_end: `${week.week_year}-01-07`,
+          };
+        }
+      })
+    );
+
+    return weekBoundaries;
+  } catch (error) {
+    console.error("Error in getAvailableLeaderboardWeeks:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get current week information using Riga timezone
+ */
+export async function getCurrentWeekInfo(): Promise<{
+  week_number: number;
+  week_year: number;
+  week_start: string;
+  week_end: string;
+}> {
+  const supabase = createClient();
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc("get_riga_week_boundaries");
+
+    if (error) {
+      console.error("Error getting current week info:", error);
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      throw new Error("No week boundaries returned");
+    }
+
+    return data[0];
+  } catch (error) {
+    console.error("Error in getCurrentWeekInfo:", error);
+    throw error;
+  }
+}
+
+
