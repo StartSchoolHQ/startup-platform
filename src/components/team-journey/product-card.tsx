@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -111,7 +112,9 @@ export function ProductCard({ product }: ProductCardProps) {
           size="sm"
           asChild
         >
-          <a href={`/dashboard/team-journey/${product.id}`}>View Product</a>
+          <Link href={`/dashboard/team-journey/${product.id}`}>
+            View Product
+          </Link>
         </Button>
       </CardFooter>
     </Card>

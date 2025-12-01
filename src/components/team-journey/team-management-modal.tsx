@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/date-utils";
 import {
   Dialog,
@@ -82,6 +83,7 @@ export function TeamManagementModal({
   userRole,
   onRefresh,
 }: TeamManagementModalProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("current-team");
   const [searchTerm, setSearchTerm] = useState("");
   const [allAvailableUsers, setAllAvailableUsers] = useState<AvailableUser[]>(
@@ -162,7 +164,7 @@ export function TeamManagementModal({
       toast.success("Team disbanded successfully");
       onClose();
       // Redirect to teams list or dashboard
-      window.location.href = "/dashboard/team-journey";
+      router.push("/dashboard/team-journey");
     } catch (error) {
       console.error("Error disbanding team:", error);
       toast.error("Failed to disband team");

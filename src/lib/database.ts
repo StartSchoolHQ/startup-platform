@@ -3314,12 +3314,11 @@ export async function getAvailableLeaderboardWeeks(): Promise<
     const weekBoundaries = await Promise.all(
       weeks.map(async (week) => {
         try {
-          const { data: boundaries, error: boundariesError } = await (
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            supabase as any
-          ).rpc("get_riga_week_boundaries", {
-            input_date: `${week.week_year}-01-01`, // Use year start to get week boundaries
-          });
+          const { data: boundaries, error: boundariesError } =
+            await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (supabase as any).rpc("get_riga_week_boundaries", {
+              input_date: `${week.week_year}-01-01`, // Use year start to get week boundaries
+            });
 
           if (boundariesError || !boundaries || boundaries.length === 0) {
             // Fallback calculation if function fails

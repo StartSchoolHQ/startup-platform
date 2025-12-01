@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useApp } from "@/contexts/app-context";
 import {
   BarChart3,
@@ -59,7 +60,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Memoize navigation items to prevent flickering
   const navigationItems = React.useMemo(() => {
     const baseItems = navMainItems.filter((item) => !item.hidden);
-    
+
     // Add admin section if user is admin (show whenever role is available)
     if (user?.primary_role === "admin") {
       return [
@@ -71,7 +72,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
       ];
     }
-    
+
     return baseItems;
   }, [user?.primary_role]); // Only recreate when admin role changes
 
@@ -81,7 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/dashboard">
+              <Link href="/dashboard">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                   <Command className="size-4" />
                 </div>
@@ -91,7 +92,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </span>
                   <span className="truncate text-xs">Batch 1</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
