@@ -56,17 +56,24 @@ const navMainItems = [
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useApp();
 
-  // Create navigation items based on user role
-  const navigationItems = navMainItems.filter((item) => !item.hidden);
-
-  // Add admin section if user is admin
-  if (user?.primary_role === "admin") {
-    navigationItems.push({
-      title: "Admin",
-      url: "/dashboard/admin",
-      icon: Settings,
-    });
-  }
+  // Memoize navigation items to prevent flickering
+  const navigationItems = React.useMemo(() => {
+    const baseItems = navMainItems.filter((item) => !item.hidden);
+    
+    // Add admin section if user is admin (show whenever role is available)
+    if (user?.primary_role === "admin") {
+      return [
+        ...baseItems,
+        {
+          title: "Admin",
+          url: "/dashboard/admin",
+          icon: Settings,
+        },
+      ];
+    }
+    
+    return baseItems;
+  }, [user?.primary_role]); // Only recreate when admin role changes
 
   return (
     <Sidebar variant="inset" {...props}>

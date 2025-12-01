@@ -16,7 +16,9 @@ export function RankIcon({ type, rank, changeDirection }: RankIconProps) {
       case "medal":
         return <span className="text-accent-foreground text-sm">🥉</span>;
       case "flame":
-        return <span className="text-sm font-medium text-foreground">#{rank}</span>;
+        return (
+          <span className="text-sm font-medium text-foreground">#{rank}</span>
+        );
       default:
         return (
           <span className="text-sm font-medium text-muted-foreground">

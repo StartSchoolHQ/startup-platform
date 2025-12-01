@@ -25,7 +25,10 @@ import { type LeaderboardEntry as DBLeaderboardEntry } from "@/lib/leaderboard-s
 function convertToLeaderboardEntry(
   dbEntry: DBLeaderboardEntry,
   currentUserId?: string,
-  userStreaks?: Map<string, { days: number; type: "active" | "warning" | "inactive" }>
+  userStreaks?: Map<
+    string,
+    { days: number; type: "active" | "warning" | "inactive" }
+  >
 ): LeaderboardEntry {
   // Determine rank icon based on position
   let rankIcon: "crown" | "trophy" | "medal" | "flame" | "none" = "none";
@@ -39,12 +42,18 @@ function convertToLeaderboardEntry(
   if (dbEntry.rank_change > 0) changeDirection = "up";
   else if (dbEntry.rank_change < 0) changeDirection = "down";
 
-  const teamText = dbEntry.team_count === 0 ? "No Teams" : 
-                  dbEntry.team_count === 1 ? "1 Team" : 
-                  `${dbEntry.team_count} Teams`;
+  const teamText =
+    dbEntry.team_count === 0
+      ? "No Teams"
+      : dbEntry.team_count === 1
+      ? "1 Team"
+      : `${dbEntry.team_count} Teams`;
 
   // Get real streak data from API
-  const userStreak = userStreaks?.get(dbEntry.user_id) || { days: 0, type: "inactive" as const };
+  const userStreak = userStreaks?.get(dbEntry.user_id) || {
+    days: 0,
+    type: "inactive" as const,
+  };
 
   return {
     rank: dbEntry.rank_position,
@@ -209,43 +218,49 @@ interface LeaderboardPageClientProps {
   currentUserId?: string;
 }
 
-export default function LeaderboardPageClient({ 
-  initialData, 
-  availableWeeks: initialAvailableWeeks, 
-  currentUserId 
+export default function LeaderboardPageClient({
+  initialData,
+  availableWeeks: initialAvailableWeeks,
+  currentUserId,
 }: LeaderboardPageClientProps) {
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
-  const [availableWeeks, setAvailableWeeks] = useState<AvailableWeek[]>(initialAvailableWeeks);
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>(
+    []
+  );
+  const [availableWeeks, setAvailableWeeks] = useState<AvailableWeek[]>(
+    initialAvailableWeeks
+  );
   const [selectedWeek, setSelectedWeek] = useState<string>("current");
   const [loading, setLoading] = useState(false);
   const [streaksLoading, setStreaksLoading] = useState(false);
-  const [userStreaks, setUserStreaks] = useState<Map<string, { days: number; type: "active" | "warning" | "inactive" }>>(new Map());
+  const [userStreaks, setUserStreaks] = useState<
+    Map<string, { days: number; type: "active" | "warning" | "inactive" }>
+  >(new Map());
   const [rawDbData, setRawDbData] = useState<DBLeaderboardEntry[]>(initialData);
-  
+
   const supabase = createClient();
 
   // Function to fetch streaks from API
   const fetchStreaks = async (userIds: string[]) => {
     if (userIds.length === 0) return new Map();
-    
+
     setStreaksLoading(true);
     try {
-      const response = await fetch('/api/leaderboard/streaks', {
-        method: 'POST',
+      const response = await fetch("/api/leaderboard/streaks", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ userIds }),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch streaks');
+        throw new Error("Failed to fetch streaks");
       }
-      
+
       const { streaks } = await response.json();
       return new Map(Object.entries(streaks));
     } catch (error) {
-      console.error('Error fetching streaks:', error);
+      console.error("Error fetching streaks:", error);
       return new Map();
     } finally {
       setStreaksLoading(false);
@@ -256,19 +271,19 @@ export default function LeaderboardPageClient({
   useEffect(() => {
     const initializeData = async () => {
       setRawDbData(initialData);
-      
+
       // Fetch streaks for initial data first
-      const userIds = initialData.map(entry => entry.user_id);
+      const userIds = initialData.map((entry) => entry.user_id);
       const streaksData = await fetchStreaks(userIds);
       setUserStreaks(streaksData);
-      
+
       // Transform data with the fetched streaks
       const transformedData = initialData.map((entry) =>
         convertToLeaderboardEntry(entry, currentUserId, streaksData)
       );
       setLeaderboardData(transformedData);
     };
-    
+
     initializeData();
   }, [initialData, currentUserId]);
 
@@ -297,32 +312,41 @@ export default function LeaderboardPageClient({
 
         if (data) {
           // Group by week and create available weeks list
-          const weekMap = new Map<string, { week_number: number; week_year: number; user_count: number }>();
-          data.forEach((snapshot: { week_year: number; week_number: number }) => {
-            const key = `${snapshot.week_year}-${snapshot.week_number}`;
-            if (!weekMap.has(key)) {
-              weekMap.set(key, {
-                week_number: snapshot.week_number,
-                week_year: snapshot.week_year,
-                user_count: 1,
-              });
-            } else {
-              const existingWeek = weekMap.get(key)!;
-              existingWeek.user_count++;
+          const weekMap = new Map<
+            string,
+            { week_number: number; week_year: number; user_count: number }
+          >();
+          data.forEach(
+            (snapshot: { week_year: number; week_number: number }) => {
+              const key = `${snapshot.week_year}-${snapshot.week_number}`;
+              if (!weekMap.has(key)) {
+                weekMap.set(key, {
+                  week_number: snapshot.week_number,
+                  week_year: snapshot.week_year,
+                  user_count: 1,
+                });
+              } else {
+                const existingWeek = weekMap.get(key)!;
+                existingWeek.user_count++;
+              }
             }
-          });
+          );
 
           const weeks = Array.from(weekMap.values()).map((week) => {
             // Simple week boundary calculation
             const startOfYear = new Date(week.week_year, 0, 1);
             const daysOffset = (week.week_number - 1) * 7;
-            const weekStart = new Date(startOfYear.getTime() + daysOffset * 24 * 60 * 60 * 1000);
-            const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+            const weekStart = new Date(
+              startOfYear.getTime() + daysOffset * 24 * 60 * 60 * 1000
+            );
+            const weekEnd = new Date(
+              weekStart.getTime() + 6 * 24 * 60 * 60 * 1000
+            );
 
             return {
               ...week,
-              week_start: weekStart.toISOString().split('T')[0],
-              week_end: weekEnd.toISOString().split('T')[0],
+              week_start: weekStart.toISOString().split("T")[0],
+              week_end: weekEnd.toISOString().split("T")[0],
             };
           });
 
@@ -351,22 +375,27 @@ export default function LeaderboardPageClient({
         }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data, error } = await (supabase as any).rpc("get_leaderboard_data", {
-          p_limit: 50,
-          p_week_number: weekNumber || null,
-          p_week_year: weekYear || null,
-        });
+        const { data, error } = await (supabase as any).rpc(
+          "get_leaderboard_data",
+          {
+            p_limit: 50,
+            p_week_number: weekNumber || null,
+            p_week_year: weekYear || null,
+          }
+        );
 
         if (error) throw error;
 
         // Store raw data first
         setRawDbData(data || []);
-        
+
         // Fetch streaks for new data
-        const userIds = (data || []).map((entry: DBLeaderboardEntry) => entry.user_id);
+        const userIds = (data || []).map(
+          (entry: DBLeaderboardEntry) => entry.user_id
+        );
         const streaks = await fetchStreaks(userIds);
         setUserStreaks(streaks);
-        
+
         // Transform data with streaks (this will be handled by useEffect)
       } catch (error) {
         console.error("Error fetching leaderboard data:", error);
@@ -377,8 +406,6 @@ export default function LeaderboardPageClient({
 
     fetchLeaderboardData();
   }, [selectedWeek, currentUserId, supabase]);
-
-
 
   return (
     <div className="space-y-6">
@@ -405,11 +432,12 @@ export default function LeaderboardPageClient({
           <SelectContent>
             <SelectItem value="current">Current Week</SelectItem>
             {availableWeeks.map((week) => (
-              <SelectItem 
+              <SelectItem
                 key={`${week.week_year}-${week.week_number}`}
                 value={`${week.week_year}-${week.week_number}`}
               >
-                Week {week.week_number}, {week.week_year} ({week.user_count} users)
+                Week {week.week_number}, {week.week_year} ({week.user_count}{" "}
+                users)
               </SelectItem>
             ))}
           </SelectContent>
@@ -454,7 +482,9 @@ export default function LeaderboardPageClient({
             ) : (
               <div className="p-8 text-center text-muted-foreground">
                 <p>No leaderboard data available for this week.</p>
-                <p className="text-sm mt-1">Weekly snapshots will be generated automatically.</p>
+                <p className="text-sm mt-1">
+                  Weekly snapshots will be generated automatically.
+                </p>
               </div>
             )}
           </div>

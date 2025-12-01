@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { ChevronRight, type LucideIcon } from "lucide-react"
 import { usePathname } from "next/navigation"
 
@@ -20,7 +21,7 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 
-export function NavMain({
+export const NavMain = React.memo(function NavMain({
   items,
 }: {
   items: {
@@ -81,4 +82,4 @@ export function NavMain({
       </SidebarMenu>
     </SidebarGroup>
   )
-}
+});

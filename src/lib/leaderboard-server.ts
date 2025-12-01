@@ -28,15 +28,18 @@ export async function getServerSideLeaderboardData(
   weekYear?: number
 ): Promise<LeaderboardEntry[]> {
   const supabase = await createClient();
-  
+
   try {
     // Use any type assertion since the function exists but isn't in generated types yet
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any).rpc("get_leaderboard_data", {
-      p_limit: limit,
-      p_week_number: weekNumber || null,
-      p_week_year: weekYear || null,
-    });
+    const { data, error } = await (supabase as any).rpc(
+      "get_leaderboard_data",
+      {
+        p_limit: limit,
+        p_week_number: weekNumber || null,
+        p_week_year: weekYear || null,
+      }
+    );
 
     if (error) {
       console.error("Error fetching leaderboard data:", error);
@@ -60,11 +63,13 @@ export async function getServerSideCurrentWeekInfo(): Promise<{
   week_end: string;
 }> {
   const supabase = await createClient();
-  
+
   try {
     // Use any type assertion since the function exists but isn't in generated types yet
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any).rpc("get_riga_week_boundaries");
+    const { data, error } = await (supabase as any).rpc(
+      "get_riga_week_boundaries"
+    );
 
     if (error) {
       console.error("Error getting current week info:", error);
@@ -85,13 +90,15 @@ export async function getServerSideCurrentWeekInfo(): Promise<{
 /**
  * Server-side function to get available weeks for leaderboard viewing
  */
-export async function getServerSideAvailableWeeks(): Promise<Array<{
-  week_number: number;
-  week_year: number;
-  week_start: string;
-  week_end: string;
-  user_count: number;
-}>> {
+export async function getServerSideAvailableWeeks(): Promise<
+  Array<{
+    week_number: number;
+    week_year: number;
+    week_start: string;
+    week_end: string;
+    user_count: number;
+  }>
+> {
   const supabase = await createClient();
 
   try {
@@ -111,12 +118,15 @@ export async function getServerSideAvailableWeeks(): Promise<Array<{
     if (!data) return [];
 
     // Group by week and count users
-    const weekMap = new Map<string, {
-      week_number: number;
-      week_year: number;
-      user_count: number;
-      created_at: string;
-    }>();
+    const weekMap = new Map<
+      string,
+      {
+        week_number: number;
+        week_year: number;
+        user_count: number;
+        created_at: string;
+      }
+    >();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data.forEach((snapshot: any) => {
@@ -138,13 +148,15 @@ export async function getServerSideAvailableWeeks(): Promise<Array<{
       // Simple week boundary calculation (can be enhanced later with proper Riga timezone logic)
       const startOfYear = new Date(week.week_year, 0, 1);
       const daysOffset = (week.week_number - 1) * 7;
-      const weekStart = new Date(startOfYear.getTime() + daysOffset * 24 * 60 * 60 * 1000);
+      const weekStart = new Date(
+        startOfYear.getTime() + daysOffset * 24 * 60 * 60 * 1000
+      );
       const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
 
       return {
         ...week,
-        week_start: weekStart.toISOString().split('T')[0],
-        week_end: weekEnd.toISOString().split('T')[0],
+        week_start: weekStart.toISOString().split("T")[0],
+        week_end: weekEnd.toISOString().split("T")[0],
       };
     });
 
@@ -186,22 +198,22 @@ export async function calculateUserStreak(userId: string): Promise<{
 
     // Group transactions by date and calculate daily activity
     const dailyActivity = new Map<string, boolean>();
-    
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     transactions.forEach((transaction: any) => {
-      const date = new Date(transaction.created_at).toISOString().split('T')[0];
+      const date = new Date(transaction.created_at).toISOString().split("T")[0];
       dailyActivity.set(date, true);
     });
 
     // Calculate current streak (consecutive days from today backwards)
     let streakDays = 0;
     const today = new Date();
-    
+
     for (let i = 0; i < 30; i++) {
       const checkDate = new Date(today);
       checkDate.setDate(today.getDate() - i);
-      const dateString = checkDate.toISOString().split('T')[0];
-      
+      const dateString = checkDate.toISOString().split("T")[0];
+
       if (dailyActivity.has(dateString)) {
         streakDays++;
       } else {
@@ -231,10 +243,15 @@ export async function calculateUserStreak(userId: string): Promise<{
 /**
  * Get user streaks for multiple users (optimized for leaderboard)
  */
-export async function getUserStreaks(userIds: string[]): Promise<Map<string, {
-  days: number;
-  type: "active" | "warning" | "inactive";
-}>> {
+export async function getUserStreaks(userIds: string[]): Promise<
+  Map<
+    string,
+    {
+      days: number;
+      type: "active" | "warning" | "inactive";
+    }
+  >
+> {
   const supabase = await createClient();
   const streakMap = new Map();
 
@@ -266,9 +283,9 @@ export async function getUserStreaks(userIds: string[]): Promise<Map<string, {
     });
 
     // Calculate streak for each user
-    userIds.forEach(userId => {
+    userIds.forEach((userId) => {
       const userTxns = userTransactions.get(userId) || [];
-      
+
       if (userTxns.length === 0) {
         streakMap.set(userId, { days: 0, type: "inactive" });
         return;
@@ -276,20 +293,20 @@ export async function getUserStreaks(userIds: string[]): Promise<Map<string, {
 
       // Group by date
       const dailyActivity = new Set<string>();
-      userTxns.forEach(txn => {
-        const date = new Date(txn.created_at).toISOString().split('T')[0];
+      userTxns.forEach((txn) => {
+        const date = new Date(txn.created_at).toISOString().split("T")[0];
         dailyActivity.add(date);
       });
 
       // Calculate streak
       let streakDays = 0;
       const today = new Date();
-      
+
       for (let i = 0; i < 30; i++) {
         const checkDate = new Date(today);
         checkDate.setDate(today.getDate() - i);
-        const dateString = checkDate.toISOString().split('T')[0];
-        
+        const dateString = checkDate.toISOString().split("T")[0];
+
         if (dailyActivity.has(dateString)) {
           streakDays++;
         } else {
@@ -309,7 +326,7 @@ export async function getUserStreaks(userIds: string[]): Promise<Map<string, {
   } catch (error) {
     console.error("Error getting user streaks:", error);
     // Return default values for all users
-    userIds.forEach(userId => {
+    userIds.forEach((userId) => {
       streakMap.set(userId, { days: 0, type: "inactive" });
     });
     return streakMap;
@@ -324,21 +341,26 @@ export async function generateServerSideWeeklySnapshots(
   weekYear?: number
 ): Promise<{ success: boolean; message: string; usersProcessed: number }> {
   const supabase = await createClient();
-  
+
   try {
     // Use any type assertion since the function exists but isn't in generated types yet
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any).rpc("generate_weekly_leaderboard_snapshots", {
-      p_week_number: weekNumber || null,
-      p_week_year: weekYear || null,
-    });
+    const { data, error } = await (supabase as any).rpc(
+      "generate_weekly_leaderboard_snapshots",
+      {
+        p_week_number: weekNumber || null,
+        p_week_year: weekYear || null,
+      }
+    );
 
     if (error) {
       console.error("Error generating weekly snapshots:", error);
       throw error;
     }
 
-    return data || { success: false, message: "Unknown error", usersProcessed: 0 };
+    return (
+      data || { success: false, message: "Unknown error", usersProcessed: 0 }
+    );
   } catch (error) {
     console.error("Error in generateServerSideWeeklySnapshots:", error);
     throw error;

@@ -2710,7 +2710,9 @@ export async function getCompletedPeerReviews(userId: string) {
   taskProgressData.forEach((task) => {
     if (task.peer_review_history && Array.isArray(task.peer_review_history)) {
       // Find all completed reviews by this user
-      const userReviews = (task.peer_review_history as unknown as PeerReviewHistoryEntry[]).filter(
+      const userReviews = (
+        task.peer_review_history as unknown as PeerReviewHistoryEntry[]
+      ).filter(
         (historyEntry: PeerReviewHistoryEntry) =>
           historyEntry.event_type === "review_completed" &&
           historyEntry.reviewer_id === userId &&
@@ -2719,10 +2721,7 @@ export async function getCompletedPeerReviews(userId: string) {
 
       // Create a separate entry for each review
       userReviews.forEach(
-        (
-          reviewEntry: PeerReviewHistoryEntry,
-          index: number
-        ) => {
+        (reviewEntry: PeerReviewHistoryEntry, index: number) => {
           individualReviews.push({
             // Use unique ID combining task ID and review timestamp
             id: `${task.id}_${reviewEntry.timestamp}`,
@@ -3183,7 +3182,7 @@ export interface LeaderboardEntry {
 /**
  * Get current leaderboard data with change indicators from previous week
  * Uses smart snapshot system for efficient weekly comparisons
- * 
+ *
  * @param limit - Number of top users to return (default: 50)
  * @param weekNumber - Specific week to view (optional, defaults to current week)
  * @param weekYear - Specific year to view (optional, defaults to current year)
@@ -3197,11 +3196,14 @@ export async function getLeaderboardData(
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any).rpc("get_leaderboard_data", {
-      p_limit: limit,
-      p_week_number: weekNumber || null,
-      p_week_year: weekYear || null,
-    });
+    const { data, error } = await (supabase as any).rpc(
+      "get_leaderboard_data",
+      {
+        p_limit: limit,
+        p_week_number: weekNumber || null,
+        p_week_year: weekYear || null,
+      }
+    );
 
     if (error) {
       console.error("Error fetching leaderboard data:", error);
@@ -3218,7 +3220,7 @@ export async function getLeaderboardData(
 /**
  * Generate weekly leaderboard snapshots for all users
  * This is typically run automatically but can be triggered manually
- * 
+ *
  * @param weekNumber - Week number to generate snapshots for (optional, defaults to current week)
  * @param weekYear - Week year to generate snapshots for (optional, defaults to current year)
  */
@@ -3230,17 +3232,22 @@ export async function generateWeeklyLeaderboardSnapshots(
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any).rpc("generate_weekly_leaderboard_snapshots", {
-      p_week_number: weekNumber || null,
-      p_week_year: weekYear || null,
-    });
+    const { data, error } = await (supabase as any).rpc(
+      "generate_weekly_leaderboard_snapshots",
+      {
+        p_week_number: weekNumber || null,
+        p_week_year: weekYear || null,
+      }
+    );
 
     if (error) {
       console.error("Error generating weekly snapshots:", error);
       throw error;
     }
 
-    return data || { success: false, message: "Unknown error", usersProcessed: 0 };
+    return (
+      data || { success: false, message: "Unknown error", usersProcessed: 0 }
+    );
   } catch (error) {
     console.error("Error in generateWeeklyLeaderboardSnapshots:", error);
     throw error;
@@ -3251,13 +3258,15 @@ export async function generateWeeklyLeaderboardSnapshots(
  * Get available weeks for leaderboard viewing
  * Returns list of weeks that have snapshot data
  */
-export async function getAvailableLeaderboardWeeks(): Promise<Array<{
-  week_number: number;
-  week_year: number;
-  week_start: string;
-  week_end: string;
-  user_count: number;
-}>> {
+export async function getAvailableLeaderboardWeeks(): Promise<
+  Array<{
+    week_number: number;
+    week_year: number;
+    week_start: string;
+    week_end: string;
+    user_count: number;
+  }>
+> {
   const supabase = createClient();
 
   try {
@@ -3276,12 +3285,15 @@ export async function getAvailableLeaderboardWeeks(): Promise<Array<{
     if (!data) return [];
 
     // Group by week and count users
-    const weekMap = new Map<string, {
-      week_number: number;
-      week_year: number;
-      user_count: number;
-      created_at: string;
-    }>();
+    const weekMap = new Map<
+      string,
+      {
+        week_number: number;
+        week_year: number;
+        user_count: number;
+        created_at: string;
+      }
+    >();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data.forEach((snapshot: any) => {
@@ -3302,32 +3314,36 @@ export async function getAvailableLeaderboardWeeks(): Promise<Array<{
     const weekBoundaries = await Promise.all(
       weeks.map(async (week) => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data: boundaries, error: boundariesError } = await (supabase as any).rpc(
-            "get_riga_week_boundaries",
-            { 
-              input_date: `${week.week_year}-01-01` // Use year start to get week boundaries
-            }
-          );
+          const { data: boundaries, error: boundariesError } = await (
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            supabase as any
+          ).rpc("get_riga_week_boundaries", {
+            input_date: `${week.week_year}-01-01`, // Use year start to get week boundaries
+          });
 
           if (boundariesError || !boundaries || boundaries.length === 0) {
             // Fallback calculation if function fails
             const startOfYear = new Date(week.week_year, 0, 1);
             const daysOffset = (week.week_number - 1) * 7;
-            const weekStart = new Date(startOfYear.getTime() + daysOffset * 24 * 60 * 60 * 1000);
-            const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+            const weekStart = new Date(
+              startOfYear.getTime() + daysOffset * 24 * 60 * 60 * 1000
+            );
+            const weekEnd = new Date(
+              weekStart.getTime() + 6 * 24 * 60 * 60 * 1000
+            );
 
             return {
               ...week,
-              week_start: weekStart.toISOString().split('T')[0],
-              week_end: weekEnd.toISOString().split('T')[0],
+              week_start: weekStart.toISOString().split("T")[0],
+              week_end: weekEnd.toISOString().split("T")[0],
             };
           }
 
           // Find the matching week from boundaries
           const matchingWeek = boundaries.find(
             (b: { week_number: number; week_year: number }) =>
-              b.week_number === week.week_number && b.week_year === week.week_year
+              b.week_number === week.week_number &&
+              b.week_year === week.week_year
           );
 
           if (matchingWeek) {
@@ -3375,7 +3391,9 @@ export async function getCurrentWeekInfo(): Promise<{
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any).rpc("get_riga_week_boundaries");
+    const { data, error } = await (supabase as any).rpc(
+      "get_riga_week_boundaries"
+    );
 
     if (error) {
       console.error("Error getting current week info:", error);
@@ -3392,5 +3410,3 @@ export async function getCurrentWeekInfo(): Promise<{
     throw error;
   }
 }
-
-
