@@ -784,7 +784,9 @@ export default function PeerReviewPage() {
                           task={task}
                           variant="submitted"
                           onAction={() => {
-                            router.push(`/dashboard/team-journey/task/${task.id}`);
+                            router.push(
+                              `/dashboard/team-journey/task/${task.id}`
+                            );
                           }}
                           actionLoading={false}
                           actionButtonText="View Feedback"

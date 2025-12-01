@@ -355,7 +355,11 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href={`/dashboard/team-journey/${task.team_id || task.teams?.id}`}>
+              <Link
+                href={`/dashboard/team-journey/${
+                  task.team_id || task.teams?.id
+                }`}
+              >
                 {task.teams?.name || "Team"}
               </Link>
             </BreadcrumbLink>

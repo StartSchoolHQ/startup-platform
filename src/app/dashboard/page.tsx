@@ -284,6 +284,7 @@ function PersonalProgressCard({
             size="sm"
             className="bg-foreground text-background hover:bg-foreground/90 h-10 grow"
             onClick={() => router.push("/dashboard/my-journey")}
+            disabled
           >
             <WandSparkles className="h-4 w-4 mr-2" />
             View Progress
