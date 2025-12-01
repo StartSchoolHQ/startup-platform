@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +46,7 @@ function RealTaskRow({
   task: TaskTableItem;
   onStartTask?: (taskId: string) => void;
 }) {
+  const router = useRouter();
   const getStatusButtonConfig = (status: TaskTableItem["status"]) => {
     switch (status) {
       case "Finished":
@@ -166,7 +168,7 @@ function RealTaskRow({
                   size="sm"
                   className="h-8 text-xs px-3 py-2"
                   onClick={() => {
-                    window.location.href = `/dashboard/my-journey/task/${task.id}`;
+                    router.push(`/dashboard/my-journey/task/${task.id}`);
                   }}
                 >
                   View Info
@@ -187,7 +189,7 @@ function RealTaskRow({
                     onStartTask(task.task_id);
                   } else if (task.status === "In Progress") {
                     // Navigate to task detail page for continuing/submitting
-                    window.location.href = `/dashboard/my-journey/task/${task.id}`;
+                    router.push(`/dashboard/my-journey/task/${task.id}`);
                   }
                 }}
               >

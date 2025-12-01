@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useApp } from "@/contexts/app-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -132,6 +133,7 @@ export default function OverviewPage() {
 
 // Progress card component for teams
 function TeamProgressCard({ data }: { data: TeamProgressData }) {
+  const router = useRouter();
   // Get the first team name for the title, or use default
   const teamName = data.teams.length > 0 ? data.teams[0].name : "Your Teams";
   const cardTitle =
@@ -153,7 +155,7 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => (window.location.href = "/dashboard/team-journey")}
+          onClick={() => router.push("/dashboard/team-journey")}
         >
           {data.joinTeamsText}
         </Button>
@@ -237,6 +239,7 @@ function PersonalProgressCard({
   hasSubmittedThisWeek: boolean;
   onOpenReportModal: () => void;
 }) {
+  const router = useRouter();
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
@@ -280,7 +283,7 @@ function PersonalProgressCard({
           <Button
             size="sm"
             className="bg-foreground text-background hover:bg-foreground/90 h-10 grow"
-            onClick={() => (window.location.href = "/dashboard/my-journey")}
+            onClick={() => router.push("/dashboard/my-journey")}
           >
             <WandSparkles className="h-4 w-4 mr-2" />
             View Progress

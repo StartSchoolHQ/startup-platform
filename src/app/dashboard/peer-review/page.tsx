@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -118,6 +119,7 @@ interface CompletedReview {
 }
 
 export default function PeerReviewPage() {
+  const router = useRouter();
   const { user } = useApp();
   const [availableTasks, setAvailableTasks] = useState<AvailableTask[]>([]);
   const [myTasks, setMyTasks] = useState<AvailableTask[]>([]);
@@ -782,7 +784,7 @@ export default function PeerReviewPage() {
                           task={task}
                           variant="submitted"
                           onAction={() => {
-                            window.location.href = `/dashboard/team-journey/task/${task.id}`;
+                            router.push(`/dashboard/team-journey/task/${task.id}`);
                           }}
                           actionLoading={false}
                           actionButtonText="View Feedback"
