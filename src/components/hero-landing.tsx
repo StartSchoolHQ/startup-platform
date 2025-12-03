@@ -61,15 +61,16 @@ export function HeroLanding() {
           transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
           className="mb-6 flex justify-center"
         >
-          <Image
-            src="/images/startschool-logo.png"
-            alt="StartSchool"
-            width={600}
-            height={200}
-            priority
-            className="max-w-full h-auto"
-            unoptimized
-          />
+          <div className="w-[600px] max-w-full h-[200px] relative">
+            <Image
+              src="/images/startschool-logo.png"
+              alt="StartSchool"
+              fill
+              priority
+              className="object-contain"
+              sizes="(max-width: 768px) 100vw, 600px"
+            />
+          </div>
         </motion.div>
 
         <motion.p
