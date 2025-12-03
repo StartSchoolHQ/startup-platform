@@ -129,7 +129,7 @@ export function TasksTable({
                                 date.getMinutes()
                               ).padStart(2, "0");
                               return `${day}-${month}-${year} ${hours}:${minutes}`;
-                            } catch (error) {
+                            } catch {
                               return task.responsible.date;
                             }
                           })()}
@@ -217,7 +217,7 @@ export function TasksTable({
                       <>
                         <Button
                           size="sm"
-                          className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
+                          className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90 text-xs"
                           disabled
                         >
                           <CheckCircle className="h-3 w-3 mr-1" />
@@ -236,7 +236,7 @@ export function TasksTable({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-xs px-3 py-2"
+                            className="text-xs px-3 py-2 border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                             onClick={() =>
                               router.push(
                                 `/dashboard/team-journey/task/${task.id}`
@@ -253,7 +253,7 @@ export function TasksTable({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-xs px-2"
+                            className="text-xs px-2 text-[#ff78c8] hover:bg-[#ff78c8]/10"
                           >
                             Tips
                           </Button>
@@ -267,7 +267,7 @@ export function TasksTable({
                           <Button
                             variant="default"
                             size="sm"
-                            className="text-xs px-3 py-2"
+                            className="text-xs px-3 py-2 bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
                             onClick={() => onStartTask(task.id)}
                           >
                             <Play className="h-3 w-3 mr-1" />
@@ -288,7 +288,7 @@ export function TasksTable({
                             <Button
                               variant="outline"
                               size="sm"
-                              className="text-xs px-3 py-2"
+                              className="text-xs px-3 py-2 border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                               onClick={() =>
                                 router.push(
                                   `/dashboard/team-journey/task/${task.id}`

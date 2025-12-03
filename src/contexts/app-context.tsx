@@ -67,8 +67,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .eq("id", authUser.id)
         .single();
 
-      if (profileError || !userProfile) {
-        console.error("Error loading user profile:", profileError);
+      if (profileError) {
+        // If profile doesn't exist (PGRST116), that's expected for new users
+        if (profileError.code !== "PGRST116") {
+          console.error("Error loading user profile:", profileError);
+        }
+        setLoading(false);
+        return;
+      }
+
+      if (!userProfile) {
+        console.error("User profile not found");
         setLoading(false);
         return;
       }

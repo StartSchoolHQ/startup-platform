@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
 import {
@@ -12,11 +12,41 @@ import { Button } from "../../../components/ui/button";
 
 export default function ProfileSetupPage() {
   const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(true);
   const router = useRouter();
+
+  // Validate access to this page
+  useEffect(() => {
+    const validateAccess = async () => {
+      const supabase = createClient();
+
+      // Check if user is authenticated
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        // User not authenticated, redirect to login
+        router.push("/login");
+        return;
+      }
+
+      // Skip profile check for now - let users access setup page if authenticated
+      // The form submission will handle profile creation/update
+      console.log("User authenticated, allowing profile setup access");
+      setIsValidating(false);
+    };
+
+    validateAccess();
+  }, [router]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -54,6 +84,21 @@ export default function ProfileSetupPage() {
       return;
     }
 
+    if (!password.trim()) {
+      setError("Password is required");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -69,6 +114,9 @@ export default function ProfileSetupPage() {
         setError("Authentication error. Please try logging in again.");
         return;
       }
+
+      // Skip existing profile check to avoid RLS issues
+      // Just proceed with profile creation/update
 
       // Upload avatar to Supabase Storage with user folder structure
       const fileExtension = avatarFile.name.split(".").pop();
@@ -92,18 +140,33 @@ export default function ProfileSetupPage() {
         data: { publicUrl },
       } = supabase.storage.from("avatars").getPublicUrl(uploadData.path);
 
-      // Update user profile in our users table
-      const { error: updateError } = await supabase
-        .from("users")
-        .update({
-          name: name.trim(),
-          avatar_url: publicUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", user.id);
+      // Update user password in Supabase Auth
+      const { error: passwordError } = await supabase.auth.updateUser({
+        password: password,
+      });
 
-      if (updateError) {
-        setError("Failed to save profile. Please try again.");
+      if (passwordError) {
+        setError("Failed to set password. Please try again.");
+        return;
+      }
+
+      // Create or update user profile via API route
+      const response = await fetch("/api/profile/setup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          avatarUrl: publicUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(
+          errorData.error || "Failed to save profile. Please try again."
+        );
         return;
       }
 
@@ -116,6 +179,18 @@ export default function ProfileSetupPage() {
       setLoading(false);
     }
   };
+
+  // Show loading while validating access
+  if (isValidating) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Validating access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -188,6 +263,57 @@ export default function ProfileSetupPage() {
               placeholder="Enter your full name"
               className="mt-1 block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder:text-muted-foreground bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
               disabled={loading}
+            />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-foreground"
+            >
+              Password *
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="mt-1 block w-full px-3 py-2 pr-10 border border-input rounded-md shadow-sm placeholder:text-muted-foreground bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
+                disabled={loading}
+                minLength={6}
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
+            </div>
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-foreground"
+            >
+              Confirm Password *
+            </label>
+            <input
+              id="confirmPassword"
+              type={showPassword ? "text" : "password"}
+              required
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirm your password"
+              className="mt-1 block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder:text-muted-foreground bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
+              disabled={loading}
+              minLength={6}
             />
           </div>
 

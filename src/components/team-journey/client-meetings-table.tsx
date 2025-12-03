@@ -184,7 +184,7 @@ export function ClientMeetingsTable({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-xs"
+                      className="text-xs border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                       onClick={() => handleViewMeeting(meeting)}
                     >
                       <Eye className="h-3 w-3 mr-1" />

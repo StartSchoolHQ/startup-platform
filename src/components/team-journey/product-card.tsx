@@ -20,7 +20,7 @@ export function ProductCard({ product }: ProductCardProps) {
     <Card
       className={`w-full h-full flex flex-col transition-all duration-200 ${
         product.isCurrentUserMember
-          ? "ring-2 ring-primary/20 border-primary/30 bg-primary/5"
+          ? "ring-2 ring-[#0000ff]/20 border-[#0000ff]/30 bg-[#0000ff]/5"
           : ""
       }`}
     >
@@ -47,7 +47,7 @@ export function ProductCard({ product }: ProductCardProps) {
             variant={product.status === "Active" ? "default" : "secondary"}
             className={
               product.status === "Active"
-                ? "bg-primary/10 text-primary hover:bg-primary/20"
+                ? "bg-[#ff78c8]/10 text-[#ff78c8] hover:bg-[#ff78c8]/20 border-[#ff78c8]/20"
                 : "bg-muted text-muted-foreground"
             }
           >

@@ -38,8 +38,25 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Define routes that should be excluded from auth checks
+  const publicRoutes = [
+    "/",
+    "/login",
+    "/auth/callback",
+    "/profile/setup",
+    "/invite",
+  ];
+  const isPublicRoute = publicRoutes.some((route) =>
+    request.nextUrl.pathname.startsWith(route)
+  );
+
+  // Skip auth checks for public routes
+  if (isPublicRoute) {
+    return supabaseResponse;
+  }
+
   // Define protected routes that require authentication
-  const protectedRoutes = ["/dashboard", "/profile/setup"];
+  const protectedRoutes = ["/dashboard"];
   const isProtectedRoute = protectedRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );

@@ -387,7 +387,7 @@ export function CreateTaskDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white">
           <Plus className="mr-2 h-4 w-4" />
           Add New {defaultTaskType === "team" ? "Team" : "Individual"} Task
         </Button>
@@ -444,7 +444,7 @@ export function CreateTaskDialog({
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
+                    <FileText className="h-4 w-4 text-black dark:text-white" />
                     Basic Task Information
                   </CardTitle>
                   <CardDescription>
@@ -457,8 +457,11 @@ export function CreateTaskDialog({
                     <Label>Task Type</Label>
                     <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
                       <Badge
-                        variant={
-                          taskContext === "team" ? "default" : "secondary"
+                        variant="secondary"
+                        className={
+                          taskContext === "team"
+                            ? "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
+                            : ""
                         }
                       >
                         {taskContext === "team"
@@ -736,7 +739,7 @@ export function CreateTaskDialog({
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
+                    <FileText className="h-4 w-4 text-black dark:text-white" />
                     Detailed Instructions
                   </CardTitle>
                   <CardDescription>
@@ -856,7 +859,7 @@ export function CreateTaskDialog({
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Lightbulb className="h-4 w-4" />
+                    <Lightbulb className="h-4 w-4 text-black dark:text-white" />
                     Tips & Resources
                   </CardTitle>
                   <CardDescription>
@@ -1015,7 +1018,7 @@ export function CreateTaskDialog({
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
+                    <Users className="h-4 w-4 text-black dark:text-white" />
                     Peer Review Criteria
                   </CardTitle>
                   <CardDescription>
@@ -1182,7 +1185,7 @@ export function CreateTaskDialog({
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-4 w-4 text-black dark:text-white" />
                     Task Preview
                   </CardTitle>
                   <CardDescription>
@@ -1477,7 +1480,11 @@ export function CreateTaskDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+            >
               {isSubmitting ? "Creating..." : "Create Task"}
             </Button>
           </DialogFooter>

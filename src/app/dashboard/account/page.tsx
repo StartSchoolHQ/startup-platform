@@ -257,7 +257,7 @@ export default function AccountPage() {
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
         <Button variant="ghost" onClick={() => router.back()} className="mb-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-2 h-4 w-4 text-black dark:text-white" />
           Back
         </Button>
         <h1 className="text-3xl font-bold">Account Settings</h1>
@@ -313,7 +313,7 @@ export default function AccountPage() {
                     <div className="flex-1">
                       <label htmlFor="avatar-upload" className="cursor-pointer">
                         <div className="flex items-center space-x-2 text-sm text-blue-600 hover:text-blue-800">
-                          <Camera className="w-4 h-4" />
+                          <Camera className="w-4 h-4 text-black dark:text-white" />
                           <span>Change photo</span>
                         </div>
                       </label>
@@ -368,8 +368,12 @@ export default function AccountPage() {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={saving}>
-                    <Save className="mr-2 h-4 w-4" />
+                  <Button
+                    type="submit"
+                    disabled={saving}
+                    className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+                  >
+                    <Save className="mr-2 h-4 w-4 text-white" />
                     {saving ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
@@ -415,9 +419,9 @@ export default function AccountPage() {
                       onClick={() => setShowNewPassword(!showNewPassword)}
                     >
                       {showNewPassword ? (
-                        <EyeOff className="h-4 w-4" />
+                        <EyeOff className="h-4 w-4 text-black dark:text-white" />
                       ) : (
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-4 w-4 text-black dark:text-white" />
                       )}
                     </Button>
                   </div>
@@ -452,17 +456,21 @@ export default function AccountPage() {
                       }
                     >
                       {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4" />
+                        <EyeOff className="h-4 w-4 text-black dark:text-white" />
                       ) : (
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-4 w-4 text-black dark:text-white" />
                       )}
                     </Button>
                   </div>
                 </div>
 
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={saving}>
-                    <Save className="mr-2 h-4 w-4" />
+                  <Button
+                    type="submit"
+                    disabled={saving}
+                    className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+                  >
+                    <Save className="mr-2 h-4 w-4 text-white" />
                     {saving ? "Updating..." : "Update Password"}
                   </Button>
                 </div>

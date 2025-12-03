@@ -307,7 +307,11 @@ export function AddClientMeetingModal({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
+            >
               {isSubmitting ? "Creating..." : "Create Meeting"}
             </Button>
           </DialogFooter>

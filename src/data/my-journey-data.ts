@@ -1,10 +1,10 @@
-import { Trophy, Star, Target, CheckSquare } from "lucide-react"
-import { MyJourneyData } from "@/types/my-journey"
+import { Trophy, Star, Target, CheckSquare } from "lucide-react";
+import { MyJourneyData } from "@/types/my-journey";
 
 export const myJourneyData: MyJourneyData = {
   user: {
     name: "Davids Petruhovs",
-    status: "Active"
+    status: "Active",
   },
   statsCards: [
     {
@@ -12,29 +12,29 @@ export const myJourneyData: MyJourneyData = {
       value: "8/25",
       subtitle: "+19% from last week",
       icon: Trophy,
-      iconColor: "text-yellow-500"
+      iconColor: "text-black dark:text-white",
     },
     {
       title: "Tasks",
       value: "32/150",
       subtitle: "+13% from last week",
       icon: CheckSquare,
-      iconColor: "text-green-500"
+      iconColor: "text-black dark:text-white",
     },
     {
       title: "XP Earned",
       value: "9504",
       subtitle: "+301 since last week",
       icon: Target,
-      iconColor: "text-purple-500"
+      iconColor: "text-black dark:text-white",
     },
     {
       title: "Points Earned",
       value: "9504",
       subtitle: "+301 since last week",
       icon: Star,
-      iconColor: "text-orange-500"
-    }
+      iconColor: "text-black dark:text-white",
+    },
   ],
   achievements: [
     {
@@ -45,7 +45,7 @@ export const myJourneyData: MyJourneyData = {
       status: "in-progress",
       points: 680,
       xp: 1020,
-      date: "2024-01-15"
+      date: "2024-01-15",
     },
     {
       id: "2",
@@ -55,7 +55,7 @@ export const myJourneyData: MyJourneyData = {
       status: "finished",
       points: 680,
       xp: 1020,
-      date: "2024-01-10"
+      date: "2024-01-10",
     },
     {
       id: "3",
@@ -65,7 +65,7 @@ export const myJourneyData: MyJourneyData = {
       status: "not-started",
       points: 680,
       xp: 1020,
-      date: "2024-01-20"
+      date: "2024-01-20",
     },
     {
       id: "4",
@@ -75,7 +75,7 @@ export const myJourneyData: MyJourneyData = {
       status: "not-started",
       points: 680,
       xp: 1020,
-      date: "2024-01-25"
+      date: "2024-01-25",
     },
     {
       id: "5",
@@ -85,7 +85,7 @@ export const myJourneyData: MyJourneyData = {
       status: "not-started",
       points: 680,
       xp: 1020,
-      date: "2024-01-30"
+      date: "2024-01-30",
     },
     {
       id: "6",
@@ -95,7 +95,7 @@ export const myJourneyData: MyJourneyData = {
       status: "not-started",
       points: 680,
       xp: 1000,
-      date: "2024-02-05"
+      date: "2024-02-05",
     },
     {
       id: "7",
@@ -105,7 +105,7 @@ export const myJourneyData: MyJourneyData = {
       status: "not-started",
       points: 680,
       xp: 1020,
-      date: "2024-02-10"
+      date: "2024-02-10",
     },
     {
       id: "8",
@@ -115,8 +115,8 @@ export const myJourneyData: MyJourneyData = {
       status: "not-started",
       points: 680,
       xp: 1020,
-      date: "2024-02-15"
-    }
+      date: "2024-02-15",
+    },
   ],
   tasks: [
     {
@@ -127,48 +127,48 @@ export const myJourneyData: MyJourneyData = {
       xp: 50,
       points: 25,
       action: "complete",
-      tips: true
+      tips: true,
     },
     {
-      id: "2", 
+      id: "2",
       title: "Random Task",
       description: "Launch Achievements",
       difficulty: "medium",
       xp: 50,
       points: 25,
       action: "done",
-      tips: false
+      tips: false,
     },
     {
       id: "3",
-      title: "Random Task", 
+      title: "Random Task",
       description: "Launch Achievements",
       difficulty: "hard",
       xp: 50,
       points: 25,
       action: "complete",
-      tips: true
+      tips: true,
     },
     {
       id: "4",
       title: "Random Task",
-      description: "Launch Achievements", 
+      description: "Launch Achievements",
       difficulty: "easy",
       xp: 50,
       points: 25,
       action: "complete",
-      tips: true
+      tips: true,
     },
     {
       id: "5",
       title: "Random Task",
       description: "Launch Achievements",
-      difficulty: "easy", 
+      difficulty: "easy",
       xp: 50,
       points: 25,
       action: "complete",
-      tips: true
-    }
+      tips: true,
+    },
   ],
   weeklyReports: [
     {
@@ -178,7 +178,7 @@ export const myJourneyData: MyJourneyData = {
       status: "complete",
       dateFilled: "XX.XX.XXXX XX:XX",
       weeklyFill: "Week 4 Fill",
-      iconColor: "green"
+      iconColor: "green",
     },
     {
       id: "2",
@@ -187,7 +187,7 @@ export const myJourneyData: MyJourneyData = {
       status: "done",
       dateFilled: "XX.XX.XXXX XX:XX",
       weeklyFill: "Week 3 Fill",
-      iconColor: "green"
+      iconColor: "green",
     },
     {
       id: "3",
@@ -196,7 +196,7 @@ export const myJourneyData: MyJourneyData = {
       status: "missed",
       dateFilled: "XX.XX.XXXX XX:XX",
       weeklyFill: "Week 2 Fill",
-      iconColor: "red"
+      iconColor: "red",
     },
     {
       id: "4",
@@ -205,7 +205,7 @@ export const myJourneyData: MyJourneyData = {
       status: "done",
       dateFilled: "XX.XX.XXXX XX:XX",
       weeklyFill: "Week 1 Fill",
-      iconColor: "green"
+      iconColor: "green",
     },
     {
       id: "5",
@@ -214,8 +214,8 @@ export const myJourneyData: MyJourneyData = {
       status: "done",
       dateFilled: "XX.XX.XXXX XX:XX",
       weeklyFill: "Week 0 Fill",
-      iconColor: "green"
-    }
+      iconColor: "green",
+    },
   ],
   strikes: [
     {
@@ -225,7 +225,7 @@ export const myJourneyData: MyJourneyData = {
       status: "explained",
       xpPenalty: 500,
       pointsPenalty: 250,
-      action: "done"
+      action: "done",
     },
     {
       id: "2",
@@ -234,7 +234,7 @@ export const myJourneyData: MyJourneyData = {
       status: "waiting-explanation",
       xpPenalty: 250,
       pointsPenalty: 125,
-      action: "explain"
-    }
-  ]
-}
+      action: "explain",
+    },
+  ],
+};

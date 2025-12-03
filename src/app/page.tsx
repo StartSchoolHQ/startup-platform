@@ -1,6 +1,108 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { HeroLanding } from "@/components/hero-landing";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Home() {
+  const [isProcessingInvite, setIsProcessingInvite] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const handleInviteAuth = async () => {
+      // Check if URL has invitation tokens in hash
+      const hash = window.location.hash;
+      if (hash.includes("access_token") && hash.includes("type=invite")) {
+        setIsProcessingInvite(true);
+        console.log("Processing invitation with hash:", hash);
+
+        try {
+          const supabase = createClient();
+
+          // Parse the hash tokens manually
+          const hashParams = new URLSearchParams(hash.substring(1));
+          const accessToken = hashParams.get("access_token");
+          const refreshToken = hashParams.get("refresh_token");
+          const expiresIn = hashParams.get("expires_in");
+          const tokenType = hashParams.get("token_type");
+
+          console.log("Hash tokens:", {
+            accessToken: accessToken ? "present" : "missing",
+            refreshToken,
+            expiresIn,
+            tokenType,
+          });
+
+          if (!accessToken || !refreshToken) {
+            console.error("Missing required tokens in hash");
+            setIsProcessingInvite(false);
+            router.push("/login?error=missing_tokens");
+            return;
+          }
+
+          // Manually set the session using the tokens from the hash
+          const { data: sessionData, error: sessionError } =
+            await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+
+          console.log("Set session result:", {
+            session: sessionData.session ? "established" : "failed",
+            user: sessionData.user?.email,
+            error: sessionError,
+          });
+
+          if (sessionData.session && sessionData.user) {
+            const user = sessionData.user;
+            console.log("User authenticated:", user.email);
+
+            // Don't try to create profile here - let the profile setup page handle it
+            console.log("User authenticated, proceeding to profile setup");
+
+            // Clear the hash from URL first
+            window.history.replaceState(
+              {},
+              document.title,
+              window.location.pathname
+            );
+
+            console.log("Redirecting to profile setup");
+            // Always redirect new invited users to profile setup
+            router.push("/profile/setup");
+            return;
+          }
+
+          // Session establishment failed
+          console.log("Session establishment failed");
+          setIsProcessingInvite(false);
+          router.push("/login?error=session_failed");
+        } catch (error) {
+          console.error(
+            "Unexpected error during invitation processing:",
+            error
+          );
+          setIsProcessingInvite(false);
+          router.push("/login?error=processing_failed");
+        }
+      }
+    };
+
+    handleInviteAuth();
+  }, [router]);
+
+  if (isProcessingInvite) {
+    return (
+      <main className="min-h-screen w-full bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Processing invitation...</p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen w-full bg-background">
       <HeroLanding />

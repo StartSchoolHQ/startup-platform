@@ -119,8 +119,8 @@ export function IndividualWeeklyReportModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-3">
             <Label htmlFor="tasksCompleted">
               Tasks/Projects Completed This Week
             </Label>
@@ -136,7 +136,7 @@ export function IndividualWeeklyReportModal({
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label htmlFor="skillsLearned">New Skills/Knowledge Acquired</Label>
             <Textarea
               id="skillsLearned"
@@ -150,7 +150,7 @@ export function IndividualWeeklyReportModal({
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label htmlFor="challengesFaced">
               Challenges & How You Overcame Them
             </Label>
@@ -165,7 +165,7 @@ export function IndividualWeeklyReportModal({
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label htmlFor="goalsNextWeek">Goals for Next Week</Label>
             <Textarea
               id="goalsNextWeek"
@@ -179,7 +179,7 @@ export function IndividualWeeklyReportModal({
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label htmlFor="additionalNotes">
               Additional Notes/Reflections
             </Label>
@@ -203,7 +203,11 @@ export function IndividualWeeklyReportModal({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+            >
               {isSubmitting ? "Submitting..." : "Submit Report"}
             </Button>
           </DialogFooter>

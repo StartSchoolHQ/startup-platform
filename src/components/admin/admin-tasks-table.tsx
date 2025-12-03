@@ -112,9 +112,9 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
       return <ArrowUpDown className="h-4 w-4 text-muted-foreground" />;
     }
     return sortOrder === "asc" ? (
-      <ArrowUp className="h-4 w-4 text-primary" />
+      <ArrowUp className="h-4 w-4 text-black dark:text-white" />
     ) : (
-      <ArrowDown className="h-4 w-4 text-primary" />
+      <ArrowDown className="h-4 w-4 text-black dark:text-white" />
     );
   };
 
@@ -278,7 +278,7 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-                      <FileText className="h-4 w-4 text-primary" />
+                      <FileText className="h-4 w-4 text-black dark:text-white" />
                     </div>
                     <div>
                       <div className="font-medium text-sm">{task.title}</div>

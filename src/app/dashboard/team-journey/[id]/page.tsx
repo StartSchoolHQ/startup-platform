@@ -715,28 +715,28 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       value: totalTeamXP.toLocaleString(),
       subtitle: "All team members combined",
       icon: Zap,
-      iconColor: "text-purple-500",
+      iconColor: "text-black dark:text-white",
     },
     {
       title: "Points Earned as Team",
       value: teamPointsEarned.toLocaleString(),
       subtitle: "From completed team tasks",
       icon: CreditCard,
-      iconColor: "text-green-500",
+      iconColor: "text-black dark:text-white",
     },
     {
       title: "Total Clients",
       value: totalClientsContacted.toString(),
       subtitle: "Clients contacted via weekly reports",
       icon: UserCheck,
-      iconColor: "text-blue-500",
+      iconColor: "text-black dark:text-white",
     },
     {
       title: "Achievements",
       value: achievementProgress,
       subtitle: `${completedAchievements} completed`,
       icon: Trophy,
-      iconColor: "text-yellow-500",
+      iconColor: "text-black dark:text-white",
     },
   ];
 
@@ -766,7 +766,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               variant={team.status === "active" ? "default" : "secondary"}
               className={
                 team.status === "active"
-                  ? "bg-primary/10 text-primary hover:bg-primary/15"
+                  ? "bg-[#ff78c8]/10 text-[#ff78c8] hover:bg-[#ff78c8]/15 border-[#ff78c8]/20"
                   : "bg-muted text-muted-foreground"
               }
             >
@@ -783,7 +783,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             {isTeamMember && userRole && (
               <Badge
                 variant="outline"
-                className="bg-primary/10 text-primary border-primary/20"
+                className="bg-[#ff78c8]/10 text-[#ff78c8] border-[#ff78c8]/20"
               >
                 {userRole
                   .replace("_", " ")
@@ -795,7 +795,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             {team.description || "No description provided"}
           </p>
           {!isTeamMember && (
-            <p className="text-sm text-primary bg-primary/5 px-3 py-2 rounded-md border border-primary/20">
+            <p className="text-sm text-[#ff78c8] bg-[#ff78c8]/5 px-3 py-2 rounded-md border border-[#ff78c8]/20">
               💡 You&apos;re viewing this team as a guest. Join the team to
               participate in activities and submit reports.
             </p>
@@ -831,8 +831,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-md bg-purple-100">
-                <Users className="h-4 w-4 text-purple-600" />
+              <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+                <Users className="h-4 w-4 text-black dark:text-white" />
               </div>
               <CardTitle className="text-lg font-semibold">
                 Team & Experience
@@ -857,8 +857,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               {" "}
               {/* Team Size */}
               <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10">
-                  <Users className="h-4 w-4 text-blue-600" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+                  <Users className="h-4 w-4 text-black dark:text-white" />
                 </div>
                 <div>
                   <div className="font-semibold text-sm">
@@ -869,8 +869,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               </div>
               {/* Total Experience Earned */}
               <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10">
-                  <Zap className="h-4 w-4 text-purple-600" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+                  <Zap className="h-4 w-4 text-black dark:text-white" />
                 </div>
                 <div>
                   <div className="font-semibold text-sm">
@@ -922,8 +922,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-md bg-pink-100">
-                <Trophy className="h-4 w-4 text-pink-600" />
+              <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+                <Trophy className="h-4 w-4 text-black dark:text-white" />
               </div>
               <CardTitle className="text-lg font-semibold">
                 Status & Progress
@@ -935,8 +935,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             <div className="grid grid-cols-2 gap-4">
               {/* Date Created */}
               <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10">
-                  <Calendar className="h-4 w-4 text-blue-600" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+                  <Calendar className="h-4 w-4 text-black dark:text-white" />
                 </div>
                 <div>
                   <div className="font-semibold text-sm">
@@ -950,8 +950,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
               {/* Strikes */}
               <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-destructive/10">
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+                  <AlertTriangle className="h-4 w-4 text-black dark:text-white" />
                 </div>
                 <div className="flex items-center gap-2">
                   <div>
@@ -980,8 +980,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             <div className="grid grid-cols-2 gap-4">
               {/* Total Points Earned */}
               <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10">
-                  <CreditCard className="h-4 w-4 text-green-600" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+                  <CreditCard className="h-4 w-4 text-black dark:text-white" />
                 </div>
                 <div>
                   <div className="font-semibold text-sm">
@@ -997,8 +997,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
               {/* Total Points Invested */}
               <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-destructive/10">
-                  <CreditCard className="h-4 w-4 text-red-600" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+                  <CreditCard className="h-4 w-4 text-black dark:text-white" />
                 </div>
                 <div>
                   <div className="font-semibold text-sm">

@@ -60,7 +60,7 @@ export function TaskRow({
       <td className="py-4 px-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-            <Medal className="h-4 w-4" />
+            <Medal className="h-4 w-4 text-black dark:text-white" />
           </div>
           <div>
             <div className="font-medium text-sm">{task.tasks.title}</div>
@@ -95,7 +95,7 @@ export function TaskRow({
       {!showStatus && (
         <td className="py-4 px-4">
           <div className="flex items-center gap-1">
-            <Zap className="h-4 w-4 text-primary" />
+            <Zap className="h-4 w-4 text-black dark:text-white" />
             <span className="text-sm font-medium">
               {reviewerReward
                 ? Math.max(
@@ -112,7 +112,7 @@ export function TaskRow({
       {!showStatus && (
         <td className="py-4 px-4">
           <div className="flex items-center gap-1">
-            <Medal className="h-4 w-4 text-amber-500" />
+            <Medal className="h-4 w-4 text-black dark:text-white" />
             <span className="text-sm font-medium">
               {reviewerReward
                 ? Math.max(
@@ -138,7 +138,13 @@ export function TaskRow({
           <Button
             variant={actionButtonVariant}
             size="sm"
-            className="text-xs px-3 py-2"
+            className={`text-xs px-3 py-2 ${
+              actionButtonVariant === "default"
+                ? "bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+                : actionButtonVariant === "outline"
+                ? "border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
+                : ""
+            }`}
             onClick={() => onAction(task)}
             disabled={actionLoading || actionButtonDisabled}
           >

@@ -147,8 +147,8 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
         <div className="flex items-center gap-3">
           <IconContainer
             icon={Users}
-            iconColor="text-blue-600 dark:text-blue-400"
-            backgroundColor="bg-blue-100 dark:bg-blue-950/20"
+            iconColor="text-black dark:text-white"
+            backgroundColor="bg-gray-100 dark:bg-gray-800"
           />
           <CardTitle className="text-lg font-semibold">{cardTitle}</CardTitle>
         </div>
@@ -192,7 +192,7 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
                       value: team.memberCount.toString(),
                       label: "Members",
                       icon: Users,
-                      iconColor: "text-blue-600",
+                      iconColor: "text-black dark:text-white",
                     }}
                   />
                   <TeamItem
@@ -200,7 +200,7 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
                       value: team.completedTasks.toString(),
                       label: "Tasks Completed",
                       icon: CheckCircle2,
-                      iconColor: "text-green-500",
+                      iconColor: "text-black dark:text-white",
                     }}
                   />
                   <TeamItem
@@ -208,7 +208,7 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
                       value: team.totalPoints.toString(),
                       label: "Team Points",
                       icon: Star,
-                      iconColor: "text-orange-500",
+                      iconColor: "text-black dark:text-white",
                     }}
                   />
                   <TeamItem
@@ -216,7 +216,7 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
                       value: team.totalXP.toString(),
                       label: "Team XP",
                       icon: Trophy,
-                      iconColor: "text-purple-500",
+                      iconColor: "text-black dark:text-white",
                     }}
                   />
                 </div>
@@ -246,8 +246,8 @@ function PersonalProgressCard({
         <div className="flex items-center gap-3">
           <IconContainer
             icon={Users}
-            iconColor="text-pink-600"
-            backgroundColor="bg-pink-100"
+            iconColor="text-black dark:text-white"
+            backgroundColor="bg-gray-100 dark:bg-gray-800"
           />
           <CardTitle className="text-lg font-semibold">{data.title}</CardTitle>
         </div>

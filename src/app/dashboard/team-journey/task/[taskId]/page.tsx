@@ -6,6 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -1279,14 +1287,14 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-blue-500" />
+                  <CreditCard className="h-4 w-4 text-black dark:text-white" />
                   <span className="text-sm text-gray-600">Points</span>
                 </div>
                 <span className="font-semibold">{task.base_xp_reward}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-green-500" />
+                  <Zap className="h-4 w-4 text-black dark:text-white" />
                   <span className="text-sm text-gray-600">XP</span>
                 </div>
                 <span className="font-semibold">{task.base_xp_reward}</span>
@@ -1337,7 +1345,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
               {task.status === "not_started" ? (
                 permissions.canStart ? (
                   <Button
-                    className="w-full gap-2"
+                    className="w-full gap-2 bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
                     onClick={handleStartTask}
                     disabled={actionLoading}
                   >
@@ -1345,7 +1353,11 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                     {actionLoading ? "Starting..." : "Start Task"}
                   </Button>
                 ) : task.assigned_to_user_id ? (
-                  <Button variant="outline" className="w-full gap-2" disabled>
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-[#0000ff] text-[#0000ff]"
+                    disabled
+                  >
                     <User className="h-4 w-4" />
                     View Info
                   </Button>
@@ -1358,7 +1370,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 <div className="space-y-2">
                   {permissions.canComplete && (
                     <Button
-                      className="w-full gap-2"
+                      className="w-full gap-2 bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
                       onClick={handleCompleteTask}
                       disabled={actionLoading}
                     >
@@ -1368,8 +1380,8 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                   )}
                   {permissions.canCancel && (
                     <Button
-                      variant="link"
-                      className="w-full text-red-500 text-xs"
+                      variant="outline"
+                      className="w-full gap-2 text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
                       onClick={handleCancelTask}
                       disabled={actionLoading}
                     >
@@ -1377,7 +1389,11 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                     </Button>
                   )}
                   {!permissions.canComplete && !permissions.canCancel && (
-                    <Button variant="outline" className="w-full gap-2" disabled>
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2 border-[#0000ff] text-[#0000ff]"
+                      disabled
+                    >
                       <User className="h-4 w-4" />
                       View Info - In Progress by {task.assignee_name}
                     </Button>
@@ -1385,7 +1401,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 </div>
               ) : task.status === "approved" ? (
                 <Button
-                  className="w-full gap-2 bg-green-600 hover:bg-green-700"
+                  className="w-full gap-2 bg-[#ff78c8] hover:bg-[#ff78c8]/90"
                   disabled
                 >
                   <CheckCircle className="h-4 w-4" />
@@ -1395,7 +1411,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 task.status === "revision_required" ? (
                 permissions.canStart ? (
                   <Button
-                    className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
+                    className="w-full gap-2 bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
                     onClick={handleRetryTask}
                     disabled={actionLoading}
                   >
@@ -1403,7 +1419,11 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                     {actionLoading ? "Retrying..." : "Retry"}
                   </Button>
                 ) : (
-                  <Button variant="outline" className="w-full gap-2" disabled>
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-[#0000ff] text-[#0000ff]"
+                    disabled
+                  >
                     <User className="h-4 w-4" />
                     View Info - Needs Revision by {task.assignee_name}
                   </Button>
@@ -1412,7 +1432,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 <div className="space-y-2">
                   {permissions.canStart ? (
                     <Button
-                      className="w-full gap-2"
+                      className="w-full gap-2 bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
                       onClick={handleStartTask}
                       disabled={actionLoading}
                     >
@@ -1427,7 +1447,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                   {permissions.canReassign && (
                     <Button
                       variant="outline"
-                      className="w-full gap-2"
+                      className="w-full gap-2 border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                       onClick={() => setShowReassignModal(true)}
                     >
                       Reassign Task
@@ -1436,7 +1456,11 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 </div>
               ) : task.status === "pending_review" ? (
                 <div className="space-y-2">
-                  <Button variant="outline" className="w-full gap-2" disabled>
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-[#0000ff] text-[#0000ff]"
+                    disabled
+                  >
                     <User className="h-4 w-4" />
                     View Info - Under Peer Review
                   </Button>
@@ -1444,7 +1468,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full text-xs"
+                      className="w-full text-xs border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                       onClick={() => setShowReassignModal(true)}
                     >
                       Reassign Task
@@ -1452,7 +1476,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                   )}
                 </div>
               ) : (
-                <Button className="w-full" disabled>
+                <Button className="w-full bg-[#ff78c8] text-white" disabled>
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Task Status
                 </Button>
@@ -1465,8 +1489,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 task.status !== "pending_review" && (
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="w-full text-xs"
+                    className="w-full gap-2 border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                     onClick={() => setShowReassignModal(true)}
                   >
                     Reassign Task
@@ -1477,55 +1500,54 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
         </div>
       </div>
 
-      {/* Simple Reassign Modal */}
-      {showReassignModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-full">
-            <h3 className="text-lg font-semibold mb-4">Reassign Task</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Choose a team member to assign this task to:
-            </p>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {teamMembers.map((member) => (
-                <button
-                  key={member.id}
-                  onClick={() => handleReassignTask(member.id)}
-                  disabled={actionLoading}
-                  className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-100 disabled:opacity-50"
-                >
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage
-                      src={member.avatar_url || "/avatars/john-doe.jpg"}
-                    />
-                    <AvatarFallback className="bg-gradient-to-r from-blue-400 to-purple-400 text-white font-bold text-xs">
-                      {member.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium">{member.name}</span>
-                  {member.id === task?.assigned_to_user_id && (
-                    <span className="text-xs text-blue-600 ml-auto">
-                      Current
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowReassignModal(false)}
+      {/* Reassign Task Modal */}
+      <Dialog open={showReassignModal} onOpenChange={setShowReassignModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reassign Task</DialogTitle>
+            <DialogDescription>
+              Choose a team member to assign this task to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {teamMembers.map((member) => (
+              <button
+                key={member.id}
+                onClick={() => handleReassignTask(member.id)}
                 disabled={actionLoading}
-                className="flex-1"
+                className="w-full flex items-center gap-3 p-2 rounded hover:bg-muted disabled:opacity-50"
               >
-                Cancel
-              </Button>
-            </div>
+                <Avatar className="w-8 h-8">
+                  <AvatarImage
+                    src={member.avatar_url || "/avatars/john-doe.jpg"}
+                  />
+                  <AvatarFallback className="bg-gradient-to-r from-blue-400 to-purple-400 text-white font-bold text-xs">
+                    {member.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium">{member.name}</span>
+                {member.id === task?.assigned_to_user_id && (
+                  <span className="text-xs text-[#0000ff] ml-auto">
+                    Current
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
-        </div>
-      )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowReassignModal(false)}
+              disabled={actionLoading}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Task Submission Modal */}
       <TaskDetailsModal

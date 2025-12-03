@@ -69,13 +69,13 @@ export function IndividualWeeklyReportsTable({
     loadReports(); // Reload reports after successful submission
   };
 
-  const getStatusConfig = () => {
-    return {
-      buttonText: "Done",
-      buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
-      icon: <CheckCircle className="h-3 w-3 mr-1" />,
-    };
-  };
+  // const getStatusConfig = () => {
+  //   return {
+  //     buttonText: "Done",
+  //     buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
+  //     icon: <CheckCircle className="h-3 w-3 mr-1" />,
+  //   };
+  // };
 
   if (isLoading) {
     return (
@@ -96,9 +96,9 @@ export function IndividualWeeklyReportsTable({
           onClick={() => setIsModalOpen(true)}
           disabled={hasSubmittedThisWeek}
           size="sm"
-          className="gap-2"
+          className="gap-2 bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4 text-white" />
           {hasSubmittedThisWeek ? "Report Submitted" : "Submit This Week"}
         </Button>
       </div>
@@ -143,7 +143,7 @@ export function IndividualWeeklyReportsTable({
                     string,
                     unknown
                   >;
-                  const statusConfig = getStatusConfig();
+                  // const statusConfig = getStatusConfig();
 
                   return (
                     <tr
@@ -157,7 +157,7 @@ export function IndividualWeeklyReportsTable({
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
                           <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-                            <Calendar className="h-4 w-4 text-primary" />
+                            <Calendar className="h-4 w-4 text-black dark:text-white" />
                           </div>
                           <div>
                             <div className="font-medium text-sm text-foreground">
@@ -194,7 +194,7 @@ export function IndividualWeeklyReportsTable({
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-xs"
+                            className="text-xs border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                             onClick={() => handleViewReport(report)}
                           >
                             <Eye className="h-3 w-3 mr-1" />
@@ -202,10 +202,10 @@ export function IndividualWeeklyReportsTable({
                           </Button>
                           <Button
                             size="sm"
-                            className={`text-xs ${statusConfig.buttonClass}`}
+                            className="text-xs bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
                           >
-                            {statusConfig.icon}
-                            {statusConfig.buttonText}
+                            <CheckCircle className="h-3 w-3 mr-1 text-white" />
+                            Done
                           </Button>
                         </div>
                       </td>
@@ -276,7 +276,7 @@ function ViewIndividualReportModal({
           <div className="space-y-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="h-4 w-4 text-blue-500" />
+                <CheckCircle className="h-4 w-4 text-black dark:text-white" />
                 <h3 className="font-medium">Tasks/Projects Completed</h3>
               </div>
               <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
@@ -287,7 +287,7 @@ function ViewIndividualReportModal({
 
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Calendar className="h-4 w-4 text-yellow-500" />
+                <Calendar className="h-4 w-4 text-black dark:text-white" />
                 <h3 className="font-medium">New Skills/Knowledge Acquired</h3>
               </div>
               <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
@@ -299,7 +299,7 @@ function ViewIndividualReportModal({
             {(submissionData?.challengesFaced as string) && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-red-500" />
+                  <Calendar className="h-4 w-4 text-black dark:text-white" />
                   <h3 className="font-medium">Challenges & Solutions</h3>
                 </div>
                 <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
@@ -310,7 +310,7 @@ function ViewIndividualReportModal({
 
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-black dark:text-white" />
                 <h3 className="font-medium">Goals for Next Week</h3>
               </div>
               <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
@@ -321,7 +321,7 @@ function ViewIndividualReportModal({
             {(submissionData?.additionalNotes as string) && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-purple-500" />
+                  <Calendar className="h-4 w-4 text-black dark:text-white" />
                   <h3 className="font-medium">Additional Notes</h3>
                 </div>
                 <p className="text-sm text-muted-foreground bg-muted p-3 rounded">

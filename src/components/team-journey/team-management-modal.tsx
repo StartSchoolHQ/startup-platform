@@ -284,11 +284,12 @@ export function TeamManagementModal({
     setIsUpdating(true);
     try {
       // Optimistic update: Create updated team object for immediate UI feedback
-      const optimisticTeam = {
-        ...team,
-        name: editFormData.name.trim(),
-        description: editFormData.description.trim() || null,
-      };
+      // Note: Currently not implemented - we just refresh after API call
+      // const optimisticTeam = {
+      //   ...team,
+      //   name: editFormData.name.trim(),
+      //   description: editFormData.description.trim() || null,
+      // };
 
       await updateTeamDetails(team.id, founderId, {
         name: editFormData.name.trim(),

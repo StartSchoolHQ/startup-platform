@@ -97,7 +97,7 @@ function RealTaskRow({
                 task.status === "Finished" ? "bg-primary/10" : "bg-muted"
               }`}
             >
-              <Medal className="h-4 w-4 text-primary" />
+              <Medal className="h-4 w-4 text-black dark:text-white" />
             </div>
             <div className="flex-1">
               <div className="font-medium text-sm">{task.title}</div>
@@ -141,13 +141,13 @@ function RealTaskRow({
         </td>
         <td className="py-4 px-4">
           <div className="flex items-center gap-1">
-            <Zap className="h-4 w-4 text-green-600" />
+            <Zap className="h-4 w-4 text-black dark:text-white" />
             <span className="text-sm font-medium">{task.xp}</span>
           </div>
         </td>
         <td className="py-4 px-4">
           <div className="flex items-center gap-1">
-            <Banknote className="h-4 w-4 text-blue-600" />
+            <Banknote className="h-4 w-4 text-black dark:text-white" />
             <span className="text-sm font-medium">{task.points}</span>
           </div>
         </td>
@@ -157,16 +157,16 @@ function RealTaskRow({
               <>
                 <Button
                   size="sm"
-                  className="h-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="h-8 bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
                   disabled
                 >
-                  <CheckCircle className="h-3 w-3 mr-1" />
+                  <CheckCircle className="h-3 w-3 mr-1 text-white" />
                   Done
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs px-3 py-2"
+                  className="h-8 text-xs px-3 py-2 border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                   onClick={() => {
                     router.push(`/dashboard/my-journey/task/${task.id}`);
                   }}
@@ -206,7 +206,7 @@ function RealTaskRow({
           <td colSpan={6} className="py-3 px-4">
             <div className="flex items-start gap-3">
               <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 flex-shrink-0 mt-0.5">
-                <MessageSquare className="h-3 w-3 text-blue-600" />
+                <MessageSquare className="h-3 w-3 text-black dark:text-white" />
               </div>
               <div className="flex-1">
                 <div className="text-sm font-medium text-primary mb-1">
@@ -248,14 +248,14 @@ function StrikeRow({ strike }: { strike: Strike }) {
       case "done":
         return {
           buttonText: "Done",
-          buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
-          icon: <CheckCircle className="h-3 w-3 mr-1" />,
+          buttonClass: "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90",
+          icon: <CheckCircle className="h-3 w-3 mr-1 text-white" />,
         };
       case "explain":
         return {
           buttonText: "Explain",
           buttonClass:
-            "bg-background border border-border text-foreground hover:bg-accent",
+            "border border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white bg-background",
           icon: <Clock className="h-3 w-3 mr-1" />,
         };
     }
@@ -268,8 +268,8 @@ function StrikeRow({ strike }: { strike: Strike }) {
     <tr className="border-b border-border hover:bg-muted/50">
       <td className="py-4 px-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-destructive/10">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
+            <AlertTriangle className="h-4 w-4 text-black dark:text-white" />
           </div>
           <div>
             <div className="font-medium text-sm">{strike.title}</div>
@@ -284,13 +284,13 @@ function StrikeRow({ strike }: { strike: Strike }) {
       </td>
       <td className="py-4 px-4">
         <div className="flex items-center gap-1">
-          <Zap className="h-4 w-4 text-green-500" />
+          <Zap className="h-4 w-4 text-black dark:text-white" />
           <span className="text-sm font-medium">-{strike.xpPenalty}</span>
         </div>
       </td>
       <td className="py-4 px-4">
         <div className="flex items-center gap-1">
-          <Banknote className="h-4 w-4 text-blue-500" />
+          <Banknote className="h-4 w-4 text-black dark:text-white" />
           <span className="text-sm font-medium">-{strike.pointsPenalty}</span>
         </div>
       </td>
@@ -487,28 +487,28 @@ export default function MyJourneyPage() {
           value: totalXP.toLocaleString(),
           subtitle: `From ${totalTasks} tasks`,
           icon: Zap,
-          iconColor: "text-green-500",
+          iconColor: "text-black dark:text-white",
         },
         {
           title: "Total Credits",
           value: totalCredits.toLocaleString(),
           subtitle: "Earned credits",
           icon: Banknote,
-          iconColor: "text-blue-500",
+          iconColor: "text-black dark:text-white",
         },
         {
           title: "Tasks Completed",
           value: tasksCompleted.toString(),
           subtitle: `${taskStats.completionRate}% completion rate`,
           icon: CheckCircle,
-          iconColor: "text-primary",
+          iconColor: "text-black dark:text-white",
         },
         {
           title: "Achievement Rate",
           value: `${achievementRate}%`,
           subtitle: `${completedAchievements} of ${achievements.length} completed`,
           icon: Trophy,
-          iconColor: "text-yellow-500",
+          iconColor: "text-black dark:text-white",
         },
       ];
       setStatsCards(dynamicStatsCards);
@@ -533,23 +533,23 @@ export default function MyJourneyPage() {
           </h1>
           <Badge
             variant="secondary"
-            className="bg-primary/10 text-primary px-3 py-1"
+            className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90 px-3 py-1"
           >
             {loading ? "Loading..." : userProfile?.status || "Active"}
           </Badge>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" size="sm" className="gap-2">
-            <Settings className="h-4 w-4" />
+            <Settings className="h-4 w-4 text-black dark:text-white" />
             Set Status
           </Button>
           <Button
             size="sm"
-            className="bg-foreground text-background hover:bg-foreground/80"
+            className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
             onClick={() => setIsIndividualReportModalOpen(true)}
             disabled={hasSubmittedThisWeek}
           >
-            <FileText className="h-4 w-4 mr-2" />
+            <FileText className="h-4 w-4 mr-2 text-white" />
             {hasSubmittedThisWeek ? "Report Submitted" : "Submit Weekly Report"}
           </Button>
         </div>
@@ -582,18 +582,18 @@ export default function MyJourneyPage() {
       <Tabs defaultValue="achievements" className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-8">
           <TabsTrigger value="achievements" className="flex items-center gap-2">
-            <Trophy className="h-4 w-4" />
+            <Trophy className="h-4 w-4 text-black dark:text-white" />
             Achievements
           </TabsTrigger>
           <TabsTrigger
             value="weekly-reports"
             className="flex items-center gap-2"
           >
-            <FileText className="h-4 w-4" />
+            <FileText className="h-4 w-4 text-black dark:text-white" />
             Weekly Reports
           </TabsTrigger>
           <TabsTrigger value="strikes" className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" />
+            <AlertTriangle className="h-4 w-4 text-black dark:text-white" />
             Strikes
           </TabsTrigger>
         </TabsList>
@@ -603,7 +603,7 @@ export default function MyJourneyPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Achievements</h2>
             <Button variant="outline" className="gap-2">
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="h-4 w-4 text-black dark:text-white" />
               Read About Achievements
             </Button>
           </div>
@@ -702,7 +702,7 @@ export default function MyJourneyPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Strikes & Issues</h2>
             <Button variant="outline" className="gap-2">
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="h-4 w-4 text-black dark:text-white" />
               Read About Strikes
             </Button>
           </div>

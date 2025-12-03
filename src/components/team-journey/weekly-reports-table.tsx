@@ -62,7 +62,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
       case "done":
         return {
           buttonText: "Done",
-          buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
+          buttonClass: "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90",
           icon: <CheckCircle className="h-3 w-3 mr-1" />,
         };
       case "missed":
@@ -175,7 +175,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-xs"
+                          className="text-xs border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                           onClick={() => handleViewReport(report)}
                         >
                           <Eye className="h-3 w-3 mr-1" />

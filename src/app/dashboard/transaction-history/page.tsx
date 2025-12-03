@@ -35,18 +35,8 @@ const getTransactionIcon = (type: string) => {
 };
 
 const getTransactionColor = (type: string) => {
-  switch (type) {
-    case "task":
-      return "text-green-500";
-    case "revenue":
-      return "text-blue-500";
-    case "validation":
-      return "text-purple-500";
-    case "team_cost":
-      return "text-orange-500";
-    default:
-      return "text-gray-500";
-  }
+  // Return consistent black theme for all transaction types
+  return "text-black dark:text-white";
 };
 
 const formatTransactionDescription = (transaction: Transaction) => {
@@ -122,7 +112,7 @@ export default function TransactionHistoryPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total XP</CardTitle>
-            <Trophy className="h-4 w-4 text-purple-500" />
+            <Trophy className="h-4 w-4 text-black dark:text-white" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{user?.total_xp || 0}</div>
@@ -135,7 +125,7 @@ export default function TransactionHistoryPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Credits</CardTitle>
-            <Star className="h-4 w-4 text-orange-500" />
+            <Star className="h-4 w-4 text-black dark:text-white" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{user?.total_points || 0}</div>
@@ -201,6 +191,11 @@ export default function TransactionHistoryPage() {
                               ? "default"
                               : "destructive"
                           }
+                          className={
+                            transaction.xp_change > 0
+                              ? "bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+                              : ""
+                          }
                         >
                           {transaction.xp_change > 0 ? "+" : ""}
                           {transaction.xp_change} XP
@@ -212,6 +207,11 @@ export default function TransactionHistoryPage() {
                             transaction.points_change > 0
                               ? "default"
                               : "destructive"
+                          }
+                          className={
+                            transaction.points_change > 0
+                              ? "bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+                              : ""
                           }
                         >
                           {transaction.points_change > 0 ? "+" : ""}

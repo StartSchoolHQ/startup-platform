@@ -514,7 +514,7 @@ export default function PeerReviewPage() {
           }
           subtitle="Available for review"
           icon={FileText}
-          iconColor="text-green-500"
+          iconColor="text-black dark:text-white"
         />
         <StatsCardComponent
           title="Tasks Tested By You"
@@ -523,21 +523,21 @@ export default function PeerReviewPage() {
           }
           subtitle="Reviews completed"
           icon={User}
-          iconColor="text-pink-500"
+          iconColor="text-black dark:text-white"
         />
         <StatsCardComponent
           title="Points Earned"
           value={loading ? "..." : peerReviewStats.totalPointsEarned.toString()}
           subtitle="From peer reviews"
           icon={CreditCard}
-          iconColor="text-orange-500"
+          iconColor="text-black dark:text-white"
         />
         <StatsCardComponent
           title="XP Earned"
           value={loading ? "..." : peerReviewStats.totalXpEarned.toString()}
           subtitle="From peer reviews"
           icon={Zap}
-          iconColor="text-purple-500"
+          iconColor="text-black dark:text-white"
         />
       </div>
 
@@ -548,19 +548,19 @@ export default function PeerReviewPage() {
             value="available-tests"
             className="flex items-center gap-2"
           >
-            <Trophy className="h-4 w-4" />
+            <Trophy className="h-4 w-4 text-black dark:text-white" />
             Available Tests
           </TabsTrigger>
           <TabsTrigger value="my-tests" className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4" />
+            <CheckCircle2 className="h-4 w-4 text-black dark:text-white" />
             My Tests
           </TabsTrigger>
           <TabsTrigger value="my-tasks" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
+            <Users className="h-4 w-4 text-black dark:text-white" />
             My Tasks
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
-            <History className="h-4 w-4" />
+            <History className="h-4 w-4 text-black dark:text-white" />
             History
           </TabsTrigger>
         </TabsList>
@@ -652,6 +652,7 @@ export default function PeerReviewPage() {
                             acceptingTaskId === task.id ||
                             myAcceptedTasks.length > 0
                           }
+                          actionButtonVariant="default"
                         />
                       ))
                   )}
@@ -867,7 +868,7 @@ export default function PeerReviewPage() {
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-3">
                               <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-                                <Medal className="h-4 w-4" />
+                                <Medal className="h-4 w-4 text-black dark:text-white" />
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
@@ -903,7 +904,7 @@ export default function PeerReviewPage() {
                           {/* Team */}
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <div className="w-2 h-2 bg-black dark:bg-white rounded-full"></div>
                               <span className="text-sm font-medium">
                                 {review.teams &&
                                 typeof review.teams === "object" &&
@@ -953,7 +954,7 @@ export default function PeerReviewPage() {
                           {/* XP Earned */}
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-1">
-                              <Zap className="h-4 w-4 text-primary" />
+                              <Zap className="h-4 w-4 text-black dark:text-white" />
                               <span className="text-sm font-medium">
                                 {Math.max(
                                   1,
@@ -972,7 +973,7 @@ export default function PeerReviewPage() {
                           {/* Points Earned */}
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-1">
-                              <Medal className="h-4 w-4 text-amber-500" />
+                              <Medal className="h-4 w-4 text-black dark:text-white" />
                               <span className="text-sm font-medium">
                                 {Math.max(
                                   1,
