@@ -157,14 +157,16 @@ function InviteAcceptContent() {
 
 export default function InviteAcceptPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff78c8] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading invitation...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff78c8] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading invitation...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <InviteAcceptContent />
     </Suspense>
   );
