@@ -34,7 +34,7 @@ const getTransactionIcon = (type: string) => {
   }
 };
 
-const getTransactionColor = (type: string) => {
+const getTransactionColor = () => {
   // Return consistent black theme for all transaction types
   return "text-black dark:text-white";
 };
@@ -154,7 +154,7 @@ export default function TransactionHistoryPage() {
             <div className="space-y-4">
               {transactions.map((transaction) => {
                 const Icon = getTransactionIcon(transaction.type);
-                const iconColor = getTransactionColor(transaction.type);
+                const iconColor = getTransactionColor();
 
                 return (
                   <div

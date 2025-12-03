@@ -164,6 +164,8 @@ export interface TaskTableItem {
   completedAt?: string | null;
   // For lazy progress system - original task ID for starting new tasks
   task_id?: string;
+  // For achievement filtering in My Journey
+  achievement_id?: string;
 }
 
 // Admin-specific task interface for task management

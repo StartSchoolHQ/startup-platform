@@ -33,6 +33,8 @@ import {
   getUserAchievementProgress,
   getUserTaskCompletionStats,
   getUserTasksVisible,
+  getUserIndividualTasks,
+  getIndividualXPAndCredits,
 } from "@/lib/database";
 import { hasUserSubmittedThisWeekIndividual } from "@/lib/weekly-reports";
 import { startTaskLazy } from "@/lib/tasks";
@@ -340,6 +342,28 @@ export default function MyJourneyPage() {
     useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [hasSubmittedThisWeek, setHasSubmittedThisWeek] = useState(false);
+  const [selectedAchievementId, setSelectedAchievementId] = useState<
+    string | null
+  >(null);
+  const [filteredTasks, setFilteredTasks] = useState<TaskTableItem[]>([]);
+
+  // Achievement click handler for filtering tasks
+  const handleAchievementClick = useCallback(
+    (achievementId: string | null) => {
+      setSelectedAchievementId(achievementId);
+
+      // Filter tasks based on selected achievement
+      if (achievementId) {
+        const filtered = userTasks.filter(
+          (task) => task.achievement_id === achievementId
+        );
+        setFilteredTasks(filtered);
+      } else {
+        setFilteredTasks(userTasks);
+      }
+    },
+    [userTasks]
+  );
 
   // Task interaction handlers using new lazy progress architecture
   const handleStartTask = async (taskId: string) => {
@@ -376,16 +400,20 @@ export default function MyJourneyPage() {
       // Fetch all data in parallel
       const [
         profile,
+        availableTasksData,
         individualTasksData,
         achievementProgress,
         taskStats,
         submissionStatus,
+        individualStats,
       ] = await Promise.all([
         getUserProfile(user.id),
-        getUserTasksVisible(user.id),
+        getUserTasksVisible(user.id), // Available/active tasks
+        getUserIndividualTasks(user.id), // All individual tasks (including completed)
         getUserAchievementProgress(user.id),
         getUserTaskCompletionStats(user.id),
         hasUserSubmittedThisWeekIndividual(user.id),
+        getIndividualXPAndCredits(user.id),
       ]);
 
       setHasSubmittedThisWeek(submissionStatus);
@@ -409,65 +437,129 @@ export default function MyJourneyPage() {
         }))
       );
 
-      // Convert individual tasks to TaskTableItem format
-      const convertedTasks: TaskTableItem[] =
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (individualTasksData as any[]).map((task: any) => {
-          const getUIStatus = (
-            status: string | null
-          ): TaskTableItem["status"] => {
-            if (!status) return "Not Started";
-            switch (status) {
-              case "approved":
-                return "Finished";
-              case "in_progress":
-                return "In Progress";
-              case "rejected":
-              case "revision_required":
-                return "Not Accepted";
-              case "pending_review":
-                return "Peer Review";
-              case "not_started":
-              default:
-                return "Not Started";
-            }
-          };
+      // Combine and process tasks from both sources to get complete picture
+      // Use Map to deduplicate by task_id (individual tasks take priority)
+      const taskMap = new Map();
 
-          const getDifficulty = (
-            level: number
-          ): TaskTableItem["difficulty"] => {
-            if (level >= 4) return "Hard";
-            if (level >= 3) return "Medium";
-            return "Easy";
-          };
+      // First process available tasks (for lazy progress system)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (availableTasksData as any[]).forEach((task: any) => {
+        const getUIStatus = (
+          status: string | null
+        ): TaskTableItem["status"] => {
+          if (!status) return "Not Started";
+          switch (status) {
+            case "approved":
+              return "Finished";
+            case "in_progress":
+              return "In Progress";
+            case "rejected":
+            case "revision_required":
+              return "Not Accepted";
+            case "pending_review":
+              return "Peer Review";
+            case "not_started":
+            default:
+              return "Not Started";
+          }
+        };
 
-          return {
-            id: task.progress_id || task.task_id, // Use progress_id if exists, otherwise task_id for new lazy approach
-            title: task.task_title || task.title,
-            description: task.task_description || task.description,
-            difficulty: getDifficulty(task.difficulty_level),
-            xp: task.base_xp_reward,
-            points: task.base_points_reward || task.base_xp_reward,
-            status: getUIStatus(task.progress_status),
-            action: task.progress_status === "approved" ? "done" : "complete",
-            isAvailable: true,
-            reviewFeedback: task.reviewer_notes,
-            reviewerName: undefined,
-            reviewerAvatarUrl: undefined,
-            teamName: undefined,
-            assignedAt: task.assigned_at,
-            completedAt: task.completed_at,
-            task_id: task.task_id, // Store original task_id for starting new tasks
-          };
-        });
+        const getDifficulty = (level: number): TaskTableItem["difficulty"] => {
+          if (level >= 4) return "Hard";
+          if (level >= 3) return "Medium";
+          return "Easy";
+        };
 
+        const taskItem: TaskTableItem = {
+          id: task.progress_id || `temp-${task.task_id}`,
+          title: task.task_title || task.title,
+          description: task.task_description || task.description,
+          difficulty: getDifficulty(task.difficulty_level),
+          xp: task.base_xp_reward,
+          points: task.base_points_reward || task.base_xp_reward,
+          status: getUIStatus(task.progress_status),
+          action: task.progress_status === "approved" ? "done" : "complete",
+          isAvailable: task.is_available,
+          reviewFeedback: task.reviewer_notes,
+          reviewerName: undefined,
+          reviewerAvatarUrl: undefined,
+          teamName: undefined,
+          assignedAt: task.assigned_at,
+          completedAt: task.completed_at,
+          task_id: task.task_id,
+          achievement_id: task.achievement_id,
+        };
+        taskMap.set(task.task_id, taskItem);
+      });
+
+      // Then process individual tasks (includes completed ones)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (individualTasksData as any[]).forEach((task: any) => {
+        const getUIStatus = (
+          status: string | null
+        ): TaskTableItem["status"] => {
+          if (!status) return "Not Started";
+          switch (status) {
+            case "approved":
+              return "Finished";
+            case "in_progress":
+              return "In Progress";
+            case "rejected":
+            case "revision_required":
+              return "Not Accepted";
+            case "pending_review":
+              return "Peer Review";
+            case "not_started":
+            default:
+              return "Not Started";
+          }
+        };
+
+        const getDifficulty = (level: number): TaskTableItem["difficulty"] => {
+          if (level >= 4) return "Hard";
+          if (level >= 3) return "Medium";
+          return "Easy";
+        };
+
+        const taskItem: TaskTableItem = {
+          id: task.progress_id || task.task_id,
+          title: task.task_title || task.title,
+          description: task.task_description || task.description,
+          difficulty: getDifficulty(task.difficulty_level),
+          xp: task.base_xp_reward,
+          points: task.base_points_reward || task.base_xp_reward,
+          status: getUIStatus(task.progress_status),
+          action: task.progress_status === "approved" ? "done" : "complete",
+          isAvailable: task.is_available ?? true,
+          reviewFeedback: task.reviewer_notes,
+          reviewerName: undefined,
+          reviewerAvatarUrl: undefined,
+          teamName: undefined,
+          assignedAt: task.assigned_at,
+          completedAt: task.completed_at,
+          task_id: task.task_id,
+          achievement_id: task.achievement_id,
+        };
+        taskMap.set(task.task_id, taskItem);
+      });
+
+      const convertedTasks: TaskTableItem[] = Array.from(taskMap.values());
       setUserTasks(convertedTasks);
 
+      // Initialize filtered tasks (apply current filter if any)
+      if (selectedAchievementId) {
+        const filtered = convertedTasks.filter(
+          (task) => task.achievement_id === selectedAchievementId
+        );
+        setFilteredTasks(filtered);
+      } else {
+        setFilteredTasks(convertedTasks);
+      }
+
       // Calculate dynamic stats cards
-      const totalXP = profile?.total_xp || 0;
-      const totalCredits = profile?.total_points || 0;
+      const totalXP = individualStats?.totalXP || 0;
+      const totalCredits = individualStats?.totalCredits || 0;
       const tasksCompleted = taskStats.completed;
-      const totalTasks = taskStats.total;
 
       // Calculate achievement rate
       const achievements = Array.isArray(achievementProgress)
@@ -485,14 +577,14 @@ export default function MyJourneyPage() {
         {
           title: "Total XP",
           value: totalXP.toLocaleString(),
-          subtitle: `From ${totalTasks} tasks`,
+          subtitle: `From individual tasks & peer reviews`,
           icon: Zap,
           iconColor: "text-black dark:text-white",
         },
         {
           title: "Total Credits",
           value: totalCredits.toLocaleString(),
-          subtitle: "Earned credits",
+          subtitle: "From individual activities",
           icon: Banknote,
           iconColor: "text-black dark:text-white",
         },
@@ -517,7 +609,7 @@ export default function MyJourneyPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, selectedAchievementId]);
 
   useEffect(() => {
     fetchUserData();
@@ -622,21 +714,61 @@ export default function MyJourneyPage() {
               </div>
             ) : (
               achievements.map((achievement) => (
-                <AchievementCard
+                <div
                   key={achievement.achievement_id}
-                  title={achievement.achievement_name}
-                  description={`${achievement.completed_tasks} of ${achievement.total_tasks} tasks completed`}
-                  status={
-                    achievement.status === "completed"
-                      ? "finished"
-                      : achievement.status
+                  onClick={() =>
+                    handleAchievementClick(
+                      selectedAchievementId === achievement.achievement_id
+                        ? null
+                        : achievement.achievement_id
+                    )
                   }
-                  points={achievement.points_reward}
-                  xp={achievement.xp_reward}
-                />
+                  className="cursor-pointer transition-all duration-200 hover:scale-[1.02]"
+                >
+                  <AchievementCard
+                    title={achievement.achievement_name}
+                    description={
+                      selectedAchievementId === achievement.achievement_id
+                        ? "Click to show all tasks"
+                        : "Click to filter tasks"
+                    }
+                    status={
+                      achievement.status === "completed"
+                        ? "finished"
+                        : achievement.status
+                    }
+                    points={achievement.points_reward}
+                    xp={achievement.xp_reward}
+                    selected={
+                      selectedAchievementId === achievement.achievement_id
+                    }
+                  />
+                </div>
               ))
             )}
           </div>
+
+          {/* Filter Status */}
+          {selectedAchievementId && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-blue-800">
+                  <span className="font-medium">Showing tasks for:</span>{" "}
+                  {
+                    achievements.find(
+                      (a) => a.achievement_id === selectedAchievementId
+                    )?.achievement_name
+                  }
+                </div>
+                <button
+                  onClick={() => handleAchievementClick(null)}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  Show All Tasks
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Tasks Table */}
           <div className="bg-card rounded-lg p-6">
@@ -645,10 +777,11 @@ export default function MyJourneyPage() {
               <div className="flex items-center justify-center py-8">
                 <div className="text-muted-foreground">Loading tasks...</div>
               </div>
-            ) : userTasks.length === 0 ? (
+            ) : filteredTasks.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No individual tasks assigned yet. Check back later for new
-                challenges!
+                {selectedAchievementId
+                  ? "No tasks found for this achievement"
+                  : "No individual tasks assigned yet. Check back later for new challenges!"}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -676,7 +809,7 @@ export default function MyJourneyPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {userTasks.map((task) => (
+                    {filteredTasks.map((task) => (
                       <RealTaskRow
                         key={task.id}
                         task={task}

@@ -49,11 +49,13 @@ export function AchievementCard({
 
   return (
     <Card
-      className={`${config.cardClass} transition-all hover:shadow-md p-0 ${
+      className={`${
+        config.cardClass
+      } transition-all hover:shadow-md p-0 h-full flex flex-col ${
         selected ? "border-2 border-primary" : ""
       }`}
     >
-      <CardHeader className="pt-4 px-4">
+      <CardHeader className="pt-4 px-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <Badge
             variant="outline"
@@ -63,16 +65,20 @@ export function AchievementCard({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="px-4 pb-4">
-        <div className="flex items-center gap-2 align-middle mb-4">
-          <Medal className="h-12 w-12 text-black dark:text-white flex-shrink-0 bg-muted rounded-md p-2" />
-          <div className="">
-            <h3 className="font-semibold text-lg">{title}</h3>
-            <p className="text-sm text-muted-foreground">{description}</p>
+      <CardContent className="px-4 pb-4 flex-1 flex flex-col">
+        <div className="flex items-start gap-2 mb-4 flex-1">
+          <Medal className="h-12 w-12 text-black dark:text-white flex-shrink-0 bg-muted rounded-md p-2 mt-1" />
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-lg leading-tight mb-1">
+              {title}
+            </h3>
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {description}
+            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 mt-auto">
           {/* Points Box */}
           <div className="border border-border rounded-lg p-2 bg-background">
             <div className="flex items-center gap-2">

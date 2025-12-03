@@ -44,6 +44,7 @@ import {
   getTeamTasksVisible,
   getTeamPointsInvested,
   getTeamPointsEarned,
+  getTeamXPEarned,
 } from "@/lib/database";
 import { StatsCard } from "@/types/dashboard";
 import type { Database } from "@/types/database";
@@ -152,6 +153,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [teamPointsEarnedFromActivities, setTeamPointsEarnedFromActivities] =
     useState(0);
   const [loadingPointsEarned, setLoadingPointsEarned] = useState(false);
+  const [teamXPEarned, setTeamXPEarned] = useState(0);
+  // XP earned loading state removed as it's not used
   const [totalClientsContacted, setTotalClientsContacted] = useState(0);
 
   // Extract ID from params
@@ -482,6 +485,19 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     }
   }, [teamId]);
 
+  // Load team XP earned from all activities (tasks, meetings, etc.)
+  const loadTeamXPEarned = useCallback(async () => {
+    if (!teamId) return;
+
+    try {
+      const xpEarned = await getTeamXPEarned(teamId);
+      setTeamXPEarned(xpEarned);
+    } catch (error) {
+      console.error("Error loading team XP earned:", error);
+      setTeamXPEarned(0);
+    }
+  }, [teamId]);
+
   // Load team weekly reports from database
   const loadWeeklyReports = useCallback(async () => {
     if (!teamId) return;
@@ -661,6 +677,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     loadWeeklyReports();
     loadTeamPointsInvested();
     loadTeamPointsEarned();
+    loadTeamXPEarned();
   }, [
     isTeamMember,
     checkWeeklyReportStatus,
@@ -671,6 +688,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     loadWeeklyReports,
     loadTeamPointsInvested,
     loadTeamPointsEarned,
+    loadTeamXPEarned,
   ]);
 
   // Handle loading and error states in the render return
@@ -689,11 +707,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   // Calculate real team stats
   const actualMemberCount = team.members?.length || 0;
 
-  // Calculate total team XP
-  const totalTeamXP = team.members.reduce(
-    (sum, member) => sum + (member.users?.total_xp || 0),
-    0
-  );
+  // Use team XP earned from team activities only (not individual user totals)
+  const totalTeamXP = teamXPEarned;
 
   // Calculate dynamic achievement progress
   const completedAchievements = achievements.filter(
@@ -713,7 +728,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     {
       title: "Total XP",
       value: totalTeamXP.toLocaleString(),
-      subtitle: "All team members combined",
+      subtitle: "From completed team activities",
       icon: Zap,
       iconColor: "text-black dark:text-white",
     },

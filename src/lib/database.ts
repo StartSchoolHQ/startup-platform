@@ -190,6 +190,42 @@ export async function getPeerReviewStatsFromTransactions(userId: string) {
   };
 }
 
+// Get total individual XP and Credits earned (individual tasks + peer review rewards)
+export async function getIndividualXPAndCredits(userId: string) {
+  const supabase = createClient();
+
+  // Get all transactions for individual context activities
+  const { data: transactions, error } = await supabase
+    .from("transactions")
+    .select("xp_change, points_change, type")
+    .eq("user_id", userId)
+    .is("team_id", null) // Individual activities have team_id = NULL
+    .gte("xp_change", 0); // Only positive gains
+
+  if (error) {
+    console.error("Error fetching individual transactions:", error);
+    throw error;
+  }
+
+  const individualTransactions = transactions || [];
+
+  // Calculate totals from all individual transactions (tasks, achievements, peer reviews, etc.)
+  const totalXP = individualTransactions.reduce(
+    (sum, t) => sum + (t.xp_change || 0),
+    0
+  );
+  const totalCredits = individualTransactions.reduce(
+    (sum, t) => sum + (t.points_change || 0),
+    0
+  );
+
+  return {
+    totalXP,
+    totalCredits,
+    transactionCount: individualTransactions.length,
+  };
+}
+
 export async function getIndividualActivityStats(userId: string) {
   const supabase = createClient();
 
