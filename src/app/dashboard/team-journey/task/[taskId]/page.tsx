@@ -379,7 +379,24 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
             <StatusBadge status={task.status as TaskStatus} variant="journey" />
           </div>
           <p className="text-muted-foreground text-lg">
-            {task.category && `{{${task.category}}}`}
+            {(() => {
+              // Map database categories to achievement names
+              const categoryToAchievementMap: Record<string, string> = {
+                development: "Product Foundation",
+                design: "Product Foundation",
+                testing: "Product Foundation",
+                deployment: "Product Foundation",
+                marketing: "Customer Acquisition",
+                business: "Team & Growth",
+                onboarding: "Team & Growth",
+                milestone: "Revenue Generation",
+              };
+
+              const category = task.category?.toLowerCase();
+              return category
+                ? categoryToAchievementMap[category] || task.category
+                : "No category assigned";
+            })()}
           </p>
         </div>
       </div>

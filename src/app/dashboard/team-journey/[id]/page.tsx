@@ -1372,6 +1372,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           onClose={() => setShowTeamManagement(false)}
           team={team}
           userRole={userRole}
+          currentUserId={user?.id}
           onRefresh={loadTeam}
         />
       )}

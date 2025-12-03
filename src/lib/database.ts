@@ -1520,6 +1520,71 @@ export async function updateTeamMemberRole(
   }
 }
 
+// Update team details (name and/or description) - founder only
+export async function updateTeamDetails(
+  teamId: string,
+  founderId: string,
+  updates: {
+    name?: string;
+    description?: string;
+  }
+): Promise<void> {
+  const supabase = createClient();
+
+  // First, verify the user is actually the founder of this team
+  const { data: teamCheck, error: checkError } = await supabase
+    .from("teams")
+    .select("founder_id, name")
+    .eq("id", teamId)
+    .eq("founder_id", founderId)
+    .single();
+
+  if (checkError || !teamCheck) {
+    console.error("Team founder verification failed:", checkError);
+    throw new Error(
+      "You are not authorized to edit this team or the team does not exist."
+    );
+  }
+
+  // Validate input data
+  if (updates.name !== undefined) {
+    const trimmedName = updates.name.trim();
+    if (!trimmedName) {
+      throw new Error("Team name cannot be empty.");
+    }
+    if (trimmedName.length < 2) {
+      throw new Error("Team name must be at least 2 characters long.");
+    }
+    if (trimmedName.length > 100) {
+      throw new Error("Team name must be less than 100 characters.");
+    }
+  }
+
+  if (
+    updates.description !== undefined &&
+    updates.description &&
+    updates.description.length > 500
+  ) {
+    throw new Error("Team description must be less than 500 characters.");
+  }
+
+  const updateData: Record<string, unknown> = {};
+  if (updates.name !== undefined) updateData.name = updates.name.trim();
+  if (updates.description !== undefined)
+    updateData.description = updates.description;
+
+  const { error } = await supabase
+    .from("teams")
+    .update(updateData)
+    .eq("id", teamId)
+    .eq("founder_id", founderId); // Security: Only founder can edit
+
+  if (error) {
+    console.error("Error updating team details:", error);
+    throw error;
+  }
+}
+
 // Disband team (remove ALL members including founder and mark team as archived)
 export async function disbandTeam(teamId: string): Promise<void> {
   // Use the proper function that disbands everyone

@@ -17,10 +17,13 @@ import {
   disbandTeam,
   getAvailableUsersForInvitation,
   sendTeamInvitationById,
+  updateTeamDetails,
 } from "@/lib/database";
 import { invitationCountManager } from "@/hooks/use-invitation-count";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -42,6 +45,7 @@ import {
   AlertTriangle,
   Search,
   Mail,
+  Edit,
 } from "lucide-react";
 
 interface TeamMember {
@@ -70,9 +74,11 @@ interface TeamManagementModalProps {
   team: {
     id: string;
     name: string;
+    description?: string | null;
     members: TeamMember[];
   };
   userRole: string;
+  currentUserId?: string;
   onRefresh?: () => void;
 }
 
@@ -81,6 +87,7 @@ export function TeamManagementModal({
   onClose,
   team,
   userRole,
+  currentUserId,
   onRefresh,
 }: TeamManagementModalProps) {
   const router = useRouter();
@@ -91,6 +98,14 @@ export function TeamManagementModal({
   );
   const [loading, setLoading] = useState(false);
   const [invitingUsers, setInvitingUsers] = useState<Set<string>>(new Set());
+
+  // Team details form state
+  const [editFormData, setEditFormData] = useState({
+    name: team.name,
+    description: team.description || "",
+  });
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [editError, setEditError] = useState("");
 
   const canManageMembers =
     userRole === "founder" ||
@@ -222,6 +237,126 @@ export function TeamManagementModal({
     }
   };
 
+  // Team details form handlers
+  const handleTeamDetailsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditError("");
+
+    // Security check: Only founders can edit team details
+    if (userRole !== "founder") {
+      setEditError("Only team founders can edit team details.");
+      return;
+    }
+
+    if (!editFormData.name.trim()) {
+      setEditError("Team name is required");
+      return;
+    }
+
+    if (editFormData.name.trim().length < 2) {
+      setEditError("Team name must be at least 2 characters long.");
+      return;
+    }
+
+    if (editFormData.name.trim().length > 100) {
+      setEditError("Team name must be less than 100 characters.");
+      return;
+    }
+
+    if (editFormData.description.length > 500) {
+      setEditError("Team description must be less than 500 characters.");
+      return;
+    } // Get founder ID - prefer currentUserId if available, otherwise find founder in members
+    const founderId =
+      currentUserId ||
+      team.members.find((m) => m.team_role === "founder")?.user_id;
+    if (!founderId) {
+      setEditError("Unable to identify team founder. Please try again.");
+      return;
+    }
+
+    // Additional security: Verify current user is actually the founder
+    if (currentUserId && founderId !== currentUserId) {
+      setEditError("You are not authorized to edit this team.");
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      // Optimistic update: Create updated team object for immediate UI feedback
+      const optimisticTeam = {
+        ...team,
+        name: editFormData.name.trim(),
+        description: editFormData.description.trim() || null,
+      };
+
+      await updateTeamDetails(team.id, founderId, {
+        name: editFormData.name.trim(),
+        description: editFormData.description.trim() || undefined,
+      });
+
+      toast.success(`Team "${editFormData.name.trim()}" updated successfully!`);
+
+      // Refresh team data to ensure consistency
+      await onRefresh?.();
+
+      // Switch back to current team tab and close modal
+      setActiveTab("current-team");
+      onClose();
+    } catch (error) {
+      console.error("Error updating team details:", error);
+
+      // Enhanced error handling with specific messages
+      if (error instanceof Error) {
+        if (error.message.includes("authorized")) {
+          setEditError("You are not authorized to edit this team.");
+        } else if (
+          error.message.includes("network") ||
+          error.message.includes("fetch")
+        ) {
+          setEditError(
+            "Network error. Please check your connection and try again."
+          );
+        } else {
+          setEditError(error.message);
+        }
+      } else {
+        setEditError("Failed to update team details. Please try again.");
+      }
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const resetEditForm = () => {
+    setEditFormData({
+      name: team.name,
+      description: team.description || "",
+    });
+    setEditError("");
+  };
+
+  // Handle modal close with confirmation if form has changes
+  const handleModalClose = () => {
+    const hasChanges =
+      editFormData.name !== team.name ||
+      (editFormData.description || "") !== (team.description || "");
+
+    if (hasChanges && !isUpdating) {
+      if (
+        window.confirm(
+          "You have unsaved changes. Are you sure you want to close?"
+        )
+      ) {
+        resetEditForm();
+        onClose();
+      }
+    } else {
+      resetEditForm();
+      onClose();
+    }
+  };
+
   // Load users once when invite tab becomes active
   useEffect(() => {
     if (activeTab === "invite-users" && allAvailableUsers.length === 0) {
@@ -229,21 +364,38 @@ export function TeamManagementModal({
     }
   }, [activeTab, loadAllAvailableUsers, allAvailableUsers.length]);
 
+  // Reset form data when team prop changes
+  useEffect(() => {
+    setEditFormData({
+      name: team.name,
+      description: team.description || "",
+    });
+    setEditError("");
+  }, [team.name, team.description]);
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={handleModalClose}>
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
             Manage Team: {team.name}
           </DialogTitle>
           <DialogDescription>
-            Manage your team members and invite new users to join your team.
+            Manage your team members, invite new users, and edit team details.
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-full flex-1 flex flex-col overflow-hidden"
+        >
+          <TabsList
+            className={`grid w-full ${
+              userRole === "founder" ? "grid-cols-3" : "grid-cols-2"
+            }`}
+          >
             <TabsTrigger
               value="current-team"
               className="flex items-center gap-2"
@@ -258,10 +410,22 @@ export function TeamManagementModal({
               <UserPlus className="h-4 w-4" />
               Invite Users
             </TabsTrigger>
+            {userRole === "founder" && (
+              <TabsTrigger
+                value="team-details"
+                className="flex items-center gap-2"
+              >
+                <Edit className="h-4 w-4" />
+                Team Details
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Current Team Tab */}
-          <TabsContent value="current-team" className="space-y-4 mt-6">
+          <TabsContent
+            value="current-team"
+            className="space-y-4 mt-6 flex-1 overflow-y-auto"
+          >
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Team Members</h3>
               {canManageMembers && userRole === "founder" && (
@@ -364,7 +528,10 @@ export function TeamManagementModal({
           </TabsContent>
 
           {/* Invite Users Tab */}
-          <TabsContent value="invite-users" className="space-y-4 mt-6">
+          <TabsContent
+            value="invite-users"
+            className="space-y-4 mt-6 flex-1 overflow-y-auto"
+          >
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Invite New Members</h3>
             </div>
@@ -445,10 +612,138 @@ export function TeamManagementModal({
               )}
             </div>
           </TabsContent>
+
+          {/* Team Details Tab - Founder Only */}
+          {userRole === "founder" ? (
+            <TabsContent
+              value="team-details"
+              className="space-y-4 mt-6 flex-1 overflow-y-auto"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Edit Team Details</h3>
+                <Badge
+                  variant="secondary"
+                  className="bg-primary/10 text-primary"
+                >
+                  <Crown className="h-3 w-3 mr-1" />
+                  Founder Only
+                </Badge>
+              </div>
+
+              {editError && (
+                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+                  {editError}
+                </div>
+              )}
+
+              <form onSubmit={handleTeamDetailsSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="teamName">Team Name</Label>
+                    <span
+                      className={`text-xs ${
+                        editFormData.name.length > 80
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {editFormData.name.length}/100
+                    </span>
+                  </div>
+                  <Input
+                    id="teamName"
+                    value={editFormData.name}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter team name..."
+                    required
+                    disabled={isUpdating}
+                    maxLength={100}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="teamDescription">Team Description</Label>
+                    <span
+                      className={`text-xs ${
+                        editFormData.description.length > 450
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {editFormData.description.length}/500
+                    </span>
+                  </div>
+                  <Textarea
+                    id="teamDescription"
+                    value={editFormData.description}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
+                    placeholder="Describe your team's mission and goals..."
+                    rows={4}
+                    disabled={isUpdating}
+                    maxLength={500}
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button
+                    type="submit"
+                    disabled={
+                      isUpdating ||
+                      !editFormData.name.trim() ||
+                      editFormData.name.length > 100 ||
+                      editFormData.description.length > 500 ||
+                      (editFormData.name === team.name &&
+                        editFormData.description === (team.description || ""))
+                    }
+                    className="flex-1"
+                  >
+                    {isUpdating ? "Saving..." : "Save Changes"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={resetEditForm}
+                    disabled={isUpdating}
+                  >
+                    Reset
+                  </Button>
+                </div>
+              </form>
+            </TabsContent>
+          ) : (
+            <TabsContent
+              value="team-details"
+              className="space-y-4 mt-6 flex-1 overflow-y-auto"
+            >
+              <div className="text-center py-8">
+                <Crown className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h4 className="font-semibold mb-2">Founder Access Required</h4>
+                <p className="text-muted-foreground text-sm">
+                  Only the team founder can edit team details like name and
+                  description.
+                </p>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
 
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>
+        <div className="flex justify-end gap-2 pt-4 border-t flex-shrink-0">
+          <Button
+            variant="outline"
+            onClick={handleModalClose}
+            disabled={isUpdating}
+          >
             Close
           </Button>
         </div>

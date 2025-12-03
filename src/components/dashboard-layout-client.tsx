@@ -63,7 +63,7 @@ export function DashboardLayoutClient({
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
                   <BreadcrumbLink href="/dashboard">
-                    StartSchool Platform
+                    StartSchool Startup Module
                   </BreadcrumbLink>
                 </BreadcrumbItem>
               </BreadcrumbList>

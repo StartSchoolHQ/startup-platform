@@ -76,6 +76,15 @@ export function HeroLanding() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+          className="text-2xl md:text-3xl lg:text-4xl text-white mb-8 max-w-4xl mx-auto text-pretty leading-tight font-bold"
+        >
+          Startup Module Platform
+        </motion.p>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
           className="text-lg md:text-xl text-white mb-12 max-w-2xl mx-auto text-pretty leading-relaxed"
         >
           Transform your ideas into reality with our cutting-edge platform. Join

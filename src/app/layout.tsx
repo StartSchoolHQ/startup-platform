@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StartSchool Platform",
+  title: "StartSchool Startup Module",
   description: "StartSchool learning platform",
 };
 
