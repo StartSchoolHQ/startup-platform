@@ -102,6 +102,7 @@ interface TeamDetails {
   id: string;
   name: string;
   description: string | null;
+  website?: string | null;
   status: "active" | "archived";
   created_at: string;
   member_count: number | null;
@@ -819,9 +820,31 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2">
-            <ExternalLink className="h-4 w-4" />
-            Website
+          <Button 
+            variant="outline" 
+            className="gap-2"
+            disabled={!team.website}
+            asChild={!!team.website}
+          >
+            {team.website ? (
+              <a
+                href={
+                  team.website.startsWith('http')
+                    ? team.website
+                    : `https://${team.website}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Website
+              </a>
+            ) : (
+              <>
+                <ExternalLink className="h-4 w-4" />
+                Website
+              </>
+            )}
           </Button>
         </div>
       </div>

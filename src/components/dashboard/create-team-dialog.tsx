@@ -30,6 +30,7 @@ export function CreateTeamDialog({
 }: CreateTeamDialogProps) {
   const [teamName, setTeamName] = useState("");
   const [description, setDescription] = useState("");
+  const [website, setWebsite] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -70,6 +71,7 @@ export function CreateTeamDialog({
       setSuccess(`Team "${teamName}" created successfully!`);
       setTeamName("");
       setDescription("");
+      setWebsite("");
 
       // Close dialog immediately and call callback to refresh parent data
       onOpenChange(false);
@@ -143,6 +145,18 @@ export function CreateTeamDialog({
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="website">Website (optional)</Label>
+            <Input
+              id="website"
+              type="url"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              placeholder="https://example.com or example.com"
+              disabled={isLoading}
+            />
+          </div>
+
           <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-muted-foreground" />
@@ -157,7 +171,7 @@ export function CreateTeamDialog({
             </div>
             <span
               className={`font-semibold ${
-                canAfford ? "text-primary" : "text-destructive"
+                canAfford ? "text-[#ff78c8]" : "text-destructive"
               }`}
             >
               {user?.total_points || 0} Credits
@@ -176,6 +190,7 @@ export function CreateTeamDialog({
             <Button
               type="submit"
               disabled={isLoading || !canAfford || !teamName.trim()}
+              className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted"
             >
               {isLoading ? (
                 <>

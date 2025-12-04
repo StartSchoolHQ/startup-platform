@@ -8,9 +8,11 @@ import {
   Users,
   FileText,
   WandSparkles,
-  Star,
-  Trophy,
   CheckCircle2,
+  Zap,
+  CreditCard,
+  Building2,
+  User,
 } from "lucide-react";
 import { IndividualWeeklyReportModal } from "@/components/weekly-reports/individual-weekly-report-modal";
 import { hasUserSubmittedThisWeekIndividual } from "@/lib/weekly-reports";
@@ -142,11 +144,11 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
       : "Your Teams Progress";
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
         <div className="flex items-center gap-3">
           <IconContainer
-            icon={Users}
+            icon={Building2}
             iconColor="text-black dark:text-white"
             backgroundColor="bg-gray-100 dark:bg-gray-800"
           />
@@ -160,70 +162,72 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
           {data.joinTeamsText}
         </Button>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {!data.hasTeams ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <p className="text-muted-foreground">
-              You are not a part of any team yet
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Stats row - only show aggregate totals if multiple teams */}
-            {data.stats.length > 0 && (
-              <div className="grid grid-cols-2 gap-4">
-                {data.stats.map((stat, index) => (
-                  <StatItem key={index} stat={stat} />
-                ))}
-              </div>
-            )}
-
-            {/* Team member stats - show for each team */}
-            {data.teams.map((team) => (
-              <div key={team.id}>
-                {data.teams.length > 1 && (
-                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground">
-                    {team.name}
-                  </h3>
-                )}
+      <CardContent className="flex-1 flex flex-col">
+        <div className="space-y-6 flex-1">
+          {!data.hasTeams ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <p className="text-muted-foreground">
+                You are not a part of any team yet
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Stats row - only show aggregate totals if multiple teams */}
+              {data.stats.length > 0 && (
                 <div className="grid grid-cols-2 gap-4">
-                  <TeamItem
-                    stat={{
-                      value: team.memberCount.toString(),
-                      label: "Members",
-                      icon: Users,
-                      iconColor: "text-black dark:text-white",
-                    }}
-                  />
-                  <TeamItem
-                    stat={{
-                      value: team.completedTasks.toString(),
-                      label: "Tasks Completed",
-                      icon: CheckCircle2,
-                      iconColor: "text-black dark:text-white",
-                    }}
-                  />
-                  <TeamItem
-                    stat={{
-                      value: team.totalPoints.toString(),
-                      label: "Team Points",
-                      icon: Star,
-                      iconColor: "text-black dark:text-white",
-                    }}
-                  />
-                  <TeamItem
-                    stat={{
-                      value: team.totalXP.toString(),
-                      label: "Team XP",
-                      icon: Trophy,
-                      iconColor: "text-black dark:text-white",
-                    }}
-                  />
+                  {data.stats.map((stat, index) => (
+                    <StatItem key={index} stat={stat} />
+                  ))}
                 </div>
-              </div>
-            ))}
-          </>
-        )}
+              )}
+
+              {/* Team member stats - show for each team */}
+              {data.teams.map((team) => (
+                <div key={team.id}>
+                  {data.teams.length > 1 && (
+                    <h3 className="text-sm font-semibold mb-3 text-muted-foreground">
+                      {team.name}
+                    </h3>
+                  )}
+                  <div className="grid grid-cols-2 gap-4">
+                    <TeamItem
+                      stat={{
+                        value: team.memberCount.toString(),
+                        label: "Members",
+                        icon: Users,
+                        iconColor: "text-black dark:text-white",
+                      }}
+                    />
+                    <TeamItem
+                      stat={{
+                        value: team.completedTasks.toString(),
+                        label: "Tasks Completed",
+                        icon: CheckCircle2,
+                        iconColor: "text-black dark:text-white",
+                      }}
+                    />
+                    <TeamItem
+                      stat={{
+                        value: team.totalPoints.toString(),
+                        label: "Team Points",
+                        icon: CreditCard,
+                        iconColor: "text-black dark:text-white",
+                      }}
+                    />
+                    <TeamItem
+                      stat={{
+                        value: team.totalXP.toString(),
+                        label: "Team XP",
+                        icon: Zap,
+                        iconColor: "text-black dark:text-white",
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -241,11 +245,11 @@ function PersonalProgressCard({
 }) {
   const router = useRouter();
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
         <div className="flex items-center gap-3">
           <IconContainer
-            icon={Users}
+            icon={User}
             iconColor="text-black dark:text-white"
             backgroundColor="bg-gray-100 dark:bg-gray-800"
           />
@@ -253,43 +257,49 @@ function PersonalProgressCard({
         </div>
         <div className="w-[80px]"></div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Stats row */}
-        <div className="grid grid-cols-2 gap-4">
-          {data.stats.map((stat, index) => (
-            <StatItem key={index} stat={stat} />
-          ))}
-        </div>
+      <CardContent className="flex-1 flex flex-col">
+        <div className="space-y-6 flex-1">
+          {/* Stats row */}
+          <div className="grid grid-cols-2 gap-4">
+            {data.stats.map((stat, index) => (
+              <StatItem key={index} stat={stat} />
+            ))}
+          </div>
 
-        {/* Activities */}
-        <div className="grid grid-cols-2 gap-4">
-          {data.activities.map((activity, index) => (
-            <ActivityItem key={index} activity={activity} />
-          ))}
+          {/* Activities */}
+          <div className="grid grid-cols-2 gap-4">
+            {data.activities.map((activity, index) => (
+              <ActivityItem key={index} activity={activity} />
+            ))}
+          </div>
         </div>
 
         {/* Action buttons */}
-        <BorderedContainer className="justify-center w-full">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-10 grow"
-            disabled={hasSubmittedThisWeek}
-            onClick={onOpenReportModal}
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            {hasSubmittedThisWeek ? "Report Submitted" : "Submit Weekly Report"}
-          </Button>
-          <Button
-            size="sm"
-            className="bg-foreground text-background hover:bg-foreground/90 h-10 grow"
-            onClick={() => router.push("/dashboard/my-journey")}
-            disabled
-          >
-            <WandSparkles className="h-4 w-4 mr-2" />
-            View Progress
-          </Button>
-        </BorderedContainer>
+        <div className="mt-6">
+          <BorderedContainer className="justify-center w-full">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 grow"
+              disabled={hasSubmittedThisWeek}
+              onClick={onOpenReportModal}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              {hasSubmittedThisWeek
+                ? "Report Submitted"
+                : "Submit Weekly Report"}
+            </Button>
+            <Button
+              size="sm"
+              className="bg-foreground text-background hover:bg-foreground/90 h-10 grow"
+              onClick={() => router.push("/dashboard/my-journey")}
+              disabled
+            >
+              <WandSparkles className="h-4 w-4 mr-2" />
+              View Progress
+            </Button>
+          </BorderedContainer>
+        </div>
       </CardContent>
     </Card>
   );

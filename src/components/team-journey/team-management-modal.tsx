@@ -75,6 +75,7 @@ interface TeamManagementModalProps {
     id: string;
     name: string;
     description?: string | null;
+    website?: string | null;
     members: TeamMember[];
   };
   userRole: string;
@@ -103,6 +104,7 @@ export function TeamManagementModal({
   const [editFormData, setEditFormData] = useState({
     name: team.name,
     description: team.description || "",
+    website: team.website || "",
   });
   const [isUpdating, setIsUpdating] = useState(false);
   const [editError, setEditError] = useState("");
@@ -266,7 +268,14 @@ export function TeamManagementModal({
     if (editFormData.description.length > 500) {
       setEditError("Team description must be less than 500 characters.");
       return;
-    } // Get founder ID - prefer currentUserId if available, otherwise find founder in members
+    }
+
+    if (editFormData.website && editFormData.website.length > 255) {
+      setEditError("Website URL must be less than 255 characters.");
+      return;
+    }
+
+    // Get founder ID - prefer currentUserId if available, otherwise find founder in members
     const founderId =
       currentUserId ||
       team.members.find((m) => m.team_role === "founder")?.user_id;
@@ -294,6 +303,7 @@ export function TeamManagementModal({
       await updateTeamDetails(team.id, founderId, {
         name: editFormData.name.trim(),
         description: editFormData.description.trim() || undefined,
+        website: editFormData.website.trim() || undefined,
       });
 
       toast.success(`Team "${editFormData.name.trim()}" updated successfully!`);
@@ -333,6 +343,7 @@ export function TeamManagementModal({
     setEditFormData({
       name: team.name,
       description: team.description || "",
+      website: team.website || "",
     });
     setEditError("");
   };
@@ -341,7 +352,8 @@ export function TeamManagementModal({
   const handleModalClose = () => {
     const hasChanges =
       editFormData.name !== team.name ||
-      (editFormData.description || "") !== (team.description || "");
+      (editFormData.description || "") !== (team.description || "") ||
+      (editFormData.website || "") !== (team.website || "");
 
     if (hasChanges && !isUpdating) {
       if (
@@ -370,9 +382,10 @@ export function TeamManagementModal({
     setEditFormData({
       name: team.name,
       description: team.description || "",
+      website: team.website || "",
     });
     setEditError("");
-  }, [team.name, team.description]);
+  }, [team.name, team.description, team.website]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleModalClose}>
@@ -696,6 +709,35 @@ export function TeamManagementModal({
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="teamWebsite">Team Website (optional)</Label>
+                    <span
+                      className={`text-xs ${
+                        editFormData.website && editFormData.website.length > 230
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {editFormData.website.length}/255
+                    </span>
+                  </div>
+                  <Input
+                    id="teamWebsite"
+                    type="url"
+                    value={editFormData.website}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        website: e.target.value,
+                      }))
+                    }
+                    placeholder="https://example.com or example.com"
+                    disabled={isUpdating}
+                    maxLength={255}
+                  />
+                </div>
+
                 <div className="flex gap-2 pt-4">
                   <Button
                     type="submit"
@@ -704,8 +746,10 @@ export function TeamManagementModal({
                       !editFormData.name.trim() ||
                       editFormData.name.length > 100 ||
                       editFormData.description.length > 500 ||
+                      (editFormData.website && editFormData.website.length > 255) ||
                       (editFormData.name === team.name &&
-                        editFormData.description === (team.description || ""))
+                        editFormData.description === (team.description || "") &&
+                        editFormData.website === (team.website || ""))
                     }
                     className="flex-1"
                   >

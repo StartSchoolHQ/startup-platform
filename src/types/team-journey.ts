@@ -8,6 +8,7 @@ export interface Product {
   id: string;
   name: string;
   description: string;
+  website?: string;
   status: "Active" | "Inactive";
   customers: {
     count: number;

@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, DollarSign, Trophy } from "lucide-react";
+import { Users, DollarSign, Trophy, ExternalLink } from "lucide-react";
 import { AvatarStack } from "@/components/team-journey/avatar-stack";
 import { Product } from "@/types/team-journey";
 
@@ -102,20 +102,48 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </CardContent>
 
-      <CardFooter className="pt-0 flex items-center justify-between mt-auto">
-        {/* Team Members Avatar Stack */}
-        <AvatarStack users={product.teamMembers} maxVisible={4} size="md" />
+      <CardFooter className="pt-0 flex flex-col gap-3 mt-auto">
+        {/* Website Link (if available) */}
+        {product.website && (
+          <div className="w-full">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-center gap-2"
+              asChild
+            >
+              <a
+                href={
+                  product.website.startsWith('http')
+                    ? product.website
+                    : `https://${product.website}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Visit Website
+              </a>
+            </Button>
+          </div>
+        )}
 
-        {/* View Product Button */}
-        <Button
-          className="bg-foreground text-background hover:bg-foreground/90"
-          size="sm"
-          asChild
-        >
-          <Link href={`/dashboard/team-journey/${product.id}`}>
-            View Product
-          </Link>
-        </Button>
+        {/* Bottom row */}
+        <div className="w-full flex items-center justify-between">
+          {/* Team Members Avatar Stack */}
+          <AvatarStack users={product.teamMembers} maxVisible={4} size="md" />
+
+          {/* View Product Button */}
+          <Button
+            className="bg-foreground text-background hover:bg-foreground/90"
+            size="sm"
+            asChild
+          >
+            <Link href={`/dashboard/team-journey/${product.id}`}>
+              View Product
+            </Link>
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

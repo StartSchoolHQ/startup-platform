@@ -66,6 +66,7 @@ export interface DatabaseTeam {
   id: string;
   name: string;
   description: string | null;
+  website?: string | null;
   status: "active" | "archived";
   created_at: string;
   member_count: number | null;
@@ -161,15 +162,14 @@ export async function getPeerReviewStatsFromTransactions(userId: string) {
 
   const transactions = validationTransactions || [];
 
-  // Filter to ensure we only count legitimate peer review rewards (should be around 10% of task rewards)
-  // Peer review rewards should typically be small amounts (1-50 XP range for most tasks)
+  // Filter to ensure we only count legitimate peer review rewards
+  // Any positive validation transaction is a legitimate peer review reward (10% of task rewards)
   const legitTransactions = transactions.filter((t) => {
     const xp = t.xp_change || 0;
     const points = t.points_change || 0;
 
-    // Only count transactions that look like proper 10% peer review rewards
-    // (typically 1-50 XP range, not full task rewards of 100+ XP)
-    return xp > 0 && xp <= 50 && points > 0 && points <= 10;
+    // Only count positive peer review rewards (no upper limit since high-difficulty tasks give high rewards)
+    return xp > 0 && points > 0;
   });
 
   // Calculate totals
@@ -1144,6 +1144,7 @@ export function transformTeamToProduct(
     id: team.id,
     name: team.name,
     description: team.description || "No description provided",
+    website: team.website || undefined,
     status: team.status === "active" ? "Active" : "Inactive",
     customers: {
       count: actualTeamSize,
@@ -1563,6 +1564,7 @@ export async function updateTeamDetails(
   updates: {
     name?: string;
     description?: string;
+    website?: string;
   }
 ): Promise<void> {
   const supabase = createClient();
@@ -1604,10 +1606,26 @@ export async function updateTeamDetails(
     throw new Error("Team description must be less than 500 characters.");
   }
 
+  // Validate website URL if provided
+  if (updates.website !== undefined && updates.website) {
+    const trimmedWebsite = updates.website.trim();
+    if (trimmedWebsite.length > 255) {
+      throw new Error("Website URL must be less than 255 characters.");
+    }
+    // Basic URL format validation
+    try {
+      new URL(trimmedWebsite.startsWith('http') ? trimmedWebsite : `https://${trimmedWebsite}`);
+    } catch {
+      throw new Error("Please enter a valid website URL (e.g., example.com or https://example.com).");
+    }
+  }
+
   const updateData: Record<string, unknown> = {};
   if (updates.name !== undefined) updateData.name = updates.name.trim();
   if (updates.description !== undefined)
     updateData.description = updates.description;
+  if (updates.website !== undefined)
+    updateData.website = updates.website?.trim() || null;
 
   const { error } = await supabase
     .from("teams")

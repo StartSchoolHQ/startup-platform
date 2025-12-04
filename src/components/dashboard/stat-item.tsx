@@ -18,7 +18,7 @@ export function StatItem({ stat }: StatItemProps) {
             : "bg-primary/10"
         }
       />
-      <div>
+      <div className="flex-1 min-w-0">
         <div className="text-lg font-bold">{stat.value}</div>
         <div className="text-sm text-muted-foreground">{stat.label}</div>
       </div>

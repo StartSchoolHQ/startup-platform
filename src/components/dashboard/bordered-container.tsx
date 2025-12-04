@@ -13,7 +13,7 @@ export function BorderedContainer({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 border border-border rounded-lg p-2",
+        "flex items-center gap-3 border border-border rounded-lg p-2 min-h-[64px]",
         className
       )}
     >

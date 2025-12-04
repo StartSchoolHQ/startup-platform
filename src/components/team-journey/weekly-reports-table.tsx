@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Calendar, Users, CheckCircle, X, Eye } from "lucide-react";
+import { Calendar, Users, CheckCircle, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -126,7 +126,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-                        <Calendar className="h-4 w-4 text-primary" />
+                        <Calendar className="h-4 w-4 text-black dark:text-white" />
                       </div>
                       <div>
                         <div className="font-medium text-sm text-foreground">
@@ -155,7 +155,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-1">
-                      <Users className="h-4 w-4 text-primary" />
+                      <Users className="h-4 w-4 text-black dark:text-white" />
                       <span className="text-sm font-medium text-foreground">
                         {report.clients}
                       </span>
@@ -163,7 +163,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4 text-primary" />
+                      <Calendar className="h-4 w-4 text-black dark:text-white" />
                       <span className="text-sm font-medium">
                         {report.meetings}
                       </span>
@@ -178,7 +178,6 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                           className="text-xs border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                           onClick={() => handleViewReport(report)}
                         >
-                          <Eye className="h-3 w-3 mr-1" />
                           View Report
                         </Button>
                       )}

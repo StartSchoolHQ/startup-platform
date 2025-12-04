@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Eye, Plus, Calendar, CheckCircle } from "lucide-react";
+import { Plus, Calendar, CheckCircle } from "lucide-react";
 import { IndividualWeeklyReportModal } from "./individual-weekly-report-modal";
 import {
   getUserIndividualWeeklyReports,
@@ -197,7 +197,6 @@ export function IndividualWeeklyReportsTable({
                             className="text-xs border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                             onClick={() => handleViewReport(report)}
                           >
-                            <Eye className="h-3 w-3 mr-1" />
                             View Report
                           </Button>
                           <Button

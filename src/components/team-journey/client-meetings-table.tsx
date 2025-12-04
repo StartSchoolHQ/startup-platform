@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Building2, Zap, CreditCard, Eye } from "lucide-react";
+import { Building2, Zap, CreditCard } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { getTeamClientMeetings } from "@/lib/database";
 import { toast } from "sonner";
@@ -109,7 +109,10 @@ export function ClientMeetingsTable({
                 Responsible
               </th>
               <th className="text-left py-4 px-4 font-medium text-muted-foreground">
-                Rewards
+                XP
+              </th>
+              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                Points
               </th>
               <th className="text-right py-4 px-4 font-medium text-muted-foreground">
                 Actions
@@ -127,7 +130,7 @@ export function ClientMeetingsTable({
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-                      <Building2 className="h-4 w-4 text-primary" />
+                      <Building2 className="h-4 w-4 text-black dark:text-white" />
                     </div>
                     <div>
                       <div className="font-medium text-sm">
@@ -168,15 +171,15 @@ export function ClientMeetingsTable({
                   </div>
                 </td>
                 <td className="py-4 px-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1">
-                      <Zap className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium">50</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <CreditCard className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium">25</span>
-                    </div>
+                  <div className="flex items-center gap-1">
+                    <Zap className="h-4 w-4 text-black dark:text-white" />
+                    <span className="text-sm font-medium">50</span>
+                  </div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="flex items-center gap-1">
+                    <CreditCard className="h-4 w-4 text-black dark:text-white" />
+                    <span className="text-sm font-medium">25</span>
                   </div>
                 </td>
                 <td className="py-4 px-4">
@@ -187,7 +190,6 @@ export function ClientMeetingsTable({
                       className="text-xs border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                       onClick={() => handleViewMeeting(meeting)}
                     >
-                      <Eye className="h-3 w-3 mr-1" />
                       View
                     </Button>
                   </div>

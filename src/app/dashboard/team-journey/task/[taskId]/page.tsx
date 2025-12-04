@@ -441,7 +441,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                   <CardTitle className="text-lg font-semibold">
                     Task Information
                   </CardTitle>
-                  <Button variant="link" className="text-blue-500 p-0 h-auto">
+                  <Button variant="link" className="text-blue-500 p-0 h-auto" disabled>
                     Suggest Edits
                   </Button>
                 </CardHeader>
@@ -517,7 +517,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                   <CardTitle className="text-lg font-semibold">
                     Tips for task
                   </CardTitle>
-                  <Button variant="link" className="text-blue-500 p-0 h-auto">
+                  <Button variant="link" className="text-blue-500 p-0 h-auto" disabled>
                     Suggest Edits
                   </Button>
                 </CardHeader>
@@ -602,7 +602,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                   <CardTitle className="text-lg font-semibold">
                     Peer Review Criteria
                   </CardTitle>
-                  <Button variant="link" className="text-blue-500 p-0 h-auto">
+                  <Button variant="link" className="text-blue-500 p-0 h-auto" disabled>
                     Suggest Edits
                   </Button>
                 </CardHeader>
@@ -1312,8 +1312,8 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
             <CardContent className="space-y-3">
               {/* Assigned User Info */}
               {task.assigned_to_user_id ? (
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-8 h-8">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar className="w-8 h-8 flex-shrink-0">
                     <AvatarImage
                       src={task.assignee_avatar_url || "/avatars/john-doe.jpg"}
                     />
@@ -1324,11 +1324,11 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                         .join("") || "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <div className="text-sm font-medium">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium truncate">
                       {task.assignee_name || "Unknown User"}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-muted-foreground truncate">
                       {task.assigned_at
                         ? formatDate(task.assigned_at, "date-only")
                         : "Recently assigned"}

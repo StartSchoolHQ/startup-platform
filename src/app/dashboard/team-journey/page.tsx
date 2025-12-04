@@ -54,23 +54,21 @@ export default function TeamJourneyPage() {
       // Load all products
       const allTeams = await getAllTeamsForJourney(user.id, options);
       setAllProducts(
-        allTeams
-          .filter((team) => Array.isArray(team.team_members))
+        (allTeams as DatabaseTeam[])
+          .filter((team) => team && Array.isArray(team.team_members))
           .map((team) =>
-            transformTeamToProduct(team as unknown as DatabaseTeam, user.id)
+            transformTeamToProduct(team, user.id)
           )
-        // ...existing code...
       );
 
       // Load user's products
       const userTeams = await getUserTeamsForJourney(user.id, options);
       setMyProducts(
-        userTeams
-          .filter((team) => Array.isArray(team.team_members))
+        (userTeams as DatabaseTeam[])
+          .filter((team) => team && Array.isArray(team.team_members))
           .map((team) =>
-            transformTeamToProduct(team as unknown as DatabaseTeam, user.id)
+            transformTeamToProduct(team, user.id)
           )
-        // ...existing code...
       );
 
       // Load archived products
@@ -80,12 +78,11 @@ export default function TeamJourneyPage() {
         sortOrder,
       });
       setArchivedProducts(
-        archivedTeams
-          .filter((team) => Array.isArray(team.team_members))
+        (archivedTeams as DatabaseTeam[])
+          .filter((team) => team && Array.isArray(team.team_members))
           .map((team) =>
-            transformTeamToProduct(team as unknown as DatabaseTeam, user.id)
+            transformTeamToProduct(team, user.id)
           )
-        // ...existing code...
       );
     } catch (error) {
       console.error("Error loading team data:", error);
@@ -179,7 +176,7 @@ export default function TeamJourneyPage() {
 
               {/* Add Product */}
               <Button
-                className="gap-2 bg-foreground text-background hover:bg-foreground/80"
+                className="gap-2 bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
                 onClick={() => setShowCreateTeamDialog(true)}
               >
                 <Plus className="h-4 w-4" />

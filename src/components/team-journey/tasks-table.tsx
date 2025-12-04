@@ -185,13 +185,13 @@ export function TasksTable({
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-1">
-                    <Zap className="h-4 w-4 text-primary" />
+                    <Zap className="h-4 w-4 text-black dark:text-white" />
                     <span className="text-sm font-medium">{task.xp}</span>
                   </div>
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-1">
-                    <CreditCard className="h-4 w-4 text-primary" />
+                    <CreditCard className="h-4 w-4 text-black dark:text-white" />
                     <span className="text-sm font-medium">{task.points}</span>
                   </div>
                 </td>
