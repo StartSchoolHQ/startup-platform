@@ -632,7 +632,7 @@ export function TaskDetailsModal({
                 ? "bg-green-600 hover:bg-green-700 text-white"
                 : reviewDecision === "rejected"
                 ? "bg-red-600 hover:bg-red-700 text-white"
-                : ""
+                : "bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
             }`}
           >
             {submittingReview ? (
