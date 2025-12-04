@@ -3175,7 +3175,8 @@ export async function getSubmittedTasksHistory(userId: string) {
       reviewer: reviewerInfo,
       total_reviews: task.peer_review_history
         ? (task.peer_review_history as Record<string, unknown>[]).filter(
-            (entry: Record<string, unknown>) => entry.event_type === "review_completed"
+            (entry: Record<string, unknown>) =>
+              entry.event_type === "review_completed"
           ).length
         : 0,
     };
