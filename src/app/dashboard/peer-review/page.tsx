@@ -499,7 +499,12 @@ export default function PeerReviewPage() {
             Compete with others and track your progress
           </p>
         </div>
-        <Button variant="outline" className="gap-2">
+        <Button
+          variant="outline"
+          className="gap-2"
+          disabled
+          title="Coming soon"
+        >
           <ExternalLink className="h-4 w-4" />
           Read About Testing
         </Button>

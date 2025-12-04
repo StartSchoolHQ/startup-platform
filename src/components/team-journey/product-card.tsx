@@ -114,7 +114,7 @@ export function ProductCard({ product }: ProductCardProps) {
             >
               <a
                 href={
-                  product.website.startsWith('http')
+                  product.website.startsWith("http")
                     ? product.website
                     : `https://${product.website}`
                 }

@@ -443,7 +443,12 @@ export default function LeaderboardPageClient({
           </SelectContent>
         </Select>
 
-        <Button variant="outline" className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          className="flex items-center gap-2"
+          disabled
+          title="Coming soon"
+        >
           <BookOpen className="h-4 w-4" />
           Read About Rankings
         </Button>

@@ -61,6 +61,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   const [task, setTask] = useState<TeamTask | null>(null);
   const [loading, setLoading] = useState(true);
   const [taskId, setTaskId] = useState<string | null>(null);
+  const [teamName, setTeamName] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [showReassignModal, setShowReassignModal] = useState(false);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
@@ -101,6 +102,20 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
       // Use new lazy progress function that handles both task_id and progress_id
       const taskData = await getTaskByIdLazy(taskId, user.id);
       setTask(taskData);
+
+      // Load team name if task has team_id
+      if (taskData && taskData.team_id) {
+        const supabase = createClient();
+        const { data: teamData } = await supabase
+          .from("teams")
+          .select("name")
+          .eq("id", taskData.team_id)
+          .single();
+
+        if (teamData) {
+          setTeamName(teamData.name);
+        }
+      }
 
       // Load permissions and team members if task data is available
       // For lazy progress: taskData.progress_id might be null for new tasks
@@ -368,13 +383,18 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                   task.team_id || task.teams?.id
                 }`}
               >
-                {task.teams?.name || "Team"}
+                {teamName || task.teams?.name || "Product"}
               </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <span className="font-medium">{task.title}</span>
+            <span
+              className="font-medium truncate max-w-[200px]"
+              title={task.title}
+            >
+              {task.title}
+            </span>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -441,7 +461,12 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                   <CardTitle className="text-lg font-semibold">
                     Task Information
                   </CardTitle>
-                  <Button variant="link" className="text-blue-500 p-0 h-auto" disabled>
+                  <Button
+                    variant="link"
+                    className="text-blue-500 p-0 h-auto"
+                    disabled
+                    title="Coming soon"
+                  >
                     Suggest Edits
                   </Button>
                 </CardHeader>
@@ -482,7 +507,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                           {task.learning_objectives.map((objective, index) => (
                             <li key={index} className="flex items-start gap-2">
                               <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
-                              {objective}
+                              <span className="break-words">{objective}</span>
                             </li>
                           ))}
                         </ul>
@@ -501,7 +526,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                           {task.deliverables.map((deliverable, index) => (
                             <li key={index} className="flex items-start gap-2">
                               <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                              {deliverable}
+                              <span className="break-words">{deliverable}</span>
                             </li>
                           ))}
                         </ul>
@@ -517,7 +542,12 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                   <CardTitle className="text-lg font-semibold">
                     Tips for task
                   </CardTitle>
-                  <Button variant="link" className="text-blue-500 p-0 h-auto" disabled>
+                  <Button
+                    variant="link"
+                    className="text-blue-500 p-0 h-auto"
+                    disabled
+                    title="Coming soon"
+                  >
                     Suggest Edits
                   </Button>
                 </CardHeader>
@@ -602,7 +632,12 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                   <CardTitle className="text-lg font-semibold">
                     Peer Review Criteria
                   </CardTitle>
-                  <Button variant="link" className="text-blue-500 p-0 h-auto" disabled>
+                  <Button
+                    variant="link"
+                    className="text-blue-500 p-0 h-auto"
+                    disabled
+                    title="Coming soon"
+                  >
                     Suggest Edits
                   </Button>
                 </CardHeader>
@@ -1395,7 +1430,9 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                       disabled
                     >
                       <User className="h-4 w-4" />
-                      View Info - In Progress by {task.assignee_name}
+                      <span className="truncate">
+                        View Info - In Progress by {task.assignee_name}
+                      </span>
                     </Button>
                   )}
                 </div>
@@ -1425,7 +1462,9 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                     disabled
                   >
                     <User className="h-4 w-4" />
-                    View Info - Needs Revision by {task.assignee_name}
+                    <span className="truncate">
+                      View Info - Needs Revision by {task.assignee_name}
+                    </span>
                   </Button>
                 )
               ) : task.status === "cancelled" ? (

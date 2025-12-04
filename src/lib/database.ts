@@ -1614,9 +1614,15 @@ export async function updateTeamDetails(
     }
     // Basic URL format validation
     try {
-      new URL(trimmedWebsite.startsWith('http') ? trimmedWebsite : `https://${trimmedWebsite}`);
+      new URL(
+        trimmedWebsite.startsWith("http")
+          ? trimmedWebsite
+          : `https://${trimmedWebsite}`
+      );
     } catch {
-      throw new Error("Please enter a valid website URL (e.g., example.com or https://example.com).");
+      throw new Error(
+        "Please enter a valid website URL (e.g., example.com or https://example.com)."
+      );
     }
   }
 

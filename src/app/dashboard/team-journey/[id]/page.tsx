@@ -820,8 +820,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="gap-2"
             disabled={!team.website}
             asChild={!!team.website}
@@ -829,7 +829,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             {team.website ? (
               <a
                 href={
-                  team.website.startsWith('http')
+                  team.website.startsWith("http")
                     ? team.website
                     : `https://${team.website}`
                 }

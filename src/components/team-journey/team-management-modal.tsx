@@ -714,7 +714,8 @@ export function TeamManagementModal({
                     <Label htmlFor="teamWebsite">Team Website (optional)</Label>
                     <span
                       className={`text-xs ${
-                        editFormData.website && editFormData.website.length > 230
+                        editFormData.website &&
+                        editFormData.website.length > 230
                           ? "text-destructive"
                           : "text-muted-foreground"
                       }`}
@@ -746,7 +747,8 @@ export function TeamManagementModal({
                       !editFormData.name.trim() ||
                       editFormData.name.length > 100 ||
                       editFormData.description.length > 500 ||
-                      (editFormData.website && editFormData.website.length > 255) ||
+                      (editFormData.website &&
+                        editFormData.website.length > 255) ||
                       (editFormData.name === team.name &&
                         editFormData.description === (team.description || "") &&
                         editFormData.website === (team.website || ""))

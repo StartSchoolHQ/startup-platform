@@ -121,7 +121,12 @@ export default function IndividualTaskDetailPage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <span className="font-medium">{task.title}</span>
+            <span
+              className="font-medium truncate max-w-[200px]"
+              title={task.title}
+            >
+              {task.title}
+            </span>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -160,7 +165,12 @@ export default function IndividualTaskDetailPage() {
                   <CardTitle className="text-lg font-semibold">
                     Task Information
                   </CardTitle>
-                  <Button variant="link" className="text-blue-500 p-0 h-auto">
+                  <Button
+                    variant="link"
+                    className="text-blue-500 p-0 h-auto"
+                    disabled
+                    title="Coming soon"
+                  >
                     Suggest Edits
                   </Button>
                 </CardHeader>
@@ -201,7 +211,7 @@ export default function IndividualTaskDetailPage() {
                           {task.learning_objectives.map((objective, index) => (
                             <li key={index} className="flex items-start gap-2">
                               <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
-                              {objective}
+                              <span className="break-words">{objective}</span>
                             </li>
                           ))}
                         </ul>
@@ -220,7 +230,7 @@ export default function IndividualTaskDetailPage() {
                           {task.deliverables.map((deliverable, index) => (
                             <li key={index} className="flex items-start gap-2">
                               <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                              {deliverable}
+                              <span className="break-words">{deliverable}</span>
                             </li>
                           ))}
                         </ul>
@@ -236,7 +246,12 @@ export default function IndividualTaskDetailPage() {
                   <CardTitle className="text-lg font-semibold">
                     Tips for task
                   </CardTitle>
-                  <Button variant="link" className="text-blue-500 p-0 h-auto">
+                  <Button
+                    variant="link"
+                    className="text-blue-500 p-0 h-auto"
+                    disabled
+                    title="Coming soon"
+                  >
                     Suggest Edits
                   </Button>
                 </CardHeader>

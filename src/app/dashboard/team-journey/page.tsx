@@ -56,9 +56,7 @@ export default function TeamJourneyPage() {
       setAllProducts(
         (allTeams as DatabaseTeam[])
           .filter((team) => team && Array.isArray(team.team_members))
-          .map((team) =>
-            transformTeamToProduct(team, user.id)
-          )
+          .map((team) => transformTeamToProduct(team, user.id))
       );
 
       // Load user's products
@@ -66,9 +64,7 @@ export default function TeamJourneyPage() {
       setMyProducts(
         (userTeams as DatabaseTeam[])
           .filter((team) => team && Array.isArray(team.team_members))
-          .map((team) =>
-            transformTeamToProduct(team, user.id)
-          )
+          .map((team) => transformTeamToProduct(team, user.id))
       );
 
       // Load archived products
@@ -80,9 +76,7 @@ export default function TeamJourneyPage() {
       setArchivedProducts(
         (archivedTeams as DatabaseTeam[])
           .filter((team) => team && Array.isArray(team.team_members))
-          .map((team) =>
-            transformTeamToProduct(team, user.id)
-          )
+          .map((team) => transformTeamToProduct(team, user.id))
       );
     } catch (error) {
       console.error("Error loading team data:", error);
@@ -121,7 +115,7 @@ export default function TeamJourneyPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">My Products</h1>
+          <h1 className="text-2xl font-bold">All Products</h1>
         </div>
         <div className="flex items-center justify-center h-64">
           <div className="text-muted-foreground">Loading...</div>
@@ -134,7 +128,7 @@ export default function TeamJourneyPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">My Products</h1>
+        <h1 className="text-2xl font-bold">All Products</h1>
       </div>
 
       {/* Tabs and Controls */}
