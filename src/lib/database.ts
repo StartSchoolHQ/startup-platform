@@ -1488,6 +1488,122 @@ export async function getInvitationCount(userId: string): Promise<number> {
   return count || 0;
 }
 
+// Simple notification types
+export interface Notification {
+  id: string;
+  type: "review_completed" | "review_rejected";
+  title: string;
+  taskId: string;
+  taskTitle: string;
+  timestamp: string;
+  icon: "check-circle" | "x-circle";
+}
+
+// Get simple notifications - only review completions for the user
+export async function getUserNotifications(
+  userId: string
+): Promise<Notification[]> {
+  const supabase = createClient();
+  const notifications: Notification[] = [];
+
+  // Get recent task completions for this user (last 7 days, not seen)
+  const sevenDaysAgo = new Date(
+    Date.now() - 7 * 24 * 60 * 60 * 1000
+  ).toISOString();
+
+  const { data: completedTasks, error } = await supabase
+    .from("task_progress")
+    .select(
+      `
+      id,
+      status,
+      updated_at,
+      task_id,
+      metadata
+    `
+    )
+    .eq("assigned_to_user_id", userId)
+    .in("status", ["approved", "rejected"])
+    .gte("updated_at", sevenDaysAgo)
+    .order("updated_at", { ascending: false });
+
+  if (!error && completedTasks) {
+    for (const task of completedTasks) {
+      // Skip if already seen
+      const metadata = task.metadata as Record<string, unknown> | null;
+      const seenByUsers = (metadata?.seen_by_users as string[]) || [];
+      if (seenByUsers.includes(userId)) continue;
+
+      // Get task title
+      const { data: taskData } = await supabase
+        .from("tasks")
+        .select("title")
+        .eq("id", task.task_id)
+        .single();
+
+      notifications.push({
+        id: task.id,
+        type:
+          task.status === "approved" ? "review_completed" : "review_rejected",
+        title:
+          task.status === "approved"
+            ? "Review Completed ✅"
+            : "Review Rejected ❌",
+        taskId: task.id,
+        taskTitle: taskData?.title || "Unknown Task",
+        timestamp: task.updated_at,
+        icon: task.status === "approved" ? "check-circle" : "x-circle",
+      });
+    }
+  }
+
+  return notifications;
+}
+
+// Get notification count for badge display
+export async function getNotificationCount(userId: string): Promise<number> {
+  const notifications = await getUserNotifications(userId);
+  return notifications.length;
+}
+
+// Mark notification as seen
+export async function markNotificationSeen(
+  taskProgressId: string,
+  userId: string
+): Promise<boolean> {
+  const supabase = createClient();
+
+  try {
+    // Get current metadata
+    const { data: task } = await supabase
+      .from("task_progress")
+      .select("metadata")
+      .eq("id", taskProgressId)
+      .single();
+
+    const metadata = (task?.metadata as Record<string, unknown>) || {};
+    const seenByUsers = (metadata.seen_by_users as string[]) || [];
+
+    if (!seenByUsers.includes(userId)) {
+      seenByUsers.push(userId);
+
+      const { error } = await supabase
+        .from("task_progress")
+        .update({
+          metadata: { ...metadata, seen_by_users: seenByUsers },
+        })
+        .eq("id", taskProgressId);
+
+      return !error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error marking notification as seen:", error);
+    return false;
+  }
+}
+
 // Remove a team member (for team management)
 export async function removeTeamMember(
   teamId: string,
@@ -2758,7 +2874,34 @@ export async function assignTeamTaskToProgress(
 export async function getCompletedPeerReviews(userId: string) {
   const supabase = createClient();
 
-  // Get all tasks where the user appears in peer_review_history with completed reviews
+  // First, get all task transactions where this user was the reviewer (validation type)
+  // This gives us the progress_ids of tasks they reviewed
+  const { data: reviewTransactions, error: transactionsError } = await supabase
+    .from("transactions")
+    .select("metadata")
+    .eq("user_id", userId)
+    .eq("type", "validation")
+    .not("metadata", "is", null);
+
+  if (transactionsError) {
+    console.error("Error fetching review transactions:", transactionsError);
+    throw transactionsError;
+  }
+
+  if (!reviewTransactions || reviewTransactions.length === 0) {
+    return [];
+  }
+
+  // Extract progress_ids from transaction metadata
+  const progressIds = reviewTransactions
+    .map((t) => (t.metadata as Record<string, unknown>)?.progress_id as string)
+    .filter((id) => id);
+
+  if (progressIds.length === 0) {
+    return [];
+  }
+
+  // Get task_progress data for these progress_ids
   const { data: taskProgressData, error } = await supabase
     .from("task_progress")
     .select(
@@ -2789,6 +2932,7 @@ export async function getCompletedPeerReviews(userId: string) {
       )
     `
     )
+    .in("id", progressIds)
     .eq("context", "team")
     .not("peer_review_history", "is", null)
     .order("updated_at", { ascending: false });
@@ -2915,6 +3059,129 @@ export async function getCompletedPeerReviews(userId: string) {
   }));
 
   return combinedData;
+}
+
+/**
+ * Get tasks submitted by the user that were peer reviewed (for user's History view)
+ * This shows tasks the user submitted and their review outcomes
+ */
+export async function getSubmittedTasksHistory(userId: string) {
+  const supabase = createClient();
+
+  // Get all task_progress records that were assigned to this user and have peer review history
+  // This covers both approved and rejected tasks that went through peer review
+
+  const { data: taskProgressData, error } = await supabase
+    .from("task_progress")
+    .select(
+      `
+      id,
+      task_id,
+      team_id,
+      assigned_to_user_id,
+      completed_at,
+      updated_at,
+      submission_data,
+      submission_notes,
+      status,
+      review_feedback,
+      peer_review_history,
+      tasks(
+        id,
+        title,
+        description,
+        difficulty_level,
+        base_xp_reward,
+        base_points_reward,
+        category
+      ),
+      teams(
+        id,
+        name
+      )
+    `
+    )
+    .eq("assigned_to_user_id", userId)
+    .eq("context", "team")
+    .not("peer_review_history", "is", null)
+    .order("updated_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching submitted tasks history:", error);
+    throw error;
+  }
+
+  if (!taskProgressData || taskProgressData.length === 0) {
+    return [];
+  }
+
+  // Transform data to show the task submission and its review outcomes
+  interface PeerReviewHistoryEntry {
+    event_type: string;
+    reviewer_id: string;
+    feedback: string;
+    decision: "approved" | "rejected";
+    timestamp: string;
+    reviewer_name: string;
+    reviewer_avatar_url: string;
+  }
+
+  const submittedTasks = taskProgressData.map((task) => {
+    let latestReviewDecision = null;
+    let latestReviewFeedback = null;
+    let reviewerInfo = null;
+
+    if (task.peer_review_history && Array.isArray(task.peer_review_history)) {
+      // Get the most recent completed review
+      const completedReviews = (
+        task.peer_review_history as unknown as PeerReviewHistoryEntry[]
+      ).filter(
+        (historyEntry: PeerReviewHistoryEntry) =>
+          historyEntry.event_type === "review_completed" &&
+          historyEntry.decision
+      );
+
+      if (completedReviews.length > 0) {
+        // Sort by timestamp to get the most recent
+        completedReviews.sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+
+        const latestReview = completedReviews[0];
+        latestReviewDecision = latestReview.decision;
+        latestReviewFeedback = latestReview.feedback;
+        reviewerInfo = {
+          id: latestReview.reviewer_id,
+          name: latestReview.reviewer_name,
+          avatar_url: latestReview.reviewer_avatar_url,
+        };
+      }
+    }
+
+    return {
+      id: task.id,
+      task_id: task.task_id,
+      team_id: task.team_id,
+      assigned_to_user_id: task.assigned_to_user_id,
+      completed_at: task.completed_at,
+      updated_at: task.updated_at,
+      submission_data: task.submission_data,
+      submission_notes: task.submission_notes,
+      status: latestReviewDecision || task.status, // Use review decision if available
+      review_feedback: latestReviewFeedback || task.review_feedback,
+      tasks: task.tasks,
+      teams: task.teams,
+      reviewer: reviewerInfo,
+      total_reviews: task.peer_review_history
+        ? (task.peer_review_history as Record<string, unknown>[]).filter(
+            (entry: Record<string, unknown>) => entry.event_type === "review_completed"
+          ).length
+        : 0,
+    };
+  });
+
+  return submittedTasks;
 }
 
 // Rich content interfaces

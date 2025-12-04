@@ -37,6 +37,7 @@ export default function TeamJourneyPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchInput, setSearchInput] = useState(""); // Separate state for input value
   const [sortBy, setSortBy] = useState<SortOption>("date");
+  const [activeTab, setActiveTab] = useState("all-products");
   const sortOrder: SortOrder = "desc"; // Fixed sort order for now
 
   const loadData = useCallback(async () => {
@@ -45,13 +46,12 @@ export default function TeamJourneyPage() {
     setLoading(true);
     try {
       const options = {
-        searchQuery: searchQuery || undefined,
         sortBy,
         sortOrder,
         status: "all" as const,
       };
 
-      // Load all products
+      // Load all products (no search query - filter client-side)
       const allTeams = await getAllTeamsForJourney(user.id, options);
       setAllProducts(
         (allTeams as DatabaseTeam[])
@@ -69,7 +69,6 @@ export default function TeamJourneyPage() {
 
       // Load archived products
       const archivedTeams = await getArchivedTeamsForJourney(user.id, {
-        searchQuery: searchQuery || undefined,
         sortBy,
         sortOrder,
       });
@@ -83,7 +82,7 @@ export default function TeamJourneyPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, searchQuery, sortBy, sortOrder]);
+  }, [user?.id, sortBy, sortOrder]);
 
   useEffect(() => {
     loadData();
@@ -111,11 +110,42 @@ export default function TeamJourneyPage() {
     loadData();
   };
 
+  // Client-side filtering function
+  const filterProducts = (products: Product[]) => {
+    if (!searchQuery.trim()) return products;
+
+    const query = searchQuery.toLowerCase();
+    return products.filter(
+      (product) =>
+        product.name.toLowerCase().includes(query) ||
+        product.description?.toLowerCase().includes(query)
+    );
+  };
+
+  // Get filtered products for each tab
+  const filteredAllProducts = filterProducts(allProducts);
+  const filteredMyProducts = filterProducts(myProducts);
+  const filteredArchivedProducts = filterProducts(archivedProducts);
+
+  // Get header text based on active tab
+  const getHeaderText = () => {
+    switch (activeTab) {
+      case "all-products":
+        return "All Products";
+      case "my-products":
+        return "My Products";
+      case "archive":
+        return "Archive";
+      default:
+        return "All Products";
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">All Products</h1>
+          <h1 className="text-2xl font-bold">{getHeaderText()}</h1>
         </div>
         <div className="flex items-center justify-center h-64">
           <div className="text-muted-foreground">Loading...</div>
@@ -128,13 +158,18 @@ export default function TeamJourneyPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">All Products</h1>
+        <h1 className="text-2xl font-bold">{getHeaderText()}</h1>
       </div>
 
       {/* Tabs and Controls */}
       <div className="space-y-4">
         {/* Tabs */}
-        <Tabs defaultValue="all-products" className="w-full">
+        <Tabs
+          defaultValue="all-products"
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-full"
+        >
           <div className="flex items-center justify-between">
             <TabsList className="grid w-fit grid-cols-3">
               <TabsTrigger value="all-products">All Products</TabsTrigger>
@@ -181,13 +216,15 @@ export default function TeamJourneyPage() {
 
           {/* Tab Content */}
           <TabsContent value="all-products" className="space-y-4 mt-6">
-            {allProducts.length === 0 ? (
+            {filteredAllProducts.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No products found
+                {searchQuery
+                  ? "No products found matching your search"
+                  : "No products found"}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-                {allProducts.map((product) => (
+                {filteredAllProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
@@ -195,14 +232,15 @@ export default function TeamJourneyPage() {
           </TabsContent>
 
           <TabsContent value="my-products" className="space-y-4 mt-6">
-            {myProducts.length === 0 ? (
+            {filteredMyProducts.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                You haven&apos;t created any products yet. Click &quot;Add
-                Product&quot; to get started!
+                {searchQuery
+                  ? "No products found matching your search"
+                  : 'You haven\'t created any products yet. Click "Add Product" to get started!'}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-                {myProducts.map((product) => (
+                {filteredMyProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
@@ -210,13 +248,15 @@ export default function TeamJourneyPage() {
           </TabsContent>
 
           <TabsContent value="archive" className="space-y-4 mt-6">
-            {archivedProducts.length === 0 ? (
+            {filteredArchivedProducts.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No archived products
+                {searchQuery
+                  ? "No archived products found matching your search"
+                  : "No archived products"}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-                {archivedProducts.map((product) => (
+                {filteredArchivedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>

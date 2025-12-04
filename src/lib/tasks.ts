@@ -976,20 +976,37 @@ export async function startTask(
     // First assign the task to the user, then update status
     await assignTaskToMember(progressId, userId);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any).rpc("update_task_status", {
-      p_progress_id: progressId,
-      p_status: "in_progress",
-    });
+    // Direct update to avoid RPC version conflicts
+    const { error } = await supabase
+      .from("task_progress")
+      .update({
+        status: "in_progress",
+        started_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", progressId);
 
     if (error) {
-      console.error("Error starting task:", error);
+      console.error("Error starting task:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        progressId,
+        fullError: error,
+      });
       return false;
     }
 
-    return data?.[0]?.success || false;
+    return true;
   } catch (error) {
-    console.error("Error in startTask:", error);
+    console.error("Error in startTask:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      progressId,
+      userId,
+      fullError: error,
+    });
     return false;
   }
 }
@@ -1015,22 +1032,40 @@ export async function completeTask(
 
     const supabase = createClient();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any).rpc("update_task_status", {
-      p_progress_id: progressId,
-      p_status: "pending_review",
-      p_submission_data: JSON.stringify(submissionData),
-      p_submission_notes: submissionData.notes as string,
-    });
+    // Direct update to avoid RPC version conflicts
+    const { error } = await supabase
+      .from("task_progress")
+      .update({
+        status: "pending_review",
+        completed_at: new Date().toISOString(),
+        submission_data: JSON.stringify(submissionData),
+        submission_notes: submissionData.notes as string,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", progressId);
 
     if (error) {
-      console.error("Error completing task:", error);
+      console.error("Error completing task:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        progressId,
+        fullError: error,
+      });
       return false;
     }
 
-    return data?.[0]?.success || false;
+    // Peer review history will be managed by the peer review system itself
+
+    return true;
   } catch (error) {
-    console.error("Error in completeTask:", error);
+    console.error("Error in completeTask:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      progressId,
+      fullError: error,
+    });
     return false;
   }
 }
@@ -1049,20 +1084,37 @@ export async function cancelTask(
 
     const supabase = createClient();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any).rpc("update_task_status", {
-      p_progress_id: progressId,
-      p_status: "cancelled",
-    });
+    // Direct update to avoid RPC version conflicts
+    const { error } = await supabase
+      .from("task_progress")
+      .update({
+        status: "cancelled",
+        cancelled_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", progressId);
 
     if (error) {
-      console.error("Error cancelling task:", error);
+      console.error("Error cancelling task:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        progressId,
+        fullError: error,
+      });
       return false;
     }
 
-    return data?.[0]?.success || false;
+    return true;
   } catch (error) {
-    console.error("Error in cancelTask:", error);
+    console.error("Error in cancelTask:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      progressId,
+      userId,
+      fullError: error,
+    });
     return false;
   }
 }
@@ -1081,23 +1133,68 @@ export async function retryTask(
 
     const supabase = createClient();
 
-    // Reset to in_progress and assign to user
-    await assignTaskToMember(progressId, userId);
+    // Get the team_id from the existing task_progress record
+    const { data: progressData } = await supabase
+      .from("task_progress")
+      .select("team_id")
+      .eq("id", progressId)
+      .single();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any).rpc("update_task_status", {
-      p_progress_id: progressId,
-      p_status: "in_progress",
-    });
-
-    if (error) {
-      console.error("Error retrying task:", error);
+    if (!progressData?.team_id) {
+      console.error("Could not find team_id for progress_id:", progressId);
       return false;
     }
 
-    return data?.[0]?.success || false;
+    // Use single timestamp to avoid race condition
+    const now = new Date().toISOString();
+
+    // Reset to in_progress and assign to user
+    const assignSuccess = await assignTaskToMember(
+      progressId,
+      userId,
+      progressData.team_id
+    );
+    if (!assignSuccess) {
+      console.error("Failed to assign task to user during retry");
+      return false;
+    }
+
+    // Direct update instead of RPC to avoid version conflicts
+    const { error } = await supabase
+      .from("task_progress")
+      .update({
+        status: "in_progress",
+        started_at: now,
+        completed_at: null,
+        cancelled_at: null,
+        reviewer_user_id: null,
+        review_feedback: null,
+        peer_review_history: null, // Clear old review history on retry
+        updated_at: now,
+      })
+      .eq("id", progressId);
+
+    if (error) {
+      console.error("Error updating task status during retry:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        progressId,
+        fullError: error,
+      });
+      return false;
+    }
+
+    return true;
   } catch (error) {
-    console.error("Error in retryTask:", error);
+    console.error("Error in retryTask:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      progressId,
+      userId,
+      fullError: error,
+    });
     return false;
   }
 }

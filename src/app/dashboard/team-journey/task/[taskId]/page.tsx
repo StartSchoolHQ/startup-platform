@@ -45,6 +45,8 @@ import {
 import { useAppContext } from "@/contexts/app-context";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { taskNotificationManager } from "@/hooks/use-task-notifications";
+import { toast } from "sonner";
 import { TaskDetailsModal } from "@/components/ui/task-details-modal";
 import { StatusBadge, TaskStatus } from "@/components/ui/status-badge";
 import { formatDate } from "@/lib/date-utils";
@@ -246,8 +248,20 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
       if (success) {
         setShowSubmissionModal(false);
         await loadTask(); // Reload task to get updated status
+
+        // Refresh notifications for all users
+        taskNotificationManager.refresh();
+
+        // Enhanced success feedback with toast
+        toast.success("Task Submitted Successfully! ✅", {
+          description:
+            "Your task is in the peer review queue. You'll be notified when complete (2-3 days).",
+          duration: 5000,
+        });
       } else {
-        console.error("Failed to complete task");
+        toast.error("Failed to submit task", {
+          description: "Please check your internet connection and try again.",
+        });
       }
     } catch (error) {
       console.error("Error completing task:", error);

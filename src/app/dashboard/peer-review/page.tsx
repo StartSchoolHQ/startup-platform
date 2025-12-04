@@ -9,6 +9,8 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DifficultyBadge } from "@/components/ui/difficulty-badge";
+import { taskNotificationManager } from "@/hooks/use-task-notifications";
+import { toast } from "sonner";
 
 import {
   Trophy,
@@ -380,6 +382,43 @@ export default function PeerReviewPage() {
   ) => {
     if (!selectedTaskForReview || !decision || !user?.id) return;
 
+    // Prevent double submission
+    if (submittingReview) {
+      console.log("Already submitting review, ignoring duplicate request");
+      return;
+    }
+
+    // EARLY CONTINUATION CHECK: Determine if this is a valid continuation before blocking
+    const hasPreviouslyReviewedTask = completedReviews.some(
+      (review) => review.task_id === selectedTaskForReview.task_id
+    );
+
+    const isAssignedReviewer = selectedTaskForReview.reviewer?.id === user.id;
+
+    // Allow continuation if user is assigned reviewer OR they have previously reviewed this task
+    const isValidContinuation = isAssignedReviewer || hasPreviouslyReviewedTask;
+
+    // Add debug logging to see what's happening
+    console.log("🚨 EARLY CONTINUATION CHECK:", {
+      task_id: selectedTaskForReview.task_id,
+      user_id: user.id,
+      hasPreviouslyReviewedTask,
+      isAssignedReviewer,
+      isValidContinuation,
+      reviewer_info: selectedTaskForReview.reviewer,
+    });
+
+    // Only block if user has reviewed AND this is NOT a valid continuation scenario
+    if (hasPreviouslyReviewedTask && !isValidContinuation) {
+      toast.error("Already Reviewed", {
+        description:
+          "You have already reviewed this task. Refreshing to sync your view.",
+        duration: 4000,
+      });
+      setTimeout(() => window.location.reload(), 1500);
+      return;
+    }
+
     setSubmittingReview(true);
 
     // Calculate rewards (10% of task rewards, actual values come from backend)
@@ -413,6 +452,62 @@ export default function PeerReviewPage() {
     try {
       const supabase = createClient();
 
+      // Use the continuation variables already defined at the beginning of the function
+      const isResubmissionReview = isValidContinuation;
+
+      // Enhanced logging for debugging continuation logic
+      console.log("🔍 CONTINUATION DETECTION DEBUG:", {
+        task_id: selectedTaskForReview.task_id,
+        current_user_id: user.id,
+        assigned_reviewer_id: selectedTaskForReview.reviewer?.id,
+        is_assigned_reviewer: isAssignedReviewer,
+        has_previously_reviewed: hasPreviouslyReviewedTask,
+        previous_reviews_for_task: completedReviews.filter(
+          (r) => r.task_id === selectedTaskForReview.task_id
+        ),
+        is_continuation: isResubmissionReview,
+        is_valid_continuation: isValidContinuation,
+        continuation_reason: hasPreviouslyReviewedTask
+          ? "Previously reviewed"
+          : isAssignedReviewer
+          ? "Assigned reviewer"
+          : "New review",
+        selectedTask: {
+          id: selectedTaskForReview.id,
+          status: selectedTaskForReview.status,
+          reviewer: selectedTaskForReview.reviewer,
+        },
+      });
+
+      // Log the submission attempt for debugging
+      console.log("Submitting peer review:", {
+        progress_id: selectedTaskForReview.id,
+        task_id: selectedTaskForReview.task_id,
+        user_id: user.id,
+        decision,
+        feedback: feedback || null,
+        is_continuation: isResubmissionReview,
+        previous_reviews: completedReviews.filter(
+          (r) => r.task_id === selectedTaskForReview.task_id
+        ).length,
+      });
+
+      if (isResubmissionReview) {
+        console.log(
+          "🔄 Continuation Review: Same reviewer handling resubmission - bypassing duplicate prevention"
+        );
+        console.log(
+          "✅ Continuation Flag = TRUE - Backend will bypass duplicate check"
+        );
+      } else {
+        console.log(
+          "🆕 New Review: First time reviewing this task - normal duplicate prevention applies"
+        );
+        console.log(
+          "⚠️ Continuation Flag = FALSE - Backend will enforce duplicate prevention"
+        );
+      }
+
       // Call database function to submit peer review
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any).rpc(
@@ -421,6 +516,7 @@ export default function PeerReviewPage() {
           p_progress_id: selectedTaskForReview.id,
           p_decision: decision,
           p_feedback: feedback || null,
+          p_is_continuation: isResubmissionReview, // NEW: Pass continuation flag
         }
       );
 
@@ -431,21 +527,43 @@ export default function PeerReviewPage() {
         setMyAcceptedTasks(originalAcceptedTasks);
         setPeerReviewStats(originalStats);
 
-        setAlertState({
-          variant: "error",
-          message: "Failed to submit review",
-          description:
-            "Please try again or contact support if the issue persists.",
-        });
+        // Show specific error message for duplicate prevention
+        if (error.message?.includes("DUPLICATE PREVENTION")) {
+          const errorContext = isResubmissionReview
+            ? "There was an issue with the continuation review system"
+            : "You have already reviewed this task";
+
+          toast.error("Review Submission Error", {
+            description: `${errorContext}. Refreshing the page to update your view.`,
+            duration: 6000,
+          });
+
+          // Refresh the page after a short delay to sync the UI with database state
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else {
+          toast.error("Failed to submit review", {
+            description:
+              error.message ||
+              "Please try again or contact support if the issue persists.",
+          });
+        }
         return;
       }
 
       if (data?.success) {
-        setAlertState({
-          variant: "success",
-          message: `Review submitted successfully`,
-          description: `Task ${decision}. You earned ${estimatedXP} XP and ${estimatedPoints} points (10% of task rewards).`,
+        // Show toast notification with context about continuation reviews
+        const reviewType = isResubmissionReview ? "Follow-up review" : "Review";
+        toast.success(`${reviewType} submitted successfully! \u2705`, {
+          description: `Task ${decision}. You earned ${estimatedXP} XP and ${estimatedPoints} points.${
+            isResubmissionReview ? " (Continuation review)" : ""
+          }`,
+          duration: 5000,
         });
+
+        // Refresh notifications for all users (reviewer and submitter)
+        taskNotificationManager.refresh();
 
         // Refresh actual stats from database
         try {

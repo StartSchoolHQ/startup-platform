@@ -166,9 +166,17 @@ export function TasksTable({
                         ))}
                       </SelectContent>
                     </Select>
+                  ) : task.isAvailable === false ? (
+                    <span className="text-sm text-muted-foreground">
+                      Locked
+                    </span>
+                  ) : !isTeamMember ? (
+                    <span className="text-sm text-muted-foreground">
+                      Unassigned
+                    </span>
                   ) : (
                     <span className="text-sm text-muted-foreground">
-                      {task.isAvailable === false ? "Locked" : "Choose Member"}
+                      Choose Member
                     </span>
                   )}
                 </td>

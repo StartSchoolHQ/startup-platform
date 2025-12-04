@@ -38,8 +38,41 @@ export function IndividualWeeklyReportModal({
     additionalNotes: "",
   });
 
+  // Validation constant
+  const MIN_TEXT_LENGTH = 20;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate minimum text length for required fields
+    if (formData.tasksCompleted.trim().length < MIN_TEXT_LENGTH) {
+      toast.error(
+        `"Tasks/Projects Completed" must be at least ${MIN_TEXT_LENGTH} characters long.`
+      );
+      return;
+    }
+
+    if (formData.skillsLearned.trim().length < MIN_TEXT_LENGTH) {
+      toast.error(
+        `"New Skills/Knowledge Acquired" must be at least ${MIN_TEXT_LENGTH} characters long.`
+      );
+      return;
+    }
+
+    if (formData.challengesFaced.trim().length < MIN_TEXT_LENGTH) {
+      toast.error(
+        `"Challenges & How You Overcame Them" must be at least ${MIN_TEXT_LENGTH} characters long.`
+      );
+      return;
+    }
+
+    if (formData.goalsNextWeek.trim().length < MIN_TEXT_LENGTH) {
+      toast.error(
+        `"Goals for Next Week" must be at least ${MIN_TEXT_LENGTH} characters long.`
+      );
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -122,7 +155,7 @@ export function IndividualWeeklyReportModal({
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-3">
             <Label htmlFor="tasksCompleted">
-              Tasks/Projects Completed This Week
+              Tasks/Projects Completed This Week (min {MIN_TEXT_LENGTH} chars)
             </Label>
             <Textarea
               id="tasksCompleted"
@@ -131,13 +164,20 @@ export function IndividualWeeklyReportModal({
               onChange={(e) =>
                 handleInputChange("tasksCompleted", e.target.value)
               }
-              className="min-h-[80px]"
+              className={`min-h-[80px] ${
+                formData.tasksCompleted.trim().length > 0 &&
+                formData.tasksCompleted.trim().length < MIN_TEXT_LENGTH
+                  ? "border-red-500"
+                  : ""
+              }`}
               required
             />
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="skillsLearned">New Skills/Knowledge Acquired</Label>
+            <Label htmlFor="skillsLearned">
+              New Skills/Knowledge Acquired (min {MIN_TEXT_LENGTH} chars)
+            </Label>
             <Textarea
               id="skillsLearned"
               placeholder="What new skills or knowledge did you gain?"
@@ -145,14 +185,19 @@ export function IndividualWeeklyReportModal({
               onChange={(e) =>
                 handleInputChange("skillsLearned", e.target.value)
               }
-              className="min-h-[80px]"
+              className={`min-h-[80px] ${
+                formData.skillsLearned.trim().length > 0 &&
+                formData.skillsLearned.trim().length < MIN_TEXT_LENGTH
+                  ? "border-red-500"
+                  : ""
+              }`}
               required
             />
           </div>
 
           <div className="space-y-3">
             <Label htmlFor="challengesFaced">
-              Challenges & How You Overcame Them
+              Challenges & How You Overcame Them (min {MIN_TEXT_LENGTH} chars)
             </Label>
             <Textarea
               id="challengesFaced"
@@ -161,12 +206,20 @@ export function IndividualWeeklyReportModal({
               onChange={(e) =>
                 handleInputChange("challengesFaced", e.target.value)
               }
-              className="min-h-[80px]"
+              className={`min-h-[80px] ${
+                formData.challengesFaced.trim().length > 0 &&
+                formData.challengesFaced.trim().length < MIN_TEXT_LENGTH
+                  ? "border-red-500"
+                  : ""
+              }`}
+              required
             />
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="goalsNextWeek">Goals for Next Week</Label>
+            <Label htmlFor="goalsNextWeek">
+              Goals for Next Week (min {MIN_TEXT_LENGTH} chars)
+            </Label>
             <Textarea
               id="goalsNextWeek"
               placeholder="What do you plan to focus on next week?"
@@ -174,7 +227,12 @@ export function IndividualWeeklyReportModal({
               onChange={(e) =>
                 handleInputChange("goalsNextWeek", e.target.value)
               }
-              className="min-h-[80px]"
+              className={`min-h-[80px] ${
+                formData.goalsNextWeek.trim().length > 0 &&
+                formData.goalsNextWeek.trim().length < MIN_TEXT_LENGTH
+                  ? "border-red-500"
+                  : ""
+              }`}
               required
             />
           </div>
@@ -205,8 +263,14 @@ export function IndividualWeeklyReportModal({
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting}
-              className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+              disabled={
+                isSubmitting ||
+                formData.tasksCompleted.trim().length < MIN_TEXT_LENGTH ||
+                formData.skillsLearned.trim().length < MIN_TEXT_LENGTH ||
+                formData.challengesFaced.trim().length < MIN_TEXT_LENGTH ||
+                formData.goalsNextWeek.trim().length < MIN_TEXT_LENGTH
+              }
+              className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted"
             >
               {isSubmitting ? "Submitting..." : "Submit Report"}
             </Button>

@@ -24,6 +24,8 @@ import {
 import { getTaskByIdLazy, completeIndividualTask } from "@/lib/tasks";
 import { TaskSubmissionModal } from "@/components/tasks/task-submission-modal";
 import { useAppContext } from "@/contexts/app-context";
+import { taskNotificationManager } from "@/hooks/use-task-notifications";
+import { toast } from "sonner";
 import { StatusBadge, TaskStatus } from "@/components/ui/status-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { TeamTask } from "@/types/team-journey";
@@ -72,8 +74,20 @@ export default function IndividualTaskDetailPage() {
         // Refresh task data to show completed status
         await loadTask();
         setIsSubmissionModalOpen(false);
+
+        // Refresh notifications
+        taskNotificationManager.refresh();
+
+        // Enhanced success feedback for individual tasks
+        toast.success("Task Completed Successfully! 🎉", {
+          description:
+            "XP and points awarded! Your task was automatically approved.",
+          duration: 5000,
+        });
       } else {
-        alert("Failed to submit task. Please try again.");
+        toast.error("Failed to submit task", {
+          description: "Please check your submission and try again.",
+        });
       }
     } catch (error) {
       console.error("Error submitting task:", error);

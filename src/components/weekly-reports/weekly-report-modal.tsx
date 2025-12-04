@@ -41,8 +41,36 @@ export function WeeklyReportModal({
     meetingsHeld: 0,
   });
 
+  // Validation constant
+  const MIN_TEXT_LENGTH = 20;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate minimum text length for required fields
+    if (formData.whatDidYouDoThisWeek.trim().length < MIN_TEXT_LENGTH) {
+      toast.error(
+        `"What did you do this week?" must be at least ${MIN_TEXT_LENGTH} characters long.`
+      );
+      return;
+    }
+
+    if (formData.whatWereYourBlockers.trim().length < MIN_TEXT_LENGTH) {
+      toast.error(
+        `"What were your blockers?" must be at least ${MIN_TEXT_LENGTH} characters long.`
+      );
+      return;
+    }
+
+    if (
+      formData.whatWasYourBiggestAchievement.trim().length < MIN_TEXT_LENGTH
+    ) {
+      toast.error(
+        `"What was your biggest achievement?" must be at least ${MIN_TEXT_LENGTH} characters long.`
+      );
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -130,7 +158,7 @@ export function WeeklyReportModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="whatDidYouDoThisWeek">
-              What did you do this week?
+              What did you do this week? (min {MIN_TEXT_LENGTH} chars)
             </Label>
             <Textarea
               id="whatDidYouDoThisWeek"
@@ -144,12 +172,18 @@ export function WeeklyReportModal({
               }
               required
               rows={3}
+              className={
+                formData.whatDidYouDoThisWeek.trim().length > 0 &&
+                formData.whatDidYouDoThisWeek.trim().length < MIN_TEXT_LENGTH
+                  ? "border-red-500"
+                  : ""
+              }
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="whatWereYourBlockers">
-              What were your blockers?
+              What were your blockers? (min {MIN_TEXT_LENGTH} chars)
             </Label>
             <Textarea
               id="whatWereYourBlockers"
@@ -163,12 +197,18 @@ export function WeeklyReportModal({
               }
               required
               rows={3}
+              className={
+                formData.whatWereYourBlockers.trim().length > 0 &&
+                formData.whatWereYourBlockers.trim().length < MIN_TEXT_LENGTH
+                  ? "border-red-500"
+                  : ""
+              }
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="whatWasYourBiggestAchievement">
-              What was your biggest achievement?
+              What was your biggest achievement? (min {MIN_TEXT_LENGTH} chars)
             </Label>
             <Textarea
               id="whatWasYourBiggestAchievement"
@@ -182,6 +222,13 @@ export function WeeklyReportModal({
               }
               required
               rows={3}
+              className={
+                formData.whatWasYourBiggestAchievement.trim().length > 0 &&
+                formData.whatWasYourBiggestAchievement.trim().length <
+                  MIN_TEXT_LENGTH
+                  ? "border-red-500"
+                  : ""
+              }
             />
           </div>
 
@@ -232,7 +279,13 @@ export function WeeklyReportModal({
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={
+                isSubmitting ||
+                formData.whatDidYouDoThisWeek.trim().length < MIN_TEXT_LENGTH ||
+                formData.whatWereYourBlockers.trim().length < MIN_TEXT_LENGTH ||
+                formData.whatWasYourBiggestAchievement.trim().length <
+                  MIN_TEXT_LENGTH
+              }
               className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted"
             >
               {isSubmitting ? "Submitting..." : "Submit Report"}

@@ -345,8 +345,8 @@ export function TaskSubmissionModal({
           <DialogDescription>
             Complete your submission for <strong>{taskTitle}</strong>.{" "}
             {isIndividualTask
-              ? "This will be automatically approved once submitted."
-              : "This will be sent for peer review once submitted."}
+              ? "This will be automatically approved and you'll receive XP/points immediately."
+              : "This will be sent to peer reviewers who will provide feedback within 2-3 days. You'll be notified when the review is complete."}
           </DialogDescription>
         </DialogHeader>
 

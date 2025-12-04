@@ -311,7 +311,9 @@ export function TaskDetailsModal({
         <DialogTitle>Submit Task for Review</DialogTitle>
         <DialogDescription>
           Complete your submission for <strong>{taskTitle}</strong>. This will
-          be sent for peer review once submitted.
+          be sent to peer reviewers who will evaluate your work and provide
+          feedback within 2-3 days. You&apos;ll receive a notification when the
+          review is complete.
         </DialogDescription>
       </DialogHeader>
 

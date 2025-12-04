@@ -1160,7 +1160,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           {/* Achievements Header */}
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Achievements</h2>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" disabled>
               <ExternalLink className="h-4 w-4" />
               Read About Achievements
             </Button>
@@ -1322,7 +1322,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           {/* Weekly Reports Header */}
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">This Week Progress</h2>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" disabled>
               <ExternalLink className="h-4 w-4" />
               Read About Weekly Reports
             </Button>
@@ -1356,7 +1356,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   Add Meeting
                 </Button>
               )}
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2" disabled>
                 <ExternalLink className="h-4 w-4" />
                 Read About Meetings
               </Button>
@@ -1382,7 +1382,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           {/* Strikes Header */}
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Strikes & Issues</h2>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" disabled>
               <ExternalLink className="h-4 w-4" />
               Read About Strikes
             </Button>

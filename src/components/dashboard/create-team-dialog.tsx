@@ -38,6 +38,11 @@ export function CreateTeamDialog({
 
   const TEAM_CREATION_COST = 100;
 
+  // Validation constants
+  const MIN_TEAM_NAME_LENGTH = 5;
+  const MIN_DESCRIPTION_LENGTH = 20;
+  const MAX_DESCRIPTION_LENGTH = 100;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.id) {
@@ -54,6 +59,28 @@ export function CreateTeamDialog({
 
     setError("");
     setSuccess("");
+
+    // Validation
+    if (teamName.trim().length < MIN_TEAM_NAME_LENGTH) {
+      setError(
+        `Product/Team name must be at least ${MIN_TEAM_NAME_LENGTH} characters long.`
+      );
+      return;
+    }
+
+    if (description.trim().length < MIN_DESCRIPTION_LENGTH) {
+      setError(
+        `Description must be at least ${MIN_DESCRIPTION_LENGTH} characters long.`
+      );
+      return;
+    }
+
+    if (description.trim().length > MAX_DESCRIPTION_LENGTH) {
+      setError(
+        `Description must be at most ${MAX_DESCRIPTION_LENGTH} characters long.`
+      );
+      return;
+    }
 
     if (user.total_points && user.total_points < TEAM_CREATION_COST) {
       setError(
@@ -120,7 +147,9 @@ export function CreateTeamDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="teamName">Product/Team Name</Label>
+            <Label htmlFor="teamName">
+              Product/Team Name (min {MIN_TEAM_NAME_LENGTH} chars)
+            </Label>
             <Input
               id="teamName"
               value={teamName}
@@ -128,11 +157,15 @@ export function CreateTeamDialog({
               placeholder="Enter product/team name..."
               required
               disabled={isLoading}
+              className="border-[#ff78c8] focus:border-[#ff78c8] focus:ring-[#ff78c8] ring-[#ff78c8]/20"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">
+              Description ({MIN_DESCRIPTION_LENGTH}-{MAX_DESCRIPTION_LENGTH}{" "}
+              chars)
+            </Label>
             <Textarea
               id="description"
               value={description}
@@ -142,6 +175,8 @@ export function CreateTeamDialog({
               placeholder="Describe your product idea or team mission..."
               rows={3}
               disabled={isLoading}
+              maxLength={MAX_DESCRIPTION_LENGTH}
+              className="border-[#ff78c8] focus:border-[#ff78c8] focus:ring-[#ff78c8] ring-[#ff78c8]/20"
             />
           </div>
 
@@ -154,6 +189,7 @@ export function CreateTeamDialog({
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="https://example.com or example.com"
               disabled={isLoading}
+              className="border-[#ff78c8] focus:border-[#ff78c8] focus:ring-[#ff78c8] ring-[#ff78c8]/20"
             />
           </div>
 
@@ -189,7 +225,13 @@ export function CreateTeamDialog({
             </Button>
             <Button
               type="submit"
-              disabled={isLoading || !canAfford || !teamName.trim()}
+              disabled={
+                isLoading ||
+                !canAfford ||
+                teamName.trim().length < MIN_TEAM_NAME_LENGTH ||
+                description.trim().length < MIN_DESCRIPTION_LENGTH ||
+                description.trim().length > MAX_DESCRIPTION_LENGTH
+              }
               className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted"
             >
               {isLoading ? (
