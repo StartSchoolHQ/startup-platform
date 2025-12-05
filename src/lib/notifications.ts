@@ -2,17 +2,48 @@ import { createClient } from "@/lib/supabase/client";
 import { getUserNotifications, markNotificationSeen } from "./database";
 
 export interface NotificationData {
+  // Task-related routing
   taskId?: string;
+  task_id?: string; // Alternative naming for consistency
+  task_progress_id?: string; // Specific for peer review
   taskTitle?: string;
-  reviewerId?: string;
-  reviewDecision?: string;
-  feedback?: string;
+  task_title?: string;
+
+  // Team-related routing
   teamId?: string;
+  team_id?: string;
   teamName?: string;
+
+  // Invitation routing
+  invitationId?: string;
+  invitation_id?: string;
+
+  // Review-specific data
+  reviewerId?: string;
+  reviewer_id?: string;
+  reviewDecision?: string;
+  decision?: string;
+  feedback?: string;
+
+  // Routing overrides
+  target_route?: string; // Custom route override
+  target_tab?: string; // Specific tab to open
+
+  // Legacy fields
+  role?: string;
   achievementId?: string;
   achievementName?: string;
   inviterName?: string;
-  role?: string;
+
+  // Auto-decline specific
+  count?: number;
+  teamNames?: string;
+  reason?: string;
+  joinedTeamId?: string;
+  response?: string;
+  respondedAt?: string;
+  inviteeName?: string;
+  context?: string;
 }
 
 export interface PersistentNotification {
@@ -36,6 +67,31 @@ export interface MetadataNotification {
 }
 
 export type UnifiedNotification = PersistentNotification | MetadataNotification;
+
+// Enhanced icon mapping
+function getNotificationIcon(type: string): string {
+  switch (type) {
+    case "invitation_accepted":
+      return "user-check";
+    case "invitation_declined":
+      return "user-x";
+    case "invitations_auto_declined":
+      return "users-x";
+    case "peer_review_approved":
+      return "check-circle";
+    case "peer_review_rejected":
+      return "x-circle";
+    case "peer_review_resubmission":
+      return "refresh-cw";
+    case "weekly_report_reminder_2day":
+    case "weekly_report_reminder_1day":
+      return "calendar-clock";
+    case "invitation":
+      return "users";
+    default:
+      return "bell";
+  }
+}
 
 // Create a new persistent notification (placeholder until types are properly resolved)
 export async function createNotification(
@@ -122,16 +178,7 @@ async function getPersistentNotifications(
         created_at: notif.created_at as string,
         source: "persistent",
         // Add icon based on notification type
-        icon:
-          notif.type === "peer_review_approved"
-            ? "check-circle"
-            : notif.type === "peer_review_rejected"
-            ? "x-circle"
-            : notif.type === "peer_review_resubmission"
-            ? "refresh-cw"
-            : notif.type === "invitation"
-            ? "users"
-            : "bell",
+        icon: getNotificationIcon(notif.type),
       })
     );
   } catch (error) {
@@ -181,6 +228,48 @@ export async function getNotifications(
 export async function getNotificationCount(userId: string): Promise<number> {
   const notifications = await getNotifications(userId);
   return notifications.length;
+}
+
+export async function markAllNotificationsAsSeen(
+  userId: string
+): Promise<boolean> {
+  try {
+    const supabase = createClient();
+
+    // Mark all persistent notifications as read
+    const { error: persistentError } = await supabase
+      .from("notifications")
+      .update({ read_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .is("read_at", null);
+
+    if (persistentError) {
+      console.error(
+        "Error marking persistent notifications as read:",
+        persistentError
+      );
+    }
+
+    // Mark all metadata notifications as seen
+    const { error: metadataError } = await supabase.rpc(
+      "mark_all_notifications_seen",
+      {
+        user_id_param: userId,
+      }
+    );
+
+    if (metadataError) {
+      console.error(
+        "Error marking metadata notifications as seen:",
+        metadataError
+      );
+    }
+
+    return !persistentError && !metadataError;
+  } catch (error) {
+    console.error("Error marking all notifications as seen:", error);
+    return false;
+  }
 }
 
 // Export legacy functions for backward compatibility

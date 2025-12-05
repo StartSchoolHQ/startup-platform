@@ -1085,12 +1085,14 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                       onClick={() => setShowWeeklyReportModal(true)}
                       disabled={checkingSubmission || hasSubmittedThisWeek}
                     >
-                      <FileText className="h-4 w-4" />
-                      {checkingSubmission
-                        ? "Checking..."
-                        : hasSubmittedThisWeek
-                        ? "Report Submitted"
-                        : "Submit Weekly Report"}
+                      <FileText className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">
+                        {checkingSubmission
+                          ? "Checking..."
+                          : hasSubmittedThisWeek
+                          ? "Report Submitted"
+                          : "Submit Team Weekly Report"}
+                      </span>
                     </Button>
                   )}
                 </div>

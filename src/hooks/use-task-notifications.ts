@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import {
   getNotifications,
   getNotificationCount,
   markPersistentNotificationRead,
   markNotificationSeen,
+  markAllNotificationsAsSeen,
   type UnifiedNotification,
 } from "@/lib/notifications";
 
@@ -29,6 +31,7 @@ export function useNotifications(userId: string | undefined) {
   const [notifications, setNotifications] = useState<UnifiedNotification[]>([]);
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const pathname = usePathname();
 
   const loadNotifications = useCallback(async () => {
     if (!userId) {
@@ -56,6 +59,11 @@ export function useNotifications(userId: string | undefined) {
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
+
+  // Refresh notifications on route change
+  useEffect(() => {
+    loadNotifications();
+  }, [pathname, loadNotifications]);
 
   useEffect(() => {
     const unsubscribe = notificationManager.subscribe(() => {

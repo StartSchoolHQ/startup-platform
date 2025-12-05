@@ -1032,7 +1032,54 @@ export async function completeTask(
 
     const supabase = createClient();
 
-    // Direct update to avoid RPC version conflicts
+    // Check if this is a resubmission by examining peer review history
+    const { data: taskData, error: fetchError } = await supabase
+      .from("task_progress")
+      .select("status, peer_review_history, reviewer_user_id")
+      .eq("id", progressId)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching task status:", fetchError);
+      return false;
+    }
+
+    // Detect resubmission: has reviewer assigned AND has previous review_completed events
+    const hasReviewer = !!taskData.reviewer_user_id;
+    const reviewHistory =
+      (taskData.peer_review_history as Array<{ event_type: string }>) || [];
+    const hasBeenReviewed = reviewHistory.some(
+      (event) => event.event_type === "review_completed"
+    );
+    const isResubmission = hasReviewer && hasBeenReviewed;
+
+    // If this is a resubmission, use atomic RPC function
+    if (isResubmission) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error: rpcError } = await (supabase as any).rpc(
+        "resubmit_task_for_review",
+        {
+          p_task_id: progressId,
+        }
+      );
+
+      if (rpcError) {
+        console.error("Error resubmitting task:", {
+          message: rpcError.message,
+          details: rpcError.details,
+          hint: rpcError.hint,
+          code: rpcError.code,
+          progressId,
+          fullError: rpcError,
+        });
+        return false;
+      }
+
+      console.log("Task resubmitted successfully:", data);
+      return true;
+    }
+
+    // Otherwise, this is initial submission - use direct update
     const { error } = await supabase
       .from("task_progress")
       .update({

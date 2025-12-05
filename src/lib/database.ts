@@ -1375,76 +1375,77 @@ export async function respondToInvitation(
     throw new Error("Invitation not found or already responded to");
   }
 
-  // Update invitation status
-  const { error: updateError } = await supabase
-    .from("team_invitations")
-    .update({
-      status: response,
-      responded_at: new Date().toISOString(),
-    })
-    .eq("id", invitationId);
-
-  if (updateError) throw updateError;
-
-  // If accepted, add user to team members
+  // If accepting, check team membership BEFORE any database changes
   if (response === "accepted") {
-    // First check if user is already in an active team
-    try {
-      const { data: existingMembership, error: membershipError } =
-        await supabase
-          .from("team_members")
-          .select(
-            `
+    const { data: existingMembership, error: membershipError } = await supabase
+      .from("team_members")
+      .select(
+        `
           team_id,
           teams!inner (
             name
           )
         `
-          )
-          .eq("user_id", userId)
-          .is("left_at", null)
-          .limit(1);
+      )
+      .eq("user_id", userId)
+      .is("left_at", null)
+      .limit(1);
 
-      if (membershipError) {
-        console.error(
-          "Database error checking team membership:",
-          membershipError
-        );
-        throw new Error(
-          "Unable to verify your team membership status. Please try again."
-        );
-      }
-
-      if (existingMembership && existingMembership.length > 0) {
-        const teamName =
-          (existingMembership[0].teams as unknown as TeamRelation)?.name ||
-          "Unknown Team";
-        throw new Error(
-          `Cannot accept invitation: You are already a member of "${teamName}". You can only be part of one team at a time.`
-        );
-      }
-    } catch (error) {
-      // If it's already our custom error, re-throw it
-      if (
-        error instanceof Error &&
-        error.message.startsWith("Cannot accept invitation:")
-      ) {
-        throw error;
-      }
-      // Otherwise, wrap any other error
-      console.error("Unexpected error checking team membership:", error);
-      throw new Error("Unable to verify team membership. Please try again.");
+    if (membershipError) {
+      console.error(
+        "Database error checking team membership:",
+        membershipError
+      );
+      throw new Error(
+        "Unable to verify your team membership status. Please try again."
+      );
     }
 
+    if (existingMembership && existingMembership.length > 0) {
+      const teamName =
+        (existingMembership[0].teams as unknown as TeamRelation)?.name ||
+        "Unknown Team";
+      throw new Error(
+        `Cannot accept invitation: You are already a member of "${teamName}". You can only be part of one team at a time.`
+      );
+    }
+
+    // Validation passed - now make database changes atomically
+
+    // First: Add user to team_members (this will trigger auto-decline of other invitations)
     const { error: memberError } = await supabase.from("team_members").insert({
       team_id: invitation.team_id,
       user_id: userId,
       team_role: invitation.role,
     });
 
-    if (memberError) throw memberError;
+    if (memberError) {
+      console.error("Error adding user to team:", memberError);
+      // Handle unique constraint violation with clearer error message
+      if (memberError.message?.includes("unique_active_user_membership")) {
+        throw new Error(
+          "You are already a member of another team. Please leave your current team first."
+        );
+      }
+      throw new Error("Failed to add you to the team. Please try again.");
+    }
 
-    // Update team member count
+    // Second: Update invitation status to "accepted"
+    const { error: updateError } = await supabase
+      .from("team_invitations")
+      .update({
+        status: response,
+        responded_at: new Date().toISOString(),
+      })
+      .eq("id", invitationId);
+
+    if (updateError) {
+      console.error("Error updating invitation status:", updateError);
+      // User is already in team but invitation status not updated
+      // This is not critical - the important part (team membership) succeeded
+    }
+
+    // Third: Update team member count
     const { error: countError } = await (
       supabase as unknown as {
         rpc: (
@@ -1468,6 +1469,20 @@ export async function respondToInvitation(
         .from("teams")
         .update({ member_count: (currentTeam?.member_count || 0) + 1 })
         .eq("id", invitation.team_id);
+    }
+  } else {
+    // For declined invitations, just update the status
+    const { error: updateError } = await supabase
+      .from("team_invitations")
+      .update({
+        status: response,
+        responded_at: new Date().toISOString(),
+      })
+      .eq("id", invitationId);
+
+    if (updateError) {
+      console.error("Error updating invitation status:", updateError);
+      throw new Error("Failed to update invitation status. Please try again.");
     }
   }
 
@@ -2875,38 +2890,15 @@ export async function assignTeamTaskToProgress(
 
 /**
  * Get completed peer reviews given by the user (all individual review attempts)
+ * UPDATED: Now looks directly at peer_review_history instead of relying on transactions
+ * This fixes the issue where rejected reviews weren't showing until after approval
  */
 export async function getCompletedPeerReviews(userId: string) {
   const supabase = createClient();
 
-  // First, get all task transactions where this user was the reviewer (validation type)
-  // This gives us the progress_ids of tasks they reviewed
-  const { data: reviewTransactions, error: transactionsError } = await supabase
-    .from("transactions")
-    .select("metadata")
-    .eq("user_id", userId)
-    .eq("type", "validation")
-    .not("metadata", "is", null);
-
-  if (transactionsError) {
-    console.error("Error fetching review transactions:", transactionsError);
-    throw transactionsError;
-  }
-
-  if (!reviewTransactions || reviewTransactions.length === 0) {
-    return [];
-  }
-
-  // Extract progress_ids from transaction metadata
-  const progressIds = reviewTransactions
-    .map((t) => (t.metadata as Record<string, unknown>)?.progress_id as string)
-    .filter((id) => id);
-
-  if (progressIds.length === 0) {
-    return [];
-  }
-
-  // Get task_progress data for these progress_ids
+  // CRITICAL FIX: Instead of relying on transactions (which historically only existed for approvals),
+  // directly query all task_progress records that have this user in their peer_review_history
+  // This will show BOTH approved AND rejected reviews immediately
   const { data: taskProgressData, error } = await supabase
     .from("task_progress")
     .select(
@@ -2937,7 +2929,6 @@ export async function getCompletedPeerReviews(userId: string) {
       )
     `
     )
-    .in("id", progressIds)
     .eq("context", "team")
     .not("peer_review_history", "is", null)
     .order("updated_at", { ascending: false });
@@ -2983,17 +2974,19 @@ export async function getCompletedPeerReviews(userId: string) {
 
   taskProgressData.forEach((task) => {
     if (task.peer_review_history && Array.isArray(task.peer_review_history)) {
-      // Find all completed reviews by this user
+      // Find all completed reviews by this user (BOTH approved AND rejected)
       const userReviews = (
         task.peer_review_history as unknown as PeerReviewHistoryEntry[]
       ).filter(
         (historyEntry: PeerReviewHistoryEntry) =>
           historyEntry.event_type === "review_completed" &&
           historyEntry.reviewer_id === userId &&
-          historyEntry.feedback
+          (historyEntry.decision === "approved" ||
+            historyEntry.decision === "rejected") &&
+          historyEntry.feedback // Must have feedback
       );
 
-      // Create a separate entry for each review
+      // Create a separate entry for each review (BOTH approved AND rejected show immediately)
       userReviews.forEach(
         (reviewEntry: PeerReviewHistoryEntry, index: number) => {
           individualReviews.push({

@@ -56,6 +56,7 @@ interface BaseTask {
   description?: string;
   category?: string;
   base_xp_reward?: number;
+  base_points_reward?: number;
   learning_objectives?: string[];
   deliverables?: string[];
   peer_review_criteria?: Array<{

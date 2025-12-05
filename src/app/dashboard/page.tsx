@@ -284,10 +284,12 @@ function PersonalProgressCard({
               disabled={hasSubmittedThisWeek}
               onClick={onOpenReportModal}
             >
-              <FileText className="h-4 w-4 mr-2" />
-              {hasSubmittedThisWeek
-                ? "Report Submitted"
-                : "Submit Weekly Report"}
+              <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="truncate">
+                {hasSubmittedThisWeek
+                  ? "Report Submitted"
+                  : "Submit Personal Weekly Report"}
+              </span>
             </Button>
             <Button
               size="sm"
@@ -295,8 +297,8 @@ function PersonalProgressCard({
               onClick={() => router.push("/dashboard/my-journey")}
               disabled
             >
-              <WandSparkles className="h-4 w-4 mr-2" />
-              View Progress
+              <WandSparkles className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="truncate">View Progress</span>
             </Button>
           </BorderedContainer>
         </div>

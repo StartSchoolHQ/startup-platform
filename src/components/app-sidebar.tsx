@@ -13,6 +13,8 @@ import {
   Settings,
 } from "lucide-react";
 
+import { NotificationCenter } from "@/components/notification-center";
+
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -81,19 +83,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard">
-                <div className="flex items-center justify-center w-full">
-                  <Image
-                    src="/images/startschool-logo.png"
-                    alt="StartSchool"
-                    width={132}
-                    height={34}
-                    className="h-8 w-auto object-contain"
-                  />
-                </div>
-              </Link>
-            </SidebarMenuButton>
+            <div className="flex items-center justify-between w-full px-2">
+              <SidebarMenuButton size="lg" asChild className="flex-1">
+                <Link href="/dashboard">
+                  <div className="flex items-center justify-center w-full">
+                    <Image
+                      src="/images/startschool-logo.png"
+                      alt="StartSchool"
+                      width={132}
+                      height={34}
+                      className="h-8 w-auto object-contain"
+                    />
+                  </div>
+                </Link>
+              </SidebarMenuButton>
+              <div className="flex-shrink-0 ml-2">
+                <NotificationCenter />
+              </div>
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

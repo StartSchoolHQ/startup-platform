@@ -212,20 +212,28 @@ export default function PeerReviewPage() {
             task_id,
             team_id,
             assigned_to_user_id,
+            reviewer_user_id,
             completed_at,
             submission_data,
+            peer_review_history,
             tasks(
               id,
               title,
               description,
               difficulty_level,
               base_xp_reward,
+              base_points_reward,
               category,
               peer_review_criteria
             ),
             teams(
               id,
               name
+            ),
+            reviewer:users!reviewer_user_id(
+              id,
+              name,
+              avatar_url
             )
           `
           )
@@ -450,8 +458,14 @@ export default function PeerReviewPage() {
       "base_xp_reward" in selectedTaskForReview.tasks
         ? Number(selectedTaskForReview.tasks.base_xp_reward) || 20
         : 20;
+    const taskPoints =
+      selectedTaskForReview.tasks &&
+      typeof selectedTaskForReview.tasks === "object" &&
+      "base_points_reward" in selectedTaskForReview.tasks
+        ? Number(selectedTaskForReview.tasks.base_points_reward) || 20
+        : 20;
     const estimatedXP = Math.max(1, Math.round(taskXP * 0.1));
-    const estimatedPoints = Math.max(1, Math.round(taskXP * 0.1)); // Assume points = XP for estimation
+    const estimatedPoints = Math.max(1, Math.round(taskPoints * 0.1));
 
     // Store original state for potential revert
     const originalAcceptedTasks = [...myAcceptedTasks];

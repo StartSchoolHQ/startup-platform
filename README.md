@@ -21,6 +21,7 @@ A comprehensive startup accelerator platform built with Next.js and Supabase, de
 - **Team Management**: Create and manage teams with role assignments
 - **Progress Tracking**: Monitor individual and team achievements
 - **Peer Review System**: Collaborative feedback and validation system
+- **Real-time Notifications**: Unified notification system for invitations, peer reviews, and achievements
 
 ### Gamification
 
@@ -181,6 +182,32 @@ The app can be deployed to any platform supporting Node.js:
 - Netlify
 - Railway
 - Digital Ocean App Platform
+
+## 🔔 Notification System
+
+The platform features a comprehensive real-time notification system:
+
+### Notification Types
+
+- **Team Invitations**: New invitations, acceptances, and declines
+- **Peer Reviews**: Task approvals, rejections, and resubmissions with task names
+- **Auto-decline Notifications**: Transparent feedback when invitations are auto-declined
+- **Achievements**: Individual and team achievement completions
+
+### Technical Implementation
+
+- **Database Triggers**: Automatic notification creation via PostgreSQL triggers
+- **Unified Architecture**: Persistent notifications table with legacy metadata support
+- **Modern UI**: Shadcn-based NotificationCenter with Popover, ScrollArea, and Badge components
+- **Smart Routing**: Context-aware navigation to relevant sections
+
+### Features
+
+- **Bell Icon**: Accessible notification center in sidebar header
+- **Badge Indicators**: Unread notification count with visual feedback
+- **Mark All Read**: Bulk notification management
+- **Time Formatting**: User-friendly "X minutes ago" timestamps
+- **Duplicate Prevention**: Intelligent deduplication to prevent spam
 
 ## 🤖 Automation System
 
