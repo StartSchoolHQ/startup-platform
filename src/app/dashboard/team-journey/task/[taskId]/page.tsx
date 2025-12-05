@@ -30,7 +30,7 @@ import {
   AlertCircle,
   Play,
 } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, use } from "react";
 import { TeamTask } from "@/types/team-journey";
 import {
   getTaskByIdLazy,
@@ -58,7 +58,8 @@ interface TaskDetailPageProps {
   }>;
 }
 
-export default function TaskDetailPage({ params }: TaskDetailPageProps) {
+export default function TaskDetailPage(props: TaskDetailPageProps) {
+  const params = use(props.params);
   const { user } = useAppContext();
   const [task, setTask] = useState<TeamTask | null>(null);
   const [loading, setLoading] = useState(true);
@@ -412,7 +413,6 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-
       {/* Task Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-2">
@@ -442,7 +442,6 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
           </p>
         </div>
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-3">
@@ -1552,7 +1551,6 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
           </Card>
         </div>
       </div>
-
       {/* Reassign Task Modal */}
       <Dialog open={showReassignModal} onOpenChange={setShowReassignModal}>
         <DialogContent className="sm:max-w-md">
@@ -1601,7 +1599,6 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Task Submission Modal */}
       <TaskDetailsModal
         mode="submission"

@@ -56,7 +56,7 @@ import {
 } from "@/lib/database";
 import { StatsCard } from "@/types/dashboard";
 import type { Database } from "@/types/database";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, use } from "react";
 import { useAppContext } from "@/contexts/app-context";
 import { hasUserSubmittedThisWeek } from "@/lib/weekly-reports";
 import { assignTaskToMember, startTask, startTaskLazy } from "@/lib/tasks";
@@ -130,7 +130,8 @@ interface TeamDetails {
   }[];
 }
 
-export default function ProductDetailPage({ params }: ProductDetailPageProps) {
+export default function ProductDetailPage(props: ProductDetailPageProps) {
+  const params = use(props.params);
   const { user, loading: userLoading } = useAppContext();
   const [team, setTeam] = useState<TeamDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -809,7 +810,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-
       {/* Product Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-2">
@@ -885,7 +885,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           </Button>
         </div>
       </div>
-
       {/* Stats Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statsCards.map((card, index) => (
@@ -899,7 +898,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           />
         ))}
       </div>
-
       {/* Team & Experience and Status & Progress Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Team & Experience Card */}
@@ -1167,7 +1165,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           </CardContent>
         </Card>
       </div>
-
       {/* Tab Section */}
       <Tabs defaultValue="achievements" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
@@ -1526,7 +1523,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           )}
         </TabsContent>
       </Tabs>
-
       {/* Team Management Modal */}
       {team && userRole && (
         <TeamManagementModal
@@ -1538,7 +1534,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           onRefresh={loadTeam}
         />
       )}
-
       {/* Weekly Report Modal */}
       {team && user?.id && (
         <WeeklyReportModal
@@ -1560,7 +1555,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           }}
         />
       )}
-
       {/* Add Client Meeting Modal */}
       {team && (
         <AddClientMeetingModal
