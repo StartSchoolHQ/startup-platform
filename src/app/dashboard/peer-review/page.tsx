@@ -9,7 +9,7 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DifficultyBadge } from "@/components/ui/difficulty-badge";
-import { taskNotificationManager } from "@/hooks/use-task-notifications";
+import { taskNotificationManager } from "@/lib/notification-manager";
 import { toast } from "sonner";
 
 import {

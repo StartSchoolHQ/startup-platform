@@ -45,7 +45,7 @@ import {
 import { useAppContext } from "@/contexts/app-context";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { taskNotificationManager } from "@/hooks/use-task-notifications";
+import { taskNotificationManager } from "@/lib/notification-manager";
 import { toast } from "sonner";
 import { TaskDetailsModal } from "@/components/ui/task-details-modal";
 import { StatusBadge, TaskStatus } from "@/components/ui/status-badge";

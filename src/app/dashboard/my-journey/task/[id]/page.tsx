@@ -24,7 +24,7 @@ import {
 import { getTaskByIdLazy, completeIndividualTask } from "@/lib/tasks";
 import { TaskSubmissionModal } from "@/components/tasks/task-submission-modal";
 import { useAppContext } from "@/contexts/app-context";
-import { taskNotificationManager } from "@/hooks/use-task-notifications";
+import { taskNotificationManager } from "@/lib/notification-manager";
 import { toast } from "sonner";
 import { StatusBadge, TaskStatus } from "@/components/ui/status-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

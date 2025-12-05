@@ -230,47 +230,5 @@ export async function getNotificationCount(userId: string): Promise<number> {
   return notifications.length;
 }
 
-export async function markAllNotificationsAsSeen(
-  userId: string
-): Promise<boolean> {
-  try {
-    const supabase = createClient();
-
-    // Mark all persistent notifications as read
-    const { error: persistentError } = await supabase
-      .from("notifications")
-      .update({ read_at: new Date().toISOString() })
-      .eq("user_id", userId)
-      .is("read_at", null);
-
-    if (persistentError) {
-      console.error(
-        "Error marking persistent notifications as read:",
-        persistentError
-      );
-    }
-
-    // Mark all metadata notifications as seen
-    const { error: metadataError } = await supabase.rpc(
-      "mark_all_notifications_seen",
-      {
-        user_id_param: userId,
-      }
-    );
-
-    if (metadataError) {
-      console.error(
-        "Error marking metadata notifications as seen:",
-        metadataError
-      );
-    }
-
-    return !persistentError && !metadataError;
-  } catch (error) {
-    console.error("Error marking all notifications as seen:", error);
-    return false;
-  }
-}
-
 // Export legacy functions for backward compatibility
 export { markNotificationSeen };
