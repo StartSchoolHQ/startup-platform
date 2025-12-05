@@ -9,9 +9,16 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Lock,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -273,15 +280,39 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
                 key={task.id}
                 className={`${
                   index < tasks.length - 1 ? "border-b border-border" : ""
-                } hover:bg-muted/20 transition-colors`}
+                } hover:bg-muted/20 transition-colors ${
+                  task.is_confidential ? "bg-red-50/50" : ""
+                }`}
               >
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
                       <FileText className="h-4 w-4 text-black dark:text-white" />
                     </div>
-                    <div>
-                      <div className="font-medium text-sm">{task.title}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="font-medium text-sm">{task.title}</div>
+                        {task.is_confidential && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge
+                                  variant="destructive"
+                                  className="text-xs flex items-center gap-1 px-1.5 py-0.5"
+                                >
+                                  <Lock className="h-2.5 w-2.5" />
+                                  Confidential
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  This task can only be reviewed by admin users
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
                       {task.description && (
                         <div className="text-xs text-muted-foreground line-clamp-2 max-w-md">
                           {task.description}

@@ -3,6 +3,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Trophy,
   Star,
   User,
@@ -11,6 +17,7 @@ import {
   XCircle,
   AlertCircle,
   Circle,
+  Lock,
 } from "lucide-react";
 import { TaskWithAchievement } from "@/types/dashboard";
 
@@ -119,7 +126,11 @@ export function TasksTable({
             return (
               <div
                 key={task.progress_id || task.task_id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors ${
+                  task.is_confidential
+                    ? "border-red-200 bg-red-50/30"
+                    : "border-gray-200"
+                }`}
               >
                 <div className="flex items-center space-x-4 flex-1">
                   {/* Task Icon */}
@@ -146,6 +157,26 @@ export function TasksTable({
                         <Badge variant="secondary" className="text-xs">
                           {task.achievement_name}
                         </Badge>
+                      )}
+                      {task.is_confidential && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge
+                                variant="destructive"
+                                className="text-xs flex items-center gap-1"
+                              >
+                                <Lock className="h-3 w-3" />
+                                Confidential
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                This task can only be reviewed by admin users
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </div>
                   </div>

@@ -70,6 +70,7 @@ export function convertTeamTaskToTableItem(task: TeamTask): TaskTableItem {
     status: getUIStatus(task.status),
     action: task.status === "approved" ? "done" : "complete",
     isAvailable: task.is_available,
+    is_confidential: task.is_confidential,
   };
 }
 
@@ -109,6 +110,7 @@ export async function getTeamTasks(teamId: string): Promise<TaskTableItem[]> {
       started_at: row.started_at,
       completed_at: row.completed_at,
       is_available: row.is_available,
+      is_confidential: row.is_confidential,
       detailed_instructions: row.detailed_instructions,
       tips_content: row.tips_content,
       peer_review_criteria: row.peer_review_criteria,
@@ -133,16 +135,26 @@ export async function getTeamTasks(teamId: string): Promise<TaskTableItem[]> {
 
 // Fetch team tasks using the new visible architecture (alongside existing getTeamTasks)
 export async function getTeamTasksVisible(
-  teamId: string
+  teamId: string,
+  userId?: string
 ): Promise<TaskTableItem[]> {
   try {
     const supabase = createClient();
+
+    // Get current user if not provided
+    let currentUserId = userId;
+    if (!currentUserId) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      currentUserId = user?.id;
+    }
 
     // Use the new visible function that shows ALL tasks with lazy progress
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any).rpc(
       "get_team_tasks_visible",
-      { p_team_id: teamId }
+      { p_team_id: teamId, p_user_id: currentUserId }
     );
 
     if (error) {
@@ -169,6 +181,7 @@ export async function getTeamTasksVisible(
       started_at: row.started_at,
       completed_at: row.completed_at,
       is_available: row.is_available,
+      is_confidential: row.is_confidential,
       detailed_instructions: row.detailed_instructions,
       tips_content: row.tips_content,
       peer_review_criteria: row.peer_review_criteria,
@@ -1301,6 +1314,7 @@ export async function getAllTasks(
         base_xp_reward,
         base_points_reward,
         activity_type,
+        is_confidential,
         created_at,
         updated_at
       `
@@ -1337,6 +1351,7 @@ export async function getAllTasks(
           category: task.category || undefined,
           priority: task.priority || undefined,
           activity_type: task.activity_type,
+          is_confidential: task.is_confidential || false,
           created_at: task.created_at || undefined,
           updated_at: task.updated_at || task.created_at || undefined,
           difficulty_level: task.difficulty_level || 1,

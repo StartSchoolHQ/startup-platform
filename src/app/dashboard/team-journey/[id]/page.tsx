@@ -13,6 +13,12 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
 import { AchievementCard } from "@/components/my-journey/achievement-card";
 import { TasksTable } from "@/components/team-journey/tasks-table";
@@ -33,6 +39,7 @@ import {
   CreditCard,
   UserCheck,
   Plus,
+  RotateCcw,
 } from "lucide-react";
 import {
   getTeamDetails,
@@ -45,6 +52,7 @@ import {
   getTeamPointsInvested,
   getTeamPointsEarned,
   getTeamXPEarned,
+  getTeamClientMeetings,
 } from "@/lib/database";
 import { StatsCard } from "@/types/dashboard";
 import type { Database } from "@/types/database";
@@ -158,6 +166,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [teamXPEarned, setTeamXPEarned] = useState(0);
   // XP earned loading state removed as it's not used
   const [totalClientsContacted, setTotalClientsContacted] = useState(0);
+  const [clientMeetingsCount, setClientMeetingsCount] = useState(0);
+  const [achievementsUnlocked, setAchievementsUnlocked] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState(0);
+  const [refreshCountdown, setRefreshCountdown] = useState(0);
 
   // Extract ID from params
   useEffect(() => {
@@ -271,7 +283,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           setTimeout(async () => {
             try {
               // Use the existing function that handles RLS correctly
-              const freshTasks = await getTeamTasksVisible(team.id);
+              const freshTasks = await getTeamTasksVisible(team.id, user?.id);
               const freshTask = (
                 freshTasks as Database["public"]["Functions"]["get_team_tasks_visible"]["Returns"]
               ).find(
@@ -380,16 +392,37 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
   // Load team achievements from database
   const loadAchievements = useCallback(async () => {
-    if (!teamId) return; // Prevent DB call with null/invalid teamId
+    if (!teamId || !user?.id) return; // Prevent DB call with null/invalid teamId or user
     setLoadingAchievements(true);
     try {
+      // First, check client meetings count to determine if achievements should be unlocked
+      const clientMeetings = await getTeamClientMeetings(teamId, user.id);
+      const meetingsCount = clientMeetings.length;
+      setClientMeetingsCount(meetingsCount);
+
+      // Achievements are unlocked only if team has 8+ client meetings
+      const unlocked = meetingsCount >= 8;
+      setAchievementsUnlocked(unlocked);
+
       // Load achievements with progress tracking and rewards divided by team member count
       const achievementsData = await getTeamAchievements(teamId);
       setAchievements(achievementsData);
 
       // PHASE 2: Use new visible tasks approach - shows ALL active tasks with lazy progress
-      const allTasksData = await getTeamTasksVisible(teamId);
+      const allTasksData = await getTeamTasksVisible(teamId, user?.id);
       const tasksArray = Array.isArray(allTasksData) ? allTasksData : [];
+
+      // Debug: Check for confidential tasks
+      console.log(
+        "Team tasks data:",
+        tasksArray
+          .filter((t) => t.is_confidential)
+          .map((t) => ({
+            id: t.task_id,
+            title: t.task_title,
+            confidential: t.is_confidential,
+          }))
+      );
 
       const transformedTasks = (
         tasksArray as Database["public"]["Functions"]["get_team_tasks_visible"]["Returns"]
@@ -398,6 +431,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         return {
           progress_id: taskData.progress_id,
           task_id: taskData.task_id,
+          is_confidential: taskData.is_confidential,
           title: taskData.task_title, // Fixed: use task_title from function response
           description: taskData.task_description, // Fixed: use task_description from function response
           category: taskData.category,
@@ -426,7 +460,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     } finally {
       setLoadingAchievements(false);
     }
-  }, [teamId]);
+  }, [teamId, user?.id]);
 
   // Load team strikes from database
   const loadStrikes = useCallback(async () => {
@@ -613,10 +647,42 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   }, [teamId]);
 
   // Handle achievement card click for filtering - client-side only
-  const handleAchievementClick = useCallback((achievementId: string | null) => {
-    setSelectedAchievementId(achievementId);
-    // Filtering will be handled by useEffect below
-  }, []);
+  const handleAchievementClick = useCallback(
+    (achievementId: string | null) => {
+      // Only allow achievement clicks if achievements are unlocked (8+ client meetings)
+      if (!achievementsUnlocked) return;
+
+      setSelectedAchievementId(achievementId);
+      // Filtering will be handled by useEffect below
+    },
+    [achievementsUnlocked]
+  );
+
+  // Handle refresh with cooldown protection
+  const handleRefreshAchievements = useCallback(() => {
+    const now = Date.now();
+    const timeSinceLastRefresh = now - lastRefreshTime;
+    const cooldownPeriod = 3000; // 3 seconds
+
+    // Prevent spam clicking - require 3 second gap between refreshes
+    if (timeSinceLastRefresh < cooldownPeriod) {
+      return;
+    }
+
+    setLastRefreshTime(now);
+    setRefreshCountdown(3); // Start 3 second countdown
+    loadAchievements();
+  }, [lastRefreshTime, setLastRefreshTime, loadAchievements]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (refreshCountdown > 0) {
+      const timer = setTimeout(() => {
+        setRefreshCountdown(refreshCountdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [refreshCountdown]);
 
   useEffect(() => {
     if (!userLoading) {
@@ -1133,11 +1199,54 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           {/* Achievements Header */}
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Achievements</h2>
-            <Button variant="outline" className="gap-2" disabled>
-              <ExternalLink className="h-4 w-4" />
-              Read About Achievements
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={handleRefreshAchievements}
+                disabled={loadingAchievements || refreshCountdown > 0}
+              >
+                <RotateCcw
+                  className={`h-4 w-4 ${
+                    loadingAchievements ? "animate-spin" : ""
+                  }`}
+                />
+                {loadingAchievements
+                  ? "Refreshing..."
+                  : refreshCountdown > 0
+                  ? `Wait ${refreshCountdown}s`
+                  : "Refresh"}
+              </Button>
+              <Button variant="outline" className="gap-2" disabled>
+                <ExternalLink className="h-4 w-4" />
+                Read About Achievements
+              </Button>
+            </div>
           </div>
+
+          {/* Client Meetings Requirement Notice */}
+          {!achievementsUnlocked && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-center gap-2 text-amber-800">
+                <AlertTriangle className="h-5 w-5" />
+                <div>
+                  <div className="font-medium">Achievements Locked</div>
+                  <div className="text-sm text-amber-700 mt-1">
+                    {isTeamMember ? (
+                      <>
+                        Complete at least 8 client meetings to unlock
+                        achievements and tasks. Current progress:{" "}
+                        {clientMeetingsCount}/8 meetings
+                      </>
+                    ) : (
+                      "This team needs to complete more client meetings to unlock achievements and tasks."
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Achievement Cards Grid */}
           {loadingAchievements ? (
@@ -1149,40 +1258,70 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               No achievements available for this team
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {achievements.map((achievement) => (
-                <div
-                  key={achievement.achievement_id}
-                  onClick={() =>
-                    handleAchievementClick(
-                      selectedAchievementId === achievement.achievement_id
-                        ? null
-                        : achievement.achievement_id
-                    )
-                  }
-                  className="cursor-pointer transition-all duration-200 hover:scale-[1.02]"
-                >
-                  <AchievementCard
-                    title={achievement.achievement_name}
-                    description={
-                      selectedAchievementId === achievement.achievement_id
-                        ? "Click to show all tasks"
-                        : "Click to filter tasks"
-                    }
-                    status={
-                      achievement.status === "completed"
-                        ? "finished"
-                        : achievement.status
-                    }
-                    points={achievement.credits_reward}
-                    xp={achievement.xp_reward}
-                    selected={
-                      selectedAchievementId === achievement.achievement_id
-                    }
-                  />
-                </div>
-              ))}
-            </div>
+            <TooltipProvider>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {achievements.map((achievement) => (
+                  <Tooltip key={achievement.achievement_id}>
+                    <TooltipTrigger asChild>
+                      <div
+                        onClick={() =>
+                          handleAchievementClick(
+                            selectedAchievementId === achievement.achievement_id
+                              ? null
+                              : achievement.achievement_id
+                          )
+                        }
+                        className={`transition-all duration-200 ${
+                          achievementsUnlocked
+                            ? "cursor-pointer hover:scale-[1.02]"
+                            : "cursor-not-allowed opacity-60"
+                        }`}
+                      >
+                        <AchievementCard
+                          title={achievement.achievement_name}
+                          description={
+                            !achievementsUnlocked
+                              ? isTeamMember
+                                ? `Need ${
+                                    8 - clientMeetingsCount
+                                  } more client meetings`
+                                : "Locked - more client meetings required"
+                              : selectedAchievementId ===
+                                achievement.achievement_id
+                              ? "Click to show all tasks"
+                              : "Click to filter tasks"
+                          }
+                          status={
+                            !achievementsUnlocked
+                              ? "not-started"
+                              : achievement.status === "completed"
+                              ? "finished"
+                              : achievement.status
+                          }
+                          points={achievement.credits_reward}
+                          xp={achievement.xp_reward}
+                          selected={
+                            achievementsUnlocked &&
+                            selectedAchievementId === achievement.achievement_id
+                          }
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    {!achievementsUnlocked && (
+                      <TooltipContent>
+                        <p className="text-sm">
+                          {isTeamMember
+                            ? `Complete ${
+                                8 - clientMeetingsCount
+                              } more client meetings to unlock achievements`
+                            : "This team needs more client meetings to unlock achievements"}
+                        </p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                ))}
+              </div>
+            </TooltipProvider>
           )}
 
           {/* Filter Status */}
@@ -1211,6 +1350,17 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           {loadingTasks || loadingAchievements ? (
             <div className="flex items-center justify-center py-8">
               <div className="text-gray-500">Loading tasks...</div>
+            </div>
+          ) : !achievementsUnlocked ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <div className="mb-2">Tasks are locked</div>
+              <div className="text-sm">
+                {isTeamMember
+                  ? `Complete ${
+                      8 - clientMeetingsCount
+                    } more client meetings to unlock tasks`
+                  : "This team needs more client meetings to unlock tasks"}
+              </div>
             </div>
           ) : filteredTasks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -1274,6 +1424,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     : undefined,
                   action: task.status === "approved" ? "done" : "complete",
                   isAvailable: task.is_available,
+                  is_confidential: task.is_confidential,
                   assignedAt: task.assigned_at,
                   completedAt: task.completed_at,
                 }))}

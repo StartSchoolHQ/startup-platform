@@ -95,6 +95,7 @@ export interface TaskWithAchievement {
   is_available: boolean | null;
   achievement_id?: string | null;
   achievement_name?: string | null;
+  is_confidential?: boolean | null;
 }
 
 export interface AchievementProgress {

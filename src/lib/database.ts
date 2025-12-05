@@ -2035,6 +2035,20 @@ export async function getAvailableTasksForReview(userId: string) {
     );
   }
 
+  // Check if user is admin to determine confidential task access
+  const { data: userProfile, error: userError } = await supabase
+    .from("users")
+    .select("primary_role")
+    .eq("id", userId)
+    .single();
+
+  if (userError) {
+    console.error("Error fetching user profile:", userError);
+    throw userError;
+  }
+
+  const isAdmin = userProfile?.primary_role === "admin";
+
   // Get tasks available for peer review (ONLY from teams user is NOT a member of)
   // External Peer Reviewer = someone from a different team than the submitting team
   let query = supabase
@@ -2055,7 +2069,8 @@ export async function getAvailableTasksForReview(userId: string) {
         base_xp_reward,
         base_points_reward,
         category,
-        peer_review_criteria
+        peer_review_criteria,
+        is_confidential
       ),
       teams(
         id,
@@ -2066,6 +2081,11 @@ export async function getAvailableTasksForReview(userId: string) {
     .eq("status", "pending_review")
     .eq("context", "team")
     .is("reviewer_user_id", null); // Only show tasks that don't have a reviewer assigned yet
+
+  // Filter out confidential tasks from peer review for non-admin users
+  if (!isAdmin) {
+    query = query.eq("tasks.is_confidential", false);
+  }
 
   // Users can only review tasks from teams they are NOT members of
   if (userTeamIds.length > 0) {
@@ -2310,49 +2330,37 @@ export async function leaveAllActiveTeams(userId: string) {
 }
 
 // Client Meetings Functions (following golden rule - simple and clean!)
-export async function getTeamClientMeetings(teamId: string) {
+
+// Removed insecure canUserSeeClientNames function - now handled securely at database level
+
+export async function getTeamClientMeetings(teamId: string, userId: string) {
   const supabase = createClient();
-  console.log("Loading client meetings for team:", teamId);
+  console.log("Loading client meetings for team:", teamId, "user:", userId);
 
   try {
-    // Using any cast since client_meetings table exists but not in generated types
+    // Use the secure database function that handles permissions at database level
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any)
-      .from("client_meetings")
-      .select(
-        `
-        id,
-        client_name,
-        status,
-        created_at,
-        completed_at,
-        cancelled_at,
-        responsible_user_id,
-        client_type,
-        call_type,
-        how_it_went,
-        new_things_learned,
-        users:responsible_user_id (
-          id,
-          name,
-          avatar_url
-        )
-      `
-      )
-      .eq("team_id", teamId)
-      .order("created_at", { ascending: false });
+    const { data, error } = await (supabase as any).rpc(
+      "get_team_client_meetings_secure",
+      {
+        p_team_id: teamId,
+        p_user_id: userId,
+      }
+    );
 
     if (error) {
       console.error("Error fetching client meetings:", error);
       throw error;
     }
 
+    console.log("Meetings loaded:", data?.length || 0);
+
     // Transform the data to match our expected interface
     return (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data?.map((meeting: any) => ({
         id: meeting.id,
-        client_name: meeting.client_name,
+        client_name: meeting.client_name, // Already masked at database level if needed
         status: meeting.status,
         created_at: meeting.created_at,
         completed_at: meeting.completed_at,
@@ -2362,10 +2370,11 @@ export async function getTeamClientMeetings(teamId: string) {
         call_type: meeting.call_type,
         how_it_went: meeting.how_it_went,
         new_things_learned: meeting.new_things_learned,
+        is_client_name_masked: meeting.is_client_name_masked, // New field to indicate masking
         users: {
-          id: meeting.users?.id || "",
-          name: meeting.users?.name || "Unknown User",
-          avatar_url: meeting.users?.avatar_url || null,
+          id: meeting.user_id || "",
+          name: meeting.user_name || "Unknown User",
+          avatar_url: meeting.user_avatar_url || null,
         },
       })) || []
     );
@@ -3426,12 +3435,22 @@ export async function getTaskForEdit(taskId: string) {
  * Get team tasks using the new visible architecture (alongside existing functions)
  * Shows ALL active team tasks with lazy progress - only creates progress when needed
  */
-export async function getTeamTasksVisible(teamId: string) {
+export async function getTeamTasksVisible(teamId: string, userId?: string) {
   const supabase = createClient();
+
+  // Get current user if not provided
+  let currentUserId = userId;
+  if (!currentUserId) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    currentUserId = user?.id;
+  }
 
   const { data, error } = await supabase.rpc("get_team_tasks_visible", {
     p_team_id: teamId,
-  });
+    p_user_id: currentUserId,
+  } as { p_team_id: string; p_user_id?: string });
 
   if (error) {
     console.error("Error fetching team tasks visible:", error);

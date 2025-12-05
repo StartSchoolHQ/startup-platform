@@ -68,6 +68,7 @@ export interface TeamTask {
   priority: TaskPriority;
   difficulty_level: number;
   base_xp_reward: number;
+  is_confidential?: boolean;
   detailed_instructions?: string;
   tips_content?: Array<{
     title: string;
@@ -167,6 +168,8 @@ export interface TaskTableItem {
   task_id?: string;
   // For achievement filtering in My Journey
   achievement_id?: string;
+  // For confidential task indicators
+  is_confidential?: boolean | null;
 }
 
 // Admin-specific task interface for task management

@@ -317,6 +317,7 @@ export type Database = {
           estimated_hours: number | null;
           id: string;
           is_active: boolean | null;
+          is_confidential: boolean | null;
           learning_objectives: string[] | null;
           metadata: Json | null;
           minimum_team_level: number | null;
@@ -350,6 +351,7 @@ export type Database = {
           estimated_hours?: number | null;
           id?: string;
           is_active?: boolean | null;
+          is_confidential?: boolean | null;
           learning_objectives?: string[] | null;
           metadata?: Json | null;
           minimum_team_level?: number | null;
@@ -383,6 +385,7 @@ export type Database = {
           estimated_hours?: number | null;
           id?: string;
           is_active?: boolean | null;
+          is_confidential?: boolean | null;
           learning_objectives?: string[] | null;
           metadata?: Json | null;
           minimum_team_level?: number | null;
@@ -1102,16 +1105,25 @@ export type Database = {
       get_team_tasks_visible: {
         Args: {
           p_team_id: string;
+          p_user_id?: string;
         };
         Returns: {
           progress_id: string | null;
           task_id: string;
           task_title: string;
           task_description: string | null;
+          detailed_instructions: string | null;
           category: string | null;
+          priority: string | null;
           difficulty_level: number | null;
+          estimated_hours: number | null; // numeric in DB = number in TS
           base_xp_reward: number | null;
           base_points_reward: number | null;
+          tips_content: string | null;
+          peer_review_criteria: string | null;
+          learning_objectives: string | null;
+          deliverables: string | null;
+          resources: string | null;
           progress_status: string | null;
           assigned_to_user_id: string | null;
           assignee_name: string | null;
@@ -1120,8 +1132,11 @@ export type Database = {
           started_at: string | null;
           completed_at: string | null;
           is_available: boolean | null;
+          sort_order: number | null;
           achievement_id: string | null;
           achievement_name: string | null;
+          reviewer_notes: string | null;
+          is_confidential: boolean | null;
         }[];
       };
       get_user_individual_tasks: {

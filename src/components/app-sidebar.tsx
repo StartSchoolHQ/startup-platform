@@ -11,6 +11,7 @@ import {
   Users,
   FileText,
   Settings,
+  HelpCircle,
 } from "lucide-react";
 
 import { NotificationCenter } from "@/components/notification-center";
@@ -53,6 +54,11 @@ const navMainItems = [
     title: "Peer Review",
     url: "/dashboard/peer-review",
     icon: FileText,
+  },
+  {
+    title: "Support",
+    url: "/dashboard/support",
+    icon: HelpCircle,
   },
 ];
 

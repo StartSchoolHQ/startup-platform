@@ -1,10 +1,17 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { DifficultyBadge } from "@/components/ui/difficulty-badge";
 import { StatusBadge, TaskStatus } from "@/components/ui/status-badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatDate } from "@/lib/date-utils";
-import { Medal, Zap } from "lucide-react";
+import { Medal, Zap, Lock } from "lucide-react";
 
 interface Task {
   id: string;
@@ -15,6 +22,7 @@ interface Task {
     difficulty_level: number;
     base_xp_reward: number;
     base_points_reward: number;
+    is_confidential?: boolean;
   } | null;
   teams?: {
     id: string;
@@ -55,15 +63,39 @@ export function TaskRow({
   const teamDotColor = variant === "submitted" ? "bg-primary" : "bg-primary/70";
 
   return (
-    <tr className="border-b border-border hover:bg-muted/50">
+    <tr
+      className={`border-b border-border hover:bg-muted/50 ${
+        task.tasks.is_confidential ? "bg-red-50/50" : ""
+      }`}
+    >
       {/* Task Info */}
       <td className="py-4 px-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
             <Medal className="h-4 w-4 text-black dark:text-white" />
           </div>
-          <div>
-            <div className="font-medium text-sm">{task.tasks.title}</div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="font-medium text-sm">{task.tasks.title}</div>
+              {task.tasks.is_confidential && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant="destructive"
+                        className="text-xs flex items-center gap-1 px-1.5 py-0.5"
+                      >
+                        <Lock className="h-2.5 w-2.5" />
+                        Confidential
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>This task can only be reviewed by admin users</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             <div className="text-xs text-muted-foreground max-w-xs truncate">
               {task.tasks.description}
             </div>

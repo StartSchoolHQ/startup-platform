@@ -9,7 +9,20 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Building2, Calendar, Phone, MessageSquare, Star } from "lucide-react";
+import {
+  Building2,
+  Calendar,
+  Phone,
+  MessageSquare,
+  Star,
+  EyeOff,
+} from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ViewClientMeetingModalProps {
   isOpen: boolean;
@@ -26,6 +39,7 @@ interface ViewClientMeetingModalProps {
     call_type?: string;
     how_it_went?: string;
     new_things_learned?: string;
+    is_client_name_masked?: boolean; // New field from secure database function
     users: {
       id: string;
       name: string | null;
@@ -138,8 +152,25 @@ export function ViewClientMeetingModal({
                 <div className="flex items-center justify-center w-10 h-10 rounded-md bg-primary/10">
                   <Building2 className="h-5 w-5 text-primary" />
                 </div>
-                <div>
-                  <div className="font-medium">{meeting.client_name}</div>
+                <div className="flex-1">
+                  <div className="font-medium flex items-center gap-2">
+                    {meeting.client_name}
+                    {meeting.is_client_name_masked && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">
+                              Client name hidden - only visible to team members
+                              and admins
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
                   {meeting.client_type && (
                     <div className="text-sm text-muted-foreground">
                       {getClientTypeLabel(meeting.client_type)}

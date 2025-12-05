@@ -1,10 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Building2, Zap, CreditCard } from "lucide-react";
+import { Building2, Zap, CreditCard, EyeOff } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { getTeamClientMeetings } from "@/lib/database";
 import { toast } from "sonner";
 import { ViewClientMeetingModal } from "./view-client-meeting-modal";
+import { useAppContext } from "@/contexts/app-context";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface DatabaseClientMeeting {
   id: string;
@@ -18,6 +25,7 @@ interface DatabaseClientMeeting {
   call_type?: string;
   how_it_went?: string;
   new_things_learned?: string;
+  is_client_name_masked?: boolean; // New field from secure database function
   users: {
     id: string;
     name: string | null;
@@ -35,6 +43,7 @@ export function ClientMeetingsTable({
   teamId,
   isTeamMember,
 }: ClientMeetingsTableProps) {
+  const { user } = useAppContext();
   const [meetings, setMeetings] = useState<DatabaseClientMeeting[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -42,9 +51,16 @@ export function ClientMeetingsTable({
     useState<DatabaseClientMeeting | null>(null);
 
   const loadMeetings = useCallback(async () => {
+    if (!user?.id) {
+      console.log("User not loaded yet, waiting...");
+      return;
+    }
+
     try {
       setLoading(true);
-      const data = await getTeamClientMeetings(teamId);
+      console.log("Loading meetings for team:", teamId, "user:", user.id);
+      const data = await getTeamClientMeetings(teamId, user.id);
+      console.log("Meetings loaded:", data.length);
       setMeetings(data);
     } catch (error) {
       console.error("Error loading client meetings:", error);
@@ -52,7 +68,7 @@ export function ClientMeetingsTable({
     } finally {
       setLoading(false);
     }
-  }, [teamId]);
+  }, [teamId, user?.id]);
 
   // Load meetings data
   useEffect(() => {
@@ -133,8 +149,23 @@ export function ClientMeetingsTable({
                       <Building2 className="h-4 w-4 text-black dark:text-white" />
                     </div>
                     <div>
-                      <div className="font-medium text-sm">
+                      <div className="font-medium text-sm flex items-center gap-2">
                         {meeting.client_name}
+                        {meeting.is_client_name_masked && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">
+                                  Client name hidden - only visible to team
+                                  members and admins
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         Created {formatDate(meeting.created_at)}
