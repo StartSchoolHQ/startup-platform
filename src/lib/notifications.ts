@@ -85,23 +85,30 @@ async function getPersistentNotifications(
 
   try {
     // Use manual query since the notifications table might not be in generated types yet
-    const { data: notifications, error } = await supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from("notifications" as any)
+    const { data: notifications, error } = (await supabase
+      // @ts-expect-error - notifications table exists but not in types yet
+      .from("notifications")
       .select("*")
       .eq("user_id", userId)
       .is("read_at", null)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(50)) as { data: Array<{
+        id: string;
+        user_id: string;
+        type: string;
+        title: string;
+        message: string | null;
+        data: unknown;
+        read_at: string | null;
+        created_at: string | null;
+      }> | null; error: unknown };
 
     if (error) {
       console.error("Error fetching persistent notifications:", error);
       return [];
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (notifications || []).map(
-      (notif: any): PersistentNotification => ({
+    return (notifications || []).map((notif): PersistentNotification => ({
         id: notif.id as string,
         type: notif.type as string,
         title: notif.title as string,
