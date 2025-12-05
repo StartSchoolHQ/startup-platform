@@ -40,15 +40,6 @@ export async function POST(request: NextRequest) {
     // Get webhook URL from environment
     const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
 
-    // Better error logging for debugging
-    console.log("Environment check:", {
-      hasWebhookUrl: !!webhookUrl,
-      availableEnvVars: Object.keys(process.env).filter((key) =>
-        key.includes("DISCORD")
-      ),
-      nodeEnv: process.env.NODE_ENV,
-    });
-
     if (!webhookUrl) {
       return NextResponse.json(
         {
