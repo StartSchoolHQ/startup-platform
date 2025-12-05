@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -122,6 +122,7 @@ interface CompletedReview {
 
 export default function PeerReviewPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useApp();
   const [availableTasks, setAvailableTasks] = useState<AvailableTask[]>([]);
   const [myTasks, setMyTasks] = useState<AvailableTask[]>([]);
@@ -144,6 +145,27 @@ export default function PeerReviewPage() {
   // Removed unused feedbackModalOpen and setFeedbackModalOpen
   // Removed unused setSelectedFeedbackTask
   const [activeTab, setActiveTab] = useState<string>("available-tests");
+
+  // Handle URL query parameters for tab and task navigation
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    const taskId = searchParams.get("task");
+
+    // Switch to specified tab if provided
+    if (
+      tab &&
+      ["available-tests", "my-tests", "my-tasks", "completed"].includes(tab)
+    ) {
+      setActiveTab(tab);
+    }
+
+    // TODO: If taskId is provided, we could auto-open the task modal
+    // For now, just switching to correct tab is sufficient
+    if (taskId) {
+      console.log("Task ID from notification:", taskId);
+    }
+  }, [searchParams]);
+
   // Alert state for inline feedback
   const [alertState, setAlertState] = useState<{
     variant: "success" | "error" | "info";

@@ -1,20 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  getUserNotifications,
+  getNotifications,
   getNotificationCount,
+  markPersistentNotificationRead,
   markNotificationSeen,
-  type Notification,
-} from "@/lib/database";
+  type UnifiedNotification,
+} from "@/lib/notifications";
 
-// Notification hook types
-export interface NotificationState {
-  notifications: Notification[];
-  count: number;
-  loading: boolean;
-}
-
-// Simple event emitter for task notification updates
-class TaskNotificationManager {
+// Simple event emitter for notification updates
+class NotificationManager {
   private listeners: (() => void)[] = [];
 
   subscribe(listener: () => void) {
@@ -29,32 +23,33 @@ class TaskNotificationManager {
   }
 }
 
-export const taskNotificationManager = new TaskNotificationManager();
+export const notificationManager = new NotificationManager();
 
 export function useNotifications(userId: string | undefined) {
-  const [state, setState] = useState<NotificationState>({
-    notifications: [],
-    count: 0,
-    loading: false,
-  });
+  const [notifications, setNotifications] = useState<UnifiedNotification[]>([]);
+  const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const loadNotifications = useCallback(async () => {
     if (!userId) {
-      setState({ notifications: [], count: 0, loading: false });
+      setNotifications([]);
+      setCount(0);
       return;
     }
 
-    setState((prev) => ({ ...prev, loading: true }));
+    setLoading(true);
     try {
-      const [notifications, count] = await Promise.all([
-        getUserNotifications(userId),
+      const [notifs, notifCount] = await Promise.all([
+        getNotifications(userId),
         getNotificationCount(userId),
       ]);
 
-      setState({ notifications, count, loading: false });
+      setNotifications(notifs);
+      setCount(notifCount);
     } catch (error) {
       console.error("Error loading notifications:", error);
-      setState({ notifications: [], count: 0, loading: false });
+    } finally {
+      setLoading(false);
     }
   }, [userId]);
 
@@ -63,38 +58,53 @@ export function useNotifications(userId: string | undefined) {
   }, [loadNotifications]);
 
   useEffect(() => {
-    const unsubscribe = taskNotificationManager.subscribe(() => {
+    const unsubscribe = notificationManager.subscribe(() => {
       loadNotifications();
     });
     return unsubscribe;
   }, [loadNotifications]);
 
-  const refreshNotifications = useCallback(() => {
-    taskNotificationManager.refresh();
-  }, []);
-
-  const markAsSeen = useCallback(
-    async (taskProgressId: string) => {
+  const markNotificationAsRead = useCallback(
+    async (notificationId: string, source?: "persistent" | "metadata") => {
       if (!userId) return false;
 
-      const success = await markNotificationSeen(taskProgressId, userId);
+      // Auto-detect source from notification if not provided
+      let notificationSource = source;
+      if (!notificationSource) {
+        const notification = notifications.find((n) => n.id === notificationId);
+        notificationSource = notification?.source || "metadata";
+      }
+
+      let success = false;
+      if (notificationSource === "persistent") {
+        success = await markPersistentNotificationRead(notificationId);
+      } else {
+        success = await markNotificationSeen(notificationId, userId);
+      }
+
       if (success) {
-        // Remove from local state immediately
-        setState((prev) => ({
-          ...prev,
-          notifications: prev.notifications.filter(
-            (n) => n.id !== taskProgressId
-          ),
-          count: prev.count - 1,
-        }));
+        setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+        setCount((prev) => Math.max(0, prev - 1));
       }
       return success;
     },
-    [userId]
+    [userId, notifications]
   );
 
-  return { ...state, refreshNotifications, markAsSeen };
+  const refresh = useCallback(() => {
+    notificationManager.refresh();
+  }, []);
+
+  return {
+    notifications,
+    count,
+    loading,
+    markAsRead: markNotificationAsRead,
+    markAsSeen: markNotificationAsRead, // Provide both interfaces for compatibility
+    refresh,
+  };
 }
 
-// Keep old hook name for backwards compatibility during transition
+// Legacy exports for backwards compatibility during transition
+export const taskNotificationManager = notificationManager;
 export const useTaskNotifications = useNotifications;

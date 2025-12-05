@@ -1500,13 +1500,17 @@ export interface Notification {
 }
 
 // Get simple notifications - only review completions for the user
-export async function getUserNotifications(
-  userId: string
-): Promise<Notification[]> {
-  const supabase = createClient();
+export async function getUserNotifications(): Promise<Notification[]> {
   const notifications: Notification[] = [];
 
+  // DISABLED: Metadata-based notifications are redundant with database trigger notifications
+  // Database triggers (notify_submitter_on_review_completion, notify_reviewer_on_resubmission)
+  // already create persistent notifications in the notifications table
+  // Keeping this metadata system creates duplicates
+
+  // Legacy metadata notification system - DISABLED to prevent duplicates
   // Get recent task completions for this user (last 7 days, not seen)
+  /*
   const sevenDaysAgo = new Date(
     Date.now() - 7 * 24 * 60 * 60 * 1000
   ).toISOString();
@@ -1556,13 +1560,14 @@ export async function getUserNotifications(
       });
     }
   }
+  */
 
   return notifications;
 }
 
 // Get notification count for badge display
-export async function getNotificationCount(userId: string): Promise<number> {
-  const notifications = await getUserNotifications(userId);
+export async function getNotificationCount(): Promise<number> {
+  const notifications = await getUserNotifications();
   return notifications.length;
 }
 

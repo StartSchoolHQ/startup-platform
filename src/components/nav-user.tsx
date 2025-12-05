@@ -9,6 +9,7 @@ import {
   Mail,
   CheckCircle,
   XCircle,
+  RefreshCw,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -31,7 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/contexts/app-context";
 import { useInvitationCount } from "@/hooks/use-invitation-count";
 import { useNotifications } from "@/hooks/use-task-notifications";
-import type { Notification } from "@/lib/database";
+import type { UnifiedNotification } from "@/lib/notifications";
 
 export function NavUser({
   user,
@@ -52,23 +53,54 @@ export function NavUser({
     markAsSeen,
   } = useNotifications(appUser?.id);
 
-  const handleNotificationClick = async (notification: Notification) => {
-    // Mark as seen and remove from list
-    await markAsSeen(notification.id);
+  const handleNotificationClick = async (notification: UnifiedNotification) => {
+    // Mark as seen and remove from list (auto-detects source)
+    await markAsSeen(notification.id, notification.source);
 
-    // Navigate to the task based on notification type/context
-    // Peer review notifications should go to team-journey (team context tasks)
-    // Individual task notifications should go to my-journey
-    if (
-      notification.type === "review_completed" ||
-      notification.type === "review_rejected" ||
-      notification.title?.toLowerCase().includes("review")
+    // Extract task_id from different sources
+    const taskId =
+      ("taskId" in notification ? notification.taskId : undefined) ||
+      ("data" in notification && notification.data?.taskId);
+
+    // Navigate based on notification type and data
+    const notificationType =
+      "type" in notification ? notification.type : undefined;
+    const notificationTitle =
+      "title" in notification ? notification.title : undefined;
+
+    if (notificationType === "invitation") {
+      router.push("/dashboard/invitations");
+    } else if (notificationType === "achievement") {
+      router.push("/dashboard/my-journey");
+    } else if (notificationType === "team_update") {
+      router.push("/dashboard/team-journey");
+    } else if (
+      notificationType === "peer_review_rejected" ||
+      notificationType === "peer_review_approved" ||
+      notificationType === "peer_review_resubmission" ||
+      notificationType === "review_completed" ||
+      notificationType === "review_rejected" ||
+      notificationType === "resubmission" ||
+      notificationTitle?.toLowerCase().includes("review")
     ) {
-      // Peer review notifications are for team context tasks
-      router.push(`/dashboard/team-journey/task/${notification.taskId}`);
+      // Peer review notifications - navigate to correct tab based on type
+      // Reviewer notifications (resubmission) -> My Tests tab
+      // Submitter notifications (rejected/approved) -> My Tasks tab
+      const isReviewerNotification =
+        notificationType === "peer_review_resubmission";
+      const tab = isReviewerNotification ? "my-tests" : "my-tasks";
+
+      if (taskId) {
+        router.push(`/dashboard/peer-review?tab=${tab}&task=${taskId}`);
+      } else {
+        router.push(`/dashboard/peer-review?tab=${tab}`);
+      }
+    } else if (taskId) {
+      // Task-related notifications
+      router.push(`/dashboard/team-journey/task/${taskId}`);
     } else {
-      // Individual task notifications
-      router.push(`/dashboard/my-journey/task/${notification.taskId}`);
+      // Default fallback
+      router.push("/dashboard");
     }
   };
 
@@ -172,17 +204,29 @@ export function NavUser({
                 </div>
               </DropdownMenuItem>
 
-              {/* Simple Notifications */}
+              {/* Unified Notifications */}
               {notifications.length > 0 && (
                 <>
                   {notifications.map((notification) => {
+                    const notificationIcon =
+                      "icon" in notification ? notification.icon : undefined;
                     const IconComponent =
-                      notification.icon === "check-circle"
+                      notificationIcon === "check-circle"
                         ? CheckCircle
+                        : notificationIcon === "users"
+                        ? Mail
+                        : notificationIcon === "refresh-cw"
+                        ? RefreshCw
+                        : notificationIcon === "x-circle"
+                        ? XCircle
                         : XCircle;
                     const iconColor =
-                      notification.icon === "check-circle"
+                      notificationIcon === "check-circle"
                         ? "text-green-500"
+                        : notificationIcon === "users"
+                        ? "text-blue-500"
+                        : notificationIcon === "refresh-cw"
+                        ? "text-blue-500"
                         : "text-red-500";
 
                     return (
@@ -197,10 +241,17 @@ export function NavUser({
                           />
                           <div className="flex-1">
                             <div className="text-sm font-medium">
-                              {notification.title}
+                              {"title" in notification
+                                ? notification.title
+                                : notification.message}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {notification.taskTitle}
+                              {/* Show task title from data if available, otherwise show message */}
+                              {("data" in notification &&
+                                notification.data?.taskTitle) ||
+                                ("message" in notification &&
+                                  notification.message) ||
+                                ""}
                             </div>
                           </div>
                         </div>

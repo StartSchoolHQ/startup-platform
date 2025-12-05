@@ -17,11 +17,7 @@ export function TeamItem({ stat }: TeamItemProps) {
       <IconContainer
         icon={stat.icon}
         iconColor={stat.iconColor}
-        backgroundColor={
-          stat.iconColor.includes("orange") || stat.iconColor.includes("yellow")
-            ? "bg-accent/20"
-            : "bg-primary/10"
-        }
+        backgroundColor="bg-gray-100 dark:bg-gray-800"
       />
       <div className="flex-1 min-w-0">
         <div className="text-lg font-bold">{stat.value}</div>

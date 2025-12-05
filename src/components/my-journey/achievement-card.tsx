@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Medal, Zap, CreditCard } from "lucide-react";
+import { Medal, Zap, CreditCard, ChevronRight } from "lucide-react";
 
 interface AchievementCardProps {
   title: string;
@@ -69,9 +69,10 @@ export function AchievementCard({
         <div className="flex items-start gap-2 mb-4 flex-1">
           <Medal className="h-12 w-12 text-black dark:text-white flex-shrink-0 bg-muted rounded-md p-2 mt-1" />
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg leading-tight mb-1">
-              {title}
-            </h3>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-semibold text-lg leading-tight">{title}</h3>
+              <ChevronRight className="h-4 w-4 text-muted-foreground opacity-60 flex-shrink-0" />
+            </div>
             <p className="text-sm text-muted-foreground line-clamp-2">
               {description}
             </p>

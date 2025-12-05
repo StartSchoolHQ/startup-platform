@@ -348,22 +348,10 @@ export default function MyJourneyPage() {
   const [filteredTasks, setFilteredTasks] = useState<TaskTableItem[]>([]);
 
   // Achievement click handler for filtering tasks
-  const handleAchievementClick = useCallback(
-    (achievementId: string | null) => {
-      setSelectedAchievementId(achievementId);
-
-      // Filter tasks based on selected achievement
-      if (achievementId) {
-        const filtered = userTasks.filter(
-          (task) => task.achievement_id === achievementId
-        );
-        setFilteredTasks(filtered);
-      } else {
-        setFilteredTasks(userTasks);
-      }
-    },
-    [userTasks]
-  );
+  const handleAchievementClick = useCallback((achievementId: string | null) => {
+    setSelectedAchievementId(achievementId);
+    // Filtering is handled by useEffect below
+  }, []);
 
   // Task interaction handlers using new lazy progress architecture
   const handleStartTask = async (taskId: string) => {
@@ -379,9 +367,20 @@ export default function MyJourneyPage() {
       );
 
       if (success) {
-        console.log("Task started successfully, refreshing data...");
-        // Refresh the task data to show updated status
-        await fetchUserData();
+        console.log("Task started successfully, updating UI...");
+        // Optimistically update the task status
+        setUserTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task.task_id === taskId
+              ? {
+                  ...task,
+                  status: "In Progress" as const,
+                  action: "complete" as const,
+                  assignedAt: new Date().toISOString(),
+                }
+              : task
+          )
+        );
       } else {
         console.error("Failed to start task");
         alert("Failed to start task. Please try again.");
@@ -389,6 +388,8 @@ export default function MyJourneyPage() {
     } catch (error) {
       console.error("Error starting task:", error);
       alert("Failed to start task. Please try again.");
+      // On error, refresh data to ensure consistency
+      await fetchUserData();
     }
   };
 
@@ -545,16 +546,7 @@ export default function MyJourneyPage() {
 
       const convertedTasks: TaskTableItem[] = Array.from(taskMap.values());
       setUserTasks(convertedTasks);
-
-      // Initialize filtered tasks (apply current filter if any)
-      if (selectedAchievementId) {
-        const filtered = convertedTasks.filter(
-          (task) => task.achievement_id === selectedAchievementId
-        );
-        setFilteredTasks(filtered);
-      } else {
-        setFilteredTasks(convertedTasks);
-      }
+      setFilteredTasks(convertedTasks);
 
       // Calculate dynamic stats cards
       const totalXP = individualStats?.totalXP || 0;
@@ -609,11 +601,23 @@ export default function MyJourneyPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, selectedAchievementId]);
+  }, [user?.id]);
 
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
+
+  // Client-side filtering effect
+  useEffect(() => {
+    if (selectedAchievementId) {
+      const filtered = userTasks.filter(
+        (task) => task.achievement_id === selectedAchievementId
+      );
+      setFilteredTasks(filtered);
+    } else {
+      setFilteredTasks(userTasks);
+    }
+  }, [selectedAchievementId, userTasks]);
 
   return (
     <main className="p-8">

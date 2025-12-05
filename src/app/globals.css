@@ -92,11 +92,11 @@
   --popover-foreground: oklch(0.984 0.003 247.858);
 
   /* Primary - using ff78c8 pink/magenta */
-  --primary: oklch(0.65 0.20 330);
+  --primary: oklch(0.65 0.2 330);
   --primary-foreground: oklch(0.984 0.003 247.858);
 
   /* Secondary - ff78c8 tinted for buttons to match borders */
-  --secondary: oklch(0.65 0.20 330 / 20%);
+  --secondary: oklch(0.65 0.2 330 / 20%);
   --secondary-foreground: oklch(0.9 0.005 270);
 
   /* Muted areas - between background and card */

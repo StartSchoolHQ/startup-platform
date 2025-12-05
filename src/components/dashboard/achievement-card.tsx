@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   Clock,
   Circle,
+  ChevronRight,
 } from "lucide-react";
 import { AchievementCardProps } from "@/types/dashboard";
 
@@ -79,10 +80,13 @@ export function AchievementCard({
             <div className={`p-2 rounded-lg bg-white shadow-sm`}>
               <IconComponent className={`h-6 w-6 ${statusColors.iconColor}`} />
             </div>
-            <div>
-              <CardTitle className="text-lg font-semibold">
-                {achievement.achievement_name}
-              </CardTitle>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg font-semibold">
+                  {achievement.achievement_name}
+                </CardTitle>
+                <ChevronRight className="h-4 w-4 text-muted-foreground opacity-60" />
+              </div>
               <CardDescription className="text-sm text-gray-600 mt-1">
                 {achievement.achievement_description}
               </CardDescription>

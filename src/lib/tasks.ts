@@ -1167,9 +1167,10 @@ export async function retryTask(
         started_at: now,
         completed_at: null,
         cancelled_at: null,
-        reviewer_user_id: null,
+        // PRESERVE reviewer_user_id for continuity (Phase 1 fix)
+        // reviewer_user_id: null, // REMOVED - don't clear reviewer on retry
         review_feedback: null,
-        peer_review_history: null, // Clear old review history on retry
+        // KEEP peer_review_history for notification triggers and history display
         updated_at: now,
       })
       .eq("id", progressId);

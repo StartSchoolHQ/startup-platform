@@ -7,20 +7,12 @@ interface ActivityItemProps {
 }
 
 export function ActivityItem({ activity }: ActivityItemProps) {
-  const getBackgroundColor = (iconColor: string) => {
-    if (iconColor.includes("red") || iconColor.includes("destructive"))
-      return "bg-destructive/10";
-    if (iconColor.includes("pink") || iconColor.includes("primary"))
-      return "bg-primary/10";
-    return "bg-muted";
-  };
-
   return (
     <BorderedContainer>
       <IconContainer
         icon={activity.icon}
         iconColor={activity.iconColor}
-        backgroundColor={getBackgroundColor(activity.iconColor)}
+        backgroundColor="bg-gray-100 dark:bg-gray-800"
       />
       <div className="flex-1">
         <div className="text-lg font-bold">{activity.name}</div>
