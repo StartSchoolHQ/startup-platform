@@ -61,21 +61,21 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="space-y-4">
           {/* Clients */}
           <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-              <Users className="h-4 w-4 text-primary" />
+            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+              <Users className="h-4 w-4 text-black dark:text-white" />
             </div>
             <div>
               <div className="font-semibold text-sm">
                 {product.customers.count}
               </div>
-              <div className="text-xs text-muted-foreground">Clients</div>
+              <div className="text-xs text-muted-foreground">Members</div>
             </div>
           </div>
 
           {/* Revenue */}
           <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-              <DollarSign className="h-4 w-4 text-primary" />
+            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+              <DollarSign className="h-4 w-4 text-black dark:text-white" />
             </div>
             <div>
               <div className="font-semibold text-sm">
@@ -89,8 +89,8 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {/* Points */}
           <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-              <Trophy className="h-4 w-4 text-primary" />
+            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+              <Trophy className="h-4 w-4 text-black dark:text-white" />
             </div>
             <div>
               <div className="font-semibold text-sm">

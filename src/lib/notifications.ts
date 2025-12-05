@@ -92,7 +92,8 @@ async function getPersistentNotifications(
       .eq("user_id", userId)
       .is("read_at", null)
       .order("created_at", { ascending: false })
-      .limit(50)) as { data: Array<{
+      .limit(50)) as {
+      data: Array<{
         id: string;
         user_id: string;
         type: string;
@@ -101,14 +102,17 @@ async function getPersistentNotifications(
         data: unknown;
         read_at: string | null;
         created_at: string | null;
-      }> | null; error: unknown };
+      }> | null;
+      error: unknown;
+    };
 
     if (error) {
       console.error("Error fetching persistent notifications:", error);
       return [];
     }
 
-    return (notifications || []).map((notif): PersistentNotification => ({
+    return (notifications || []).map(
+      (notif): PersistentNotification => ({
         id: notif.id as string,
         type: notif.type as string,
         title: notif.title as string,

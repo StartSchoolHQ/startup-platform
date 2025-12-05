@@ -306,7 +306,14 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         setRefreshTrigger((prev) => prev + 1); // Trigger reload on error
       }
     },
-    [team?.id, team?.members, user?.id, user?.name, user?.avatar_url, filteredTasks]
+    [
+      team?.id,
+      team?.members,
+      user?.id,
+      user?.name,
+      user?.avatar_url,
+      filteredTasks,
+    ]
   );
 
   // Load team data
