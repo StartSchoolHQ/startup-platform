@@ -96,6 +96,18 @@ export interface TaskWithAchievement {
   achievement_id?: string | null;
   achievement_name?: string | null;
   is_confidential?: boolean | null;
+  // Recurring task properties
+  is_recurring?: boolean;
+  recurring_status?: string | null;
+  cooldown_days?: number;
+  next_available_at?: string | null;
+  has_active_instance?: boolean;
+  template_code?: string | null;
+  _debug?: {
+    recurring_status?: string;
+    has_active_instance?: boolean;
+    latest_progress_id?: string | null;
+  } | null;
 }
 
 export interface AchievementProgress {

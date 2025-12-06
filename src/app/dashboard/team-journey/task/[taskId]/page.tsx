@@ -71,6 +71,61 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
   const [teamMembers, setTeamMembers] = useState<
     Array<{ id: string; name: string; avatar_url?: string }>
   >([]);
+  const [previousSubmissions, setPreviousSubmissions] = useState<any[]>([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+
+  // Check if task is recurring (mock for now, will come from task data)
+  const isRecurringTask =
+    task?.title?.includes("Weekly") || (task as any)?.is_recurring === true;
+
+  // Load previous submissions for recurring tasks
+  const loadPreviousSubmissions = useCallback(async () => {
+    if (!task?.task_id || !task?.team_id || !isRecurringTask) return;
+
+    setLoadingSubmissions(true);
+    try {
+      const supabase = createClient();
+
+      const { data, error } = await supabase
+        .from("task_progress")
+        .select(
+          `
+          id,
+          status,
+          completed_at,
+          assigned_to_user_id,
+          submission_data,
+          submission_url,
+          review_feedback,
+          users!inner(name, avatar_url)
+        `
+        )
+        .eq("task_id", task.task_id) // Get all instances of this task template
+        .eq("team_id", task.team_id)
+        .neq("id", task.id) // Exclude current instance
+        .in("status", ["approved", "rejected"]) // Only completed submissions
+        .order("completed_at", { ascending: false });
+
+      if (error) {
+        console.error("Error loading previous submissions:", error);
+        return;
+      }
+
+      setPreviousSubmissions(data || []);
+    } catch (error) {
+      console.error("Error loading previous submissions:", error);
+    } finally {
+      setLoadingSubmissions(false);
+    }
+  }, [task?.task_id, task?.team_id, task?.id, isRecurringTask]);
+
+  // Load previous submissions when task data is available
+  useEffect(() => {
+    if (task && isRecurringTask) {
+      loadPreviousSubmissions();
+    }
+  }, [task, isRecurringTask, loadPreviousSubmissions]);
+
   const [permissions, setPermissions] = useState<{
     canStart: boolean;
     canComplete: boolean;
@@ -446,7 +501,11 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
         {/* Main Content */}
         <div className="lg:col-span-3">
           <Tabs defaultValue="task" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList
+              className={`grid w-full ${
+                isRecurringTask ? "grid-cols-5" : "grid-cols-4"
+              }`}
+            >
               <TabsTrigger value="task" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Task
@@ -466,6 +525,15 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                 <Clock className="h-4 w-4" />
                 History
               </TabsTrigger>
+              {isRecurringTask && (
+                <TabsTrigger
+                  value="submissions"
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  Previous ({previousSubmissions.length})
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="task" className="space-y-6 mt-6">
@@ -1322,6 +1390,136 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Previous Submissions Tab - Only for recurring tasks */}
+            {isRecurringTask && (
+              <TabsContent value="submissions" className="space-y-6 mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold">
+                      Previous Submissions
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      History of all completed instances of this recurring task
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    {loadingSubmissions ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="text-muted-foreground">
+                          Loading previous submissions...
+                        </div>
+                      </div>
+                    ) : previousSubmissions.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                        <p>No previous submissions found.</p>
+                        <p className="text-sm">
+                          This is the first completion of this recurring task.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {previousSubmissions.map((submission, index) => (
+                          <div
+                            key={submission.id}
+                            className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage
+                                    src={submission.users?.avatar_url}
+                                  />
+                                  <AvatarFallback>
+                                    {submission.users?.name
+                                      ?.split(" ")
+                                      .map((n: string) => n[0])
+                                      .join("") || "U"}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <div className="font-medium text-sm">
+                                    {submission.users?.name || "Unknown User"}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    Completed{" "}
+                                    {new Date(
+                                      submission.completed_at
+                                    ).toLocaleDateString()}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge
+                                  variant={
+                                    submission.status === "approved"
+                                      ? "default"
+                                      : "destructive"
+                                  }
+                                  className="text-xs"
+                                >
+                                  {submission.status === "approved"
+                                    ? "Approved"
+                                    : "Rejected"}
+                                </Badge>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs"
+                                  onClick={() =>
+                                    window.open(
+                                      `/dashboard/team-journey/task/${submission.id}`,
+                                      "_blank"
+                                    )
+                                  }
+                                >
+                                  View Details
+                                </Button>
+                              </div>
+                            </div>
+                            {submission.review_feedback && (
+                              <div className="mt-3 p-3 bg-blue-50 rounded-md">
+                                <p className="text-sm text-gray-700">
+                                  <span className="font-medium">
+                                    Review Feedback:
+                                  </span>{" "}
+                                  {submission.review_feedback}
+                                </p>
+                              </div>
+                            )}
+                            {((submission.submission_data as any)?.files || [])
+                              .length > 0 && (
+                              <div className="mt-3">
+                                <p className="text-xs text-muted-foreground mb-2">
+                                  Evidence Files:
+                                </p>
+                                <div className="flex gap-2 flex-wrap">
+                                  {(
+                                    (submission.submission_data as any)
+                                      ?.files || []
+                                  ).map((url: string, fileIndex: number) => (
+                                    <Button
+                                      key={fileIndex}
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-xs h-7"
+                                      onClick={() => window.open(url, "_blank")}
+                                    >
+                                      File {fileIndex + 1}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
           </Tabs>
         </div>
 

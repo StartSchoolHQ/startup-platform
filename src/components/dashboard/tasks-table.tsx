@@ -59,6 +59,12 @@ const statusConfig = {
     bgColor: "bg-gray-100",
     label: "Not Started",
   },
+  cooldown: {
+    icon: Clock,
+    color: "text-purple-600",
+    bgColor: "bg-purple-100",
+    label: "Cooldown",
+  },
 };
 
 const difficultyColors = {

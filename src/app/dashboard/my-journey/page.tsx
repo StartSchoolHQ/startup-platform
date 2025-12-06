@@ -76,6 +76,12 @@ function RealTaskRow({
           buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
           icon: <Clock className="h-3 w-3 mr-1" />,
         };
+      case "Cooldown":
+        return {
+          buttonText: "Cooldown",
+          buttonClass: "bg-blue-500 text-white hover:bg-blue-600",
+          icon: <Clock className="h-3 w-3 mr-1" />,
+        };
       case "Not Started":
       default:
         return {

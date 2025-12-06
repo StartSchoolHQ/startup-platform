@@ -216,6 +216,8 @@ export type Database = {
           team_id: string | null;
           updated_at: string;
           user_id: string | null;
+          last_completed_at: string | null;
+          next_available_at: string | null;
         };
         Insert: {
           activity_type: string;
@@ -242,6 +244,8 @@ export type Database = {
           team_id?: string | null;
           updated_at?: string;
           user_id?: string | null;
+          last_completed_at?: string | null;
+          next_available_at?: string | null;
         };
         Update: {
           activity_type?: string;
@@ -268,6 +272,8 @@ export type Database = {
           team_id?: string | null;
           updated_at?: string;
           user_id?: string | null;
+          last_completed_at?: string | null;
+          next_available_at?: string | null;
         };
         Relationships: [
           {
@@ -334,6 +340,9 @@ export type Database = {
           tips_content: Json | null;
           title: string;
           updated_at: string | null;
+          is_recurring: boolean | null;
+          cooldown_days: number | null;
+          recurring_type: string | null;
         };
         Insert: {
           achievement_id?: string | null;
@@ -368,6 +377,9 @@ export type Database = {
           tips_content?: Json | null;
           title: string;
           updated_at?: string | null;
+          is_recurring?: boolean | null;
+          cooldown_days?: number | null;
+          recurring_type?: string | null;
         };
         Update: {
           achievement_id?: string | null;
@@ -402,6 +414,9 @@ export type Database = {
           tips_content?: Json | null;
           title?: string;
           updated_at?: string | null;
+          is_recurring?: boolean | null;
+          cooldown_days?: number | null;
+          recurring_type?: string | null;
         };
         Relationships: [
           {
@@ -1193,6 +1208,44 @@ export type Database = {
         Args: {
           p_progress_id: string;
         };
+        Returns: undefined;
+      };
+      get_recurring_task_status: {
+        Args: {
+          team_id_param: string;
+        };
+        Returns: {
+          task_id: string;
+          template_code: string;
+          title: string;
+          is_recurring: boolean;
+          cooldown_days: number;
+          last_completion: string;
+          next_available: string;
+          latest_progress_id: string;
+          recurring_status: string;
+          has_active_instance: boolean;
+        }[];
+      };
+      start_recurring_task: {
+        Args: {
+          task_id_param: string;
+          team_id_param: string;
+          user_id_param: string;
+        };
+        Returns: {
+          progress_id: string;
+          message: string;
+        }[];
+      };
+      is_task_recurring: {
+        Args: {
+          task_id: string;
+        };
+        Returns: boolean;
+      };
+      reset_available_recurring_tasks: {
+        Args: Record<string, never>;
         Returns: undefined;
       };
     };

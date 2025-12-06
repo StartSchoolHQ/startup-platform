@@ -24,9 +24,12 @@ import {
   Play,
   Loader2,
   Lock,
+  RotateCcw,
+  Clock,
 } from "lucide-react";
 import { TaskTableItem } from "@/types/team-journey";
 import { useRouter } from "next/navigation";
+import { mapUIStatusToBadge } from "@/lib/status-mapper";
 
 interface TasksTableProps {
   tasks: TaskTableItem[];
@@ -46,6 +49,8 @@ export function TasksTable({
   onStartTask,
 }: TasksTableProps) {
   const router = useRouter();
+
+  // Filter out any duplicate recurring tasks that may appear in regular task list
 
   return (
     <div>
@@ -94,6 +99,29 @@ export function TasksTable({
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="font-medium text-sm">{task.title}</div>
+                        {task.isRecurring && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 text-blue-800 hover:bg-blue-200"
+                                >
+                                  <RotateCcw className="h-2.5 w-2.5" />
+                                  Recurring
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  This task can be completed multiple times with
+                                  a cooldown period
+                                  {task.cooldownHours &&
+                                    ` (${task.cooldownHours}h cooldown)`}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                         {task.is_confidential && (
                           <TooltipProvider>
                             <Tooltip>
@@ -236,111 +264,308 @@ export function TasksTable({
                   </div>
                 </td>
                 <td className="py-4 px-4">
-                  <StatusBadge
-                    status={
-                      task.status === "Finished"
-                        ? "approved"
-                        : task.status === "Not Accepted"
-                        ? "rejected"
-                        : task.status === "Peer Review"
-                        ? "pending_review"
-                        : task.status === "In Progress"
-                        ? "in_progress"
-                        : "not_started"
-                    }
-                    variant="journey"
-                  />
+                  {task.status === "Cooldown" &&
+                  task.isRecurring &&
+                  task.nextAvailableAt ? (
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <StatusBadge
+                          status={mapUIStatusToBadge(task.status)}
+                          variant="journey"
+                        />
+                        <span className="text-xs text-blue-600 font-medium">
+                          🔄
+                        </span>
+                      </div>
+                      {task.nextAvailableAt &&
+                        (() => {
+                          const nextAvailable = new Date(task.nextAvailableAt);
+                          const now = new Date();
+                          const diffMs =
+                            nextAvailable.getTime() - now.getTime();
+
+                          if (diffMs <= 0) {
+                            return (
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-green-600 font-medium animate-pulse">
+                                  ✅ Available Now
+                                </span>
+                                <Button
+                                  size="sm"
+                                  className="text-xs px-2 py-1 h-6 bg-green-500 hover:bg-green-600 text-white"
+                                  onClick={() => window.location.reload()}
+                                >
+                                  Refresh
+                                </Button>
+                              </div>
+                            );
+                          }
+
+                          // Calculate days, hours, and minutes more accurately
+                          const diffMinutes = Math.floor(diffMs / (1000 * 60));
+                          const diffDays = Math.floor(diffMinutes / (24 * 60));
+                          const remainingMinutes = diffMinutes % (24 * 60);
+                          const remainingHours = Math.floor(
+                            remainingMinutes / 60
+                          );
+                          const finalMinutes = remainingMinutes % 60;
+
+                          let timeText = "";
+                          if (diffDays > 0) {
+                            timeText = `${diffDays}d ${remainingHours}h`;
+                          } else if (remainingHours > 0) {
+                            timeText = `${remainingHours}h ${finalMinutes}m`;
+                          } else {
+                            timeText = `${finalMinutes}m`;
+                          }
+
+                          // Calculate progress percentage (assuming 7 days cooldown)
+                          const totalCooldownMs = task.cooldownHours
+                            ? task.cooldownHours * 60 * 60 * 1000
+                            : 7 * 24 * 60 * 60 * 1000;
+                          const elapsedMs = totalCooldownMs - diffMs;
+                          const progressPercent = Math.max(
+                            0,
+                            Math.min(100, (elapsedMs / totalCooldownMs) * 100)
+                          );
+
+                          return (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="w-full">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className="text-xs text-blue-600 font-medium">
+                                        🕒 {timeText} left
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {Math.round(progressPercent)}%
+                                      </span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-1">
+                                      <div
+                                        className="bg-blue-500 h-1 rounded-full transition-all duration-300"
+                                        style={{ width: `${progressPercent}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <div className="text-center">
+                                    <p className="font-medium">
+                                      Next Available:
+                                    </p>
+                                    <p>{nextAvailable.toLocaleString()}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      Cooldown Progress:{" "}
+                                      {Math.round(progressPercent)}%
+                                    </p>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          );
+                        })()}
+                    </div>
+                  ) : (
+                    <StatusBadge
+                      status={
+                        task.status === "Finished"
+                          ? "approved"
+                          : task.status === "Not Accepted"
+                          ? "rejected"
+                          : task.status === "Peer Review"
+                          ? "pending_review"
+                          : task.status === "In Progress"
+                          ? "in_progress"
+                          : "not_started"
+                      }
+                      variant="journey"
+                    />
+                  )}
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex justify-end gap-2">
-                    {task.status === "Finished" ? (
-                      <>
-                        <Button
-                          size="sm"
-                          className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90 text-xs"
-                          disabled
-                        >
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Done
-                        </Button>
-                        {task.id && task.id.toString().startsWith("temp-") ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs px-3 py-2"
-                            disabled
-                          >
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs px-3 py-2 border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
-                            onClick={() =>
-                              router.push(
-                                `/dashboard/team-journey/task/${task.id}`
-                              )
-                            }
-                          >
-                            View Info
-                          </Button>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        {task.hasTips && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-xs px-2 text-[#ff78c8] hover:bg-[#ff78c8]/10"
-                          >
-                            Tips
-                          </Button>
-                        )}
-                        {/* Show Start button for unassigned available tasks */}
-                        {isTeamMember &&
-                        task.isAvailable &&
+                    {(() => {
+                      // Handle recurring tasks: distinguish between different states
+                      const isNeverStartedRecurring =
+                        task.isRecurring &&
+                        task.status === "Not Started" &&
                         !task.responsible &&
-                        currentUserId &&
-                        onStartTask ? (
+                        task.recurringStatus === "never_completed" &&
+                        !task.hasActiveInstance;
+
+                      const isRecurringAvailableAfterCooldown =
+                        task.isRecurring &&
+                        task.nextAvailableAt &&
+                        new Date(task.nextAvailableAt) <= new Date();
+
+                      if (isNeverStartedRecurring) {
+                        // Never started recurring task - show only Start button (no View Info)
+                        return (
                           <Button
-                            variant="default"
                             size="sm"
-                            className="text-xs px-3 py-2 bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
-                            onClick={() => onStartTask(task.id)}
+                            className="bg-green-500 text-white hover:bg-green-600 text-xs"
+                            onClick={() => onStartTask?.(task.id)}
                           >
                             <Play className="h-3 w-3 mr-1" />
                             Start
                           </Button>
-                        ) : task.responsible ? (
-                          // Task is assigned - everyone sees View Info button
-                          task.id && task.id.toString().startsWith("temp-") ? (
+                        );
+                      }
+
+                      if (isRecurringAvailableAfterCooldown) {
+                        // Available after cooldown - show Start Again + View Info
+                        return (
+                          <>
                             <Button
-                              variant="outline"
                               size="sm"
-                              className="text-xs px-3 py-2"
+                              className="bg-green-500 text-white hover:bg-green-600 text-xs"
+                              onClick={() => onStartTask?.(task.id)}
+                            >
+                              <Play className="h-3 w-3 mr-1" />
+                              Start Again
+                            </Button>
+                            {task.id &&
+                            task.id.toString().startsWith("temp-") ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs px-3 py-2"
+                                disabled
+                              >
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs px-3 py-2 border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
+                                onClick={() =>
+                                  router.push(
+                                    `/dashboard/team-journey/task/${task.id}`
+                                  )
+                                }
+                              >
+                                View Info
+                              </Button>
+                            )}
+                          </>
+                        );
+                      }
+
+                      if (
+                        task.status === "Finished" ||
+                        (task.isRecurring && task.status === "Cooldown")
+                      ) {
+                        return (
+                          <>
+                            <Button
+                              size="sm"
+                              className={`${
+                                task.isRecurring && task.status === "Cooldown"
+                                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md"
+                                  : "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
+                              } text-xs transition-all duration-200`}
                               disabled
                             >
-                              <Loader2 className="h-3 w-3 animate-spin" />
+                              {task.isRecurring && task.nextAvailableAt ? (
+                                <>
+                                  <Clock className="h-3 w-3 mr-1 animate-spin" />
+                                  Cooldown
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Done
+                                </>
+                              )}
                             </Button>
-                          ) : (
+                            {task.id &&
+                            task.id.toString().startsWith("temp-") ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs px-3 py-2"
+                                disabled
+                              >
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs px-3 py-2 border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
+                                onClick={() =>
+                                  router.push(
+                                    `/dashboard/team-journey/task/${task.id}`
+                                  )
+                                }
+                              >
+                                View Info
+                              </Button>
+                            )}
+                          </>
+                        );
+                      }
+
+                      // Return other task states (non-finished tasks)
+                      return (
+                        <>
+                          {task.hasTips && (
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
-                              className="text-xs px-3 py-2 border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
-                              onClick={() =>
-                                router.push(
-                                  `/dashboard/team-journey/task/${task.id}`
-                                )
-                              }
+                              className="text-xs px-2 text-[#ff78c8] hover:bg-[#ff78c8]/10"
                             >
-                              View Info
+                              Tips
                             </Button>
-                          )
-                        ) : null}
-                      </>
-                    )}
+                          )}
+                          {/* Show Start button for unassigned available tasks */}
+                          {isTeamMember &&
+                          task.isAvailable &&
+                          !task.responsible &&
+                          currentUserId &&
+                          onStartTask ? (
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="text-xs px-3 py-2 bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
+                              onClick={() => onStartTask(task.id)}
+                            >
+                              <Play className="h-3 w-3 mr-1" />
+                              Start
+                            </Button>
+                          ) : task.responsible ? (
+                            // Task is assigned - everyone sees View Info button
+                            task.id &&
+                            task.id.toString().startsWith("temp-") ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs px-3 py-2"
+                                disabled
+                              >
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs px-3 py-2 border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
+                                onClick={() =>
+                                  router.push(
+                                    `/dashboard/team-journey/task/${task.id}`
+                                  )
+                                }
+                              >
+                                View Info
+                              </Button>
+                            )
+                          ) : null}
+                        </>
+                      );
+                    })()}
                   </div>
                 </td>
               </tr>

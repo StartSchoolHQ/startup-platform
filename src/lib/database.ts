@@ -3432,8 +3432,9 @@ export async function getTaskForEdit(taskId: string) {
 // ============================================================================
 
 /**
- * Get team tasks using the new visible architecture (alongside existing functions)
- * Shows ALL active team tasks with lazy progress - only creates progress when needed
+ * PHASE 1 UNIFIED: Get team tasks with recurring metadata merged
+ * Eliminates need for separate /api/recurring-tasks endpoint
+ * Shows ALL active team tasks with lazy progress and recurring status
  */
 export async function getTeamTasksVisible(teamId: string, userId?: string) {
   const supabase = createClient();
@@ -3447,17 +3448,72 @@ export async function getTeamTasksVisible(teamId: string, userId?: string) {
     currentUserId = user?.id;
   }
 
-  const { data, error } = await supabase.rpc("get_team_tasks_visible", {
-    p_team_id: teamId,
-    p_user_id: currentUserId,
-  } as { p_team_id: string; p_user_id?: string });
+  try {
+    // BRILLIANT RESET APPROACH: Auto-reset completed recurring tasks when cooldown ends
+    await supabase.rpc("reset_available_recurring_tasks");
 
-  if (error) {
-    console.error("Error fetching team tasks visible:", error);
+    // PHASE 4 COMPLETE UNIFICATION: Use only get_team_tasks_visible
+    // This function already includes recurring tasks, we just need to identify them
+    const { data: allTasks, error } = await supabase.rpc(
+      "get_team_tasks_visible",
+      {
+        p_team_id: teamId,
+        p_user_id: currentUserId,
+      } as { p_team_id: string; p_user_id?: string }
+    );
+
+    if (error) {
+      console.error("Error fetching team tasks:", error);
+      throw error;
+    }
+
+    const tasks = allTasks || [];
+
+    // PHASE 4: Enhance all tasks with recurring metadata
+    // Use the actual is_recurring field from the database if available
+    const enhancedTasks = tasks.map((task: any) => {
+      // First check if the task has is_recurring field from database
+      // If not, fall back to template code pattern matching
+      const isRecurring =
+        task.is_recurring === true ||
+        task.template_code?.startsWith("TEAM-") ||
+        task.task_title?.toLowerCase().includes("weekly") ||
+        task.task_title?.toLowerCase().includes("meeting");
+
+      // Debug log for the recurring task detection
+      if (
+        task.task_title?.toLowerCase().includes("weekly") ||
+        task.task_title?.toLowerCase().includes("meeting")
+      ) {
+        console.log("PHASE 4 DEBUG: Recurring task detection:", {
+          task_id: task.task_id,
+          title: task.task_title,
+          template_code: task.template_code,
+          db_is_recurring: task.is_recurring,
+          detected_recurring: isRecurring,
+          progress_id: task.progress_id,
+        });
+      }
+
+      return {
+        ...task,
+        // Simplified metadata - reset function handles recurring logic
+        is_recurring: isRecurring,
+        template_code: task.template_code || null,
+      };
+    });
+
+    console.log("PHASE 4 COMPLETE UNIFICATION: Loaded", {
+      total: enhancedTasks.length,
+      regular: enhancedTasks.filter((t) => !t.is_recurring).length,
+      recurring: enhancedTasks.filter((t) => t.is_recurring).length,
+    });
+
+    return enhancedTasks;
+  } catch (error) {
+    console.error("Error in unified task loading:", error);
     throw error;
   }
-
-  return data || [];
 }
 
 /**

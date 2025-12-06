@@ -3,6 +3,14 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  mapRecurringStatusToUI,
+  mapUIStatusToBadge,
+  getTaskAction,
+  validateStatusConsistency,
+  type RecurringTaskStatus,
+  type UITaskStatus,
+} from "@/lib/status-mapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,6 +48,8 @@ import {
   UserCheck,
   Plus,
   RotateCcw,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import {
   getTeamDetails,
@@ -61,6 +71,7 @@ import { useAppContext } from "@/contexts/app-context";
 import { hasUserSubmittedThisWeek } from "@/lib/weekly-reports";
 import { assignTaskToMember, startTask, startTaskLazy } from "@/lib/tasks";
 import { Achievement, TaskWithAchievement } from "@/types/dashboard";
+import { TaskTableItem } from "@/types/team-journey";
 
 interface ProductDetailPageProps {
   params: Promise<{
@@ -171,6 +182,10 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
   const [achievementsUnlocked, setAchievementsUnlocked] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const [refreshCountdown, setRefreshCountdown] = useState(0);
+  const [taskActionSuccess, setTaskActionSuccess] = useState<string | null>(
+    null
+  );
+  const [taskActionError, setTaskActionError] = useState<string | null>(null);
 
   // Extract ID from params
   useEffect(() => {
@@ -238,10 +253,21 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         // Find current user details for the UI update
         const currentMember = team?.members.find((m) => m.user_id === user.id);
 
-        // For new lazy progress model: taskId might be task_id (for new tasks) or progress_id (for existing tasks)
-        // Check if this is a task_id (new task) or progress_id (existing progress)
-        const isNewTask = !filteredTasks.find((t) => t.progress_id === taskId);
-        const actualTaskId = isNewTask
+        // PHASE 3 UNIFIED: Check if this is a recurring task using unified data
+        const task = filteredTasks.find(
+          (t) => t.progress_id === taskId || t.task_id === taskId
+        );
+        const isRecurringTask = task?.is_recurring === true;
+
+        // PHASE 3 UNIFIED: Handle both regular and recurring tasks with same logic
+        // For recurring tasks, always use task_id for starting new instances
+        // For regular tasks, use progress_id if exists, otherwise task_id
+        const isNewTask =
+          isRecurringTask ||
+          !filteredTasks.find((t) => t.progress_id === taskId);
+        const actualTaskId = isRecurringTask
+          ? task?.task_id || taskId // Always use task_id for recurring tasks
+          : isNewTask
           ? taskId
           : filteredTasks.find((t) => t.progress_id === taskId)?.task_id ||
             taskId;
@@ -270,16 +296,46 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         setAllTasks(updateTaskStart);
         setFilteredTasks(updateTaskStart);
 
-        // PHASE 2: Use lazy progress creation for new tasks without existing progress
+        // PHASE 3 UNIFIED: Use startTaskLazy for both regular and recurring tasks
+        console.log("PHASE 3 UNIFIED: Starting task:", {
+          taskId: actualTaskId,
+          teamId: team.id,
+          userId: user.id,
+          isRecurring: isRecurringTask,
+          taskTitle: task?.title,
+        });
+
         const success = isNewTask
           ? await startTaskLazy(actualTaskId, team.id, user.id, "team")
           : await startTask(taskId, user.id);
 
         if (!success) {
           // If it failed, revert the optimistic update
-          console.error("Failed to start task - reverting");
+          console.error("PHASE 3 UNIFIED: Failed to start task - reverting");
           setRefreshTrigger((prev) => prev + 1); // Trigger reload
-        } else if (isNewTask) {
+
+          // Show error feedback
+          setTaskActionError(`Failed to start: ${task?.title || "Task"}`);
+          setTimeout(() => setTaskActionError(null), 5000);
+        } else {
+          // PHASE 3 UNIFIED: Success handling for both regular and recurring tasks
+          console.log(
+            `PHASE 3 UNIFIED: Successfully started: ${task?.title || "Task"}`
+          );
+
+          // Show success feedback
+          setTaskActionSuccess(`Started: ${task?.title || "Task"}`);
+          setTimeout(() => setTaskActionSuccess(null), 3000);
+
+          // For recurring tasks, refresh data to show updated state
+          if (isRecurringTask) {
+            setTimeout(async () => {
+              await loadAchievements();
+            }, 500);
+          }
+        }
+
+        if (success && isNewTask) {
           // For newly created progress entries, get the real progress_id smoothly
           setTimeout(async () => {
             try {
@@ -316,7 +372,15 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         }
       } catch (error) {
         console.error("Error starting task:", error);
-        setRefreshTrigger((prev) => prev + 1); // Trigger reload on error
+
+        // Show error feedback
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to start task";
+        setTaskActionError(errorMessage);
+        setTimeout(() => setTaskActionError(null), 5000);
+
+        // Revert optimistic updates on failure
+        setRefreshTrigger((prev) => prev + 1);
       }
     },
     [
@@ -409,14 +473,20 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
       const achievementsData = await getTeamAchievements(teamId);
       setAchievements(achievementsData);
 
-      // PHASE 2: Use new visible tasks approach - shows ALL active tasks with lazy progress
+      // PHASE 1 UNIFIED: Use enhanced visible tasks with built-in recurring metadata
       const allTasksData = await getTeamTasksVisible(teamId, user?.id);
-      const tasksArray = Array.isArray(allTasksData) ? allTasksData : [];
+      const unifiedTasksArray = Array.isArray(allTasksData) ? allTasksData : [];
+
+      console.log("BRILLIANT RESET: Tasks loaded with auto-reset:", {
+        total: unifiedTasksArray.length,
+        recurring: unifiedTasksArray.filter((t) => t.is_recurring).length,
+        regular: unifiedTasksArray.filter((t) => !t.is_recurring).length,
+      });
 
       // Debug: Check for confidential tasks
       console.log(
         "Team tasks data:",
-        tasksArray
+        unifiedTasksArray
           .filter((t) => t.is_confidential)
           .map((t) => ({
             id: t.task_id,
@@ -425,34 +495,137 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
           }))
       );
 
-      const transformedTasks = (
-        tasksArray as Database["public"]["Functions"]["get_team_tasks_visible"]["Returns"]
-      ).map((task) => {
-        const taskData = task;
+      // PHASE 1 UNIFIED: Transform unified tasks (no need to separate regular vs recurring)
+      const transformedTasks = unifiedTasksArray.map((task) => {
+        // Handle both regular and recurring tasks in unified way
+        // Since get_team_tasks_visible doesn't return is_recurring, identify by achievement_name
+        const isRecurring = task.achievement_name === "Recurring Tasks";
+
+        // Debug log for recurring tasks specifically
+        if (task.task_title === "Weekly Team Meetings") {
+          console.log("DEBUG: Weekly Team Meetings detection:", {
+            task_id: task.task_id,
+            title: task.task_title,
+            achievement_name: task.achievement_name,
+            isRecurring: isRecurring,
+            progress_status: task.progress_status,
+            is_available: task.is_available,
+            next_available_at: task.next_available_at,
+          });
+        }
+
+        // BRILLIANT RESET: Simple status handling - database auto-resets tasks
+        // But we need special handling for recurring task cooldown display
+        let finalStatus = task.progress_status || "not_started";
+        let recurringStatus = null;
+
+        // For recurring tasks, check if they're in cooldown
+        if (isRecurring) {
+          recurringStatus = task.recurring_status || "available";
+
+          // If task is approved but not available, it's in cooldown
+          if (
+            task.progress_status === "approved" &&
+            task.is_available === false
+          ) {
+            finalStatus = "cooldown";
+          } else {
+            // Otherwise use the database status
+            finalStatus = task.progress_status || "not_started";
+          }
+
+          // Debug log for status mapping
+          if (task.task_title === "Weekly Team Meetings") {
+            console.log("DEBUG: Status mapping result:", {
+              original_progress_status: task.progress_status,
+              is_available: task.is_available,
+              mapped_finalStatus: finalStatus,
+              recurringStatus: recurringStatus,
+            });
+          }
+        }
+
         return {
-          progress_id: taskData.progress_id,
-          task_id: taskData.task_id,
-          is_confidential: taskData.is_confidential,
-          title: taskData.task_title, // Fixed: use task_title from function response
-          description: taskData.task_description, // Fixed: use task_description from function response
-          category: taskData.category,
-          difficulty_level: taskData.difficulty_level,
-          base_xp_reward: taskData.base_xp_reward,
-          base_credits_reward: taskData.base_points_reward,
-          status: taskData.progress_status || "not_started", // Fixed: use progress_status from function response
-          assigned_to_user_id: taskData.assigned_to_user_id,
-          assignee_name: taskData.assignee_name,
-          assignee_avatar_url: taskData.assignee_avatar_url,
-          assigned_at: taskData.assigned_at,
-          started_at: taskData.started_at,
-          completed_at: taskData.completed_at,
-          is_available: taskData.is_available !== false, // Default to true for template visibility
-          achievement_id: taskData.achievement_id,
-          achievement_name: taskData.achievement_name,
+          progress_id: task.progress_id,
+          task_id: task.task_id,
+          is_confidential: task.is_confidential || false,
+          title: task.task_title,
+          description:
+            task.task_description ||
+            (isRecurring ? "Weekly recurring task" : "Team task"),
+          category: task.category || (isRecurring ? "recurring" : "general"),
+          difficulty_level: task.difficulty_level || (isRecurring ? 1 : 2),
+          base_xp_reward: task.base_xp_reward || (isRecurring ? 200 : 100),
+          base_credits_reward:
+            task.base_points_reward || (isRecurring ? 20 : 10),
+          status: finalStatus,
+          recurring_status: recurringStatus,
+          assigned_to_user_id: task.assigned_to_user_id,
+          assignee_name: task.assignee_name,
+          assignee_avatar_url: task.assignee_avatar_url,
+          assigned_at: task.assigned_at,
+          started_at: task.started_at,
+          completed_at: task.completed_at,
+          is_available: task.is_available === true,
+          achievement_id: task.achievement_id,
+          achievement_name: task.achievement_name,
+          is_recurring: isRecurring,
+          // Enhanced recurring fields (now available for all tasks)
+          cooldown_days: task.cooldown_days,
+          template_code: task.template_code,
+          next_available_at: task.next_available_at,
+          has_active_instance: task.has_active_instance || false,
+          // Debug info for recurring tasks
+          _debug: isRecurring
+            ? {
+                recurring_status: task.recurring_status,
+                has_active_instance: task.has_active_instance,
+                latest_progress_id: task.latest_progress_id || task.progress_id,
+              }
+            : null,
         };
       });
 
-      setAllTasks(transformedTasks);
+      // BRILLIANT RESET: Simplified validation - database handles consistency
+      const validateTaskData = (task: any) => {
+        const issues = [];
+
+        // Check for missing required fields only
+        if (!task.task_id) issues.push(`task missing task_id`);
+        if (!task.title) issues.push(`task missing title`);
+
+        // No complex recurring validation needed - reset approach handles it!
+
+        if (issues.length > 0) {
+          console.warn(
+            `Task data validation issues for ${task.title}:`,
+            issues
+          );
+        }
+
+        return issues.length === 0;
+      };
+
+      // Validate all unified tasks
+      const validTasks = transformedTasks.filter(validateTaskData);
+
+      // Log validation results
+      if (transformedTasks.length !== validTasks.length) {
+        console.warn(
+          `PHASE 1 UNIFIED: Filtered out ${
+            transformedTasks.length - validTasks.length
+          } invalid tasks`
+        );
+      }
+
+      console.log("BRILLIANT RESET: Clean, validated tasks:", {
+        total: validTasks.length,
+        recurring: validTasks.filter((t) => t.is_recurring).length,
+        regular: validTasks.filter((t) => !t.is_recurring).length,
+      });
+
+      const allTasksCombined = validTasks;
+      setAllTasks(allTasksCombined);
       // Don't set filteredTasks here - let useEffect handle filtering based on selectedAchievementId
     } catch (error) {
       console.error("Error loading achievements:", error);
@@ -1283,6 +1456,9 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                                     8 - clientMeetingsCount
                                   } more client meetings`
                                 : "Locked - more client meetings required"
+                              : achievement.achievement_name ===
+                                "Recurring Tasks"
+                              ? "Weekly recurring team tasks"
                               : selectedAchievementId ===
                                 achievement.achievement_id
                               ? "Click to show all tasks"
@@ -1291,6 +1467,9 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                           status={
                             !achievementsUnlocked
                               ? "not-started"
+                              : achievement.achievement_name ===
+                                "Recurring Tasks"
+                              ? "in-progress"
                               : achievement.status === "completed"
                               ? "finished"
                               : achievement.status
@@ -1367,64 +1546,158 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Task filtering info */}
-              <div className="text-sm text-muted-foreground">
-                Showing {filteredTasks.length} task
-                {filteredTasks.length !== 1 ? "s" : ""}
-                {selectedAchievementId && (
-                  <span>
-                    {" "}
-                    for{" "}
-                    {
-                      achievements.find(
-                        (a) => a.achievement_id === selectedAchievementId
-                      )?.achievement_name
-                    }
+              {/* User feedback notifications */}
+              {taskActionSuccess && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2 animate-in slide-in-from-top-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-800">
+                    {taskActionSuccess}
                   </span>
-                )}{" "}
-                available to this team
-              </div>
+                </div>
+              )}
+              {taskActionError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2 animate-in slide-in-from-top-2">
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <span className="text-sm text-red-800">
+                    {taskActionError}
+                  </span>
+                </div>
+              )}
 
               {/* Convert filtered tasks to TaskTableItem format */}
               <TasksTable
                 isTeamMember={isTeamMember}
                 currentUserId={user?.id}
-                tasks={filteredTasks.map((task) => ({
-                  id: task.progress_id || task.task_id, // Use progress_id if exists, otherwise task_id
-                  title: task.title,
-                  description: task.description,
-                  difficulty:
-                    task.difficulty_level === 1
-                      ? "Easy"
-                      : task.difficulty_level === 2
-                      ? "Medium"
-                      : "Hard",
-                  xp: task.base_xp_reward,
-                  points: task.base_credits_reward,
-                  status:
-                    task.status === "approved"
-                      ? "Finished"
-                      : task.status === "pending_review"
-                      ? "Peer Review"
-                      : task.status === "in_progress"
-                      ? "In Progress"
-                      : task.status === "rejected"
-                      ? "Not Accepted"
-                      : "Not Started",
-                  responsible: task.assignee_name
-                    ? {
-                        name: task.assignee_name,
-                        avatar:
-                          task.assignee_avatar_url || "/avatars/john-doe.jpg",
-                        date: task.assigned_at || new Date().toISOString(),
-                      }
-                    : undefined,
-                  action: task.status === "approved" ? "done" : "complete",
-                  isAvailable: task.is_available,
-                  is_confidential: task.is_confidential,
-                  assignedAt: task.assigned_at,
-                  completedAt: task.completed_at,
-                }))}
+                tasks={filteredTasks.map((task) => {
+                  // Use actual database field to determine if task is recurring
+                  const isRecurring = (task as any).is_recurring === true;
+                  let status: TaskTableItem["status"] = "Not Started";
+                  let action: TaskTableItem["action"] = "complete";
+
+                  // Handle recurring task logic
+
+                  if (isRecurring) {
+                    // DEBUG: Log the actual values for Weekly Team Meetings
+                    if (task.title === "Weekly Team Meetings") {
+                      console.log("DEBUG: Weekly Team Meetings mapping:", {
+                        task_status: task.status,
+                        is_available: task.is_available,
+                        should_be_cooldown: task.status === "cooldown",
+                      });
+                    }
+
+                    // For recurring tasks, map based on transformed status from database
+                    if (task.status === "cooldown") {
+                      // Task completed and in cooldown period (transformed status)
+                      status = "Cooldown";
+                      action = "done";
+                    } else if (
+                      task.status === "approved" &&
+                      task.is_available
+                    ) {
+                      // Task completed and cooldown ended, ready for next cycle
+                      status = "Not Started";
+                      action = "complete";
+                    } else if (task.status === "pending_review") {
+                      status = "Peer Review";
+                      action = "done";
+                    } else if (task.status === "in_progress") {
+                      status = "In Progress";
+                      action = "complete";
+                    } else if (task.status === "rejected") {
+                      status = "Not Accepted";
+                      action = "complete";
+                    } else {
+                      // Not started or other states
+                      status = "Not Started";
+                      action = "complete";
+                    }
+                  } else {
+                    status =
+                      task.status === "approved"
+                        ? "Finished"
+                        : task.status === "pending_review"
+                        ? "Peer Review"
+                        : task.status === "in_progress"
+                        ? "In Progress"
+                        : task.status === "rejected"
+                        ? "Not Accepted"
+                        : "Not Started";
+                    action = task.status === "approved" ? "done" : "complete";
+                  }
+
+                  return {
+                    id: task.progress_id || task.task_id, // Use task_id for navigation when no progress
+                    title: task.title,
+                    description: task.description,
+                    difficulty:
+                      task.difficulty_level === 1
+                        ? "Easy"
+                        : task.difficulty_level === 2
+                        ? "Medium"
+                        : "Hard",
+                    xp: task.base_xp_reward,
+                    points: task.base_credits_reward,
+                    status,
+                    responsible: task.assignee_name
+                      ? {
+                          name: task.assignee_name,
+                          avatar:
+                            task.assignee_avatar_url || "/avatars/john-doe.jpg",
+                          date: task.assigned_at || new Date().toISOString(),
+                        }
+                      : isRecurring && task.status === "Cooldown"
+                      ? {
+                          name: "Last completed",
+                          avatar: "/avatars/john-doe.jpg",
+                          date: task.completed_at || new Date().toISOString(),
+                        }
+                      : undefined,
+                    action,
+                    isAvailable: task.is_available,
+                    is_confidential: task.is_confidential,
+                    assignedAt: task.assigned_at,
+                    completedAt: task.completed_at,
+                    isRecurring,
+                    cooldownHours: isRecurring
+                      ? ((task as any).cooldown_days || 7) * 24 // Use actual cooldown_days from recurring task data
+                      : undefined,
+                    nextAvailableAt: isRecurring
+                      ? (task as any).next_available_at || null // Use API data
+                      : null,
+
+                    // Debug log for cooldown display
+                    ...((isRecurring &&
+                      task.title?.toLowerCase().includes("weekly") &&
+                      console.log("UI MAPPING: Recurring task cooldown data:", {
+                        title: task.title,
+                        progress_status: task.status,
+                        recurring_status: (task as any).recurring_status,
+                        mapped_ui_status: status,
+                        cooldown_days: (task as any).cooldown_days,
+                        cooldownHours: ((task as any).cooldown_days || 7) * 24,
+                        next_available_at: (task as any).next_available_at,
+                        completed_at: task.completed_at,
+                        has_active_instance: (task as any).has_active_instance,
+                      })) ||
+                      {}),
+                    recurringStatus: isRecurring
+                      ? (task as any).recurring_status || "available"
+                      : undefined,
+                    hasActiveInstance: isRecurring
+                      ? (task as any).has_active_instance || false
+                      : undefined,
+                    // Debug info for recurring tasks
+                    _debug: isRecurring
+                      ? {
+                          recurring_status: (task as any).recurring_status,
+                          has_active_instance: (task as any)
+                            .has_active_instance,
+                          latest_progress_id: (task as any).latest_progress_id,
+                        }
+                      : undefined,
+                  } as TaskTableItem;
+                })}
                 teamMembers={
                   team?.members?.map((member) => ({
                     id: member.user_id,

@@ -9,7 +9,8 @@ export type TaskStatus =
   | "pending_review"
   | "in_progress"
   | "not_started"
-  | "cancelled";
+  | "cancelled"
+  | "cooldown";
 
 interface StatusBadgeProps {
   status: TaskStatus;
@@ -67,6 +68,13 @@ const getStatusConfig = (
         badgeVariant: "secondary" as const,
         className: "",
       };
+    case "cooldown":
+      return {
+        text: "Cooldown",
+        badgeVariant: "outline" as const,
+        className:
+          "bg-blue-500/10 text-blue-700 border-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400",
+      };
     default:
       return {
         text: "Unknown",
@@ -78,6 +86,8 @@ const getStatusConfig = (
 
 export function StatusBadge({ status, variant = "default" }: StatusBadgeProps) {
   const config = getStatusConfig(status, variant);
+
+  // StatusBadge component for task status display
 
   return (
     <Badge variant={config.badgeVariant} className={config.className}>

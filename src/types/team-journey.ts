@@ -153,8 +153,10 @@ export interface TaskTableItem {
     | "In Progress"
     | "Not Accepted"
     | "Peer Review"
-    | "Not Started";
-  action: "complete" | "done";
+    | "Not Started"
+    | "Cooldown"
+    | "Available";
+  action: "complete" | "done" | "restart";
   hasTips?: boolean;
   isAvailable?: boolean | null;
   // Additional fields for My Journey view
@@ -170,6 +172,18 @@ export interface TaskTableItem {
   achievement_id?: string;
   // For confidential task indicators
   is_confidential?: boolean | null;
+  // For recurring task indicators
+  isRecurring?: boolean;
+  cooldownHours?: number;
+  nextAvailableAt?: string | null;
+  recurringStatus?: string;
+  hasActiveInstance?: boolean;
+  // Debug information for recurring tasks
+  _debug?: {
+    recurring_status?: string;
+    has_active_instance?: boolean;
+    latest_progress_id?: string | null;
+  };
 }
 
 // Admin-specific task interface for task management
