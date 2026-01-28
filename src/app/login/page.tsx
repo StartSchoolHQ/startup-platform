@@ -1,0 +1,290 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Loader2, AlertCircle } from "lucide-react";
+import { createClient } from "../../lib/supabase/client";
+
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [resetCooldown, setResetCooldown] = useState(0);
+  const router = useRouter();
+
+  // Auto-dismiss error after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (resetCooldown > 0) {
+      const timer = setTimeout(() => setResetCooldown(resetCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resetCooldown]);
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        // Check if this is an incomplete profile trying to login
+        if (error.message.includes("Invalid login credentials")) {
+          // Try to check if user exists with incomplete profile
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          if (!user && email) {
+            // Check if this email has pending invitation
+            setError(
+              "Invalid credentials. If you were invited but haven't completed setup, please contact an admin to resend your invitation link.",
+            );
+          } else {
+            setError(error.message);
+          }
+        } else {
+          setError(error.message);
+        }
+        setLoading(false);
+      } else {
+        // Successfully authenticated - let dashboard handle profile checks
+        router.push("/dashboard");
+      }
+    } catch {
+      setError("An unexpected error occurred");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden p-4 bg-[#0000dd]">
+      {/* Grid background - always dark theme styling */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
+
+      {/* Login form */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 w-full max-w-md"
+      >
+        <Card className="border-zinc-800/50 bg-zinc-900/80 backdrop-blur-xl shadow-2xl">
+          <CardHeader className="text-center pb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <CardTitle className="text-2xl font-bold text-[#ff78c8]">
+                Welcome Back
+              </CardTitle>
+              <CardDescription className="text-zinc-400 mt-2">
+                Sign in to continue building your startup
+              </CardDescription>
+            </motion.div>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            <form onSubmit={handleSignIn} className="space-y-6">
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, x: 0 }}
+                  animate={{
+                    opacity: 1,
+                    x: [0, -10, 10, -10, 10, 0],
+                  }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{
+                    x: { duration: 0.4, times: [0, 0.2, 0.4, 0.6, 0.8, 1] },
+                    opacity: { duration: 0.2 },
+                  }}
+                  className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm flex items-start gap-2"
+                >
+                  <motion.div
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  >
+                    <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                  </motion.div>
+                  <span className="flex-1">{error}</span>
+                </motion.div>
+              )}
+
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="space-y-2"
+              >
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-medium text-zinc-100"
+                >
+                  Email
+                </Label>
+                <motion.div
+                  animate={loading ? { opacity: 0.5 } : { opacity: 1 }}
+                  whileFocus={{ scale: 1.01 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                    required
+                    className="bg-zinc-800 border-zinc-600 text-zinc-100 placeholder:text-zinc-400 focus:border-[#ff78c8] focus:ring-[#ff78c8]/30 focus:bg-zinc-700/50 transition-all duration-200"
+                  />
+                </motion.div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="space-y-2"
+              >
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-zinc-100"
+                >
+                  Password
+                </Label>
+                <motion.div
+                  animate={loading ? { opacity: 0.5 } : { opacity: 1 }}
+                  whileFocus={{ scale: 1.01 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                    required
+                    className="bg-zinc-800 border-zinc-600 text-zinc-100 placeholder:text-zinc-400 focus:border-[#ff78c8] focus:ring-[#ff78c8]/30 focus:bg-zinc-700/50 transition-all duration-200"
+                  />
+                </motion.div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+              >
+                <motion.div
+                  animate={loading ? { scale: [1, 1.02, 1] } : { scale: 1 }}
+                  transition={
+                    loading
+                      ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+                      : {}
+                  }
+                >
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full group relative overflow-hidden bg-[#ff78c8] hover:bg-[#ff60b8] text-white py-6 text-base font-semibold rounded-lg transition-all duration-300 hover:scale-[1.02] active:scale-95 hover:shadow-xl hover:shadow-[#ff78c8]/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      {loading && <Loader2 className="h-5 w-5 animate-spin" />}
+                      {loading ? "Signing in..." : "Sign In"}
+                    </span>
+                    {!loading && (
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                        initial={{ x: "-100%" }}
+                        whileHover={{ x: "100%" }}
+                        transition={{ duration: 0.6, ease: "easeInOut" }}
+                      />
+                    )}
+                  </Button>
+                </motion.div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="text-center space-y-2"
+              >
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!email) {
+                      setError("Please enter your email address");
+                      return;
+                    }
+                    if (resetCooldown > 0) {
+                      setError(
+                        `Please wait ${resetCooldown} seconds before requesting another reset`,
+                      );
+                      return;
+                    }
+                    setLoading(true);
+                    setError(null);
+                    try {
+                      const supabase = createClient();
+                      const { error } =
+                        await supabase.auth.resetPasswordForEmail(email, {
+                          redirectTo: `${
+                            process.env.NEXT_PUBLIC_APP_URL ||
+                            "https://startup.startschool.org"
+                          }/auth/callback?next=/auth/reset-password`,
+                        });
+                      if (error) {
+                        setError(error.message);
+                      } else {
+                        setError(
+                          "Password reset email sent! Check your inbox.",
+                        );
+                        setResetCooldown(60); // 60 second cooldown
+                      }
+                    } catch {
+                      setError("Failed to send reset email");
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading || resetCooldown > 0}
+                  className="text-sm text-zinc-300 hover:text-[#ff78c8] transition-colors duration-200 disabled:opacity-50"
+                >
+                  {resetCooldown > 0
+                    ? `Wait ${resetCooldown}s`
+                    : "Forgot password?"}
+                </button>
+              </motion.div>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+}

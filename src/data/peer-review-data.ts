@@ -1,0 +1,222 @@
+import { FileText, User, Zap, CreditCard } from "lucide-react"
+import { PeerReviewData } from "@/types/peer-review"
+import { StatsCard } from "@/types/dashboard"
+
+export const peerReviewData: PeerReviewData = {
+  statsCards: [
+    {
+      title: "Total Tasks Available",
+      value: "150",
+      subtitle: "+19% from last week",
+      icon: FileText,
+      iconColor: "text-green-500"
+    },
+    {
+      title: "Tasks Tested By You",
+      value: "32",
+      subtitle: "+19% from last month",
+      icon: User,
+      iconColor: "text-pink-500"
+    },
+    {
+      title: "Points Earned",
+      value: "9504",
+      subtitle: "+201 since last week",
+      icon: CreditCard,
+      iconColor: "text-orange-500"
+    },
+    {
+      title: "XP Earned",
+      value: "9504",
+      subtitle: "+201 since last week",
+      icon: Zap,
+      iconColor: "text-purple-500"
+    }
+  ] as StatsCard[],
+  availableTests: [
+    {
+      id: "1",
+      title: "Tweet 5 posts a day for a Week",
+      description: "Launch Achievements",
+      submittedBy: {
+        name: "John Doe",
+        avatar: "/avatars/john-doe.jpg",
+        date: "2024-01-25"
+      },
+      difficulty: "easy",
+      xp: 50,
+      points: 25,
+      action: "test",
+      tips: true
+    },
+    {
+      id: "2",
+      title: "Random Task",
+      description: "Launch Achievements",
+      submittedBy: {
+        name: "John Doe",
+        avatar: "/avatars/john-doe.jpg",
+        date: "2024-01-25"
+      },
+      difficulty: "medium",
+      xp: 50,
+      points: 25,
+      action: "test",
+      tips: true
+    },
+    {
+      id: "3",
+      title: "Random Task",
+      description: "Launch Achievements",
+      submittedBy: {
+        name: "John Doe",
+        avatar: "/avatars/john-doe.jpg",
+        date: "2024-01-25"
+      },
+      difficulty: "hard",
+      xp: 50,
+      points: 25,
+      action: "test",
+      tips: true
+    },
+    {
+      id: "4",
+      title: "Random Task",
+      description: "Launch Achievements",
+      submittedBy: {
+        name: "John Doe",
+        avatar: "/avatars/john-doe.jpg",
+        date: "2024-01-25"
+      },
+      difficulty: "easy",
+      xp: 50,
+      points: 25,
+      action: "test",
+      tips: true
+    },
+    {
+      id: "5",
+      title: "Random Task",
+      description: "Launch Achievements",
+      submittedBy: {
+        name: "John Doe",
+        avatar: "/avatars/john-doe.jpg",
+        date: "2024-01-25"
+      },
+      difficulty: "easy",
+      xp: 50,
+      points: 25,
+      action: "test",
+      tips: true
+    }
+  ],
+  myTests: [
+    {
+      id: "1",
+      title: "Build Personal Website",
+      description: "Create a responsive portfolio website",
+      testedBy: {
+        name: "Jane Smith",
+        avatar: "/avatars/john-doe.jpg",
+        date: "2024-01-24"
+      },
+      difficulty: "medium",
+      xp: 75,
+      points: 40,
+      status: "pending",
+      action: "view"
+    },
+    {
+      id: "2",
+      title: "API Integration Task",
+      description: "Integrate third-party API",
+      testedBy: {
+        name: "Mike Johnson",
+        avatar: "/avatars/john-doe.jpg",
+        date: "2024-01-23"
+      },
+      difficulty: "hard",
+      xp: 100,
+      points: 60,
+      status: "approved",
+      action: "view"
+    }
+  ],
+  myTasks: [
+    {
+      id: "1",
+      title: "Tweet 5 posts a day for a Week",
+      description: "Launch Achievements",
+      difficulty: "easy",
+      xp: 50,
+      points: 25,
+      status: "accepted",
+      testedBy: {
+        name: "John Doe", 
+        avatar: "/avatars/john-doe.jpg",
+        date: "2024-01-25"
+      },
+      action: "view"
+    },
+    {
+      id: "2",
+      title: "Random Task",
+      description: "Launch Achievements", 
+      difficulty: "medium",
+      xp: 50,
+      points: 25,
+      status: "in-progress",
+      testedBy: {
+        name: "John Doe",
+        avatar: "/avatars/john-doe.jpg", 
+        date: "2024-01-25"
+      },
+      action: "view"
+    },
+    {
+      id: "3",
+      title: "Random Task",
+      description: "Launch Achievements",
+      difficulty: "hard", 
+      xp: 50,
+      points: 25,
+      status: "denied",
+      testedBy: {
+        name: "John Doe",
+        avatar: "/avatars/john-doe.jpg",
+        date: "2024-01-25"
+      },
+      action: "view"
+    },
+    {
+      id: "4", 
+      title: "Random Task",
+      description: "Launch Achievements",
+      difficulty: "easy",
+      xp: 50,
+      points: 25,
+      status: "accepted",
+      testedBy: {
+        name: "John Doe",
+        avatar: "/avatars/john-doe.jpg",
+        date: "2024-01-25"
+      },
+      action: "view"
+    },
+    {
+      id: "5",
+      title: "Random Task", 
+      description: "Launch Achievements",
+      difficulty: "easy",
+      xp: 50,
+      points: 25,
+      status: "accepted",
+      testedBy: {
+        name: "John Doe",
+        avatar: "/avatars/john-doe.jpg",
+        date: "2024-01-25"
+      },
+      action: "view"
+    }
+  ]
+}

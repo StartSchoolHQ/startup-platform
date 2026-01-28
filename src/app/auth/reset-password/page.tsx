@@ -1,0 +1,196 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { PasswordInput } from "@/components/ui/password-input";
+import { Loader2, AlertCircle } from "lucide-react";
+
+export default function ResetPasswordPage() {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(true);
+  const router = useRouter();
+
+  // Auto-dismiss error after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  // Validate that user came from reset link
+  useEffect(() => {
+    const validateAccess = async () => {
+      const supabase = createClient();
+
+      // Check if there's a recovery token in URL
+      if (
+        typeof window !== "undefined" &&
+        window.location.hash.includes("access_token")
+      ) {
+        // Wait for Supabase to process the token
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+
+      // Check if user is authenticated
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        // Not authenticated, redirect to login
+        router.push("/login");
+        return;
+      }
+
+      setIsValidating(false);
+    };
+
+    validateAccess();
+  }, [router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!password.trim()) {
+      setError("Password is required");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const supabase = createClient();
+
+      // Update user password
+      const { error: passwordError } = await supabase.auth.updateUser({
+        password: password,
+      });
+
+      if (passwordError) {
+        setError(
+          passwordError.message ||
+            "Failed to update password. Please try again.",
+        );
+        return;
+      }
+
+      // Success! Redirect to dashboard
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (isValidating) {
+    return (
+      <div className="relative min-h-screen flex items-center justify-center overflow-hidden p-4 bg-[#0000dd]">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
+        <div className="relative z-10 text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-zinc-400 mx-auto" />
+          <p className="mt-4 text-zinc-400">Validating access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden p-4 bg-[#0000dd]">
+      {/* Grid background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
+
+      {/* Reset password form */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 w-full max-w-md"
+      >
+        <Card className="border-zinc-800/50 bg-zinc-900/80 backdrop-blur-xl shadow-2xl">
+          <CardHeader className="text-center pb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <CardTitle className="text-3xl font-bold text-white mb-2">
+                Reset Password
+              </CardTitle>
+              <CardDescription className="text-zinc-400">
+                Enter your new password below
+              </CardDescription>
+            </motion.div>
+          </CardHeader>
+
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20"
+                >
+                  <AlertCircle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-red-400">{error}</p>
+                </motion.div>
+              )}
+
+              <div className="space-y-4">
+                <PasswordInput
+                  password={password}
+                  confirmPassword={confirmPassword}
+                  onPasswordChange={setPassword}
+                  onConfirmPasswordChange={setConfirmPassword}
+                  disabled={loading}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-[#ff78c8] to-[#b24ef7] hover:from-[#ff8cd3] hover:to-[#c165f8] text-white shadow-lg shadow-purple-500/20"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating Password...
+                  </>
+                ) : (
+                  "Update Password"
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+}

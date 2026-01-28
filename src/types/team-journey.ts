@@ -1,0 +1,206 @@
+export interface User {
+  id: string;
+  name: string;
+  avatar: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  website?: string;
+  status: "Active" | "Inactive";
+  customers: {
+    count: number;
+    label: string;
+  };
+  revenue: {
+    amount: number;
+    label: string;
+  };
+  points: {
+    amount: number;
+    label: string;
+  };
+  avatar: string;
+  teamMembers: User[];
+  category?: string;
+  isCurrentUserMember?: boolean;
+}
+
+export interface TeamJourneyData {
+  allProducts: Product[];
+  myProducts: Product[];
+  archive: Product[];
+}
+
+// Task-related types for the simplified architecture
+export type TaskStatus =
+  | "not_started"
+  | "in_progress"
+  | "pending_review"
+  | "approved"
+  | "rejected"
+  | "revision_required"
+  | "cancelled"
+  | "template";
+export type TaskPriority = "low" | "medium" | "high";
+export type TaskCategory =
+  | "customer-acquisition"
+  | "product-foundation"
+  | "idea-validation"
+  | "repeatable-tasks"
+  | "team-growth"
+  | "legal-finance"
+  | "pitch";
+
+// Simplified Task interface - combines master task with team progress
+export interface TeamTask {
+  // Progress record data
+  progress_id: string | null; // ID from task_progress table (null for lazy progress)
+  task_id: string; // ID from tasks (master) table
+
+  // Master task data (from tasks table)
+  title: string;
+  description: string;
+  category: TaskCategory;
+  priority: TaskPriority;
+  difficulty_level: number;
+  base_xp_reward: number;
+  is_confidential?: boolean;
+  detailed_instructions?: string;
+  tips_content?: Array<{
+    title: string;
+    content: string;
+  }>;
+  peer_review_criteria?: Array<{
+    category: string;
+    points: string[];
+  }>;
+  learning_objectives?: string[];
+  deliverables?: string[];
+  resources?: Array<{
+    title: string;
+    type: string;
+    url: string;
+    description: string;
+  }>;
+  submission_form_schema?: {
+    fields: Array<{
+      name: string;
+      type: "text" | "textarea" | "url_list" | "file";
+      label: string;
+      placeholder?: string;
+      required?: boolean;
+      multiple?: boolean;
+      accept?: string;
+    }>;
+  };
+
+  // Team progress data (from task_progress table)
+  status: TaskStatus;
+  assigned_to_user_id?: string;
+  assignee_name?: string;
+  assignee_avatar_url?: string;
+  assigned_at?: string;
+  started_at?: string;
+  completed_at?: string;
+  updated_at?: string;
+  submission_notes?: string;
+  is_available?: boolean;
+  reviewer_user_id?: string;
+  reviewer_name?: string;
+  reviewer_avatar_url?: string;
+  review_feedback?: string;
+  peer_review_history?: Array<{
+    timestamp: string;
+    event_type:
+      | "submitted_for_review"
+      | "reviewer_assigned"
+      | "review_completed";
+    reviewer_id?: string;
+    reviewer_name?: string;
+    reviewer_avatar_url?: string;
+    decision?: "approved" | "rejected";
+    feedback?: string;
+  }>;
+
+  // For backwards compatibility and convenience
+  id: string; // Maps to progress_id for existing code
+  xp_reward: number; // Maps to base_xp_reward
+  team_id?: string;
+  teams?: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface TaskTableItem {
+  id: string;
+  title: string;
+  description: string | null;
+  responsible?: {
+    name: string;
+    avatar: string;
+    date: string;
+  };
+  difficulty: "Easy" | "Medium" | "Hard";
+  xp: number | null;
+  points: number | null;
+  status:
+    | "Finished"
+    | "In Progress"
+    | "Not Accepted"
+    | "Peer Review"
+    | "Not Started"
+    | "Cooldown"
+    | "Available";
+  action: "complete" | "done" | "restart";
+  hasTips?: boolean;
+  isAvailable?: boolean | null;
+  // Additional fields for My Journey view
+  reviewFeedback?: string | null;
+  reviewerName?: string | null;
+  reviewerAvatarUrl?: string | null;
+  teamName?: string;
+  assignedAt?: string | null;
+  completedAt?: string | null;
+  // For lazy progress system - original task ID for starting new tasks
+  task_id?: string;
+  // For achievement filtering in My Journey
+  achievement_id?: string;
+  // For confidential task indicators
+  is_confidential?: boolean | null;
+  // For recurring task indicators
+  isRecurring?: boolean;
+  cooldownHours?: number;
+  nextAvailableAt?: string | null;
+  recurringStatus?: string;
+  hasActiveInstance?: boolean;
+  // Extended task details for preview modal
+  detailed_instructions?: string | null;
+  learning_objectives?: string[] | null;
+  deliverables?: string[] | null;
+  resources?: Array<{
+    title: string;
+    type: string;
+    url: string;
+    description?: string;
+  }> | null;
+  // Debug information for recurring tasks
+  _debug?: {
+    recurring_status?: string;
+    has_active_instance?: boolean;
+    latest_progress_id?: string | null;
+  };
+}
+
+// Admin-specific task interface for task management
+export interface AdminTaskItem extends TaskTableItem {
+  category?: string;
+  priority?: string;
+  activity_type?: string;
+  created_at?: string;
+  updated_at?: string;
+  difficulty_level?: number;
+}
