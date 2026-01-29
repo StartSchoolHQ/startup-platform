@@ -26,7 +26,7 @@ interface WeeklyReport {
       commitments?: Array<{
         text: string;
         status: string;
-        explanation: string;
+        explanation?: string;
       }>;
       blockers?: string;
       blockersAnalysis?: string;
@@ -37,7 +37,8 @@ interface WeeklyReport {
       measurableProgress?: string;
       biggestAchievement?: string;
       achievementImpact?: string;
-      nextWeekPriority?: string;
+      nextWeekPriority?: string; // Legacy field
+      nextWeekCommitments?: string[]; // New field
       teamRecognition?: string;
       alignmentScore?: number;
       alignmentReason?: string;
@@ -54,7 +55,7 @@ interface WeeklyReportsTableProps {
 
 export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
   const [selectedReport, setSelectedReport] = useState<WeeklyReport | null>(
-    null
+    null,
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -133,7 +134,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                       ? "border-b border-border/50"
                       : ""
                   } hover:bg-muted/20 transition-colors ${getRowBackgroundColor(
-                    report.status
+                    report.status,
                   )}`}
                 >
                   <td className="py-4 px-4">
@@ -270,7 +271,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                                 </div>
                               )}
                             </div>
-                          )
+                          ),
                         )}
                       </div>
                     )}
@@ -348,15 +349,29 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                     </div>
                   )}
 
-                  {/* Q7: Next Week Priority */}
-                  {submission.submission_data?.nextWeekPriority && (
+                  {/* Q7: Next Week Commitments (new) or Priority (legacy) */}
+                  {(submission.submission_data?.nextWeekCommitments?.length ||
+                    submission.submission_data?.nextWeekPriority) && (
                     <div>
                       <div className="text-sm font-semibold mb-1">
-                        Next Week Priority
+                        {submission.submission_data?.nextWeekCommitments?.length
+                          ? "Top 3 Commitments for Next Week"
+                          : "Next Week Priority"}
                       </div>
-                      <div className="text-sm">
-                        {submission.submission_data.nextWeekPriority}
-                      </div>
+                      {submission.submission_data?.nextWeekCommitments
+                        ?.length ? (
+                        <ul className="text-sm list-disc list-inside space-y-1">
+                          {submission.submission_data.nextWeekCommitments.map(
+                            (commitment: string, idx: number) => (
+                              <li key={idx}>{commitment}</li>
+                            ),
+                          )}
+                        </ul>
+                      ) : (
+                        <div className="text-sm">
+                          {submission.submission_data?.nextWeekPriority}
+                        </div>
+                      )}
                     </div>
                   )}
 

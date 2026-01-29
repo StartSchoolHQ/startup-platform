@@ -104,12 +104,13 @@ export async function hasUserSubmittedThisWeekIndividual(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
       .from("weekly_reports")
-      .select("id")
+      .select("id, status")
       .eq("user_id", userId)
       .eq("context", "individual")
       .is("team_id", null)
       .eq("week_number", weekBoundaries.week_number)
       .eq("week_year", weekBoundaries.week_year)
+      .or("status.eq.submitted,status.is.null") // Only count submitted, not drafts
       .limit(1);
 
     if (error) {
