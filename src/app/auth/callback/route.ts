@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
 import { waitForProfile, isProfileComplete } from "../../../lib/profile-utils";
+import PostHogClient from "../../../lib/posthog-server";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -23,6 +24,18 @@ export async function GET(request: Request) {
         data: { user },
       } = await supabase.auth.getUser();
       if (user) {
+        // Track successful authentication
+        const posthog = PostHogClient();
+        posthog.capture({
+          distinctId: user.id,
+          event: "user_authenticated",
+          properties: {
+            email: user.email,
+            auth_method: "email_invite",
+          },
+        });
+        await posthog.shutdown();
+
         // Wait for trigger to create profile (handles race condition)
         const userProfile = await waitForProfile(supabase, user.id);
 
@@ -52,16 +65,16 @@ export async function GET(request: Request) {
     } else {
       // Code exchange failed - likely expired or already used invite link
       console.error("Code exchange failed:", error.message);
-      
+
       // Check if user already has a session (code was used before)
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      
+
       if (user) {
         // User has session but code failed - they clicked the link again
         const userProfile = await waitForProfile(supabase, user.id);
-        
+
         if (userProfile && !isProfileComplete(userProfile)) {
           // Incomplete profile - let them finish setup
           return NextResponse.redirect(`${origin}/profile/setup`);
@@ -70,10 +83,10 @@ export async function GET(request: Request) {
           return NextResponse.redirect(`${origin}/dashboard`);
         }
       }
-      
+
       // No session and code failed - invite link expired or already used
       return NextResponse.redirect(
-        `${origin}/auth/invite-expired?error=${encodeURIComponent(error.message)}`
+        `${origin}/auth/invite-expired?error=${encodeURIComponent(error.message)}`,
       );
     }
   } else {

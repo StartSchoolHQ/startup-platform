@@ -1,5 +1,6 @@
 "use client";
 
+import posthog from "posthog-js";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/date-utils";
@@ -112,7 +113,7 @@ export function TeamManagementModal({
   const [showDisbandConfirm, setShowDisbandConfirm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [allAvailableUsers, setAllAvailableUsers] = useState<AvailableUser[]>(
-    []
+    [],
   );
   const [loading, setLoading] = useState(false);
   const [invitingUsers, setInvitingUsers] = useState<Set<string>>(new Set());
@@ -165,6 +166,11 @@ export function TeamManagementModal({
     if (!memberToRemove) return;
     try {
       await removeTeamMember(team.id, memberToRemove);
+      posthog.capture("team_member_removed", {
+        team_id: team.id,
+        team_name: team.name,
+        removed_user_id: memberToRemove,
+      });
       toast.success("Member removed from team successfully");
       onRefresh?.();
       onClose();
@@ -178,10 +184,16 @@ export function TeamManagementModal({
 
   const handleChangeRole = async (
     memberId: string,
-    newRole: "member" | "leader" | "founder" | "co_founder"
+    newRole: "member" | "leader" | "founder" | "co_founder",
   ) => {
     try {
       await updateTeamMemberRole(team.id, memberId, newRole);
+      posthog.capture("team_member_role_changed", {
+        team_id: team.id,
+        team_name: team.name,
+        member_id: memberId,
+        new_role: newRole,
+      });
       toast.success("Member role updated successfully");
       onRefresh?.();
       onClose();
@@ -198,6 +210,10 @@ export function TeamManagementModal({
   const confirmDisbandTeam = async () => {
     try {
       await disbandTeam(team.id);
+      posthog.capture("team_disbanded", {
+        team_id: team.id,
+        team_name: team.name,
+      });
 
       // Invalidate React Query cache to update UI without page refresh
       queryClient.invalidateQueries({ queryKey: ["teamJourney"] });
@@ -246,6 +262,13 @@ export function TeamManagementModal({
 
     try {
       await sendTeamInvitationById(team.id, userId, "member");
+      posthog.capture("invitation_sent", {
+        team_id: team.id,
+        team_name: team.name,
+        invited_user_id: userId,
+        invited_user_name: userName,
+        role: "member",
+      });
       toast.success(`Invitation sent to ${userName || "user"} successfully!`);
       // Remove user from available list
       setAllAvailableUsers((prev) => prev.filter((user) => user.id !== userId));
@@ -255,7 +278,7 @@ export function TeamManagementModal({
     } catch (error) {
       console.error("Error sending invitation:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to send invitation"
+        error instanceof Error ? error.message : "Failed to send invitation",
       );
     } finally {
       setInvitingUsers((prev) => {
@@ -353,7 +376,7 @@ export function TeamManagementModal({
           error.message.includes("fetch")
         ) {
           setEditError(
-            "Network error. Please check your connection and try again."
+            "Network error. Please check your connection and try again.",
           );
         } else {
           setEditError(error.message);
@@ -385,7 +408,7 @@ export function TeamManagementModal({
     if (hasChanges && !isUpdating) {
       if (
         window.confirm(
-          "You have unsaved changes. Are you sure you want to close?"
+          "You have unsaved changes. Are you sure you want to close?",
         )
       ) {
         resetEditForm();

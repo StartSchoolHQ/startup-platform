@@ -1,5 +1,6 @@
 "use client";
 
+import posthog from "posthog-js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -98,7 +99,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
   if (!parsed.success && task?.peer_review_history) {
     console.error(
       "Invalid peer_review_history in task detail page:",
-      parsed.error
+      parsed.error,
     );
   }
 
@@ -192,7 +193,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
             name,
             avatar_url
           )
-        `
+        `,
         )
         .eq("team_id", task!.team_id!)
         .is("left_at", null);
@@ -236,7 +237,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
             submission_url,
             review_feedback,
             users!inner(name, avatar_url)
-          `
+          `,
           )
           .eq("task_id", task!.task_id)
           .eq("team_id", task!.team_id!)
@@ -267,7 +268,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
           task.task_id,
           task.team_id || undefined,
           user.id,
-          "team"
+          "team",
         );
       }
     },
@@ -290,6 +291,12 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
     },
     onSuccess: async (success) => {
       if (success) {
+        posthog.capture("task_started", {
+          task_id: taskId,
+          task_title: task?.title,
+          task_category: task?.category,
+          team_id: task?.team_id,
+        });
         await refetchTask();
         await refetchPermissions(); // Explicitly refetch permissions
         queryClient.invalidateQueries({ queryKey: ["teamJourney"] });
@@ -303,7 +310,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
       if (context?.previousTask) {
         queryClient.setQueryData(
           ["task", taskId, user?.id],
-          context.previousTask
+          context.previousTask,
         );
       }
       console.error("Error starting task:", error);
@@ -328,7 +335,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
         const uploadResults = await uploadTaskFiles(
           submissionData.files,
           task.progress_id,
-          user.id
+          user.id,
         );
         uploadedFileUrls = uploadResults.map((result) => result.url);
       }
@@ -345,6 +352,13 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
     },
     onSuccess: async (success) => {
       if (success) {
+        posthog.capture("task_submitted", {
+          task_id: taskId,
+          task_title: task?.title,
+          task_category: task?.category,
+          team_id: task?.team_id,
+          base_xp_reward: task?.base_xp_reward,
+        });
         setShowSubmissionModal(false);
         await refetchTask(); // Refetch task data
         queryClient.invalidateQueries({ queryKey: ["dashboard", "stats"] });
@@ -356,12 +370,22 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
           duration: 5000,
         });
       } else {
+        posthog.capture("task_submission_failed", {
+          task_id: taskId,
+          task_title: task?.title,
+          reason: "submission_returned_false",
+        });
         toast.error("Failed to submit task", {
           description: "Please check your internet connection and try again.",
         });
       }
     },
     onError: (error) => {
+      posthog.capture("task_submission_failed", {
+        task_id: taskId,
+        task_title: task?.title,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
       console.error("Error completing task:", error);
       toast.error("Failed to submit task");
     },
@@ -375,6 +399,12 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
     },
     onSuccess: (success) => {
       if (success) {
+        posthog.capture("task_cancelled", {
+          task_id: taskId,
+          task_title: task?.title,
+          task_category: task?.category,
+          team_id: task?.team_id,
+        });
         toast.success("Task cancelled successfully");
         queryClient.invalidateQueries({ queryKey: ["task", taskId] });
         queryClient.invalidateQueries({ queryKey: ["task", "permissions"] });
@@ -406,6 +436,12 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
     },
     onSuccess: (success) => {
       if (success) {
+        posthog.capture("task_retried", {
+          task_id: taskId,
+          task_title: task?.title,
+          task_category: task?.category,
+          team_id: task?.team_id,
+        });
         queryClient.invalidateQueries({ queryKey: ["task", taskId] });
         queryClient.invalidateQueries({ queryKey: ["task", "permissions"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard", "stats"] });
@@ -428,6 +464,11 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
     },
     onSuccess: (success) => {
       if (success) {
+        posthog.capture("task_reassigned", {
+          task_id: taskId,
+          task_title: task?.title,
+          team_id: task?.team_id,
+        });
         setShowReassignModal(false);
         queryClient.invalidateQueries({ queryKey: ["task", taskId] });
         queryClient.invalidateQueries({ queryKey: ["task", "permissions"] });
@@ -969,7 +1010,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                             .sort(
                               (a, b) =>
                                 new Date(a.timestamp).getTime() -
-                                new Date(b.timestamp).getTime()
+                                new Date(b.timestamp).getTime(),
                             )
                             .map((event, index) => (
                               <div
@@ -981,10 +1022,10 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                     event.event_type === "submitted_for_review"
                                       ? "bg-blue-500"
                                       : event.event_type === "reviewer_assigned"
-                                      ? "bg-indigo-500"
-                                      : event.decision === "approved"
-                                      ? "bg-green-500"
-                                      : "bg-red-500"
+                                        ? "bg-indigo-500"
+                                        : event.decision === "approved"
+                                          ? "bg-green-500"
+                                          : "bg-red-500"
                                   }`}
                                 >
                                   {event.event_type ===
@@ -1262,7 +1303,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                       timelineEvents.sort(
                         (a, b) =>
                           new Date(b.timestamp).getTime() -
-                          new Date(a.timestamp).getTime()
+                          new Date(a.timestamp).getTime(),
                       );
 
                       // Render timeline events
@@ -1279,16 +1320,16 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                 event.color === "purple"
                                   ? "bg-purple-500"
                                   : event.color === "yellow"
-                                  ? "bg-yellow-500"
-                                  : event.color === "blue"
-                                  ? "bg-blue-500"
-                                  : event.color === "indigo"
-                                  ? "bg-indigo-500"
-                                  : event.color === "green"
-                                  ? "bg-green-500"
-                                  : event.color === "red"
-                                  ? "bg-red-500"
-                                  : "bg-gray-500"
+                                    ? "bg-yellow-500"
+                                    : event.color === "blue"
+                                      ? "bg-blue-500"
+                                      : event.color === "indigo"
+                                        ? "bg-indigo-500"
+                                        : event.color === "green"
+                                          ? "bg-green-500"
+                                          : event.color === "red"
+                                            ? "bg-red-500"
+                                            : "bg-gray-500"
                               } rounded-full ${
                                 event.icon
                                   ? "border-2 border-white shadow-sm"
@@ -1483,7 +1524,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                     Completed{" "}
                                     {submission.completed_at
                                       ? new Date(
-                                          submission.completed_at
+                                          submission.completed_at,
                                         ).toLocaleDateString()
                                       : "N/A"}
                                   </div>
@@ -1509,7 +1550,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                   onClick={() =>
                                     window.open(
                                       `/dashboard/team-journey/task/${submission.id}`,
-                                      "_blank"
+                                      "_blank",
                                     )
                                   }
                                 >

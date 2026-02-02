@@ -16,6 +16,7 @@ import { useState } from "react";
 import { createTeam, debugAuthStatus } from "@/lib/database";
 import { useAppContext } from "@/contexts/app-context";
 import { Loader2, CreditCard } from "lucide-react";
+import posthog from "posthog-js";
 
 interface CreateTeamDialogProps {
   open: boolean;
@@ -63,28 +64,28 @@ export function CreateTeamDialog({
     // Validation
     if (teamName.trim().length < MIN_TEAM_NAME_LENGTH) {
       setError(
-        `Product/Team name must be at least ${MIN_TEAM_NAME_LENGTH} characters long.`
+        `Product/Team name must be at least ${MIN_TEAM_NAME_LENGTH} characters long.`,
       );
       return;
     }
 
     if (description.trim().length < MIN_DESCRIPTION_LENGTH) {
       setError(
-        `Description must be at least ${MIN_DESCRIPTION_LENGTH} characters long.`
+        `Description must be at least ${MIN_DESCRIPTION_LENGTH} characters long.`,
       );
       return;
     }
 
     if (description.trim().length > MAX_DESCRIPTION_LENGTH) {
       setError(
-        `Description must be at most ${MAX_DESCRIPTION_LENGTH} characters long.`
+        `Description must be at most ${MAX_DESCRIPTION_LENGTH} characters long.`,
       );
       return;
     }
 
     if (user.total_points && user.total_points < TEAM_CREATION_COST) {
       setError(
-        `Insufficient credits. You need ${TEAM_CREATION_COST} credits to create a team.`
+        `Insufficient credits. You need ${TEAM_CREATION_COST} credits to create a team.`,
       );
       return;
     }
@@ -93,6 +94,14 @@ export function CreateTeamDialog({
 
     try {
       await createTeam(user.id, teamName, description);
+
+      // Track team creation
+      posthog.capture("team_created", {
+        team_name: teamName,
+        description_length: description.length,
+        cost: TEAM_CREATION_COST,
+        user_points_before: user.total_points,
+      });
 
       // Reset form
       setTeamName("");
@@ -107,8 +116,15 @@ export function CreateTeamDialog({
       onTeamCreated?.();
     } catch (error) {
       console.error("Error creating team:", error);
+
+      // Track failed team creation
+      posthog.capture("team_creation_failed", {
+        error_message: error instanceof Error ? error.message : "Unknown error",
+        team_name: teamName,
+      });
+
       setError(
-        error instanceof Error ? error.message : "Failed to create team"
+        error instanceof Error ? error.message : "Failed to create team",
       );
     } finally {
       setIsLoading(false);

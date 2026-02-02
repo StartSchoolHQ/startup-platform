@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import posthog from "posthog-js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +53,12 @@ export default function LoginPage() {
       });
 
       if (error) {
+        // Track failed login attempt
+        posthog.capture("user_login_failed", {
+          error_message: error.message,
+          email: email,
+        });
+
         // Check if this is an incomplete profile trying to login
         if (error.message.includes("Invalid login credentials")) {
           // Try to check if user exists with incomplete profile
@@ -71,6 +78,11 @@ export default function LoginPage() {
         }
         setLoading(false);
       } else {
+        // Track successful login
+        posthog.capture("user_login_success", {
+          email: email,
+        });
+
         // Successfully authenticated - let dashboard handle profile checks
         router.push("/dashboard");
       }
@@ -262,6 +274,10 @@ export default function LoginPage() {
                       if (error) {
                         setError(error.message);
                       } else {
+                        // Track password reset request
+                        posthog.capture("password_reset_requested", {
+                          email: email,
+                        });
                         setError(
                           "Password reset email sent! Check your inbox.",
                         );

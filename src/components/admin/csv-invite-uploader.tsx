@@ -1,5 +1,6 @@
 "use client";
 
+import posthog from "posthog-js";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -21,7 +22,7 @@ interface InvitationResult {
 export function CSVInviteUploader() {
   const [csvData, setCsvData] = useState<CSVRow[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
-    []
+    [],
   );
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<InvitationResult[] | null>(null);
@@ -78,8 +79,14 @@ export function CSVInviteUploader() {
 
       setResults(data.results);
 
+      posthog.capture("bulk_invitations_sent", {
+        total_invitations: csvData.length,
+        succeeded: data.summary.succeeded,
+        failed: data.summary.failed,
+      });
+
       toast.success(
-        `${data.summary.succeeded} succeeded, ${data.summary.failed} failed`
+        `${data.summary.succeeded} succeeded, ${data.summary.failed} failed`,
       );
 
       if (data.summary.succeeded > 0) {
@@ -87,7 +94,7 @@ export function CSVInviteUploader() {
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to send invitations"
+        error instanceof Error ? error.message : "Failed to send invitations",
       );
     } finally {
       setLoading(false);
@@ -189,7 +196,7 @@ export function CSVInviteUploader() {
                 <tbody>
                   {csvData.map((row, idx) => {
                     const rowErrors = validationErrors.filter(
-                      (e) => e.row === idx + 1
+                      (e) => e.row === idx + 1,
                     );
                     return (
                       <tr

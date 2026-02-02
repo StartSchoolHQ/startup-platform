@@ -11,6 +11,7 @@ import React, {
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import posthog from "posthog-js";
 
 interface User {
   id: string;
@@ -51,7 +52,7 @@ async function fetchUserProfile(): Promise<User | null> {
   const { data: userProfile, error: profileError } = await supabase
     .from("users")
     .select(
-      "id, name, email, avatar_url, primary_role, total_xp, total_points, graduation_level, created_at"
+      "id, name, email, avatar_url, primary_role, total_xp, total_points, graduation_level, created_at",
     )
     .eq("id", authUser.id)
     .single();
@@ -90,6 +91,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     retry: 1,
   });
 
+  // Identify user in PostHog when user data is available
+  useEffect(() => {
+    if (user?.id) {
+      posthog.identify(user.id, {
+        email: user.email,
+        name: user.name || undefined,
+        role: user.primary_role || undefined,
+        total_xp: user.total_xp || 0,
+        total_points: user.total_points || 0,
+        graduation_level: user.graduation_level || 0,
+      });
+    }
+  }, [user]);
+
   // Memoize callback to prevent re-creating function on every render
   const refreshUserData = useCallback(() => {
     refetch();
@@ -98,7 +113,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Memoize computed value to prevent recalculation
   const firstName = useMemo(
     () => user?.name?.split(" ")[0] || "User",
-    [user?.name]
+    [user?.name],
   );
 
   // Memoize context value to prevent unnecessary re-renders of all consumers
@@ -110,7 +125,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       firstName,
       refreshUserData,
     }),
-    [user, isLoading, mounted, firstName, refreshUserData]
+    [user, isLoading, mounted, firstName, refreshUserData],
   );
 
   // Always provide context (no hydration issues since we're client-only after server auth check)

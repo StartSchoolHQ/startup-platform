@@ -29,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/contexts/app-context";
 import { useInvitationCount } from "@/hooks/use-invitation-count";
 import { useQueryClient } from "@tanstack/react-query";
+import posthog from "posthog-js";
 
 export function NavUser({
   user,
@@ -47,6 +48,14 @@ export function NavUser({
 
   const handleLogout = async () => {
     try {
+      // Track logout before clearing session
+      posthog.capture("user_logout", {
+        user_id: appUser?.id,
+        email: appUser?.email,
+      });
+      // Reset PostHog identity on logout
+      posthog.reset();
+
       const supabase = createClient();
       await supabase.auth.signOut();
       queryClient.clear();

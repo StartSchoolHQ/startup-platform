@@ -1,5 +1,6 @@
 "use client";
 
+import posthog from "posthog-js";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -186,7 +187,7 @@ export default function PeerReviewPage() {
             name,
             avatar_url
           )
-        `
+        `,
         )
         .eq("reviewer_user_id", user!.id)
         .eq("status", "pending_review");
@@ -259,7 +260,7 @@ export default function PeerReviewPage() {
       const supabase = createClient();
       const { data, error } = await (supabase as any).rpc(
         "accept_external_task_for_review",
-        { p_progress_id: taskId }
+        { p_progress_id: taskId },
       );
       if (error) throw error;
       if (!data?.success)
@@ -280,18 +281,18 @@ export default function PeerReviewPage() {
 
       // Find the task being accepted
       const acceptedTask = currentAvailableTasks.find(
-        (task) => task.id === taskId
+        (task) => task.id === taskId,
       );
       if (!acceptedTask) return;
 
       // Optimistically update cache
       queryClient.setQueryData(
         ["peerReview", "accepted", user?.id],
-        (old: AvailableTask[] = []) => [...old, acceptedTask]
+        (old: AvailableTask[] = []) => [...old, acceptedTask],
       );
       queryClient.setQueryData(
         ["peerReview", "available", user?.id],
-        (old: AvailableTask[] = []) => old.filter((task) => task.id !== taskId)
+        (old: AvailableTask[] = []) => old.filter((task) => task.id !== taskId),
       );
 
       // Switch tab and open modal
@@ -368,7 +369,7 @@ export default function PeerReviewPage() {
           p_decision: decision,
           p_feedback: feedback || null,
           p_is_continuation: isContinuation,
-        }
+        },
       );
       if (error) throw error;
       if (!data?.success)
@@ -382,7 +383,7 @@ export default function PeerReviewPage() {
       queryClient.setQueryData(
         ["peerReview", "accepted", user?.id],
         (old: AvailableTask[] = []) =>
-          old.filter((task) => task.id !== progressId)
+          old.filter((task) => task.id !== progressId),
       );
 
       // Close modal immediately
@@ -404,6 +405,16 @@ export default function PeerReviewPage() {
           : 20;
       const estimatedXP = Math.max(1, Math.round(taskXP * 0.1));
       const estimatedPoints = Math.max(1, Math.round(taskPoints * 0.1));
+
+      posthog.capture("peer_review_submitted", {
+        task_id: variables.taskId,
+        progress_id: variables.progressId,
+        decision: variables.decision,
+        is_continuation: variables.isContinuation,
+        has_feedback: Boolean(variables.feedback),
+        estimated_xp: estimatedXP,
+        estimated_points: estimatedPoints,
+      });
 
       const reviewType = variables.isContinuation
         ? "Follow-up review"
@@ -443,13 +454,13 @@ export default function PeerReviewPage() {
 
   const submitReview = (
     feedback: string,
-    decision: "accepted" | "rejected"
+    decision: "accepted" | "rejected",
   ) => {
     if (!modalState.selectedTask || !decision || !user?.id) return;
     if (modalState.isSubmitting) return;
 
     const hasPreviouslyReviewedTask = completedReviews.some(
-      (review) => review.task_id === modalState.selectedTask!.task_id
+      (review) => review.task_id === modalState.selectedTask!.task_id,
     );
     const isAssignedReviewer = modalState.selectedTask.reviewer?.id === user.id;
     const isValidContinuation = isAssignedReviewer || hasPreviouslyReviewedTask;
@@ -636,8 +647,8 @@ export default function PeerReviewPage() {
                             acceptingTaskId === task.id
                               ? "Accepting..."
                               : myAcceptedTasks.length > 0
-                              ? "Max 1 Task"
-                              : "Accept Review"
+                                ? "Max 1 Task"
+                                : "Accept Review"
                           }
                           actionButtonDisabled={
                             acceptingTaskId === task.id ||
@@ -777,7 +788,7 @@ export default function PeerReviewPage() {
                           variant="submitted"
                           onAction={() => {
                             router.push(
-                              `/dashboard/team-journey/task/${task.id}`
+                              `/dashboard/team-journey/task/${task.id}`,
                             );
                           }}
                           actionLoading={false}
@@ -954,8 +965,8 @@ export default function PeerReviewPage() {
                                     typeof review.tasks === "object" &&
                                     "base_xp_reward" in review.tasks
                                       ? Number(review.tasks.base_xp_reward) || 0
-                                      : 0) * 0.1
-                                  )
+                                      : 0) * 0.1,
+                                  ),
                                 )}
                               </span>
                             </div>
@@ -973,10 +984,10 @@ export default function PeerReviewPage() {
                                     typeof review.tasks === "object" &&
                                     "base_points_reward" in review.tasks
                                       ? Number(
-                                          review.tasks.base_points_reward
+                                          review.tasks.base_points_reward,
                                         ) || 0
-                                      : 0) * 0.1
-                                  )
+                                      : 0) * 0.1,
+                                  ),
                                 )}
                               </span>
                             </div>
@@ -1011,7 +1022,7 @@ export default function PeerReviewPage() {
                                   year: "numeric",
                                   month: "short",
                                   day: "numeric",
-                                }
+                                },
                               )}
                             </div>
                           </td>
@@ -1039,7 +1050,7 @@ export default function PeerReviewPage() {
         taskData={modalState.selectedTask || undefined}
         onReviewSubmit={async (
           feedback: string,
-          decision: "accepted" | "rejected"
+          decision: "accepted" | "rejected",
         ) => {
           await submitReview(feedback, decision);
         }}

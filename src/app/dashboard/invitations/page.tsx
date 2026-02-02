@@ -1,5 +1,6 @@
 "use client";
 
+import posthog from "posthog-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -72,7 +73,7 @@ export default function InvitationsPage() {
       queryKey: ["invitations", "pending", user?.id],
       queryFn: () => getPendingInvitations(user!.id),
       enabled: !!user?.id,
-    }
+    },
   );
 
   const { data: sentInvitations = [], isPending: loadingSent } = useQuery({
@@ -87,12 +88,24 @@ export default function InvitationsPage() {
     mutationFn: (vars: {
       invitationId: string;
       response: "accepted" | "declined";
+      teamId?: string;
+      teamName?: string;
     }) => respondToInvitation(vars.invitationId, user!.id, vars.response),
     onSuccess: (_, vars) => {
+      posthog.capture(
+        vars.response === "accepted"
+          ? "invitation_accepted"
+          : "invitation_declined",
+        {
+          invitation_id: vars.invitationId,
+          team_id: vars.teamId,
+          team_name: vars.teamName,
+        },
+      );
       toast.success(
         vars.response === "accepted"
           ? "Invitation accepted! You are now a team member."
-          : "Invitation declined."
+          : "Invitation declined.",
       );
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
       invalidateInvitationCount(queryClient, user?.id);
@@ -107,9 +120,11 @@ export default function InvitationsPage() {
 
   const handleResponse = (
     invitationId: string,
-    response: "accepted" | "declined"
+    response: "accepted" | "declined",
+    teamId?: string,
+    teamName?: string,
   ) => {
-    respondMutation.mutate({ invitationId, response });
+    respondMutation.mutate({ invitationId, response, teamId, teamName });
   };
 
   const formatDate = (dateString: string) => {
@@ -306,7 +321,12 @@ export default function InvitationsPage() {
                           variant="outline"
                           size="sm"
                           onClick={() =>
-                            handleResponse(invitation.id, "declined")
+                            handleResponse(
+                              invitation.id,
+                              "declined",
+                              invitation.team_id,
+                              invitation.teams?.name,
+                            )
                           }
                           disabled={respondMutation.isPending}
                           className="gap-1"
@@ -317,7 +337,12 @@ export default function InvitationsPage() {
                         <Button
                           size="sm"
                           onClick={() =>
-                            handleResponse(invitation.id, "accepted")
+                            handleResponse(
+                              invitation.id,
+                              "accepted",
+                              invitation.team_id,
+                              invitation.teams?.name,
+                            )
                           }
                           disabled={respondMutation.isPending}
                           className="gap-1 bg-green-600 hover:bg-green-700"

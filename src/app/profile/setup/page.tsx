@@ -10,6 +10,7 @@ import {
 } from "../../../components/ui/avatar";
 import { Button } from "../../../components/ui/button";
 import { PasswordInput } from "../../../components/ui/password-input";
+import posthog from "posthog-js";
 
 export default function ProfileSetupPage() {
   const [name, setName] = useState("");
@@ -167,7 +168,7 @@ export default function ProfileSetupPage() {
 
       if (passwordError) {
         setError(
-          passwordError.message || "Failed to set password. Please try again."
+          passwordError.message || "Failed to set password. Please try again.",
         );
         return;
       }
@@ -187,10 +188,16 @@ export default function ProfileSetupPage() {
       if (!response.ok) {
         const errorData = await response.json();
         setError(
-          errorData.error || "Failed to save profile. Please try again."
+          errorData.error || "Failed to save profile. Please try again.",
         );
         return;
       }
+
+      // Track successful profile setup
+      posthog.capture("user_profile_setup_completed", {
+        has_avatar: true,
+        name_prefilled: isNamePrefilled,
+      });
 
       // Redirect to dashboard
       router.push("/dashboard");

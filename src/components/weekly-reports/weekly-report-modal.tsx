@@ -1,5 +1,6 @@
 "use client";
 
+import posthog from "posthog-js";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -137,12 +138,12 @@ export function WeeklyReportModal({
   useEffect(() => {
     const loadDraftFromDatabase = async () => {
       if (!open || !teamId || !userId || isInitialized.current) return;
-      
+
       setIsLoadingDraft(true);
       try {
         const supabase = createClient();
         const currentWeek = await getCurrentWeekBoundaries();
-        
+
         if (!currentWeek) {
           isInitialized.current = true;
           setIsLoadingDraft(false);
@@ -166,16 +167,23 @@ export function WeeklyReportModal({
           // Found a draft in database - load it
           const savedData = draftData.submission_data;
           setExistingDraftId(draftData.id);
-          
+
           // Convert database format to form format
           const restoredForm: FormData = {
-            commitments: savedData.commitments?.length > 0 
-              ? savedData.commitments.map((c: { text: string; status: CommitmentStatus; explanation?: string }) => ({
-                  text: c.text || "",
-                  status: c.status || "completed",
-                  explanation: c.explanation || "",
-                }))
-              : getEmptyFormData().commitments,
+            commitments:
+              savedData.commitments?.length > 0
+                ? savedData.commitments.map(
+                    (c: {
+                      text: string;
+                      status: CommitmentStatus;
+                      explanation?: string;
+                    }) => ({
+                      text: c.text || "",
+                      status: c.status || "completed",
+                      explanation: c.explanation || "",
+                    }),
+                  )
+                : getEmptyFormData().commitments,
             blockers: savedData.blockers || "",
             meetingsHeld: savedData.meetingsHeld || 0,
             keyInsight: savedData.keyInsight || "",
@@ -183,19 +191,24 @@ export function WeeklyReportModal({
             measurableProgress: savedData.measurableProgress || "",
             biggestAchievement: savedData.biggestAchievement || "",
             achievementImpact: savedData.achievementImpact || "",
-            nextWeekCommitments: savedData.nextWeekCommitments?.length > 0
-              ? [...savedData.nextWeekCommitments, "", "", ""].slice(0, 3)
-              : ["", "", ""],
+            nextWeekCommitments:
+              savedData.nextWeekCommitments?.length > 0
+                ? [...savedData.nextWeekCommitments, "", "", ""].slice(0, 3)
+                : ["", "", ""],
             teamRecognition: savedData.teamRecognition || "",
             alignmentScore: savedData.alignmentScore || 5,
             alignmentReason: savedData.alignmentReason || "",
           };
-          
+
           // Ensure we have exactly 3 commitments
           while (restoredForm.commitments.length < 3) {
-            restoredForm.commitments.push({ text: "", status: "completed", explanation: "" });
+            restoredForm.commitments.push({
+              text: "",
+              status: "completed",
+              explanation: "",
+            });
           }
-          
+
           setFormData(restoredForm);
           toast.success("Draft loaded from your previous session!");
         } else {
@@ -303,6 +316,12 @@ export function WeeklyReportModal({
       return data;
     },
     onSuccess: () => {
+      posthog.capture("weekly_report_draft_saved", {
+        team_id: teamId,
+        has_commitments: formData.commitments.some((c) => c.text.trim()),
+        has_blockers: Boolean(formData.blockers),
+        has_achievements: Boolean(formData.biggestAchievement),
+      });
       toast.success("Draft saved! You can continue later.");
       clearDraft();
       onOpenChange(false);
@@ -378,7 +397,7 @@ export function WeeklyReportModal({
       // Otherwise, insert a new record
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let submitError: Error | null = null;
-      
+
       if (existingDraftId) {
         // Update the draft to submitted
         const { error } = await (supabase as any)
@@ -390,8 +409,9 @@ export function WeeklyReportModal({
             updated_at: new Date().toISOString(),
           })
           .eq("id", existingDraftId);
-        
-        if (error) submitError = new Error(`Failed to submit report: ${error.message}`);
+
+        if (error)
+          submitError = new Error(`Failed to submit report: ${error.message}`);
       } else {
         // Insert new record
         const { error } = await (supabase as any)
@@ -408,13 +428,32 @@ export function WeeklyReportModal({
             status: "submitted",
             submitted_at: new Date().toISOString(),
           });
-        
-        if (error) submitError = new Error(`Failed to submit report: ${error.message}`);
+
+        if (error)
+          submitError = new Error(`Failed to submit report: ${error.message}`);
       }
 
       if (submitError) {
         throw submitError;
       }
+
+      posthog.capture("weekly_report_submitted", {
+        team_id: teamId,
+        week_number: currentWeek.week_number,
+        week_year: currentWeek.week_year,
+        commitments_count: formData.commitments.filter((c) => c.text.trim())
+          .length,
+        commitments_completed: formData.commitments.filter(
+          (c) => c.status === "completed",
+        ).length,
+        has_blockers: Boolean(formData.blockers),
+        meetings_held: formData.meetingsHeld,
+        alignment_score: formData.alignmentScore,
+        next_week_commitments_count: formData.nextWeekCommitments.filter((c) =>
+          c.trim(),
+        ).length,
+        was_draft: Boolean(existingDraftId),
+      });
 
       toast.success("Weekly report submitted successfully!");
       clearDraft();
