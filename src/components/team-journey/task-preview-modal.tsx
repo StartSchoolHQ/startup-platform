@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { DifficultyBadge } from "@/components/ui/difficulty-badge";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import ReactMarkdown from "react-markdown";
 import {
   Medal,
@@ -116,7 +116,7 @@ export function TaskPreviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col overflow-hidden p-0">
         <DialogHeader className="px-6 pt-6 pb-4">
           <div className="flex items-start gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted shrink-0">
@@ -153,7 +153,7 @@ export function TaskPreviewModal({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6">
           <div className="space-y-5 pb-4">
             {/* Reward Stats */}
             <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg flex-wrap">
@@ -329,7 +329,7 @@ export function TaskPreviewModal({
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter className="px-6 py-4 border-t gap-2 sm:gap-0">
           <Button variant="outline" onClick={onClose}>

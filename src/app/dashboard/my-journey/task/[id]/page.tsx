@@ -29,6 +29,7 @@ import { StatusBadge, TaskStatus } from "@/components/ui/status-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TaskDetailSkeleton } from "@/components/ui/task-detail-skeleton";
 import type { TeamTask } from "@/types/team-journey";
+import { SuggestEditsModal } from "@/components/tasks/suggest-edits-modal";
 
 export default function IndividualTaskDetailPage() {
   const params = useParams();
@@ -37,6 +38,7 @@ export default function IndividualTaskDetailPage() {
   const [loading, setLoading] = useState(true);
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuggestEditsModal, setShowSuggestEditsModal] = useState(false);
 
   const taskId = params.id as string;
 
@@ -181,8 +183,7 @@ export default function IndividualTaskDetailPage() {
                   <Button
                     variant="link"
                     className="text-blue-500 p-0 h-auto"
-                    disabled
-                    title="Coming soon"
+                    onClick={() => setShowSuggestEditsModal(true)}
                   >
                     Suggest Edits
                   </Button>
@@ -262,8 +263,7 @@ export default function IndividualTaskDetailPage() {
                   <Button
                     variant="link"
                     className="text-blue-500 p-0 h-auto"
-                    disabled
-                    title="Coming soon"
+                    onClick={() => setShowSuggestEditsModal(true)}
                   >
                     Suggest Edits
                   </Button>
@@ -472,6 +472,13 @@ export default function IndividualTaskDetailPage() {
         formSchema={task.submission_form_schema}
         isLoading={isSubmitting}
         isIndividualTask={true}
+      />
+      {/* Suggest Edits Modal */}
+      <SuggestEditsModal
+        open={showSuggestEditsModal}
+        onOpenChange={setShowSuggestEditsModal}
+        taskId={task.task_id}
+        taskTitle={task.title}
       />
     </div>
   );

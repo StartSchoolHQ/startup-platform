@@ -16,6 +16,7 @@ import { CreateTaskDialog } from "@/components/admin/create-task-dialog";
 import { ImportTasksDialog } from "@/components/admin/import-tasks-dialog";
 import { AdminTasksTable } from "@/components/admin/admin-tasks-table";
 import { AdminSkeleton } from "@/components/ui/admin-skeleton";
+import { AdminSuggestionsTable } from "@/components/admin/admin-suggestions-table";
 
 export default function AdminTasksPage() {
   const { user, loading } = useApp();
@@ -40,6 +41,7 @@ export default function AdminTasksPage() {
         <TabsList>
           <TabsTrigger value="team-tasks">Team Tasks</TabsTrigger>
           <TabsTrigger value="individual-tasks">Individual Tasks</TabsTrigger>
+          <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
         </TabsList>
 
         {/* Team Tasks Tab */}
@@ -100,6 +102,23 @@ export default function AdminTasksPage() {
             </CardHeader>
             <CardContent>
               <AdminTasksTable activityType="individual" />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Suggestions Tab */}
+        <TabsContent value="suggestions" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div>
+                <CardTitle>Task Edit Suggestions</CardTitle>
+                <CardDescription>
+                  Review suggestions from users to improve task content
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <AdminSuggestionsTable />
             </CardContent>
           </Card>
         </TabsContent>

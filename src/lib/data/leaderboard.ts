@@ -173,6 +173,55 @@ export async function getAvailableLeaderboardWeeks(): Promise<
 }
 
 /**
+ * Team leaderboard entry with weekly change indicators
+ */
+export interface TeamLeaderboardEntry {
+  team_id: string;
+  team_name: string;
+  total_xp: number;
+  total_points: number;
+  tasks_completed: number;
+  meetings_count: number;
+  member_count: number;
+  rank_position: number;
+  xp_change: number;
+  points_change: number;
+  tasks_change: number;
+  meetings_change: number;
+  rank_change: number;
+}
+
+/**
+ * Get team leaderboard data with change indicators from previous week
+ */
+export async function getTeamLeaderboardData(
+  limit: number = 50,
+  weekNumber?: number,
+  weekYear?: number
+): Promise<TeamLeaderboardEntry[]> {
+  const supabase = createClient();
+
+  try {
+    const { data, error } = await (supabase as any).rpc(
+      "get_team_leaderboard_data",
+      {
+        p_limit: limit,
+        p_week_number: weekNumber || null,
+        p_week_year: weekYear || null,
+      }
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
  * Get current week information (Riga timezone boundaries)
  * Uses database function for timezone-aware week calculation
  */

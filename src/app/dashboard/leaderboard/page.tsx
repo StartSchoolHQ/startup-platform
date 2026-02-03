@@ -1,6 +1,9 @@
 import {
   getServerSideLeaderboardData,
   getServerSideAvailableWeeks,
+  getServerSideTeamLeaderboardData,
+  getServerSideTeamAvailableWeeks,
+  getServerSideUserTeamIds,
 } from "@/lib/leaderboard-server";
 import LeaderboardPageClient from "./page-client";
 import { createClient } from "@/lib/supabase/server";
@@ -14,15 +17,24 @@ export default async function LeaderboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Fetch initial data server-side
-  const initialLeaderboardData = await getServerSideLeaderboardData();
-  const availableWeeks = await getServerSideAvailableWeeks();
+  // Fetch initial data server-side (individual + team in parallel)
+  const [initialLeaderboardData, availableWeeks, initialTeamData, teamAvailableWeeks, userTeamIds] =
+    await Promise.all([
+      getServerSideLeaderboardData(),
+      getServerSideAvailableWeeks(),
+      getServerSideTeamLeaderboardData(),
+      getServerSideTeamAvailableWeeks(),
+      user?.id ? getServerSideUserTeamIds(user.id) : Promise.resolve([]),
+    ]);
 
   return (
     <LeaderboardPageClient
       initialData={initialLeaderboardData}
       availableWeeks={availableWeeks}
+      initialTeamData={initialTeamData}
+      teamAvailableWeeks={teamAvailableWeeks}
       currentUserId={user?.id}
+      userTeamIds={userTeamIds}
     />
   );
 }

@@ -1,5 +1,22 @@
 import { createClient } from "@/lib/supabase/server";
 
+// Type definition for team leaderboard entry returned by database function
+export interface TeamLeaderboardEntry {
+  team_id: string;
+  team_name: string;
+  total_xp: number;
+  total_points: number;
+  tasks_completed: number;
+  meetings_count: number;
+  member_count: number;
+  rank_position: number;
+  xp_change: number;
+  points_change: number;
+  tasks_change: number;
+  meetings_change: number;
+  rank_change: number;
+}
+
 // Type definition for leaderboard entry returned by database function
 export interface LeaderboardEntry {
   user_id: string;
@@ -334,6 +351,135 @@ export async function getUserStreaks(userIds: string[]): Promise<
 }
 
 /**
+ * Server-side function to get team leaderboard data
+ */
+export async function getServerSideTeamLeaderboardData(
+  limit: number = 50,
+  weekNumber?: number,
+  weekYear?: number
+): Promise<TeamLeaderboardEntry[]> {
+  const supabase = await createClient();
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc(
+      "get_team_leaderboard_data",
+      {
+        p_limit: limit,
+        p_week_number: weekNumber || null,
+        p_week_year: weekYear || null,
+      }
+    );
+
+    if (error) {
+      console.error("Error fetching team leaderboard data:", error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in getServerSideTeamLeaderboardData:", error);
+    throw error;
+  }
+}
+
+/**
+ * Server-side function to get available weeks for team leaderboard
+ */
+export async function getServerSideTeamAvailableWeeks(): Promise<
+  Array<{
+    week_number: number;
+    week_year: number;
+    week_start: string;
+    week_end: string;
+    team_count: number;
+  }>
+> {
+  const supabase = await createClient();
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from("team_leaderboard_snapshots")
+      .select("week_number, week_year")
+      .order("week_year", { ascending: false })
+      .order("week_number", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching team available weeks:", error);
+      throw error;
+    }
+
+    if (!data) return [];
+
+    const weekMap = new Map<
+      string,
+      { week_number: number; week_year: number; team_count: number }
+    >();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data.forEach((snapshot: any) => {
+      const key = `${snapshot.week_year}-${snapshot.week_number}`;
+      if (!weekMap.has(key)) {
+        weekMap.set(key, {
+          week_number: snapshot.week_number,
+          week_year: snapshot.week_year,
+          team_count: 0,
+        });
+      }
+      weekMap.get(key)!.team_count++;
+    });
+
+    return Array.from(weekMap.values()).map((week) => {
+      const startOfYear = new Date(week.week_year, 0, 1);
+      const daysOffset = (week.week_number - 1) * 7;
+      const weekStart = new Date(
+        startOfYear.getTime() + daysOffset * 24 * 60 * 60 * 1000
+      );
+      const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+
+      return {
+        ...week,
+        week_start: weekStart.toISOString().split("T")[0],
+        week_end: weekEnd.toISOString().split("T")[0],
+      };
+    });
+  } catch (error) {
+    console.error("Error in getServerSideTeamAvailableWeeks:", error);
+    throw error;
+  }
+}
+
+/**
+ * Server-side function to get user's team IDs
+ */
+export async function getServerSideUserTeamIds(
+  userId: string
+): Promise<string[]> {
+  const supabase = await createClient();
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from("team_members")
+      .select("team_id")
+      .eq("user_id", userId)
+      .is("left_at", null);
+
+    if (error) {
+      console.error("Error fetching user team IDs:", error);
+      return [];
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data || []).map((row: any) => row.team_id);
+  } catch (error) {
+    console.error("Error in getServerSideUserTeamIds:", error);
+    return [];
+  }
+}
+
+/**
  * Server-side function to generate weekly snapshots (admin use)
  */
 export async function generateServerSideWeeklySnapshots(
@@ -343,7 +489,6 @@ export async function generateServerSideWeeklySnapshots(
   const supabase = await createClient();
 
   try {
-    // Use any type assertion since the function exists but isn't in generated types yet
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any).rpc(
       "generate_weekly_leaderboard_snapshots",
@@ -363,6 +508,40 @@ export async function generateServerSideWeeklySnapshots(
     );
   } catch (error) {
     console.error("Error in generateServerSideWeeklySnapshots:", error);
+    throw error;
+  }
+}
+
+/**
+ * Server-side function to generate weekly team snapshots
+ */
+export async function generateServerSideWeeklyTeamSnapshots(
+  weekNumber?: number,
+  weekYear?: number
+): Promise<{ success: boolean; teamsProcessed: number }> {
+  const supabase = await createClient();
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc(
+      "generate_weekly_team_leaderboard_snapshots",
+      {
+        p_week_number: weekNumber || null,
+        p_week_year: weekYear || null,
+      }
+    );
+
+    if (error) {
+      console.error("Error generating team snapshots:", error);
+      throw error;
+    }
+
+    return {
+      success: data?.success ?? false,
+      teamsProcessed: data?.teams_processed ?? 0,
+    };
+  } catch (error) {
+    console.error("Error in generateServerSideWeeklyTeamSnapshots:", error);
     throw error;
   }
 }

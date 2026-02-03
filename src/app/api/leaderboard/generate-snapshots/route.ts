@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateServerSideWeeklySnapshots } from "@/lib/leaderboard-server";
+import {
+  generateServerSideWeeklySnapshots,
+  generateServerSideWeeklyTeamSnapshots,
+} from "@/lib/leaderboard-server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,17 +19,19 @@ export async function POST(request: NextRequest) {
 
     console.log("Starting automated snapshot generation...");
 
-    const result = await generateServerSideWeeklySnapshots(
-      weekNumber,
-      weekYear
-    );
+    const [userResult, teamResult] = await Promise.all([
+      generateServerSideWeeklySnapshots(weekNumber, weekYear),
+      generateServerSideWeeklyTeamSnapshots(weekNumber, weekYear),
+    ]);
 
-    console.log("Snapshot generation completed:", result);
+    console.log("User snapshot generation completed:", userResult);
+    console.log("Team snapshot generation completed:", teamResult);
 
     return NextResponse.json({
       success: true,
-      message: result.message,
-      usersProcessed: result.usersProcessed,
+      message: userResult.message,
+      usersProcessed: userResult.usersProcessed,
+      teamsProcessed: teamResult.teamsProcessed,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

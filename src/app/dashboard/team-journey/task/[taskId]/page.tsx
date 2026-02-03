@@ -57,6 +57,7 @@ import { uploadTaskFiles } from "@/lib/file-upload";
 import ReactMarkdown from "react-markdown";
 import { TaskDetailSkeleton } from "@/components/ui/task-detail-skeleton";
 import { peerReviewHistorySchema } from "@/lib/validation-schemas";
+import { SuggestEditsModal } from "@/components/tasks/suggest-edits-modal";
 
 interface TaskDetailPageProps {
   params: Promise<{
@@ -72,6 +73,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
   const [taskId, setTaskId] = useState<string | null>(null);
   const [showReassignModal, setShowReassignModal] = useState(false);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+  const [showSuggestEditsModal, setShowSuggestEditsModal] = useState(false);
 
   // Extract ID from params
   useEffect(() => {
@@ -626,8 +628,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                   <Button
                     variant="link"
                     className="text-blue-500 p-0 h-auto"
-                    disabled
-                    title="Coming soon"
+                    onClick={() => setShowSuggestEditsModal(true)}
                   >
                     Suggest Edits
                   </Button>
@@ -792,8 +793,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                   <Button
                     variant="link"
                     className="text-blue-500 p-0 h-auto"
-                    disabled
-                    title="Coming soon"
+                    onClick={() => setShowSuggestEditsModal(true)}
                   >
                     Suggest Edits
                   </Button>
@@ -1878,6 +1878,13 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
         taskTitle={task?.title || "Task"}
         formSchema={task?.submission_form_schema}
         isLoading={completeTaskMutation.isPending}
+      />
+      {/* Suggest Edits Modal */}
+      <SuggestEditsModal
+        open={showSuggestEditsModal}
+        onOpenChange={setShowSuggestEditsModal}
+        taskId={task?.task_id || ""}
+        taskTitle={task?.title || "Task"}
       />
     </div>
   );

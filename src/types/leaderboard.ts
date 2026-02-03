@@ -31,4 +31,34 @@ export interface LeaderboardEntry {
     amount: number
   }
   rankIcon?: "crown" | "trophy" | "medal" | "flame" | "none"
-} 
+}
+
+export interface TeamLeaderboardEntry {
+  rank: number
+  team: {
+    name: string
+    memberCount: number
+    isCurrentUserTeam?: boolean
+  }
+  xp: {
+    current: number
+    change: number
+  }
+  points: {
+    current: number
+    change: number
+  }
+  tasks: {
+    current: number
+    change: number
+  }
+  meetings: {
+    current: number
+    change: number
+  }
+  change: {
+    direction: "up" | "down" | "none"
+    amount: number
+  }
+  rankIcon?: "crown" | "trophy" | "medal" | "none"
+}
