@@ -83,6 +83,7 @@ export async function getStatsCards(userId: string): Promise<StatsCard[]> {
 
     return [
       {
+        id: "onborda-xp-balance",
         title: "XP Balance",
         value: (userProfile.total_xp ?? 0).toString(),
         subtitle: "Total experience points",
@@ -90,6 +91,7 @@ export async function getStatsCards(userId: string): Promise<StatsCard[]> {
         iconColor: "text-black",
       },
       {
+        id: "onborda-points-balance",
         title: "Points Balance",
         value: (userProfile.total_points ?? 0).toString(),
         subtitle: "Available startup capital",
@@ -97,6 +99,7 @@ export async function getStatsCards(userId: string): Promise<StatsCard[]> {
         iconColor: "text-black",
       },
       {
+        id: "onborda-achievements",
         title: "Achievements",
         value: `${completedAchievements}/${totalAchievements}`,
         subtitle: "Team achievements unlocked",
@@ -104,6 +107,7 @@ export async function getStatsCards(userId: string): Promise<StatsCard[]> {
         iconColor: "text-black",
       },
       {
+        id: "onborda-tasks",
         title: "Tasks",
         value: `${completedTasks}/${totalTasks}`,
         subtitle: "Team tasks completed",

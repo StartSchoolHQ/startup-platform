@@ -49,12 +49,7 @@ function convertToLeaderboardEntry(
   if (dbEntry.rank_change > 0) changeDirection = "up";
   else if (dbEntry.rank_change < 0) changeDirection = "down";
 
-  const teamText =
-    dbEntry.team_count === 0
-      ? "No Teams"
-      : dbEntry.team_count === 1
-      ? "1 Team"
-      : `${dbEntry.team_count} Teams`;
+  const teamText = dbEntry.team_name || "No Team";
 
   const userStreak = userStreaks?.get(dbEntry.user_id) || {
     days: 0,

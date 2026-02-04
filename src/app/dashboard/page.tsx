@@ -31,6 +31,8 @@ import {
   getTeamProgressData,
   getPersonalProgressData,
 } from "@/data/dashboard-data";
+// Onborda disabled temporarily — uncomment to re-enable
+// import { DashboardTourTrigger } from "@/components/onboarding/dashboard-tour-trigger";
 import { useState } from "react";
 import {
   StatsCard,
@@ -100,6 +102,7 @@ export default function OverviewPage() {
 
   return (
     <div className="space-y-6">
+      {/* <DashboardTourTrigger /> */}
       {/* Header section */}
       <div>
         <h1 className="text-2xl font-bold">Hi {firstName} 👋</h1>
@@ -113,6 +116,7 @@ export default function OverviewPage() {
         {statsCards.map((card, index) => (
           <motion.div
             key={index}
+            id={card.id}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{

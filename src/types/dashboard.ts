@@ -1,6 +1,7 @@
 import { LucideIcon } from "lucide-react";
 
 export interface StatsCard {
+  id?: string;
   title: string;
   value: string;
   subtitle: string;

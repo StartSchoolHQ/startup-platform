@@ -27,7 +27,7 @@ export interface LeaderboardEntry {
   total_points: number;
   achievements_count: number;
   tasks_completed: number;
-  team_count: number;
+  team_name: string | null;
   rank_position: number;
   xp_change: number;
   points_change: number;
