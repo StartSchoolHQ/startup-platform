@@ -105,7 +105,8 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
       setDetailedInstructions(fullTask.detailed_instructions || "");
       setTipsContent((fullTask.tips_content as unknown as TipContent[]) || []);
       setPeerReviewCriteria(
-        (fullTask.peer_review_criteria as unknown as PeerReviewCriteria[]) || []
+        (fullTask.peer_review_criteria as unknown as PeerReviewCriteria[]) ||
+          [],
       );
       setLearningObjectives(fullTask.learning_objectives || []);
       setDeliverables(fullTask.deliverables || []);
@@ -136,7 +137,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
   const updateTip = (
     index: number,
     field: "title" | "content",
-    value: string
+    value: string,
   ) => {
     const updated = [...tipsContent];
     updated[index][field] = value;
@@ -185,7 +186,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
   const updateResource = (
     index: number,
     field: keyof ResourceItem,
-    value: string
+    value: string,
   ) => {
     const updated = [...resources];
     updated[index] = { ...updated[index], [field]: value };
@@ -194,6 +195,57 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
 
   const removeResource = (index: number) => {
     setResources(resources.filter((_, i) => i !== index));
+  };
+
+  // Peer Review Criteria helpers
+  const addPeerReviewCategory = () => {
+    setPeerReviewCriteria([
+      ...peerReviewCriteria,
+      { category: "", points: [""] },
+    ]);
+  };
+
+  const updatePeerReviewCategory = (index: number, value: string) => {
+    const updated = [...peerReviewCriteria];
+    updated[index] = { ...updated[index], category: value };
+    setPeerReviewCriteria(updated);
+  };
+
+  const removePeerReviewCategory = (index: number) => {
+    setPeerReviewCriteria(peerReviewCriteria.filter((_, i) => i !== index));
+  };
+
+  const addPeerReviewPoint = (categoryIndex: number) => {
+    const updated = [...peerReviewCriteria];
+    updated[categoryIndex] = {
+      ...updated[categoryIndex],
+      points: [...updated[categoryIndex].points, ""],
+    };
+    setPeerReviewCriteria(updated);
+  };
+
+  const updatePeerReviewPoint = (
+    categoryIndex: number,
+    pointIndex: number,
+    value: string,
+  ) => {
+    const updated = [...peerReviewCriteria];
+    const updatedPoints = [...updated[categoryIndex].points];
+    updatedPoints[pointIndex] = value;
+    updated[categoryIndex] = {
+      ...updated[categoryIndex],
+      points: updatedPoints,
+    };
+    setPeerReviewCriteria(updated);
+  };
+
+  const removePeerReviewPoint = (categoryIndex: number, pointIndex: number) => {
+    const updated = [...peerReviewCriteria];
+    updated[categoryIndex] = {
+      ...updated[categoryIndex],
+      points: updated[categoryIndex].points.filter((_, i) => i !== pointIndex),
+    };
+    setPeerReviewCriteria(updated);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -611,6 +663,116 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                         </Button>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Peer Review Criteria */}
+                  <div className="space-y-3 pt-4 border-t">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-base font-semibold">
+                          Peer Review Criteria
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Define what reviewers should check when evaluating
+                          submissions
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addPeerReviewCategory}
+                        disabled={isSubmitting}
+                      >
+                        Add Category
+                      </Button>
+                    </div>
+                    {peerReviewCriteria.map((criteria, categoryIndex) => (
+                      <div
+                        key={categoryIndex}
+                        className="border rounded-lg p-4 space-y-3 bg-muted/30"
+                      >
+                        <div className="flex gap-2 items-center">
+                          <Input
+                            value={criteria.category}
+                            onChange={(e) =>
+                              updatePeerReviewCategory(
+                                categoryIndex,
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Category name (e.g., 'What to evaluate', 'Reject if')"
+                            className="font-semibold"
+                            disabled={isSubmitting}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              removePeerReviewCategory(categoryIndex)
+                            }
+                            disabled={isSubmitting}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="space-y-2 pl-4 border-l-2 border-muted-foreground/20">
+                          {criteria.points.map((point, pointIndex) => (
+                            <div
+                              key={pointIndex}
+                              className="flex gap-2 items-start"
+                            >
+                              <Textarea
+                                value={point}
+                                onChange={(e) =>
+                                  updatePeerReviewPoint(
+                                    categoryIndex,
+                                    pointIndex,
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Review criterion point (supports markdown)"
+                                className="min-h-[60px] text-sm"
+                                disabled={isSubmitting}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  removePeerReviewPoint(
+                                    categoryIndex,
+                                    pointIndex,
+                                  )
+                                }
+                                disabled={
+                                  isSubmitting || criteria.points.length <= 1
+                                }
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => addPeerReviewPoint(categoryIndex)}
+                            disabled={isSubmitting}
+                            className="text-muted-foreground"
+                          >
+                            + Add Point
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {peerReviewCriteria.length === 0 && (
+                      <p className="text-sm text-muted-foreground italic">
+                        No peer review criteria defined. Click "Add Category" to
+                        create one.
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>

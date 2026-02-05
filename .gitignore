@@ -47,3 +47,8 @@ invitations.csv
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local config files
+mcp.json
+CLAUDE.md
+settings.local.json
