@@ -210,18 +210,15 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
   });
 
   // React Query: Member submission statuses
-  // Note: We need team?.members?.length in the key to refetch when team data loads
   const { data: memberSubmissionStatus = {} } = useQuery({
     queryKey: ["teamJourney", "memberSubmissions", teamId, team?.members?.length ?? 0],
     queryFn: async () => {
       if (!team?.members || team.members.length === 0) return {};
-      console.log("Fetching member submissions for", team.members.length, "members");
       const statusPromises = team.members.map(async (member: any) => {
         const hasSubmitted = await hasUserSubmittedThisWeek(
           member.user_id,
           teamId!,
         );
-        console.log("Member", member.user_id, "hasSubmitted:", hasSubmitted);
         return { userId: member.user_id, hasSubmitted };
       });
       const statuses = await Promise.all(statusPromises);
