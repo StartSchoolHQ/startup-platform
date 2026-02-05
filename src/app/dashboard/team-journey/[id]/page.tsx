@@ -210,15 +210,18 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
   });
 
   // React Query: Member submission statuses
+  // Note: We need team?.members?.length in the key to refetch when team data loads
   const { data: memberSubmissionStatus = {} } = useQuery({
-    queryKey: ["teamJourney", "memberSubmissions", teamId, team?.members],
+    queryKey: ["teamJourney", "memberSubmissions", teamId, team?.members?.length ?? 0],
     queryFn: async () => {
-      if (!team?.members) return {};
+      if (!team?.members || team.members.length === 0) return {};
+      console.log("Fetching member submissions for", team.members.length, "members");
       const statusPromises = team.members.map(async (member: any) => {
         const hasSubmitted = await hasUserSubmittedThisWeek(
           member.user_id,
           teamId!,
         );
+        console.log("Member", member.user_id, "hasSubmitted:", hasSubmitted);
         return { userId: member.user_id, hasSubmitted };
       });
       const statuses = await Promise.all(statusPromises);
@@ -230,7 +233,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         {} as Record<string, boolean>,
       );
     },
-    enabled: !!teamId && !!team?.members,
+    enabled: !!teamId && !!team?.members && team.members.length > 0,
   });
 
   // React Query: Achievements dashboard (includes tasks)
@@ -1169,7 +1172,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex -space-x-2">
-                      {team.members.slice(0, 4).map((member) => {
+                      {team.members.map((member) => {
                         const hasSubmitted =
                           memberSubmissionStatus[member.user_id];
                         const hasStatus =
