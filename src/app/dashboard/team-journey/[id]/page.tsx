@@ -169,6 +169,9 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
   const [selectedAchievementId, setSelectedAchievementId] = useState<
     string | null
   >(null);
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "not_started" | "in_progress" | "completed"
+  >("all");
   const [selectedStrike, setSelectedStrike] = useState<any>(null);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const [refreshCountdown, setRefreshCountdown] = useState(0);
@@ -712,15 +715,46 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
     setSelectedAchievementId(achievementId);
   };
 
-  // Filter tasks by selected achievement
+  // Helper: map a raw task to its filter category
+  const getTaskFilterCategory = (
+    task: (typeof allTasks)[number],
+  ): "not_started" | "in_progress" | "completed" => {
+    const isRecurring = (task as any).is_recurring === true;
+
+    if (isRecurring) {
+      if (task.status === "cooldown") return "in_progress";
+      if (task.status === "approved" && task.is_available) return "not_started";
+      if (task.status === "pending_review") return "in_progress";
+      if (task.status === "in_progress") return "in_progress";
+      if (task.status === "rejected") return "in_progress";
+      return "not_started";
+    } else {
+      if (task.status === "approved") return "completed";
+      if (task.status === "pending_review") return "in_progress";
+      if (task.status === "in_progress") return "in_progress";
+      if (task.status === "rejected") return "in_progress";
+      return "not_started";
+    }
+  };
+
+  // Filter tasks by selected achievement and status
   const filteredTasks = useMemo(() => {
+    let tasks = allTasks;
+
     if (selectedAchievementId) {
-      return allTasks.filter(
+      tasks = tasks.filter(
         (task) => task.achievement_id === selectedAchievementId,
       );
     }
-    return allTasks;
-  }, [selectedAchievementId, allTasks]);
+
+    if (statusFilter !== "all") {
+      tasks = tasks.filter(
+        (task) => getTaskFilterCategory(task) === statusFilter,
+      );
+    }
+
+    return tasks;
+  }, [selectedAchievementId, statusFilter, allTasks]);
 
   // Countdown timer for refresh button
   useEffect(() => {
@@ -1416,6 +1450,32 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             </div>
           )}
 
+          {/* Task Status Filter */}
+          {teamStats.achievementsUnlocked && (
+            <div className="flex items-center gap-2 mt-4">
+              <span className="text-sm text-muted-foreground mr-1">
+                Status:
+              </span>
+              {(
+                [
+                  { key: "all", label: "All" },
+                  { key: "not_started", label: "Not Started" },
+                  { key: "in_progress", label: "In Progress" },
+                  { key: "completed", label: "Completed" },
+                ] as const
+              ).map(({ key, label }) => (
+                <Button
+                  key={key}
+                  variant={statusFilter === key ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStatusFilter(key)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          )}
+
           {/* Tasks Table */}
           {loadingState.achievements ? (
             <div className="flex items-center justify-center py-8 gap-2">
@@ -1435,8 +1495,8 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             </div>
           ) : filteredTasks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              {selectedAchievementId
-                ? "No tasks found for this achievement"
+              {selectedAchievementId || statusFilter !== "all"
+                ? "No tasks match the current filters"
                 : "No tasks available for this team."}
             </div>
           ) : (
