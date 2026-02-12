@@ -119,6 +119,7 @@ export async function leaveTeam(teamId: string, userId: string) {
 
 /**
  * Remove a team member (for team management)
+ * Uses RPC v2: soft delete, hierarchy enforcement, invitation cleanup, member count - all in one atomic operation
  */
 export async function removeTeamMember(
   teamId: string,
@@ -126,59 +127,26 @@ export async function removeTeamMember(
 ): Promise<void> {
   const supabase = createClient();
 
-  // Check if user is founder (founders cannot be removed)
-  const { data: member, error: memberError } = await supabase
-    .from("team_members")
-    .select("team_role")
-    .eq("team_id", teamId)
-    .eq("user_id", userId)
-    .is("left_at", null)
-    .single();
-
-  if (memberError) throw memberError;
-
-  if (member.team_role === "founder") {
-    throw new Error(
-      "Cannot remove team founder. Consider transferring ownership or disbanding the team."
-    );
-  }
-
-  const { error } = await supabase
-    .from("team_members")
-    .delete()
-    .eq("team_id", teamId)
-    .eq("user_id", userId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.rpc as any)("remove_team_member_v2", {
+    p_team_id: teamId,
+    p_user_id: userId,
+  });
 
   if (error) {
+    // Map DB error messages to user-friendly messages
+    if (error.message?.includes("founder")) {
+      throw new Error(
+        "Cannot remove team founder. Consider transferring ownership or disbanding the team."
+      );
+    }
     throw error;
   }
-
-  // Clean up invitation records
-  const { error: inviteCleanupError } = await supabase
-    .from("team_invitations")
-    .delete()
-    .eq("team_id", teamId)
-    .eq("invited_user_id", userId);
-
-  if (inviteCleanupError) {
-    // Don't throw - main operation succeeded
-  }
-
-  // Update team member count using RPC
-  const { error: countError } = await (
-    supabase as unknown as {
-      rpc: (
-        name: string,
-        params: Record<string, unknown>
-      ) => Promise<{ error: unknown }>;
-    }
-  ).rpc("decrement_team_member_count", { team_id: teamId });
-
-  if (countError) throw countError;
 }
 
 /**
  * Update team member role
+ * Uses RPC v2: hierarchy enforcement, prevents founder promotion - all validated server-side
  */
 export async function updateTeamMemberRole(
   teamId: string,
@@ -187,11 +155,12 @@ export async function updateTeamMemberRole(
 ): Promise<void> {
   const supabase = createClient();
 
-  const { error } = await supabase
-    .from("team_members")
-    .update({ team_role: newRole })
-    .eq("team_id", teamId)
-    .eq("user_id", userId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.rpc as any)("update_team_member_role_v2", {
+    p_team_id: teamId,
+    p_user_id: userId,
+    p_new_role: newRole,
+  });
 
   if (error) {
     throw error;
