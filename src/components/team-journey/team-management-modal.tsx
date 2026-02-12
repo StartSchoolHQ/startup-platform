@@ -11,16 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   removeTeamMember,
@@ -44,15 +34,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Users,
   UserPlus,
-  MoreVertical,
   Crown,
   Shield,
   User,
@@ -109,7 +92,6 @@ export function TeamManagementModal({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("current-team");
-  const [memberToRemove, setMemberToRemove] = useState<string | null>(null);
   const [showDisbandConfirm, setShowDisbandConfirm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [allAvailableUsers, setAllAvailableUsers] = useState<AvailableUser[]>(
@@ -159,17 +141,12 @@ export function TeamManagementModal({
   };
 
   const handleKickMember = async (memberId: string) => {
-    setMemberToRemove(memberId);
-  };
-
-  const confirmRemoveMember = async () => {
-    if (!memberToRemove) return;
     try {
-      await removeTeamMember(team.id, memberToRemove);
+      await removeTeamMember(team.id, memberId);
       posthog.capture("team_member_removed", {
         team_id: team.id,
         team_name: team.name,
-        removed_user_id: memberToRemove,
+        removed_user_id: memberId,
       });
       toast.success("Member removed from team successfully");
       onRefresh?.();
@@ -177,8 +154,6 @@ export function TeamManagementModal({
     } catch (error) {
       console.error("Error removing member:", error);
       toast.error("Failed to remove member from team");
-    } finally {
-      setMemberToRemove(null);
     }
   };
 
@@ -440,7 +415,11 @@ export function TeamManagementModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleModalClose}>
-        <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+        <DialogContent
+          className="max-w-4xl h-[80vh] flex flex-col"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
@@ -553,38 +532,35 @@ export function TeamManagementModal({
                       </div>
 
                       {canManageMembers && member.team_role !== "founder" && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleChangeRole(member.user_id, "leader")
-                              }
-                            >
-                              <Shield className="h-4 w-4 mr-2" />
-                              Make Leader
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleChangeRole(member.user_id, "member")
-                              }
-                            >
-                              <User className="h-4 w-4 mr-2" />
-                              Make Member
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleKickMember(member.user_id)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <UserMinus className="h-4 w-4 mr-2" />
-                              Remove from Team
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleChangeRole(member.user_id, "leader")}
+                            className="h-8 px-2 text-xs"
+                          >
+                            <Shield className="h-3 w-3 mr-1" />
+                            Make Leader
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleChangeRole(member.user_id, "member")}
+                            className="h-8 px-2 text-xs"
+                          >
+                            <User className="h-3 w-3 mr-1" />
+                            Make Member
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleKickMember(member.user_id)}
+                            className="h-8 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <UserMinus className="h-3 w-3 mr-1" />
+                            Remove
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </Card>
@@ -843,6 +819,32 @@ export function TeamManagementModal({
             )}
           </Tabs>
 
+          {/* Inline Disband Team Confirmation */}
+          {showDisbandConfirm && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/95 rounded-lg p-6">
+              <div className="max-w-sm text-center space-y-4">
+                <AlertTriangle className="h-10 w-10 text-destructive mx-auto" />
+                <h3 className="text-lg font-semibold">Disband Team?</h3>
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to disband &quot;{team.name}&quot;? This
+                  action cannot be undone. All team members will lose access and
+                  all team data will be archived.
+                </p>
+                <div className="flex justify-center gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowDisbandConfirm(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button variant="destructive" onClick={confirmDisbandTeam}>
+                    Disband Team
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-end gap-2 pt-4 border-t flex-shrink-0">
             <Button
               variant="outline"
@@ -854,57 +856,6 @@ export function TeamManagementModal({
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Remove Member Confirmation Dialog */}
-      <AlertDialog
-        open={!!memberToRemove}
-        onOpenChange={(open) => !open && setMemberToRemove(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Team Member?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to remove this member from the team? They
-              will lose access to all team tasks and data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmRemoveMember}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              Remove Member
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Disband Team Confirmation Dialog */}
-      <AlertDialog
-        open={showDisbandConfirm}
-        onOpenChange={setShowDisbandConfirm}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Disband Team?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to disband &quot;{team.name}&quot;? This
-              action cannot be undone. All team members will lose access and all
-              team data will be archived.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDisbandTeam}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              Disband Team
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
