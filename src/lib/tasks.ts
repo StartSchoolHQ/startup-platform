@@ -19,6 +19,7 @@ type PartialProgressData = {
   started_at?: string | null;
   completed_at?: string | null;
   updated_at?: string;
+  submission_data?: unknown;
   submission_notes?: string | null;
   reviewer_user_id?: string | null;
   review_feedback?: string | null;
@@ -649,7 +650,11 @@ export async function getTaskByIdLazy(
       started_at: progressData?.started_at || undefined,
       completed_at: progressData?.completed_at || undefined,
       updated_at: progressData?.updated_at || new Date().toISOString(),
-      // submission_data is handled separately - not part of TeamTask interface
+      submission_data: progressData?.submission_data
+        ? typeof progressData.submission_data === "string"
+          ? JSON.parse(progressData.submission_data)
+          : (progressData.submission_data as Record<string, unknown>)
+        : undefined,
       submission_notes: progressData?.submission_notes || undefined,
       reviewer_user_id: progressData?.reviewer_user_id || undefined,
       review_feedback: progressData?.review_feedback || undefined,

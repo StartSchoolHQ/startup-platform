@@ -106,6 +106,7 @@ export interface TeamTask {
   started_at?: string;
   completed_at?: string;
   updated_at?: string;
+  submission_data?: Record<string, unknown>;
   submission_notes?: string;
   is_available?: boolean;
   reviewer_user_id?: string;

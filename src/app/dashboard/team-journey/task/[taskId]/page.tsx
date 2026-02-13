@@ -31,6 +31,7 @@ import {
   CheckCircle,
   AlertCircle,
   Play,
+  ExternalLink,
 } from "lucide-react";
 import { useEffect, useState, use } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -108,6 +109,11 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
   // Check if task is recurring
   const isRecurringTask =
     task?.title?.includes("Weekly") || (task as any)?.is_recurring === true;
+
+  // Check if task has submission data
+  const hasSubmission =
+    task?.submission_data &&
+    Object.keys(task.submission_data).length > 0;
 
   // Team name query (conditional)
   const { data: teamName = null } = useQuery({
@@ -584,19 +590,24 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
         <div className="lg:col-span-3">
           <Tabs defaultValue="task" className="w-full">
             <TabsList
-              className={`grid w-full ${
-                isRecurringTask ? "grid-cols-4" : "grid-cols-3"
-              }`}
+              className={`grid w-full`}
+              style={{
+                gridTemplateColumns: `repeat(${3 + (hasSubmission ? 1 : 0) + (isRecurringTask ? 1 : 0)}, minmax(0, 1fr))`,
+              }}
             >
               <TabsTrigger value="task" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Task
               </TabsTrigger>
-              {/* TODO: Re-enable Tips tab for full release */}
-              {/* <TabsTrigger value="tips" className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                Tips
-              </TabsTrigger> */}
+              {hasSubmission && (
+                <TabsTrigger
+                  value="submission"
+                  className="flex items-center gap-2"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Submission
+                </TabsTrigger>
+              )}
               <TabsTrigger
                 value="peer-review"
                 className="flex items-center gap-2"
@@ -783,6 +794,144 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
             {/* </CardContent>
               </Card>
             </TabsContent> */}
+
+            {/* Submission Tab - Shows what the member actually submitted */}
+            {hasSubmission && (
+              <TabsContent value="submission" className="space-y-6 mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold">
+                      Task Submission
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      What was delivered for this task
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Description */}
+                    {typeof task.submission_data?.description === "string" &&
+                      task.submission_data.description && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-2">
+                            Description
+                          </h4>
+                          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                            {task.submission_data.description}
+                          </p>
+                        </div>
+                      )}
+
+                    {/* External URLs */}
+                    {Array.isArray(task.submission_data?.external_urls) &&
+                      task.submission_data.external_urls.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-2">
+                            External Resources
+                          </h4>
+                          <div className="space-y-2">
+                            {(
+                              task.submission_data.external_urls as Array<{
+                                url: string;
+                                title?: string;
+                                type?: string;
+                              }>
+                            ).map((urlItem, index) => {
+                              const url =
+                                typeof urlItem === "string"
+                                  ? urlItem
+                                  : urlItem?.url;
+                              const title =
+                                typeof urlItem === "string"
+                                  ? urlItem
+                                  : urlItem?.title || "External Link";
+
+                              return (
+                                <a
+                                  key={index}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 p-3 border rounded-lg hover:bg-muted/50 hover:border-blue-300 transition-colors group"
+                                >
+                                  <ExternalLink className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="text-sm font-medium text-blue-700 group-hover:text-blue-800">
+                                      {title}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground truncate">
+                                      {url}
+                                    </div>
+                                  </div>
+                                </a>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Files */}
+                    {Array.isArray(task.submission_data?.files) &&
+                      task.submission_data.files.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-2">
+                            Uploaded Files
+                          </h4>
+                          <div className="space-y-3">
+                            {(task.submission_data.files as string[]).map(
+                              (fileUrl, index) => {
+                                const fileName =
+                                  fileUrl.split("/").pop() ||
+                                  `File ${index + 1}`;
+                                const isImage =
+                                  /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(
+                                    fileName,
+                                  );
+
+                                return (
+                                  <div key={index} className="space-y-2">
+                                    <a
+                                      href={fileUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-2"
+                                    >
+                                      <FileText className="h-4 w-4 flex-shrink-0" />
+                                      {fileName}
+                                    </a>
+                                    {isImage && (
+                                      <div className="border rounded-lg p-2 bg-muted/30">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                          src={fileUrl}
+                                          alt={fileName}
+                                          className="w-full max-h-80 object-contain rounded"
+                                          onError={(e) => {
+                                            (
+                                              e.target as HTMLImageElement
+                                            ).style.display = "none";
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              },
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Submitted at */}
+                    {typeof task.submission_data?.submitted_at === "string" && (
+                      <div className="pt-3 border-t text-sm text-muted-foreground">
+                        Submitted on{" "}
+                        {formatDate(task.submission_data.submitted_at)}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
 
             <TabsContent value="peer-review" className="space-y-6 mt-6">
               <Card>
