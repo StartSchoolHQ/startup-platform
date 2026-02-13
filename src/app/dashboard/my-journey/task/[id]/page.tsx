@@ -67,35 +67,28 @@ export default function IndividualTaskDetailPage() {
 
     setIsSubmitting(true);
     try {
-      const success = await completeIndividualTask(
-        task.progress_id,
-        submissionData
-      );
+      await completeIndividualTask(task.progress_id, submissionData);
 
-      if (success) {
-        // Refresh task data to show completed status
-        await loadTask();
-        setIsSubmissionModalOpen(false);
+      // Refresh task data to show completed status
+      await loadTask();
+      setIsSubmissionModalOpen(false);
 
-        // Refresh notifications (handled by React Query)
-        // No manual refresh needed - queries will auto-update
+      // Refresh notifications (handled by React Query)
+      // No manual refresh needed - queries will auto-update
 
-        // Enhanced success feedback for individual tasks
-        toast.success("Task Completed Successfully! 🎉", {
-          description:
-            "XP and points awarded! Your task was automatically approved.",
-          duration: 5000,
-        });
-      } else {
-        toast.error("Failed to submit task", {
-          description: "Please check your submission and try again.",
-        });
-      }
+      // Enhanced success feedback for individual tasks
+      toast.success("Task Completed Successfully! 🎉", {
+        description:
+          "XP and points awarded! Your task was automatically approved.",
+        duration: 5000,
+      });
     } catch (error) {
       console.error("Error submitting task:", error);
       toast.error("Failed to submit task", {
         description:
-          "Please try again or contact support if the issue persists.",
+          error instanceof Error
+            ? error.message
+            : "Please try again or contact support if the issue persists.",
       });
     } finally {
       setIsSubmitting(false);

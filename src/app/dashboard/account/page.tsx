@@ -1,9 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,10 +10,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PasswordInput } from "@/components/ui/password-input";
-import { ArrowLeft, Camera, Save, Eye, EyeOff } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import type { PostgrestError } from "@supabase/supabase-js";
+import { ArrowLeft, Camera, Save } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface UserProfile {
   id: string;
@@ -29,8 +31,7 @@ export default function AccountPage() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // Profile form state
   const [name, setName] = useState("");
@@ -65,7 +66,7 @@ export default function AccountPage() {
         .single();
 
       if (profileError || !userProfile) {
-        setError("Failed to load user profile");
+        toast.error("Failed to load user profile");
         return;
       }
 
@@ -74,7 +75,7 @@ export default function AccountPage() {
       setAvatarPreview(userProfile.avatar_url);
     } catch (error) {
       console.error("Error loading user profile:", error);
-      setError("An unexpected error occurred");
+      toast.error("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -89,17 +90,17 @@ export default function AccountPage() {
     if (file) {
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setError("File size must be less than 5MB");
+        setValidationError("File size must be less than 5MB");
         return;
       }
 
       // Validate file type
       if (!file.type.startsWith("image/")) {
-        setError("Please select an image file");
+        setValidationError("Please select an image file");
         return;
       }
 
-      setError(null);
+      setValidationError(null);
       setAvatarFile(file);
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
@@ -111,13 +112,12 @@ export default function AccountPage() {
     e.preventDefault();
 
     if (!name.trim()) {
-      setError("Full name is required");
+      setValidationError("Full name is required");
       return;
     }
 
     setSaving(true);
-    setError(null);
-    setSuccess(null);
+    setValidationError(null);
 
     try {
       const supabase = createClient();
@@ -140,7 +140,9 @@ export default function AccountPage() {
 
         if (uploadError) {
           console.error("Upload error:", uploadError);
-          setError(`Failed to upload profile picture: ${uploadError.message}`);
+          toast.error(
+            `Failed to upload profile picture: ${uploadError.message}`
+          );
           return;
         }
 
@@ -153,27 +155,32 @@ export default function AccountPage() {
       }
 
       // Update user profile via secure RPC function
-      const { data: rpcData, error: updateError } = await (supabase as any).rpc(
-        "update_user_profile",
-        {
+      type UpdateProfileResponse = { success: boolean; error?: string };
+      const { data: rpcData, error: updateError } =
+        // @ts-expect-error - RPC function not in auto-generated types
+        (await supabase.rpc("update_user_profile", {
           p_name: name.trim(),
           p_avatar_url: avatarUrl,
-        }
-      );
+        })) as {
+          data: UpdateProfileResponse | null;
+          error: PostgrestError | null;
+        };
 
       if (updateError || !rpcData?.success) {
-        setError(rpcData?.error || "Failed to save profile. Please try again.");
+        toast.error(
+          rpcData?.error || "Failed to save profile. Please try again."
+        );
         return;
       }
 
-      setSuccess("Profile updated successfully!");
+      toast.success("Profile updated successfully!");
       setAvatarFile(null);
 
       // Reload user profile to get updated data
       await loadUserProfile();
     } catch (error) {
       console.error("Error updating profile:", error);
-      setError("An unexpected error occurred. Please try again.");
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -183,18 +190,17 @@ export default function AccountPage() {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
-      setError("New passwords do not match");
+      setValidationError("New passwords do not match");
       return;
     }
 
     if (newPassword.length < 8) {
-      setError("New password must be at least 8 characters long");
+      setValidationError("New password must be at least 8 characters long");
       return;
     }
 
     setSaving(true);
-    setError(null);
-    setSuccess(null);
+    setValidationError(null);
 
     try {
       const supabase = createClient();
@@ -204,16 +210,16 @@ export default function AccountPage() {
       });
 
       if (error) {
-        setError(error.message);
+        toast.error(error.message);
         return;
       }
 
-      setSuccess("Password updated successfully!");
+      toast.success("Password updated successfully!");
       setNewPassword("");
       setConfirmPassword("");
     } catch (error) {
       console.error("Error updating password:", error);
-      setError("An unexpected error occurred. Please try again.");
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -264,15 +270,9 @@ export default function AccountPage() {
         </p>
       </div>
 
-      {error && (
+      {validationError && (
         <div className="mb-6 rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="mb-6 rounded border border-green-200 bg-green-50 px-4 py-3 text-green-700">
-          {success}
+          {validationError}
         </div>
       )}
 

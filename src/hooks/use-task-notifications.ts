@@ -60,12 +60,12 @@ export function useNotifications(userId: string | undefined) {
       notificationId: string;
       source: "persistent" | "metadata";
     }) => {
-      if (!userId) return false;
+      if (!userId) throw new Error("User not found");
 
       if (source === "persistent") {
-        return await markPersistentNotificationRead(notificationId);
+        await markPersistentNotificationRead(notificationId);
       } else {
-        return await markNotificationSeen(notificationId, userId);
+        await markNotificationSeen(notificationId, userId);
       }
     },
     onSuccess: () => {
@@ -76,6 +76,9 @@ export function useNotifications(userId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: ["notifications", "count", userId],
       });
+    },
+    onError: (error) => {
+      console.error("Error marking notification as read:", error);
     },
   });
 

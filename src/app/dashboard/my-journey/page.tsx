@@ -524,8 +524,9 @@ export default function MyJourneyPage() {
 
   // Mutation: Start task with optimistic update
   const startTaskMutation = useMutation({
-    mutationFn: (taskId: string) =>
-      startTaskLazy(taskId, undefined, user!.id, "individual"),
+    mutationFn: async (taskId: string) => {
+      await startTaskLazy(taskId, undefined, user!.id, "individual");
+    },
     onMutate: async (taskId) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["myJourney"] });

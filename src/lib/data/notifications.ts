@@ -48,7 +48,7 @@ export async function getNotificationCount(): Promise<number> {
 export async function markNotificationSeen(
   taskProgressId: string,
   userId: string
-): Promise<boolean> {
+): Promise<void> {
   const supabase = createClient();
 
   try {
@@ -72,11 +72,14 @@ export async function markNotificationSeen(
         })
         .eq("id", taskProgressId);
 
-      return !error;
+      if (error) {
+        throw new Error(
+          "Failed to mark notification as seen: " + error.message
+        );
+      }
     }
-
-    return true;
   } catch (error) {
-    return false;
+    if (error instanceof Error) throw error;
+    throw new Error("Failed to mark notification as seen");
   }
 }

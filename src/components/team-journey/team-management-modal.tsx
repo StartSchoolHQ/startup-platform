@@ -93,6 +93,7 @@ export function TeamManagementModal({
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("current-team");
   const [showDisbandConfirm, setShowDisbandConfirm] = useState(false);
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [allAvailableUsers, setAllAvailableUsers] = useState<AvailableUser[]>(
     []
@@ -371,6 +372,7 @@ export function TeamManagementModal({
       website: team.website || "",
     });
     setEditError("");
+    setShowUnsavedWarning(false);
   };
 
   // Handle modal close with confirmation if form has changes
@@ -381,14 +383,7 @@ export function TeamManagementModal({
       (editFormData.website || "") !== (team.website || "");
 
     if (hasChanges && !isUpdating) {
-      if (
-        window.confirm(
-          "You have unsaved changes. Are you sure you want to close?"
-        )
-      ) {
-        resetEditForm();
-        onClose();
-      }
+      setShowUnsavedWarning(true);
     } else {
       resetEditForm();
       onClose();
@@ -429,6 +424,34 @@ export function TeamManagementModal({
               Manage your team members, invite new users, and edit team details.
             </DialogDescription>
           </DialogHeader>
+
+          {showUnsavedWarning && (
+            <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/50 dark:bg-amber-950/30">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                You have unsaved changes.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowUnsavedWarning(false)}
+                >
+                  Keep Editing
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    setShowUnsavedWarning(false);
+                    resetEditForm();
+                    onClose();
+                  }}
+                >
+                  Discard
+                </Button>
+              </div>
+            </div>
+          )}
 
           <Tabs
             value={activeTab}

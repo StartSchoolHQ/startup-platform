@@ -1,13 +1,25 @@
 {
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "typescript.tsserver.maxTsServerMemory": 4096,
+  "typescript.inlayHints.parameterNames.enabled": "all",
+  "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
   "explorer.confirmRename": true,
   "files.enableTrash": true,
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
   "search.useIgnoreFiles": true,
   "search.smartCase": true,
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
-  }
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
+  ]
 }

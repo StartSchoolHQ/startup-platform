@@ -305,7 +305,7 @@ export async function startTaskLazy(
   teamId?: string,
   userId?: string,
   context: "team" | "individual" = "team"
-): Promise<boolean> {
+): Promise<void> {
   try {
     // First ensure progress entry exists
     // For team context: pass teamId but NOT userId (constraint requirement)
@@ -318,13 +318,14 @@ export async function startTaskLazy(
     );
 
     if (!progressId) {
-      return false;
+      throw new Error("Failed to create task progress entry");
     }
 
     // Now start the task using existing startTask function
-    return await startTask(progressId, userId || "");
+    await startTask(progressId, userId || "");
   } catch (error) {
-    return false;
+    if (error instanceof Error) throw error;
+    throw new Error("Failed to start task");
   }
 }
 
@@ -333,7 +334,7 @@ export async function assignTaskToMember(
   taskIdOrProgressId: string,
   userId: string,
   teamId?: string
-): Promise<boolean> {
+): Promise<void> {
   try {
     const supabase = createClient();
 
@@ -365,7 +366,7 @@ export async function assignTaskToMember(
         .single();
 
       if (!task) {
-        return false;
+        throw new Error("Task not found");
       }
 
       // Use the actual task ID for the rest of the function
@@ -373,7 +374,7 @@ export async function assignTaskToMember(
 
       // This is a task_id, create progress entry first if needed
       if (!teamId) {
-        return false;
+        throw new Error("Team ID is required to assign a new task");
       }
 
       const createdProgressId = await createProgressIfNeeded(
@@ -384,7 +385,7 @@ export async function assignTaskToMember(
       );
 
       if (!createdProgressId) {
-        return false;
+        throw new Error("Failed to create progress entry for task");
       }
 
       progressId = createdProgressId;
@@ -401,12 +402,15 @@ export async function assignTaskToMember(
     );
 
     if (error) {
-      return false;
+      throw new Error("Failed to assign task: " + error.message);
     }
 
-    return data?.[0]?.success || false;
+    if (!data?.[0]?.success) {
+      throw new Error("Failed to assign task to team member");
+    }
   } catch (error) {
-    return false;
+    if (error instanceof Error) throw error;
+    throw new Error("Failed to assign task");
   }
 }
 
@@ -920,7 +924,7 @@ export async function reassignTask(
   progressId: string,
   newUserId: string,
   reassignedByUserId: string
-): Promise<boolean> {
+): Promise<void> {
   try {
     const supabase = createClient();
 
@@ -932,12 +936,15 @@ export async function reassignTask(
     });
 
     if (error) {
-      return false;
+      throw new Error("Failed to reassign task: " + error.message);
     }
 
-    return data?.[0]?.success || false;
+    if (!data?.[0]?.success) {
+      throw new Error("Failed to reassign task");
+    }
   } catch (error) {
-    return false;
+    if (error instanceof Error) throw error;
+    throw new Error("Failed to reassign task");
   }
 }
 
@@ -945,12 +952,12 @@ export async function reassignTask(
 export async function startTask(
   progressId: string,
   userId: string
-): Promise<boolean> {
+): Promise<void> {
   try {
     // Check permission first
     const permission = await checkTaskPermission(progressId, userId, "start");
     if (!permission.canManage) {
-      return false;
+      throw new Error("You don't have permission to start this task");
     }
 
     const supabase = createClient();
@@ -969,19 +976,18 @@ export async function startTask(
       .eq("id", progressId);
 
     if (error) {
-      return false;
+      throw new Error("Failed to start task: " + error.message);
     }
-
-    return true;
   } catch (error) {
-    return false;
+    if (error instanceof Error) throw error;
+    throw new Error("Failed to start task");
   }
 }
 
 export async function completeTask(
   progressId: string,
   submissionData: Record<string, unknown>
-): Promise<boolean> {
+): Promise<void> {
   try {
     // Check permission first
     const userId = submissionData.completed_by as string;
@@ -992,7 +998,7 @@ export async function completeTask(
         "complete"
       );
       if (!permission.canManage) {
-        return false;
+        throw new Error("You don't have permission to complete this task");
       }
     }
 
@@ -1006,7 +1012,7 @@ export async function completeTask(
       .single();
 
     if (fetchError) {
-      return false;
+      throw new Error("Failed to fetch task data: " + fetchError.message);
     }
 
     // Detect resubmission: has reviewer assigned AND has previous review_completed events
@@ -1037,7 +1043,9 @@ export async function completeTask(
         .eq("id", progressId);
 
       if (updateError) {
-        return false;
+        throw new Error(
+          "Failed to update submission: " + updateError.message
+        );
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1049,10 +1057,12 @@ export async function completeTask(
       );
 
       if (rpcError) {
-        return false;
+        throw new Error(
+          "Failed to resubmit task for review: " + rpcError.message
+        );
       }
 
-      return true;
+      return;
     }
 
     // Otherwise, this is initial submission - use direct update
@@ -1068,26 +1078,25 @@ export async function completeTask(
       .eq("id", progressId);
 
     if (error) {
-      return false;
+      throw new Error("Failed to complete task: " + error.message);
     }
 
     // Peer review history will be managed by the peer review system itself
-
-    return true;
   } catch (error) {
-    return false;
+    if (error instanceof Error) throw error;
+    throw new Error("Failed to complete task");
   }
 }
 
 export async function cancelTask(
   progressId: string,
   userId: string
-): Promise<boolean> {
+): Promise<void> {
   try {
     // Check permission first
     const permission = await checkTaskPermission(progressId, userId, "cancel");
     if (!permission.canManage) {
-      return false;
+      throw new Error("You don't have permission to cancel this task");
     }
 
     const supabase = createClient();
@@ -1100,24 +1109,23 @@ export async function cancelTask(
       .eq("id", progressId);
 
     if (error) {
-      return false;
+      throw new Error("Failed to cancel task: " + error.message);
     }
-
-    return true;
   } catch (error) {
-    return false;
+    if (error instanceof Error) throw error;
+    throw new Error("Failed to cancel task");
   }
 }
 
 export async function retryTask(
   progressId: string,
   userId: string
-): Promise<boolean> {
+): Promise<void> {
   try {
     // Check permission first
     const permission = await checkTaskPermission(progressId, userId, "start");
     if (!permission.canManage) {
-      return false;
+      throw new Error("You don't have permission to retry this task");
     }
 
     const supabase = createClient();
@@ -1130,21 +1138,14 @@ export async function retryTask(
       .single();
 
     if (!progressData?.team_id) {
-      return false;
+      throw new Error("Cannot retry task: team information not found");
     }
 
     // Use single timestamp to avoid race condition
     const now = new Date().toISOString();
 
     // Reset to in_progress and assign to user
-    const assignSuccess = await assignTaskToMember(
-      progressId,
-      userId,
-      progressData.team_id
-    );
-    if (!assignSuccess) {
-      return false;
-    }
+    await assignTaskToMember(progressId, userId, progressData.team_id);
 
     // Direct update instead of RPC to avoid version conflicts
     const { error } = await supabase
@@ -1163,12 +1164,11 @@ export async function retryTask(
       .eq("id", progressId);
 
     if (error) {
-      return false;
+      throw new Error("Failed to retry task: " + error.message);
     }
-
-    return true;
   } catch (error) {
-    return false;
+    if (error instanceof Error) throw error;
+    throw new Error("Failed to retry task");
   }
 }
 
@@ -1176,7 +1176,7 @@ export async function retryTask(
 export async function completeIndividualTask(
   progressId: string,
   submissionData: Record<string, unknown>
-): Promise<boolean> {
+): Promise<void> {
   try {
     const supabase = createClient();
 
@@ -1191,12 +1191,17 @@ export async function completeIndividualTask(
     );
 
     if (error) {
-      return false;
+      throw new Error(
+        "Failed to complete individual task: " + error.message
+      );
     }
 
-    return data?.[0]?.success || true;
+    if (!data?.[0]?.success) {
+      throw new Error("Failed to complete individual task");
+    }
   } catch (error) {
-    return false;
+    if (error instanceof Error) throw error;
+    throw new Error("Failed to complete task");
   }
 }
 

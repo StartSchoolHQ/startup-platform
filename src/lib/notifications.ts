@@ -110,7 +110,7 @@ export async function createNotification(
 // Mark a persistent notification as read
 export async function markPersistentNotificationRead(
   notificationId: string
-): Promise<boolean> {
+): Promise<void> {
   const supabase = createClient();
 
   try {
@@ -122,14 +122,13 @@ export async function markPersistentNotificationRead(
       .eq("id", notificationId);
 
     if (error) {
-      console.error("Error marking notification as read:", error);
-      return false;
+      throw new Error(
+        "Failed to mark notification as read: " + error.message
+      );
     }
-
-    return true;
   } catch (error) {
-    console.error("Error in markPersistentNotificationRead:", error);
-    return false;
+    if (error instanceof Error) throw error;
+    throw new Error("Failed to mark notification as read");
   }
 }
 

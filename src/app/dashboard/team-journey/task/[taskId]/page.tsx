@@ -269,9 +269,9 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
       if (!task || !user?.id) throw new Error("Missing data");
 
       if (task.progress_id && task.progress_id !== "none") {
-        return await startTask(task.progress_id, user.id);
+        await startTask(task.progress_id, user.id);
       } else {
-        return await startTaskLazy(
+        await startTaskLazy(
           task.task_id,
           task.team_id || undefined,
           user.id,
@@ -296,21 +296,17 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
 
       return { previousTask };
     },
-    onSuccess: async (success) => {
-      if (success) {
-        posthog.capture("task_started", {
-          task_id: taskId,
-          task_title: task?.title,
-          task_category: task?.category,
-          team_id: task?.team_id,
-        });
-        await refetchTask();
-        await refetchPermissions(); // Explicitly refetch permissions
-        queryClient.invalidateQueries({ queryKey: ["teamJourney"] });
-        toast.success("Task started successfully!");
-      } else {
-        toast.error("Failed to start task");
-      }
+    onSuccess: async () => {
+      posthog.capture("task_started", {
+        task_id: taskId,
+        task_title: task?.title,
+        task_category: task?.category,
+        team_id: task?.team_id,
+      });
+      await refetchTask();
+      await refetchPermissions(); // Explicitly refetch permissions
+      queryClient.invalidateQueries({ queryKey: ["teamJourney"] });
+      toast.success("Task started successfully!");
     },
     onError: (error, variables, context: any) => {
       // Revert optimistic update on error
@@ -355,37 +351,26 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
         completion_date: new Date().toISOString(),
       };
 
-      return await completeTask(task.progress_id, dbSubmissionData);
+      await completeTask(task.progress_id, dbSubmissionData);
     },
-    onSuccess: async (success) => {
-      if (success) {
-        posthog.capture("task_submitted", {
-          task_id: taskId,
-          task_title: task?.title,
-          task_category: task?.category,
-          team_id: task?.team_id,
-          base_xp_reward: task?.base_xp_reward,
-        });
-        setShowSubmissionModal(false);
-        await refetchTask(); // Refetch task data
-        queryClient.invalidateQueries({ queryKey: ["dashboard", "stats"] });
-        queryClient.invalidateQueries({ queryKey: ["teamJourney", "stats"] });
-        invalidateNotifications(queryClient, user?.id);
-        toast.success("Task Submitted Successfully! ✅", {
-          description:
-            "Your task is in the peer review queue. You'll be notified when complete (2-3 days).",
-          duration: 5000,
-        });
-      } else {
-        posthog.capture("task_submission_failed", {
-          task_id: taskId,
-          task_title: task?.title,
-          reason: "submission_returned_false",
-        });
-        toast.error("Failed to submit task", {
-          description: "Please check your internet connection and try again.",
-        });
-      }
+    onSuccess: async () => {
+      posthog.capture("task_submitted", {
+        task_id: taskId,
+        task_title: task?.title,
+        task_category: task?.category,
+        team_id: task?.team_id,
+        base_xp_reward: task?.base_xp_reward,
+      });
+      setShowSubmissionModal(false);
+      await refetchTask(); // Refetch task data
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["teamJourney", "stats"] });
+      invalidateNotifications(queryClient, user?.id);
+      toast.success("Task Submitted Successfully! ✅", {
+        description:
+          "Your task is in the peer review queue. You'll be notified when complete (2-3 days).",
+        duration: 5000,
+      });
     },
     onError: (error) => {
       posthog.capture("task_submission_failed", {
@@ -394,7 +379,12 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
         error: error instanceof Error ? error.message : "Unknown error",
       });
       console.error("Error completing task:", error);
-      toast.error("Failed to submit task");
+      toast.error("Failed to submit task", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "Please check your internet connection and try again.",
+      });
     },
   });
 
@@ -402,31 +392,27 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
   const cancelTaskMutation = useMutation({
     mutationFn: async () => {
       if (!task?.progress_id || !user?.id) throw new Error("Missing data");
-      return await cancelTask(task.progress_id, user.id);
+      await cancelTask(task.progress_id, user.id);
     },
-    onSuccess: (success) => {
-      if (success) {
-        posthog.capture("task_cancelled", {
-          task_id: taskId,
-          task_title: task?.title,
-          task_category: task?.category,
-          team_id: task?.team_id,
-        });
-        toast.success("Task cancelled successfully");
-        queryClient.invalidateQueries({ queryKey: ["task", taskId] });
-        queryClient.invalidateQueries({ queryKey: ["task", "permissions"] });
-        queryClient.invalidateQueries({ queryKey: ["dashboard", "stats"] });
-        queryClient.invalidateQueries({ queryKey: ["teamJourney", "stats"] });
-        queryClient.invalidateQueries({ queryKey: ["teamJourney"] }); // Refresh tasks list
-        // Navigate back to team journey page since task is no longer in progress
-        const teamId = task?.team_id || task?.teams?.id;
-        if (teamId) {
-          router.push(`/dashboard/team-journey/${teamId}`);
-        } else {
-          router.push("/dashboard/team-journey");
-        }
+    onSuccess: () => {
+      posthog.capture("task_cancelled", {
+        task_id: taskId,
+        task_title: task?.title,
+        task_category: task?.category,
+        team_id: task?.team_id,
+      });
+      toast.success("Task cancelled successfully");
+      queryClient.invalidateQueries({ queryKey: ["task", taskId] });
+      queryClient.invalidateQueries({ queryKey: ["task", "permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["teamJourney", "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["teamJourney"] }); // Refresh tasks list
+      // Navigate back to team journey page since task is no longer in progress
+      const teamId = task?.team_id || task?.teams?.id;
+      if (teamId) {
+        router.push(`/dashboard/team-journey/${teamId}`);
       } else {
-        toast.error("Failed to cancel task");
+        router.push("/dashboard/team-journey");
       }
     },
     onError: (error) => {
@@ -439,23 +425,19 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
   const retryTaskMutation = useMutation({
     mutationFn: async () => {
       if (!task?.progress_id || !user?.id) throw new Error("Missing data");
-      return await retryTask(task.progress_id, user.id);
+      await retryTask(task.progress_id, user.id);
     },
-    onSuccess: (success) => {
-      if (success) {
-        posthog.capture("task_retried", {
-          task_id: taskId,
-          task_title: task?.title,
-          task_category: task?.category,
-          team_id: task?.team_id,
-        });
-        queryClient.invalidateQueries({ queryKey: ["task", taskId] });
-        queryClient.invalidateQueries({ queryKey: ["task", "permissions"] });
-        queryClient.invalidateQueries({ queryKey: ["dashboard", "stats"] });
-        queryClient.invalidateQueries({ queryKey: ["teamJourney", "stats"] });
-      } else {
-        toast.error("Failed to retry task");
-      }
+    onSuccess: () => {
+      posthog.capture("task_retried", {
+        task_id: taskId,
+        task_title: task?.title,
+        task_category: task?.category,
+        team_id: task?.team_id,
+      });
+      queryClient.invalidateQueries({ queryKey: ["task", taskId] });
+      queryClient.invalidateQueries({ queryKey: ["task", "permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["teamJourney", "stats"] });
     },
     onError: (error) => {
       console.error("Error retrying task:", error);
@@ -467,22 +449,18 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
   const reassignTaskMutation = useMutation({
     mutationFn: async (newUserId: string) => {
       if (!task?.progress_id || !user?.id) throw new Error("Missing data");
-      return await reassignTask(task.progress_id, newUserId, user.id);
+      await reassignTask(task.progress_id, newUserId, user.id);
     },
-    onSuccess: (success) => {
-      if (success) {
-        posthog.capture("task_reassigned", {
-          task_id: taskId,
-          task_title: task?.title,
-          team_id: task?.team_id,
-        });
-        setShowReassignModal(false);
-        queryClient.invalidateQueries({ queryKey: ["task", taskId] });
-        queryClient.invalidateQueries({ queryKey: ["task", "permissions"] });
-        toast.success("Task reassigned successfully");
-      } else {
-        toast.error("Failed to reassign task");
-      }
+    onSuccess: () => {
+      posthog.capture("task_reassigned", {
+        task_id: taskId,
+        task_title: task?.title,
+        team_id: task?.team_id,
+      });
+      setShowReassignModal(false);
+      queryClient.invalidateQueries({ queryKey: ["task", taskId] });
+      queryClient.invalidateQueries({ queryKey: ["task", "permissions"] });
+      toast.success("Task reassigned successfully");
     },
     onError: (error) => {
       console.error("Error reassigning task:", error);

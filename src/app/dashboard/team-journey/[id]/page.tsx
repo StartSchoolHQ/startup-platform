@@ -482,8 +482,9 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
   // Mutation: Assign task
   const assignTaskMutation = useMutation({
-    mutationFn: ({ taskId, userId }: { taskId: string; userId: string }) =>
-      assignTaskToMember(taskId, userId, team?.id || ""),
+    mutationFn: async ({ taskId, userId }: { taskId: string; userId: string }) => {
+      await assignTaskToMember(taskId, userId, team?.id || "");
+    },
     onMutate: async ({ taskId, userId }) => {
       await queryClient.cancelQueries({
         queryKey: ["teamJourney", "achievements", teamId, user?.id],
@@ -563,13 +564,13 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
           ? taskId
           : allTasks.find((t) => t.progress_id === taskId)?.task_id || taskId;
 
-      const success = isNewTask
-        ? await startTaskLazy(actualTaskId, team.id, user.id, "team")
-        : await startTask(taskId, user.id);
+      if (isNewTask) {
+        await startTaskLazy(actualTaskId, team.id, user.id, "team");
+      } else {
+        await startTask(taskId, user.id);
+      }
 
-      if (!success) throw new Error("Failed to start task");
-
-      return { success, isNewTask, isRecurringTask, actualTaskId, task };
+      return { isNewTask, isRecurringTask, actualTaskId, task };
     },
     onMutate: async ({ taskId }) => {
       await queryClient.cancelQueries({
