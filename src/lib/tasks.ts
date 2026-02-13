@@ -90,7 +90,7 @@ export async function getTeamTasks(teamId: string): Promise<TaskTableItem[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any).rpc(
       "get_team_tasks_simple",
-      { p_team_id: teamId },
+      { p_team_id: teamId }
     );
 
     if (error) {
@@ -141,7 +141,7 @@ export async function getTeamTasks(teamId: string): Promise<TaskTableItem[]> {
 // Fetch team tasks using the new visible architecture (alongside existing getTeamTasks)
 export async function getTeamTasksVisible(
   teamId: string,
-  userId?: string,
+  userId?: string
 ): Promise<TaskTableItem[]> {
   try {
     const supabase = createClient();
@@ -159,7 +159,7 @@ export async function getTeamTasksVisible(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any).rpc(
       "get_team_tasks_visible",
-      { p_team_id: teamId, p_user_id: currentUserId },
+      { p_team_id: teamId, p_user_id: currentUserId }
     );
 
     if (error) {
@@ -205,7 +205,7 @@ export async function getTeamTasksVisible(
 
 // Fetch user tasks using the new visible architecture (alongside existing getUserTasks)
 export async function getUserTasksVisible(
-  userId: string,
+  userId: string
 ): Promise<TaskTableItem[]> {
   try {
     const supabase = createClient();
@@ -216,7 +216,7 @@ export async function getUserTasksVisible(
       "get_user_tasks_visible",
       {
         p_user_id: userId,
-      },
+      }
     );
 
     if (error) {
@@ -273,7 +273,7 @@ export async function createProgressIfNeeded(
   taskId: string,
   teamId?: string,
   userId?: string,
-  context: "team" | "individual" = "team",
+  context: "team" | "individual" = "team"
 ): Promise<string | null> {
   try {
     const supabase = createClient();
@@ -286,7 +286,7 @@ export async function createProgressIfNeeded(
         p_team_id: teamId || null,
         p_user_id: userId || null,
         p_context: context,
-      },
+      }
     );
 
     if (error) {
@@ -304,7 +304,7 @@ export async function startTaskLazy(
   taskId: string,
   teamId?: string,
   userId?: string,
-  context: "team" | "individual" = "team",
+  context: "team" | "individual" = "team"
 ): Promise<boolean> {
   try {
     // First ensure progress entry exists
@@ -314,7 +314,7 @@ export async function startTaskLazy(
       taskId,
       context === "team" ? teamId : undefined,
       context === "individual" ? userId : undefined,
-      context,
+      context
     );
 
     if (!progressId) {
@@ -332,7 +332,7 @@ export async function startTaskLazy(
 export async function assignTaskToMember(
   taskIdOrProgressId: string,
   userId: string,
-  teamId?: string,
+  teamId?: string
 ): Promise<boolean> {
   try {
     const supabase = createClient();
@@ -380,7 +380,7 @@ export async function assignTaskToMember(
         taskIdOrProgressId, // task_id
         teamId,
         undefined, // user_id should be null for team context
-        "team",
+        "team"
       );
 
       if (!createdProgressId) {
@@ -397,7 +397,7 @@ export async function assignTaskToMember(
       {
         p_progress_id: progressId,
         p_user_id: userId,
-      },
+      }
     );
 
     if (error) {
@@ -421,7 +421,7 @@ export async function getUserTasks(userId: string): Promise<TaskTableItem[]> {
       "get_user_tasks_with_feedback",
       {
         p_user_id: userId,
-      },
+      }
     );
 
     if (error) {
@@ -485,7 +485,7 @@ export async function getUserTasks(userId: string): Promise<TaskTableItem[]> {
 export async function getTaskByIdLazy(
   taskIdOrProgressId: string,
   userId: string,
-  teamId?: string,
+  teamId?: string
 ): Promise<TeamTask | null> {
   try {
     const supabase = createClient();
@@ -558,7 +558,7 @@ export async function getTaskByIdLazy(
         requires_review,
         review_instructions,
         activity_type
-      `,
+      `
       )
       .eq("id", actualTaskId)
       .single();
@@ -591,7 +591,7 @@ export async function getTaskByIdLazy(
           peer_review_history,
           context,
           activity_type
-        `,
+        `
         )
         .eq("id", progressId)
         .single();
@@ -718,7 +718,7 @@ export async function getTaskByIdLazy(
 
 // LEGACY: Keep old function for backward compatibility
 export async function getTaskById(
-  progressId: string,
+  progressId: string
 ): Promise<TeamTask | null> {
   try {
     const supabase = createClient();
@@ -744,7 +744,7 @@ export async function getTaskById(
         review_feedback,
         peer_review_history,
         context
-      `,
+      `
       )
       .eq("id", progressId)
       .single();
@@ -772,7 +772,7 @@ export async function getTaskById(
         learning_objectives,
         deliverables,
         resources
-      `,
+      `
       )
       .eq("id", progressData.task_id)
       .single();
@@ -885,7 +885,7 @@ export async function getTaskById(
 export async function checkTaskPermission(
   progressId: string,
   userId: string,
-  action: "start" | "complete" | "cancel" | "reassign",
+  action: "start" | "complete" | "cancel" | "reassign"
 ): Promise<{ canManage: boolean; userRole: string; isAssignedUser: boolean }> {
   try {
     const supabase = createClient();
@@ -897,7 +897,7 @@ export async function checkTaskPermission(
         p_progress_id: progressId,
         p_user_id: userId,
         p_action: action,
-      },
+      }
     );
 
     if (error) {
@@ -919,7 +919,7 @@ export async function checkTaskPermission(
 export async function reassignTask(
   progressId: string,
   newUserId: string,
-  reassignedByUserId: string,
+  reassignedByUserId: string
 ): Promise<boolean> {
   try {
     const supabase = createClient();
@@ -944,7 +944,7 @@ export async function reassignTask(
 // Task action functions for the workflow
 export async function startTask(
   progressId: string,
-  userId: string,
+  userId: string
 ): Promise<boolean> {
   try {
     // Check permission first
@@ -980,7 +980,7 @@ export async function startTask(
 
 export async function completeTask(
   progressId: string,
-  submissionData: Record<string, unknown>,
+  submissionData: Record<string, unknown>
 ): Promise<boolean> {
   try {
     // Check permission first
@@ -989,7 +989,7 @@ export async function completeTask(
       const permission = await checkTaskPermission(
         progressId,
         userId,
-        "complete",
+        "complete"
       );
       if (!permission.canManage) {
         return false;
@@ -1012,14 +1012,14 @@ export async function completeTask(
     // Detect resubmission: has reviewer assigned AND has previous review_completed events
     const hasReviewer = !!taskData.reviewer_user_id;
     const parsed = peerReviewHistorySchema.safeParse(
-      taskData.peer_review_history,
+      taskData.peer_review_history
     );
     const reviewHistory = parsed.success ? parsed.data : [];
     if (!parsed.success) {
       console.error("Invalid peer_review_history in tasks.ts:", parsed.error);
     }
     const hasBeenReviewed = reviewHistory.some(
-      (event) => event.event_type === "review_completed",
+      (event) => event.event_type === "review_completed"
     );
     const isResubmission = hasReviewer && hasBeenReviewed;
 
@@ -1045,7 +1045,7 @@ export async function completeTask(
         "resubmit_task_for_review",
         {
           p_task_id: progressId,
-        },
+        }
       );
 
       if (rpcError) {
@@ -1081,7 +1081,7 @@ export async function completeTask(
 
 export async function cancelTask(
   progressId: string,
-  userId: string,
+  userId: string
 ): Promise<boolean> {
   try {
     // Check permission first
@@ -1111,7 +1111,7 @@ export async function cancelTask(
 
 export async function retryTask(
   progressId: string,
-  userId: string,
+  userId: string
 ): Promise<boolean> {
   try {
     // Check permission first
@@ -1140,7 +1140,7 @@ export async function retryTask(
     const assignSuccess = await assignTaskToMember(
       progressId,
       userId,
-      progressData.team_id,
+      progressData.team_id
     );
     if (!assignSuccess) {
       return false;
@@ -1175,7 +1175,7 @@ export async function retryTask(
 // Individual task completion - auto-approve without peer review
 export async function completeIndividualTask(
   progressId: string,
-  submissionData: Record<string, unknown>,
+  submissionData: Record<string, unknown>
 ): Promise<boolean> {
   try {
     const supabase = createClient();
@@ -1187,7 +1187,7 @@ export async function completeIndividualTask(
         p_progress_id: progressId,
         p_submission_data: submissionData as Json,
         p_submission_notes: (submissionData.notes as string) || undefined,
-      },
+      }
     );
 
     if (error) {
@@ -1209,7 +1209,7 @@ export async function getAllTasks(
     | "priority"
     | "difficulty_level"
     | "category",
-  sortOrder?: "asc" | "desc",
+  sortOrder?: "asc" | "desc"
 ): Promise<AdminTaskItem[]> {
   try {
     const supabase = createClient();
@@ -1230,7 +1230,7 @@ export async function getAllTasks(
         is_confidential,
         created_at,
         updated_at
-      `,
+      `
       )
       .order(sortBy || "created_at", { ascending: sortOrder === "asc" });
 
@@ -1267,7 +1267,7 @@ export async function getAllTasks(
           created_at: task.created_at || undefined,
           updated_at: task.updated_at || task.created_at || undefined,
           difficulty_level: task.difficulty_level || 1,
-        }),
+        })
       ) || []
     );
   } catch (error) {

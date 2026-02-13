@@ -17,11 +17,11 @@ export function RankIcon({ type, rank, changeDirection }: RankIconProps) {
         return <span className="text-accent-foreground text-sm">🥉</span>;
       case "flame":
         return (
-          <span className="text-sm font-medium text-foreground">#{rank}</span>
+          <span className="text-foreground text-sm font-medium">#{rank}</span>
         );
       default:
         return (
-          <span className="text-sm font-medium text-muted-foreground">
+          <span className="text-muted-foreground text-sm font-medium">
             #{rank}
           </span>
         );
@@ -30,9 +30,9 @@ export function RankIcon({ type, rank, changeDirection }: RankIconProps) {
 
   const getTrendIcon = () => {
     if (changeDirection === "up") {
-      return <TrendingUp className="h-3 w-3 text-primary" />;
+      return <TrendingUp className="text-primary h-3 w-3" />;
     } else if (changeDirection === "down") {
-      return <TrendingDown className="h-3 w-3 text-destructive" />;
+      return <TrendingDown className="text-destructive h-3 w-3" />;
     }
     return null;
   };

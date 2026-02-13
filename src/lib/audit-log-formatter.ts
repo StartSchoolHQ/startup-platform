@@ -182,10 +182,10 @@ export function formatAuditLog(log: AuditLog): FormattedAuditLog {
     log.action === "INSERT"
       ? "➕"
       : log.action === "UPDATE"
-      ? "✏️"
-      : log.action === "DELETE"
-      ? "🗑️"
-      : "📝";
+        ? "✏️"
+        : log.action === "DELETE"
+          ? "🗑️"
+          : "📝";
 
   // Build changes array
   const changes: Array<{ field: string; oldValue: any; newValue: any }> = [];

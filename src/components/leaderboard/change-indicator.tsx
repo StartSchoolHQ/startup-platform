@@ -24,7 +24,7 @@ export function ChangeIndicator({ direction, amount }: ChangeIndicatorProps) {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <ArrowUp className="h-3 w-3 text-primary" />
+          <ArrowUp className="text-primary h-3 w-3" />
         </motion.div>
       ) : (
         <motion.div
@@ -32,7 +32,7 @@ export function ChangeIndicator({ direction, amount }: ChangeIndicatorProps) {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <ArrowDown className="h-3 w-3 text-destructive" />
+          <ArrowDown className="text-destructive h-3 w-3" />
         </motion.div>
       )}
       <span

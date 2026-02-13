@@ -85,11 +85,11 @@ export function TasksTable({
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
-          <Trophy className="h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <Trophy className="mb-4 h-12 w-12 text-gray-400" />
+          <h3 className="mb-2 text-lg font-semibold text-gray-900">
             {emptyStateTitle}
           </h3>
-          <p className="text-gray-500 text-center max-w-md">
+          <p className="max-w-md text-center text-gray-500">
             {emptyStateDescription}
           </p>
         </CardContent>
@@ -132,27 +132,27 @@ export function TasksTable({
             return (
               <div
                 key={task.progress_id || task.task_id}
-                className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors ${
+                className={`flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-gray-50 ${
                   task.is_confidential
                     ? "border-red-200 bg-red-50/30"
                     : "border-gray-200"
                 }`}
               >
-                <div className="flex items-center space-x-4 flex-1">
+                <div className="flex flex-1 items-center space-x-4">
                   {/* Task Icon */}
-                  <div className="p-2 bg-blue-100 rounded-lg">
+                  <div className="rounded-lg bg-blue-100 p-2">
                     <Trophy className="h-5 w-5 text-blue-600" />
                   </div>
 
                   {/* Task Details */}
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-gray-900 truncate">
+                  <div className="min-w-0 flex-1">
+                    <h4 className="truncate font-medium text-gray-900">
                       {task.title}
                     </h4>
-                    <p className="text-sm text-gray-500 truncate">
+                    <p className="truncate text-sm text-gray-500">
                       {task.description}
                     </p>
-                    <div className="flex items-center space-x-2 mt-2">
+                    <div className="mt-2 flex items-center space-x-2">
                       <Badge variant="outline" className="text-xs">
                         {task.category}
                       </Badge>
@@ -170,7 +170,7 @@ export function TasksTable({
                             <TooltipTrigger asChild>
                               <Badge
                                 variant="destructive"
-                                className="text-xs flex items-center gap-1"
+                                className="flex items-center gap-1 text-xs"
                               >
                                 <Lock className="h-3 w-3" />
                                 Confidential
@@ -188,7 +188,7 @@ export function TasksTable({
                   </div>
 
                   {/* Assignee */}
-                  <div className="flex items-center space-x-2 min-w-0">
+                  <div className="flex min-w-0 items-center space-x-2">
                     {task.assignee_name ? (
                       <div className="flex items-center space-x-2">
                         <Avatar className="h-8 w-8">
@@ -213,7 +213,7 @@ export function TasksTable({
                       </div>
                     ) : (
                       <div className="flex items-center space-x-2 text-gray-500">
-                        <User className="h-8 w-8 p-2 bg-gray-100 rounded-full" />
+                        <User className="h-8 w-8 rounded-full bg-gray-100 p-2" />
                         <div className="hidden sm:block">
                           <div className="text-sm">Unassigned</div>
                           <div className="text-xs">Available</div>
@@ -224,7 +224,7 @@ export function TasksTable({
                 </div>
 
                 {/* Rewards & Status */}
-                <div className="flex items-center space-x-4 ml-4">
+                <div className="ml-4 flex items-center space-x-4">
                   <div className="text-center">
                     <div className="flex items-center space-x-1 text-purple-600">
                       <Trophy className="h-4 w-4" />
@@ -246,10 +246,10 @@ export function TasksTable({
                   </div>
 
                   <div className="flex items-center space-x-1">
-                    <div className={`p-1 rounded-full ${statusInfo.bgColor}`}>
+                    <div className={`rounded-full p-1 ${statusInfo.bgColor}`}>
                       <StatusIcon className={`h-4 w-4 ${statusInfo.color}`} />
                     </div>
-                    <span className="text-sm font-medium text-gray-700 hidden lg:block">
+                    <span className="hidden text-sm font-medium text-gray-700 lg:block">
                       {statusInfo.label}
                     </span>
                   </div>

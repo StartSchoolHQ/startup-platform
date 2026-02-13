@@ -50,21 +50,21 @@ export function StrikesTable({
         return {
           text: "Done",
           class: "bg-primary text-primary-foreground hover:bg-primary/90",
-          icon: <CheckCircle className="h-3 w-3 mr-1" />,
+          icon: <CheckCircle className="mr-1 h-3 w-3" />,
         };
       case "explain":
         return {
           text: "Explain",
           class:
             "bg-background border border-input text-foreground hover:bg-muted/20",
-          icon: <Clock className="h-3 w-3 mr-1" />,
+          icon: <Clock className="mr-1 h-3 w-3" />,
         };
       default:
         // Defensive fallback for undefined/unknown actions
         return {
           text: "Pending",
           class: "bg-muted text-muted-foreground hover:bg-muted/80",
-          icon: <Clock className="h-3 w-3 mr-1" />,
+          icon: <Clock className="mr-1 h-3 w-3" />,
         };
     }
   };
@@ -74,14 +74,14 @@ export function StrikesTable({
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+            <tr className="border-border border-b">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Strike
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Status
               </th>
-              <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                 Action
               </th>
             </tr>
@@ -95,35 +95,35 @@ export function StrikesTable({
                 <tr
                   key={strike.id}
                   className={`${
-                    index < strikes.length - 1 ? "border-b border-border" : ""
+                    index < strikes.length - 1 ? "border-border border-b" : ""
                   } hover:bg-muted/20 transition-colors`}
                 >
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-                        <AlertTriangle className="h-4 w-4 text-destructive" />
+                      <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
+                        <AlertTriangle className="text-destructive h-4 w-4" />
                       </div>
                       <div>
-                        <div className="font-medium text-sm">
+                        <div className="text-sm font-medium">
                           {strike.title}
                           {strike.userName && (
-                            <span className="ml-2 font-normal text-muted-foreground">
+                            <span className="text-muted-foreground ml-2 font-normal">
                               • {strike.userName}
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-muted-foreground text-xs">
                           {strike.datetime}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <Badge variant="secondary" className={statusConfig.class}>
                       {statusConfig.text}
                     </Badge>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex justify-end">
                       {isTeamMember ? (
                         <Button
@@ -139,7 +139,7 @@ export function StrikesTable({
                           {actionConfig.text}
                         </Button>
                       ) : (
-                        <span className="text-xs text-muted-foreground px-3 py-2">
+                        <span className="text-muted-foreground px-3 py-2 text-xs">
                           View Only
                         </span>
                       )}

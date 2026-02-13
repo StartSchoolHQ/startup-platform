@@ -60,7 +60,7 @@ export const NavMain = React.memo(function NavMain({
                     {isActive && (
                       <motion.div
                         layoutId="sidebar-active-indicator"
-                        className="absolute inset-0 bg-primary/10 rounded-md -z-10"
+                        className="bg-primary/10 absolute inset-0 -z-10 rounded-md"
                         transition={{
                           type: "spring",
                           stiffness: 380,

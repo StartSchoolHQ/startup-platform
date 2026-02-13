@@ -64,26 +64,26 @@ export function TaskRow({
 
   return (
     <tr
-      className={`border-b border-border hover:bg-muted/50 ${
+      className={`border-border hover:bg-muted/50 border-b ${
         task.tasks.is_confidential ? "bg-red-50/50" : ""
       }`}
     >
       {/* Task Info */}
-      <td className="py-4 px-4">
+      <td className="px-4 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
+          <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
             <Medal className="h-4 w-4 text-black dark:text-white" />
           </div>
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="font-medium text-sm">{task.tasks.title}</div>
+            <div className="mb-1 flex items-center gap-2">
+              <div className="text-sm font-medium">{task.tasks.title}</div>
               {task.tasks.is_confidential && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Badge
                         variant="destructive"
-                        className="text-xs flex items-center gap-1 px-1.5 py-0.5"
+                        className="flex items-center gap-1 px-1.5 py-0.5 text-xs"
                       >
                         <Lock className="h-2.5 w-2.5" />
                         Confidential
@@ -96,7 +96,7 @@ export function TaskRow({
                 </TooltipProvider>
               )}
             </div>
-            <div className="text-xs text-muted-foreground max-w-xs truncate">
+            <div className="text-muted-foreground max-w-xs truncate text-xs">
               {task.tasks.description}
             </div>
           </div>
@@ -104,28 +104,28 @@ export function TaskRow({
       </td>
 
       {/* Team */}
-      <td className="py-4 px-4">
+      <td className="px-4 py-4">
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 ${teamDotColor} rounded-full`}></div>
+          <div className={`h-2 w-2 ${teamDotColor} rounded-full`}></div>
           <span className="text-sm font-medium">{task.teams.name}</span>
         </div>
       </td>
 
       {/* Difficulty */}
-      <td className="py-4 px-4">
+      <td className="px-4 py-4">
         <DifficultyBadge level={task.tasks.difficulty_level} />
       </td>
 
       {/* Status (conditional) */}
       {showStatus && (
-        <td className="py-4 px-4">
+        <td className="px-4 py-4">
           {task.status && <StatusBadge status={task.status as TaskStatus} />}
         </td>
       )}
 
       {/* XP Reward (only show if not showing status) */}
       {!showStatus && (
-        <td className="py-4 px-4">
+        <td className="px-4 py-4">
           <div className="flex items-center gap-1">
             <Zap className="h-4 w-4 text-black dark:text-white" />
             <span className="text-sm font-medium">
@@ -142,7 +142,7 @@ export function TaskRow({
 
       {/* Points Reward (only show if not showing status) */}
       {!showStatus && (
-        <td className="py-4 px-4">
+        <td className="px-4 py-4">
           <div className="flex items-center gap-1">
             <Medal className="h-4 w-4 text-black dark:text-white" />
             <span className="text-sm font-medium">
@@ -158,24 +158,24 @@ export function TaskRow({
       )}
 
       {/* Submitted Date */}
-      <td className="py-4 px-4">
-        <div className="text-sm text-muted-foreground">
+      <td className="px-4 py-4">
+        <div className="text-muted-foreground text-sm">
           {formatDate(task.completed_at)}
         </div>
       </td>
 
       {/* Action */}
-      <td className="py-4 px-4">
+      <td className="px-4 py-4">
         <div className="flex justify-end gap-2">
           <Button
             variant={actionButtonVariant}
             size="sm"
-            className={`text-xs px-3 py-2 ${
+            className={`px-3 py-2 text-xs ${
               actionButtonVariant === "default"
-                ? "bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+                ? "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
                 : actionButtonVariant === "outline"
-                ? "border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
-                : ""
+                  ? "border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
+                  : ""
             }`}
             onClick={() => onAction(task)}
             disabled={actionLoading || actionButtonDisabled}

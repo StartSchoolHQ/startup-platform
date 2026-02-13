@@ -156,7 +156,7 @@ export function ClientMeetingsTable({
         // Check if there are missing fields to show a better error
         if (data?.missing_fields?.length > 0) {
           throw new Error(
-            `Missing required fields: ${data.missing_fields.join(", ")}`,
+            `Missing required fields: ${data.missing_fields.join(", ")}`
           );
         }
         throw new Error(data?.error || "Failed to submit draft");
@@ -167,7 +167,7 @@ export function ClientMeetingsTable({
       queryClient.invalidateQueries({ queryKey: ["clientMeetings"] });
       queryClient.invalidateQueries({ queryKey: ["teamAchievementDashboard"] });
       toast.success(
-        `Draft submitted! +${data.xp_rewarded} XP, +${data.points_rewarded} Points`,
+        `Draft submitted! +${data.xp_rewarded} XP, +${data.points_rewarded} Points`
       );
     },
     onError: (error: Error) => {
@@ -199,7 +199,7 @@ export function ClientMeetingsTable({
     if (interestFilter === "all") return meetings;
     return meetings.filter(
       (meeting: DatabaseClientMeeting) =>
-        meeting.meeting_data?.interestLevel === interestFilter,
+        meeting.meeting_data?.interestLevel === interestFilter
     );
   }, [meetings, interestFilter]);
 
@@ -299,7 +299,7 @@ export function ClientMeetingsTable({
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `client-meetings-${new Date().toISOString().split("T")[0]}.csv`,
+      `client-meetings-${new Date().toISOString().split("T")[0]}.csv`
     );
     document.body.appendChild(link);
     link.click();
@@ -319,7 +319,7 @@ export function ClientMeetingsTable({
 
   if (meetings.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className="text-muted-foreground py-8 text-center">
         No client meetings found for this team yet.
         {isTeamMember && (
           <div className="mt-2 text-sm">
@@ -334,10 +334,10 @@ export function ClientMeetingsTable({
   return (
     <div>
       {/* Filter and Export Controls */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">
+          <Filter className="text-muted-foreground h-4 w-4" />
+          <span className="text-muted-foreground text-sm">
             Filter by interest:
           </span>
           <DropdownMenu>
@@ -345,12 +345,12 @@ export function ClientMeetingsTable({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-sm min-w-[180px] justify-between"
+                className="h-8 min-w-[180px] justify-between text-sm"
               >
                 {interestFilter === "all"
                   ? `All meetings (${meetings.length})`
                   : `${interestLevelLabels[interestFilter]} (${meetings.filter((m: DatabaseClientMeeting) => m.meeting_data?.interestLevel === interestFilter).length})`}
-                <Filter className="h-3 w-3 ml-2 opacity-50" />
+                <Filter className="ml-2 h-3 w-3 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
@@ -364,7 +364,7 @@ export function ClientMeetingsTable({
                 {
                   meetings.filter(
                     (m: DatabaseClientMeeting) =>
-                      m.meeting_data?.interestLevel === "intent_to_try",
+                      m.meeting_data?.interestLevel === "intent_to_try"
                   ).length
                 }
                 )
@@ -376,7 +376,7 @@ export function ClientMeetingsTable({
                 {
                   meetings.filter(
                     (m: DatabaseClientMeeting) =>
-                      m.meeting_data?.interestLevel === "willingness_to_pay",
+                      m.meeting_data?.interestLevel === "willingness_to_pay"
                   ).length
                 }
                 )
@@ -388,7 +388,7 @@ export function ClientMeetingsTable({
                 {
                   meetings.filter(
                     (m: DatabaseClientMeeting) =>
-                      m.meeting_data?.interestLevel === "introductions",
+                      m.meeting_data?.interestLevel === "introductions"
                   ).length
                 }
                 )
@@ -400,7 +400,7 @@ export function ClientMeetingsTable({
                 {
                   meetings.filter(
                     (m: DatabaseClientMeeting) =>
-                      m.meeting_data?.interestLevel === "not_interested",
+                      m.meeting_data?.interestLevel === "not_interested"
                   ).length
                 }
                 )
@@ -427,7 +427,7 @@ export function ClientMeetingsTable({
             onClick={exportToCSV}
             className="h-8 text-xs"
           >
-            <Download className="h-3.5 w-3.5 mr-1.5" />
+            <Download className="mr-1.5 h-3.5 w-3.5" />
             Export CSV
           </Button>
         )}
@@ -436,23 +436,23 @@ export function ClientMeetingsTable({
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+            <tr className="border-border border-b">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Client
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Responsible
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Interest
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 XP
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Points
               </th>
-              <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                 Actions
               </th>
             </tr>
@@ -464,14 +464,14 @@ export function ClientMeetingsTable({
                   key={meeting.id}
                   className={`${
                     index < filteredMeetings.length - 1
-                      ? "border-b border-border/50"
+                      ? "border-border/50 border-b"
                       : ""
                   } hover:bg-muted/20 transition-colors ${meeting.status === "draft" ? "bg-amber-50/50 dark:bg-amber-900/10" : ""}`}
                 >
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`flex items-center justify-center w-8 h-8 rounded-md ${meeting.status === "draft" ? "bg-amber-100 dark:bg-amber-900/30" : "bg-muted"}`}
+                        className={`flex h-8 w-8 items-center justify-center rounded-md ${meeting.status === "draft" ? "bg-amber-100 dark:bg-amber-900/30" : "bg-muted"}`}
                       >
                         {meeting.status === "draft" ? (
                           <FileEdit className="h-4 w-4 text-amber-600 dark:text-amber-400" />
@@ -480,10 +480,10 @@ export function ClientMeetingsTable({
                         )}
                       </div>
                       <div>
-                        <div className="font-medium text-sm flex items-center gap-2">
+                        <div className="flex items-center gap-2 text-sm font-medium">
                           {meeting.client_name}
                           {meeting.status === "draft" && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 font-medium uppercase tracking-wide">
+                            <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-amber-700 uppercase dark:bg-amber-900/50 dark:text-amber-400">
                               Draft
                             </span>
                           )}
@@ -491,7 +491,7 @@ export function ClientMeetingsTable({
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                                  <EyeOff className="text-muted-foreground h-3.5 w-3.5" />
                                 </TooltipTrigger>
                                 <TooltipContent>
                                   <p className="text-xs">
@@ -503,23 +503,23 @@ export function ClientMeetingsTable({
                             </TooltipProvider>
                           )}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-muted-foreground text-xs">
                           Created {formatDate(meeting.created_at)}
                         </div>
                       </div>
                     </div>
                   </td>
 
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
-                      <Avatar className="w-8 h-8">
+                      <Avatar className="h-8 w-8">
                         <AvatarImage
                           src={
                             meeting.users?.avatar_url || "/avatars/john-doe.jpg"
                           }
                           alt={meeting.users?.name || "Unknown User"}
                         />
-                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-primary-foreground font-bold text-xs">
+                        <AvatarFallback className="text-primary-foreground bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold">
                           {(meeting.users?.name || "U")
                             .split(" ")
                             .map((n) => n[0])
@@ -531,20 +531,20 @@ export function ClientMeetingsTable({
                         <div className="text-sm font-medium">
                           {meeting.users?.name || "Unknown User"}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-muted-foreground text-xs">
                           {formatDate(meeting.created_at)}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="py-4 px-4">
-                    <span className="text-xs px-2 py-1 rounded-full bg-muted">
+                  <td className="px-4 py-4">
+                    <span className="bg-muted rounded-full px-2 py-1 text-xs">
                       {interestLevelLabels[
                         meeting.meeting_data?.interestLevel || ""
                       ] || "—"}
                     </span>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-1">
                       <Zap
                         className={`h-4 w-4 ${meeting.status === "draft" ? "text-muted-foreground" : "text-black dark:text-white"}`}
@@ -556,7 +556,7 @@ export function ClientMeetingsTable({
                       </span>
                     </div>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-1">
                       <CreditCard
                         className={`h-4 w-4 ${meeting.status === "draft" ? "text-muted-foreground" : "text-black dark:text-white"}`}
@@ -568,7 +568,7 @@ export function ClientMeetingsTable({
                       </span>
                     </div>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex justify-end gap-2">
                       {meeting.status === "draft" ? (
                         // Draft meeting actions
@@ -578,13 +578,13 @@ export function ClientMeetingsTable({
                             <Button
                               variant="outline"
                               size="sm"
-                              className="text-xs border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
+                              className="border-green-600 text-xs text-green-600 hover:bg-green-600 hover:text-white"
                               onClick={() =>
                                 submitDraftMutation.mutate(meeting.id)
                               }
                               disabled={submitDraftMutation.isPending}
                             >
-                              <Send className="h-3 w-3 mr-1" />
+                              <Send className="mr-1 h-3 w-3" />
                               {submitDraftMutation.isPending
                                 ? "Submitting..."
                                 : "Submit"}
@@ -600,7 +600,7 @@ export function ClientMeetingsTable({
                             <Button
                               variant="outline"
                               size="sm"
-                              className="text-xs border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                              className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground text-xs"
                               onClick={() => handleDeleteClick(meeting)}
                             >
                               <Trash2 className="h-3 w-3" />
@@ -608,7 +608,7 @@ export function ClientMeetingsTable({
                           </>
                         ) : (
                           // Other team members can only view drafts
-                          <span className="text-xs text-muted-foreground italic">
+                          <span className="text-muted-foreground text-xs italic">
                             Pending submission
                           </span>
                         )
@@ -618,7 +618,7 @@ export function ClientMeetingsTable({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-xs border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
+                            className="border-[#0000ff] text-xs text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                             onClick={() => handleViewMeeting(meeting)}
                           >
                             View
@@ -636,7 +636,7 @@ export function ClientMeetingsTable({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-xs border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground text-xs"
                                 onClick={() => handleDeleteClick(meeting)}
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -648,7 +648,7 @@ export function ClientMeetingsTable({
                     </div>
                   </td>
                 </tr>
-              ),
+              )
             )}
           </tbody>
         </table>

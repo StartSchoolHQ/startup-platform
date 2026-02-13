@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
             in_progress: statuses.filter((t) => t.status === "in_progress")
               .length,
             pending_review: statuses.filter(
-              (t) => t.status === "pending_review",
+              (t) => t.status === "pending_review"
             ).length,
             not_started: statuses.filter((t) => t.status === "not_started")
               .length,
@@ -145,13 +145,13 @@ export async function GET(request: NextRequest) {
           // private = never cached by CDN (admin data stays private)
           "Cache-Control": "private, max-age=10, stale-while-revalidate=30",
         },
-      },
+      }
     );
   } catch (error) {
     console.error("Error fetching stats:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

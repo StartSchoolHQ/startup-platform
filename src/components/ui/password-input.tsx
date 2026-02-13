@@ -97,13 +97,13 @@ export function PasswordInput({
             type="button"
             variant="ghost"
             size="sm"
-            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+            className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? (
-              <EyeOff className="h-4 w-4 text-muted-foreground" />
+              <EyeOff className="text-muted-foreground h-4 w-4" />
             ) : (
-              <Eye className="h-4 w-4 text-muted-foreground" />
+              <Eye className="text-muted-foreground h-4 w-4" />
             )}
           </Button>
         </div>
@@ -113,16 +113,16 @@ export function PasswordInput({
           <div className="space-y-2 text-sm">
             {/* Strength Meter */}
             <div className="flex items-center gap-2">
-              <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
                 <div
                   className={`h-full transition-all duration-300 ${
                     strength.score === 0
                       ? "w-0"
                       : strength.score === 1
-                      ? "w-1/3 bg-orange-600"
-                      : strength.score === 2
-                      ? "w-2/3 bg-yellow-600"
-                      : "w-full bg-green-600"
+                        ? "w-1/3 bg-orange-600"
+                        : strength.score === 2
+                          ? "w-2/3 bg-yellow-600"
+                          : "w-full bg-green-600"
                   }`}
                 />
               </div>
@@ -192,13 +192,13 @@ export function PasswordInput({
               type="button"
               variant="ghost"
               size="sm"
-              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+              className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
               onClick={() => setShowConfirm(!showConfirm)}
             >
               {showConfirm ? (
-                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                <EyeOff className="text-muted-foreground h-4 w-4" />
               ) : (
-                <Eye className="h-4 w-4 text-muted-foreground" />
+                <Eye className="text-muted-foreground h-4 w-4" />
               )}
             </Button>
           </div>

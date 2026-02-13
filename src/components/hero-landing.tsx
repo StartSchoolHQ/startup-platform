@@ -13,12 +13,12 @@ export function HeroLanding() {
     setIsClient(true);
   }, []);
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0000ff]">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0000ff]">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
 
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
-          className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#ff78c8]/10 rounded-full blur-3xl"
+          className="absolute top-1/4 left-1/4 h-64 w-64 rounded-full bg-[#ff78c8]/10 blur-3xl"
           animate={{
             y: [0, -20, 0],
             x: [0, 10, 0],
@@ -30,7 +30,7 @@ export function HeroLanding() {
           }}
         />
         <motion.div
-          className="absolute top-3/4 right-1/4 w-96 h-96 bg-[#ff78c8]/5 rounded-full blur-3xl"
+          className="absolute top-3/4 right-1/4 h-96 w-96 rounded-full bg-[#ff78c8]/5 blur-3xl"
           animate={{
             y: [0, 20, 0],
             x: [0, -15, 0],
@@ -43,14 +43,14 @@ export function HeroLanding() {
         />
       </div>
 
-      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+      <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="mb-6"
         >
-          <span className="inline-block px-4 py-2 bg-zinc-700/80 text-white text-sm font-medium rounded-full border border-black mb-8">
+          <span className="mb-8 inline-block rounded-full border border-black bg-zinc-700/80 px-4 py-2 text-sm font-medium text-white">
             New: Launch Your Startup Today
           </span>
         </motion.div>
@@ -61,7 +61,7 @@ export function HeroLanding() {
           transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
           className="mb-4 flex justify-center"
         >
-          <div className="w-[600px] max-w-full h-[200px] relative">
+          <div className="relative h-[200px] w-[600px] max-w-full">
             <Image
               src="/images/startschool-logo.png"
               alt="StartSchool"
@@ -77,7 +77,7 @@ export function HeroLanding() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-          className="text-2xl md:text-3xl lg:text-4xl text-white mb-8 max-w-4xl mx-auto text-pretty leading-tight font-bold"
+          className="mx-auto mb-8 max-w-4xl text-2xl leading-tight font-bold text-pretty text-white md:text-3xl lg:text-4xl"
         >
           Startup Module Platform
         </motion.p>
@@ -86,7 +86,7 @@ export function HeroLanding() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-          className="text-lg md:text-xl text-white mb-12 max-w-2xl mx-auto text-pretty leading-relaxed"
+          className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-pretty text-white md:text-xl"
         >
           Transform your ideas into reality with our cutting-edge platform. Join
           other StartSchool students and build together!
@@ -96,11 +96,11 @@ export function HeroLanding() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          className="flex flex-col items-center justify-center gap-4 sm:flex-row"
         >
           <Button
             size="lg"
-            className="group relative overflow-hidden bg-[#ff78c8] hover:bg-[#ff60b8] text-white px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-[#ff78c8]/25"
+            className="group relative overflow-hidden rounded-full bg-[#ff78c8] px-8 py-6 text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:bg-[#ff60b8] hover:shadow-2xl hover:shadow-[#ff78c8]/25"
             asChild
           >
             <Link href="/login">
@@ -123,20 +123,20 @@ export function HeroLanding() {
           transition={{ duration: 1, delay: 1.2 }}
           className="mt-16 space-y-3"
         >
-          <p className="text-sm text-white font-bold">Created by</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+          <p className="text-sm font-bold text-white">Created by</p>
+          <div className="flex flex-col items-center justify-center gap-6 sm:flex-row">
             <motion.a
               href="https://linkedin.com/in/eliass-baranovs"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-2 text-gray-300 hover:text-[#ff78c8] transition-colors duration-300 cursor-pointer"
+              className="group flex cursor-pointer items-center gap-2 text-gray-300 transition-colors duration-300 hover:text-[#ff78c8]"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 1.4 }}
               whileHover={{ opacity: 0.8 }}
             >
               <svg
-                className="w-5 h-5 text-blue-500 group-hover:text-[#ff78c8] transition-colors duration-300"
+                className="h-5 w-5 text-blue-500 transition-colors duration-300 group-hover:text-[#ff78c8]"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -150,7 +150,7 @@ export function HeroLanding() {
             </motion.a>
 
             <motion.div
-              className="w-1 h-1 bg-gray-600 rounded-full hidden sm:block"
+              className="hidden h-1 w-1 rounded-full bg-gray-600 sm:block"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.4, delay: 1.6 }}
@@ -160,14 +160,14 @@ export function HeroLanding() {
               href="https://linkedin.com/in/davids-petuhovs"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-2 text-gray-300 hover:text-[#ff78c8] transition-colors duration-300 cursor-pointer"
+              className="group flex cursor-pointer items-center gap-2 text-gray-300 transition-colors duration-300 hover:text-[#ff78c8]"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 1.5 }}
               whileHover={{ opacity: 0.8 }}
             >
               <svg
-                className="w-5 h-5 text-blue-500 group-hover:text-[#ff78c8] transition-colors duration-300"
+                className="h-5 w-5 text-blue-500 transition-colors duration-300 group-hover:text-[#ff78c8]"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -184,11 +184,11 @@ export function HeroLanding() {
       </div>
 
       {isClient && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
           {[...Array(20)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute w-1 h-1 bg-[#ff78c8]/30 rounded-full"
+              className="absolute h-1 w-1 rounded-full bg-[#ff78c8]/30"
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,

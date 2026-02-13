@@ -102,7 +102,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
   if (!parsed.success && task?.peer_review_history) {
     console.error(
       "Invalid peer_review_history in task detail page:",
-      parsed.error,
+      parsed.error
     );
   }
 
@@ -112,8 +112,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
 
   // Check if task has submission data
   const hasSubmission =
-    task?.submission_data &&
-    Object.keys(task.submission_data).length > 0;
+    task?.submission_data && Object.keys(task.submission_data).length > 0;
 
   // Team name query (conditional)
   const { data: teamName = null } = useQuery({
@@ -201,7 +200,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
             name,
             avatar_url
           )
-        `,
+        `
         )
         .eq("team_id", task!.team_id!)
         .is("left_at", null);
@@ -245,7 +244,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
             submission_url,
             review_feedback,
             users!inner(name, avatar_url)
-          `,
+          `
           )
           .eq("task_id", task!.task_id)
           .eq("team_id", task!.team_id!)
@@ -276,7 +275,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
           task.task_id,
           task.team_id || undefined,
           user.id,
-          "team",
+          "team"
         );
       }
     },
@@ -318,7 +317,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
       if (context?.previousTask) {
         queryClient.setQueryData(
           ["task", taskId, user?.id],
-          context.previousTask,
+          context.previousTask
         );
       }
       console.error("Error starting task:", error);
@@ -343,7 +342,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
         const uploadResults = await uploadTaskFiles(
           submissionData.files,
           task.progress_id,
-          user.id,
+          user.id
         );
         uploadedFileUrls = uploadResults.map((result) => result.url);
       }
@@ -511,7 +510,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
 
   if (!task) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <div className="text-gray-500">Task not found</div>
       </div>
     );
@@ -548,7 +547,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <span
-              className="font-medium truncate max-w-[200px]"
+              className="max-w-[200px] truncate font-medium"
               title={task.title}
             >
               {task.title}
@@ -585,7 +584,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
         {/* Main Content */}
         <div className="lg:col-span-3">
           <Tabs defaultValue="task" className="w-full">
@@ -630,7 +629,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
               )}
             </TabsList>
 
-            <TabsContent value="task" className="space-y-6 mt-6">
+            <TabsContent value="task" className="mt-6 space-y-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                   <CardTitle className="text-lg font-semibold">
@@ -638,7 +637,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                   </CardTitle>
                   <Button
                     variant="link"
-                    className="text-blue-500 p-0 h-auto"
+                    className="h-auto p-0 text-blue-500"
                     onClick={() => setShowSuggestEditsModal(true)}
                   >
                     Suggest Edits
@@ -646,17 +645,17 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {task.detailed_instructions ? (
-                    <div className="prose max-w-none text-gray-700 leading-relaxed [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-6 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mb-2 [&_h3]:mt-4 [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:space-y-1.5 [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:space-y-1.5 [&_li]:leading-relaxed [&_p]:leading-relaxed [&_p]:mb-3 [&_strong]:font-bold [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm">
+                    <div className="prose max-w-none leading-relaxed text-gray-700 [&_code]:rounded [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-sm [&_h1]:mb-4 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:mt-6 [&_h2]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-lg [&_h3]:font-semibold [&_li]:leading-relaxed [&_ol]:ml-6 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_p]:mb-3 [&_p]:leading-relaxed [&_strong]:font-bold [&_ul]:ml-6 [&_ul]:list-disc [&_ul]:space-y-1.5">
                       <ReactMarkdown>
                         {task.detailed_instructions}
                       </ReactMarkdown>
                     </div>
                   ) : (
                     <div>
-                      <h3 className="text-lg font-semibold mb-3">
+                      <h3 className="mb-3 text-lg font-semibold">
                         Task Description
                       </h3>
-                      <p className="text-gray-700 leading-relaxed">
+                      <p className="leading-relaxed text-gray-700">
                         {task.description ||
                           "No detailed instructions available for this task yet."}
                       </p>
@@ -668,13 +667,13 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                     Array.isArray(task.learning_objectives) &&
                     task.learning_objectives.length > 0 && (
                       <div>
-                        <h3 className="text-lg font-semibold mb-3">
+                        <h3 className="mb-3 text-lg font-semibold">
                           Learning Objectives
                         </h3>
                         <ul className="space-y-2 text-gray-700">
                           {task.learning_objectives.map((objective, index) => (
                             <li key={index} className="flex items-start gap-2">
-                              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
+                              <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-500"></span>
                               <span className="break-words">{objective}</span>
                             </li>
                           ))}
@@ -687,13 +686,13 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                     Array.isArray(task.deliverables) &&
                     task.deliverables.length > 0 && (
                       <div>
-                        <h3 className="text-lg font-semibold mb-3">
+                        <h3 className="mb-3 text-lg font-semibold">
                           Expected Deliverables
                         </h3>
                         <ul className="space-y-2 text-gray-700">
                           {task.deliverables.map((deliverable, index) => (
                             <li key={index} className="flex items-start gap-2">
-                              <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                              <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
                               <span className="break-words">{deliverable}</span>
                             </li>
                           ))}
@@ -797,13 +796,13 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
 
             {/* Submission Tab - Shows what the member actually submitted */}
             {hasSubmission && (
-              <TabsContent value="submission" className="space-y-6 mt-6">
+              <TabsContent value="submission" className="mt-6 space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg font-semibold">
                       Task Submission
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       What was delivered for this task
                     </p>
                   </CardHeader>
@@ -812,10 +811,10 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                     {typeof task.submission_data?.description === "string" &&
                       task.submission_data.description && (
                         <div>
-                          <h4 className="text-sm font-medium mb-2">
+                          <h4 className="mb-2 text-sm font-medium">
                             Description
                           </h4>
-                          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                          <p className="leading-relaxed whitespace-pre-wrap text-gray-700">
                             {task.submission_data.description}
                           </p>
                         </div>
@@ -825,7 +824,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                     {Array.isArray(task.submission_data?.external_urls) &&
                       task.submission_data.external_urls.length > 0 && (
                         <div>
-                          <h4 className="text-sm font-medium mb-2">
+                          <h4 className="mb-2 text-sm font-medium">
                             External Resources
                           </h4>
                           <div className="space-y-2">
@@ -851,14 +850,14 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                   href={url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-2 p-3 border rounded-lg hover:bg-muted/50 hover:border-blue-300 transition-colors group"
+                                  className="hover:bg-muted/50 group flex items-center gap-2 rounded-lg border p-3 transition-colors hover:border-blue-300"
                                 >
-                                  <ExternalLink className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                                  <ExternalLink className="h-4 w-4 flex-shrink-0 text-blue-600" />
                                   <div className="min-w-0 flex-1">
                                     <div className="text-sm font-medium text-blue-700 group-hover:text-blue-800">
                                       {title}
                                     </div>
-                                    <div className="text-xs text-muted-foreground truncate">
+                                    <div className="text-muted-foreground truncate text-xs">
                                       {url}
                                     </div>
                                   </div>
@@ -873,7 +872,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                     {Array.isArray(task.submission_data?.files) &&
                       task.submission_data.files.length > 0 && (
                         <div>
-                          <h4 className="text-sm font-medium mb-2">
+                          <h4 className="mb-2 text-sm font-medium">
                             Uploaded Files
                           </h4>
                           <div className="space-y-3">
@@ -884,7 +883,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                   `File ${index + 1}`;
                                 const isImage =
                                   /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(
-                                    fileName,
+                                    fileName
                                   );
 
                                 return (
@@ -893,18 +892,18 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                       href={fileUrl}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-2"
+                                      className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
                                     >
                                       <FileText className="h-4 w-4 flex-shrink-0" />
                                       {fileName}
                                     </a>
                                     {isImage && (
-                                      <div className="border rounded-lg p-2 bg-muted/30">
+                                      <div className="bg-muted/30 rounded-lg border p-2">
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img
                                           src={fileUrl}
                                           alt={fileName}
-                                          className="w-full max-h-80 object-contain rounded"
+                                          className="max-h-80 w-full rounded object-contain"
                                           onError={(e) => {
                                             (
                                               e.target as HTMLImageElement
@@ -915,7 +914,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                     )}
                                   </div>
                                 );
-                              },
+                              }
                             )}
                           </div>
                         </div>
@@ -923,7 +922,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
 
                     {/* Submitted at */}
                     {typeof task.submission_data?.submitted_at === "string" && (
-                      <div className="pt-3 border-t text-sm text-muted-foreground">
+                      <div className="text-muted-foreground border-t pt-3 text-sm">
                         Submitted on{" "}
                         {formatDate(task.submission_data.submitted_at)}
                       </div>
@@ -933,7 +932,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
               </TabsContent>
             )}
 
-            <TabsContent value="peer-review" className="space-y-6 mt-6">
+            <TabsContent value="peer-review" className="mt-6 space-y-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                   <CardTitle className="text-lg font-semibold">
@@ -941,7 +940,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                   </CardTitle>
                   <Button
                     variant="link"
-                    className="text-blue-500 p-0 h-auto"
+                    className="h-auto p-0 text-blue-500"
                     onClick={() => setShowSuggestEditsModal(true)}
                   >
                     Suggest Edits
@@ -953,14 +952,14 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                   task.peer_review_criteria.length > 0 ? (
                     task.peer_review_criteria.map((criteria, index) => (
                       <div key={index}>
-                        <h3 className="text-lg font-semibold mb-3 text-purple-900">
+                        <h3 className="mb-3 text-lg font-semibold text-purple-900">
                           {criteria.category}
                         </h3>
                         <div className="space-y-3">
                           {criteria.points.map((point, pointIndex) => (
                             <div
                               key={pointIndex}
-                              className="text-gray-700 [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mb-2 [&_h2]:mt-4 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:space-y-1.5 [&_li]:leading-relaxed [&_p]:leading-relaxed [&_strong]:font-bold"
+                              className="text-gray-700 [&_h1]:mb-3 [&_h1]:text-xl [&_h1]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_li]:leading-relaxed [&_p]:leading-relaxed [&_strong]:font-bold [&_ul]:ml-6 [&_ul]:list-disc [&_ul]:space-y-1.5"
                             >
                               <ReactMarkdown>{point}</ReactMarkdown>
                             </div>
@@ -970,10 +969,10 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                     ))
                   ) : (
                     <div>
-                      <h3 className="text-lg font-semibold mb-3">
+                      <h3 className="mb-3 text-lg font-semibold">
                         No review criteria available
                       </h3>
-                      <p className="text-gray-700 leading-relaxed">
+                      <p className="leading-relaxed text-gray-700">
                         Peer review criteria for this task haven&apos;t been
                         defined yet.
                       </p>
@@ -999,14 +998,14 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                     />
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
+                    <div className="bg-primary/5 border-primary/20 rounded-lg border p-4">
+                      <div className="mb-2 flex items-center gap-2">
                         <User className="h-4 w-4 text-blue-600" />
                         <span className="text-sm font-medium text-blue-800">
                           Reviewer Feedback:
                         </span>
                       </div>
-                      <p className="text-gray-700 leading-relaxed">
+                      <p className="leading-relaxed text-gray-700">
                         {task.submission_notes
                           .split("Peer Review:")
                           .pop()
@@ -1014,12 +1013,12 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-3 pt-4 border-t">
-                      <Avatar className="w-8 h-8">
+                    <div className="flex items-center gap-3 border-t pt-4">
+                      <Avatar className="h-8 w-8">
                         {task.reviewer_avatar_url ? (
                           <AvatarImage src={task.reviewer_avatar_url} />
                         ) : null}
-                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
+                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold text-white">
                           {task.reviewer_name
                             ? task.reviewer_name
                                 .split(" ")
@@ -1033,7 +1032,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                         <div className="text-sm font-medium">
                           {task.reviewer_name || "Peer Reviewer"}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-muted-foreground text-xs">
                           Reviewed on{" "}
                           {task.completed_at
                             ? formatDate(task.completed_at)
@@ -1051,7 +1050,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-center gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
                       <Clock className="h-5 w-5 text-yellow-600" />
                       <div>
                         <p className="font-medium text-yellow-800">
@@ -1062,7 +1061,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                           Results will appear here once the review is complete.
                         </p>
                         {task.reviewer_name && (
-                          <p className="text-sm text-yellow-700 mt-2">
+                          <p className="mt-2 text-sm text-yellow-700">
                             Being reviewed by {task.reviewer_name}
                           </p>
                         )}
@@ -1084,12 +1083,12 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {/* Reviewer Information */}
-                    <div className="flex items-center gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg">
-                      <Avatar className="w-10 h-10">
+                    <div className="bg-primary/5 border-primary/20 flex items-center gap-3 rounded-lg border p-4">
+                      <Avatar className="h-10 w-10">
                         {task.reviewer_avatar_url ? (
                           <AvatarImage src={task.reviewer_avatar_url} />
                         ) : null}
-                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold">
+                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 font-bold text-white">
                           {task.reviewer_name
                             ? task.reviewer_name
                                 .split(" ")
@@ -1108,8 +1107,8 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                             variant="secondary"
                             className={`${
                               task.status === "approved"
-                                ? "bg-green-100 text-green-800 border-green-200"
-                                : "bg-red-100 text-red-800 border-red-200"
+                                ? "border-green-200 bg-green-100 text-green-800"
+                                : "border-red-200 bg-red-100 text-red-800"
                             }`}
                           >
                             {task.status === "approved"
@@ -1117,7 +1116,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                               : "Rejected"}
                           </Badge>
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-muted-foreground text-sm">
                           Reviewed on{" "}
                           {task.updated_at
                             ? formatDate(task.updated_at)
@@ -1130,14 +1129,14 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                     {(task.review_feedback ||
                       (task.submission_notes &&
                         task.submission_notes.includes("Peer Review:"))) && (
-                      <div className="bg-gray-50 border rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
+                      <div className="rounded-lg border bg-gray-50 p-4">
+                        <div className="mb-2 flex items-center gap-2">
                           <User className="h-4 w-4 text-gray-600" />
                           <span className="text-sm font-medium text-gray-800">
                             Review Feedback:
                           </span>
                         </div>
-                        <p className="text-gray-700 leading-relaxed">
+                        <p className="leading-relaxed text-gray-700">
                           {task.review_feedback ||
                             task.submission_notes
                               ?.split("Peer Review:")
@@ -1151,7 +1150,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                     {/* Complete Peer Review History */}
                     {validatedReviewHistory.length > 0 && (
                       <div className="mt-6">
-                        <h4 className="text-sm font-medium text-gray-800 mb-3">
+                        <h4 className="mb-3 text-sm font-medium text-gray-800">
                           Review History
                         </h4>
                         <div className="space-y-3">
@@ -1159,15 +1158,15 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                             .sort(
                               (a, b) =>
                                 new Date(a.timestamp).getTime() -
-                                new Date(b.timestamp).getTime(),
+                                new Date(b.timestamp).getTime()
                             )
                             .map((event, index) => (
                               <div
                                 key={index}
-                                className="flex items-start gap-3 p-3 border rounded-lg bg-white"
+                                className="flex items-start gap-3 rounded-lg border bg-white p-3"
                               >
                                 <div
-                                  className={`flex items-center justify-center w-6 h-6 rounded-full mt-1 ${
+                                  className={`mt-1 flex h-6 w-6 items-center justify-center rounded-full ${
                                     event.event_type === "submitted_for_review"
                                       ? "bg-blue-500"
                                       : event.event_type === "reviewer_assigned"
@@ -1179,23 +1178,23 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                 >
                                   {event.event_type ===
                                     "submitted_for_review" && (
-                                    <FileText className="w-3 h-3 text-white" />
+                                    <FileText className="h-3 w-3 text-white" />
                                   )}
                                   {event.event_type === "reviewer_assigned" && (
-                                    <User className="w-3 h-3 text-white" />
+                                    <User className="h-3 w-3 text-white" />
                                   )}
                                   {event.event_type === "review_completed" &&
                                     event.decision === "approved" && (
-                                      <CheckCircle className="w-3 h-3 text-white" />
+                                      <CheckCircle className="h-3 w-3 text-white" />
                                     )}
                                   {event.event_type === "review_completed" &&
                                     event.decision === "rejected" && (
-                                      <AlertCircle className="w-3 h-3 text-white" />
+                                      <AlertCircle className="h-3 w-3 text-white" />
                                     )}
                                 </div>
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <p className="font-medium text-sm">
+                                  <div className="mb-1 flex items-center gap-2">
+                                    <p className="text-sm font-medium">
                                       {event.event_type ===
                                         "submitted_for_review" &&
                                         "Submitted for Review"}
@@ -1213,8 +1212,8 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                         variant="secondary"
                                         className={`text-xs ${
                                           event.decision === "approved"
-                                            ? "bg-green-100 text-green-800 border-green-200"
-                                            : "bg-red-100 text-red-800 border-red-200"
+                                            ? "border-green-200 bg-green-100 text-green-800"
+                                            : "border-red-200 bg-red-100 text-red-800"
                                         }`}
                                       >
                                         {event.decision === "approved"
@@ -1225,14 +1224,14 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                   </div>
 
                                   {event.reviewer_name && (
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <Avatar className="w-4 h-4">
+                                    <div className="mb-1 flex items-center gap-2">
+                                      <Avatar className="h-4 w-4">
                                         {event.reviewer_avatar_url ? (
                                           <AvatarImage
                                             src={event.reviewer_avatar_url}
                                           />
                                         ) : null}
-                                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white text-[10px] font-bold">
+                                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-[10px] font-bold text-white">
                                           {event.reviewer_name
                                             ?.split(" ")
                                             .map((n) => n[0])
@@ -1240,21 +1239,21 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                             .toUpperCase() || "R"}
                                         </AvatarFallback>
                                       </Avatar>
-                                      <p className="text-xs text-muted-foreground">
+                                      <p className="text-muted-foreground text-xs">
                                         {event.reviewer_name}
                                       </p>
                                     </div>
                                   )}
 
-                                  <p className="text-xs text-muted-foreground">
+                                  <p className="text-muted-foreground text-xs">
                                     {formatDate(event.timestamp)}
                                   </p>
 
                                   {/* Show feedback for review completed events */}
                                   {event.event_type === "review_completed" &&
                                     event.feedback && (
-                                      <div className="bg-gray-50 border rounded p-2 mt-2">
-                                        <p className="text-xs font-medium text-gray-800 mb-1">
+                                      <div className="mt-2 rounded border bg-gray-50 p-2">
+                                        <p className="mb-1 text-xs font-medium text-gray-800">
                                           Review Feedback:
                                         </p>
                                         <p className="text-xs text-gray-700">
@@ -1278,8 +1277,8 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-center py-8 text-muted-foreground">
-                      <User className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <div className="text-muted-foreground py-8 text-center">
+                      <User className="mx-auto mb-3 h-12 w-12 opacity-50" />
                       <p>No peer review information available yet.</p>
                       <p className="text-sm">
                         Complete and submit this task to initiate peer review.
@@ -1290,13 +1289,13 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
               )}
             </TabsContent>
 
-            <TabsContent value="history" className="space-y-6 mt-6">
+            <TabsContent value="history" className="mt-6 space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg font-semibold">
                     Task History
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Complete timeline of task lifecycle events
                   </p>
                 </CardHeader>
@@ -1381,9 +1380,9 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                 event.decision === "approved" ? "green" : "red",
                               icon:
                                 event.decision === "approved" ? (
-                                  <CheckCircle className="w-4 h-4 text-white bg-green-500 rounded-full" />
+                                  <CheckCircle className="h-4 w-4 rounded-full bg-green-500 text-white" />
                                 ) : (
-                                  <AlertCircle className="w-4 h-4 text-white bg-red-500 rounded-full" />
+                                  <AlertCircle className="h-4 w-4 rounded-full bg-red-500 text-white" />
                                 ),
                               reviewer: {
                                 name: event.reviewer_name || "Reviewer",
@@ -1427,9 +1426,9 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                             color: task.status === "approved" ? "green" : "red",
                             icon:
                               task.status === "approved" ? (
-                                <CheckCircle className="w-4 h-4 text-white bg-green-500 rounded-full" />
+                                <CheckCircle className="h-4 w-4 rounded-full bg-green-500 text-white" />
                               ) : (
-                                <AlertCircle className="w-4 h-4 text-white bg-red-500 rounded-full" />
+                                <AlertCircle className="h-4 w-4 rounded-full bg-red-500 text-white" />
                               ),
                             reviewer: {
                               name: task.reviewer_name,
@@ -1452,19 +1451,19 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                       timelineEvents.sort(
                         (a, b) =>
                           new Date(b.timestamp).getTime() -
-                          new Date(a.timestamp).getTime(),
+                          new Date(a.timestamp).getTime()
                       );
 
                       // Render timeline events
                       return timelineEvents.map((event, index) => (
                         <div
                           key={index}
-                          className="flex gap-3 p-3 border rounded-lg"
+                          className="flex gap-3 rounded-lg border p-3"
                         >
-                          <div className="flex items-center justify-center flex-shrink-0 w-6 h-6 mt-1">
+                          <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center">
                             <div
                               className={`flex items-center justify-center ${
-                                event.icon ? "w-6 h-6" : "w-2 h-2"
+                                event.icon ? "h-6 w-6" : "h-2 w-2"
                               } ${
                                 event.color === "purple"
                                   ? "bg-purple-500"
@@ -1488,16 +1487,16 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                               {event.icon || null}
                             </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-1 flex items-center gap-2">
                               <p className="font-medium">{event.title}</p>
                               {event.status && (
                                 <Badge
                                   variant="secondary"
                                   className={`text-xs ${
                                     event.status === "approved"
-                                      ? "bg-green-100 text-green-800 border-green-200"
-                                      : "bg-red-100 text-red-800 border-red-200"
+                                      ? "border-green-200 bg-green-100 text-green-800"
+                                      : "border-red-200 bg-red-100 text-red-800"
                                   }`}
                                 >
                                   {event.status === "approved"
@@ -1508,14 +1507,14 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                             </div>
 
                             {event.reviewer && (
-                              <div className="flex items-center gap-2 mb-2">
-                                <Avatar className="w-5 h-5">
+                              <div className="mb-2 flex items-center gap-2">
+                                <Avatar className="h-5 w-5">
                                   {event.reviewer.avatar_url ? (
                                     <AvatarImage
                                       src={event.reviewer.avatar_url}
                                     />
                                   ) : null}
-                                  <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white text-xs font-bold">
+                                  <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold text-white">
                                     {event.reviewer.name
                                       ?.split(" ")
                                       .map((n) => n[0])
@@ -1523,7 +1522,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                       .toUpperCase() || "PR"}
                                   </AvatarFallback>
                                 </Avatar>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-muted-foreground text-sm">
                                   {event.type === "reviewer_assigned"
                                     ? "Reviewer: "
                                     : "Reviewed by "}
@@ -1534,12 +1533,12 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                               </div>
                             )}
 
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-muted-foreground text-sm">
                               {formatDate(event.timestamp)}
                             </p>
 
                             {event.description && (
-                              <p className="text-sm text-muted-foreground mt-1">
+                              <p className="text-muted-foreground mt-1 text-sm">
                                 {event.description}
                               </p>
                             )}
@@ -1567,17 +1566,17 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                             return reviewParts.map((reviewFeedback, index) => (
                               <div
                                 key={index}
-                                className="flex items-start gap-3 p-3 border rounded-lg opacity-75"
+                                className="flex items-start gap-3 rounded-lg border p-3 opacity-75"
                               >
-                                <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
+                                <div className="mt-2 h-2 w-2 rounded-full bg-red-500"></div>
                                 <div className="flex-1">
                                   <p className="font-medium">
                                     Peer review rejected (attempt {index + 1})
                                   </p>
-                                  <p className="text-sm text-muted-foreground">
+                                  <p className="text-muted-foreground text-sm">
                                     Reviewed by {task.reviewer_name}
                                   </p>
-                                  <p className="text-sm text-muted-foreground mt-1 italic">
+                                  <p className="text-muted-foreground mt-1 text-sm italic">
                                     &ldquo;{reviewFeedback.trim()}&rdquo;
                                   </p>
                                 </div>
@@ -1587,13 +1586,13 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                         </>
                       )}
                     {task.status === "pending_review" && (
-                      <div className="flex items-start gap-3 p-3 border rounded-lg border-dashed">
-                        <div className="w-2 h-2 bg-orange-300 rounded-full mt-2 animate-pulse"></div>
+                      <div className="flex items-start gap-3 rounded-lg border border-dashed p-3">
+                        <div className="mt-2 h-2 w-2 animate-pulse rounded-full bg-orange-300"></div>
                         <div className="flex-1">
                           <p className="font-medium text-orange-700">
                             Awaiting peer review
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             Task is currently under review
                           </p>
                         </div>
@@ -1603,8 +1602,8 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                     {!task.assigned_at &&
                       !task.started_at &&
                       !task.completed_at && (
-                        <div className="text-center py-8 text-muted-foreground">
-                          <Clock className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                        <div className="text-muted-foreground py-8 text-center">
+                          <Clock className="mx-auto mb-3 h-12 w-12 opacity-50" />
                           <p>No timeline events yet</p>
                           <p className="text-sm">
                             Task activity will appear here once started
@@ -1618,13 +1617,13 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
 
             {/* Previous Submissions Tab - Only for recurring tasks */}
             {isRecurringTask && (
-              <TabsContent value="submissions" className="space-y-6 mt-6">
+              <TabsContent value="submissions" className="mt-6 space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg font-semibold">
                       Previous Submissions
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       History of all completed instances of this recurring task
                     </p>
                   </CardHeader>
@@ -1636,8 +1635,8 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                         </div>
                       </div>
                     ) : previousSubmissions.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <div className="text-muted-foreground py-8 text-center">
+                        <FileText className="mx-auto mb-3 h-12 w-12 opacity-50" />
                         <p>No previous submissions found.</p>
                         <p className="text-sm">
                           This is the first completion of this recurring task.
@@ -1648,9 +1647,9 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                         {previousSubmissions.map((submission, index) => (
                           <div
                             key={submission.id}
-                            className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                            className="rounded-lg border p-4 transition-colors hover:bg-gray-50"
                           >
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="mb-2 flex items-center justify-between">
                               <div className="flex items-center gap-3">
                                 <Avatar className="h-8 w-8">
                                   <AvatarImage
@@ -1666,14 +1665,14 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                   </AvatarFallback>
                                 </Avatar>
                                 <div>
-                                  <div className="font-medium text-sm">
+                                  <div className="text-sm font-medium">
                                     {submission.users?.name || "Unknown User"}
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
+                                  <div className="text-muted-foreground text-xs">
                                     Completed{" "}
                                     {submission.completed_at
                                       ? new Date(
-                                          submission.completed_at,
+                                          submission.completed_at
                                         ).toLocaleDateString()
                                       : "N/A"}
                                   </div>
@@ -1699,7 +1698,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                   onClick={() =>
                                     window.open(
                                       `/dashboard/team-journey/task/${submission.id}`,
-                                      "_blank",
+                                      "_blank"
                                     )
                                   }
                                 >
@@ -1708,7 +1707,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                               </div>
                             </div>
                             {submission.review_feedback && (
-                              <div className="mt-3 p-3 bg-blue-50 rounded-md">
+                              <div className="mt-3 rounded-md bg-blue-50 p-3">
                                 <p className="text-sm text-gray-700">
                                   <span className="font-medium">
                                     Review Feedback:
@@ -1720,10 +1719,10 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                             {((submission.submission_data as any)?.files || [])
                               .length > 0 && (
                               <div className="mt-3">
-                                <p className="text-xs text-muted-foreground mb-2">
+                                <p className="text-muted-foreground mb-2 text-xs">
                                   Evidence Files:
                                 </p>
-                                <div className="flex gap-2 flex-wrap">
+                                <div className="flex flex-wrap gap-2">
                                   {(
                                     (submission.submission_data as any)
                                       ?.files || []
@@ -1732,7 +1731,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                       key={fileIndex}
                                       variant="outline"
                                       size="sm"
-                                      className="text-xs h-7"
+                                      className="h-7 text-xs"
                                       onClick={() => window.open(url, "_blank")}
                                     >
                                       File {fileIndex + 1}
@@ -1787,12 +1786,12 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
             <CardContent className="space-y-3">
               {/* Assigned User Info */}
               {task.assigned_to_user_id ? (
-                <div className="flex items-center gap-3 min-w-0">
-                  <Avatar className="w-8 h-8 flex-shrink-0">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Avatar className="h-8 w-8 flex-shrink-0">
                     <AvatarImage
                       src={task.assignee_avatar_url || "/avatars/john-doe.jpg"}
                     />
-                    <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
+                    <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold text-white">
                       {task.assignee_name
                         ?.split(" ")
                         .map((n) => n[0])
@@ -1800,10 +1799,10 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium truncate">
+                    <div className="truncate text-sm font-medium">
                       {task.assignee_name || "Unknown User"}
                     </div>
-                    <div className="text-xs text-muted-foreground truncate">
+                    <div className="text-muted-foreground truncate text-xs">
                       {task.assigned_at
                         ? formatDate(task.assigned_at, "date-only")
                         : "Recently assigned"}
@@ -1811,7 +1810,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                   </div>
                 </div>
               ) : (
-                <div className="text-center text-sm text-gray-500 py-2">
+                <div className="py-2 text-center text-sm text-gray-500">
                   No one assigned to this task yet
                 </div>
               )}
@@ -1858,7 +1857,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                   {permissions.canCancel && (
                     <Button
                       variant="outline"
-                      className="w-full gap-2 text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
+                      className="w-full gap-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
                       onClick={handleCancelTask}
                       disabled={cancelTaskMutation.isPending}
                     >
@@ -1948,7 +1947,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                 </div>
               ) : (
                 <Button className="w-full bg-[#ff78c8] text-white" disabled>
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <CheckCircle className="mr-2 h-4 w-4" />
                   Task Status
                 </Button>
               )}
@@ -1979,19 +1978,19 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
               Choose a team member to assign this task to.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
+          <div className="max-h-60 space-y-2 overflow-y-auto">
             {teamMembers.map((member) => (
               <button
                 key={member.id}
                 onClick={() => handleReassignTask(member.id)}
                 disabled={actionLoading}
-                className="w-full flex items-center gap-3 p-2 rounded hover:bg-muted disabled:opacity-50"
+                className="hover:bg-muted flex w-full items-center gap-3 rounded p-2 disabled:opacity-50"
               >
-                <Avatar className="w-8 h-8">
+                <Avatar className="h-8 w-8">
                   <AvatarImage
                     src={member.avatar_url || "/avatars/john-doe.jpg"}
                   />
-                  <AvatarFallback className="bg-gradient-to-r from-blue-400 to-purple-400 text-white font-bold text-xs">
+                  <AvatarFallback className="bg-gradient-to-r from-blue-400 to-purple-400 text-xs font-bold text-white">
                     {member.name
                       .split(" ")
                       .map((n) => n[0])
@@ -2000,7 +1999,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                 </Avatar>
                 <span className="text-sm font-medium">{member.name}</span>
                 {member.id === task?.assigned_to_user_id && (
-                  <span className="text-xs text-[#0000ff] ml-auto">
+                  <span className="ml-auto text-xs text-[#0000ff]">
                     Current
                   </span>
                 )}
@@ -2027,7 +2026,19 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
         taskTitle={task?.title || "Task"}
         formSchema={task?.submission_form_schema}
         isLoading={completeTaskMutation.isPending}
-        initialData={task?.submission_data as { description?: string; external_urls?: Array<{ url: string; title: string; type: string }>; [key: string]: unknown } | undefined}
+        initialData={
+          task?.submission_data as
+            | {
+                description?: string;
+                external_urls?: Array<{
+                  url: string;
+                  title: string;
+                  type: string;
+                }>;
+                [key: string]: unknown;
+              }
+            | undefined
+        }
       />
       {/* Suggest Edits Modal */}
       <SuggestEditsModal

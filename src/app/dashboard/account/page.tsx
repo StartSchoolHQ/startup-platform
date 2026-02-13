@@ -252,7 +252,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <Button variant="ghost" onClick={() => router.back()} className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4 text-black dark:text-white" />
@@ -265,13 +265,13 @@ export default function AccountPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+        <div className="mb-6 rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6">
+        <div className="mb-6 rounded border border-green-200 bg-green-50 px-4 py-3 text-green-700">
           {success}
         </div>
       )}
@@ -298,7 +298,7 @@ export default function AccountPage() {
                     Profile Picture
                   </label>
                   <div className="flex items-center space-x-4">
-                    <Avatar className="w-20 h-20">
+                    <Avatar className="h-20 w-20">
                       <AvatarImage
                         src={avatarPreview || undefined}
                         alt={user.name || "User"}
@@ -311,7 +311,7 @@ export default function AccountPage() {
                     <div className="flex-1">
                       <label htmlFor="avatar-upload" className="cursor-pointer">
                         <div className="flex items-center space-x-2 text-sm text-blue-600 hover:text-blue-800">
-                          <Camera className="w-4 h-4 text-black dark:text-white" />
+                          <Camera className="h-4 w-4 text-black dark:text-white" />
                           <span>Change photo</span>
                         </div>
                       </label>
@@ -323,7 +323,7 @@ export default function AccountPage() {
                         className="hidden"
                         disabled={saving}
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-muted-foreground mt-1 text-xs">
                         JPG, PNG or GIF (max 5MB)
                       </p>
                     </div>
@@ -360,7 +360,7 @@ export default function AccountPage() {
                     disabled
                     className="bg-muted"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Email cannot be changed from this page
                   </p>
                 </div>
@@ -369,7 +369,7 @@ export default function AccountPage() {
                   <Button
                     type="submit"
                     disabled={saving}
-                    className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+                    className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
                   >
                     <Save className="mr-2 h-4 w-4 text-white" />
                     {saving ? "Saving..." : "Save Changes"}
@@ -402,7 +402,7 @@ export default function AccountPage() {
                   <Button
                     type="submit"
                     disabled={saving}
-                    className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+                    className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
                   >
                     <Save className="mr-2 h-4 w-4 text-white" />
                     {saving ? "Updating..." : "Update Password"}

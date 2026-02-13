@@ -147,7 +147,7 @@ export default function TeamJourneyPage() {
     return products.filter(
       (product) =>
         product.name.toLowerCase().includes(query) ||
-        product.description?.toLowerCase().includes(query),
+        product.description?.toLowerCase().includes(query)
     );
   };
 
@@ -155,7 +155,7 @@ export default function TeamJourneyPage() {
   const filteredAllProducts = sortProducts(filterProducts(allProducts));
   const filteredMyProducts = sortProducts(filterProducts(myProducts));
   const filteredArchivedProducts = sortProducts(
-    filterProducts(archivedProducts),
+    filterProducts(archivedProducts)
   );
 
   // Get header text based on active tab
@@ -203,10 +203,10 @@ export default function TeamJourneyPage() {
             <div className="flex items-center gap-3">
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
                 <Input
                   placeholder="Search..."
-                  className="pl-10 w-64"
+                  className="w-64 pl-10"
                   value={searchInput}
                   onChange={(e) => handleSearch(e.target.value)}
                 />
@@ -226,7 +226,7 @@ export default function TeamJourneyPage() {
 
               {/* Add Product */}
               <Button
-                className="gap-2 bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+                className="gap-2 bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
                 onClick={() => setShowCreateTeamDialog(true)}
               >
                 <Plus className="h-4 w-4" />
@@ -238,7 +238,7 @@ export default function TeamJourneyPage() {
           {/* Tab Content */}
           <TabsContent
             value="all-products"
-            className="space-y-4 mt-6 min-h-[600px]"
+            className="mt-6 min-h-[600px] space-y-4"
           >
             {filteredAllProducts.length === 0 ? (
               <EmptyState
@@ -262,7 +262,7 @@ export default function TeamJourneyPage() {
                 }
               />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredAllProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -272,7 +272,7 @@ export default function TeamJourneyPage() {
 
           <TabsContent
             value="my-products"
-            className="space-y-4 mt-6 min-h-[600px]"
+            className="mt-6 min-h-[600px] space-y-4"
           >
             {filteredMyProducts.length === 0 ? (
               <EmptyState
@@ -299,7 +299,7 @@ export default function TeamJourneyPage() {
                 }
               />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredMyProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -307,7 +307,7 @@ export default function TeamJourneyPage() {
             )}
           </TabsContent>
 
-          <TabsContent value="archive" className="space-y-4 mt-6 min-h-[600px]">
+          <TabsContent value="archive" className="mt-6 min-h-[600px] space-y-4">
             {filteredArchivedProducts.length === 0 ? (
               <EmptyState
                 icon={PackageOpen}
@@ -334,7 +334,7 @@ export default function TeamJourneyPage() {
                 }
               />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredArchivedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}

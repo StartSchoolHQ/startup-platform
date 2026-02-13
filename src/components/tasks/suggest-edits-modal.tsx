@@ -77,7 +77,7 @@ export function SuggestEditsModal({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <div className="text-sm font-medium">Task</div>
-            <div className="rounded-md bg-muted p-3">
+            <div className="bg-muted rounded-md p-3">
               <div className="text-sm font-medium">{taskTitle}</div>
             </div>
           </div>

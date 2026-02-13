@@ -17,17 +17,17 @@ export async function updateSession(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
+            request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({
             request,
           });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
+            supabaseResponse.cookies.set(name, value, options)
           );
         },
       },
-    },
+    }
   );
 
   // IMPORTANT: Avoid writing any logic between createServerClient and
@@ -48,7 +48,7 @@ export async function updateSession(request: NextRequest) {
     "/invite",
   ];
   const isPublicRoute = publicRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route),
+    request.nextUrl.pathname.startsWith(route)
   );
 
   // Skip auth checks for public routes
@@ -59,7 +59,7 @@ export async function updateSession(request: NextRequest) {
   // Define protected routes that require authentication
   const protectedRoutes = ["/dashboard"];
   const isProtectedRoute = protectedRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route),
+    request.nextUrl.pathname.startsWith(route)
   );
 
   // If user is not authenticated and trying to access a protected route

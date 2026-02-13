@@ -94,7 +94,7 @@ export function NavUser({
                 {invitationCount > 0 && (
                   <Badge
                     variant="destructive"
-                    className="absolute -top-1 -right-1 h-4 min-w-4 text-xs p-0 flex items-center justify-center"
+                    className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center p-0 text-xs"
                   >
                     {invitationCount}
                   </Badge>
@@ -138,7 +138,7 @@ export function NavUser({
               <DropdownMenuItem
                 onClick={() => router.push("/dashboard/invitations")}
               >
-                <div className="flex items-center justify-between w-full">
+                <div className="flex w-full items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Mail />
                     Invitations

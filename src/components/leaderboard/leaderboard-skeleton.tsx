@@ -9,49 +9,49 @@ export function LeaderboardSkeleton() {
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               {/* Rank */}
-              <div className="flex-shrink-0 w-8 h-8">
-                <Skeleton className="w-full h-full rounded-full" />
+              <div className="h-8 w-8 flex-shrink-0">
+                <Skeleton className="h-full w-full rounded-full" />
               </div>
 
               {/* Avatar */}
               <div className="flex-shrink-0">
-                <Skeleton className="w-10 h-10 rounded-full" />
+                <Skeleton className="h-10 w-10 rounded-full" />
               </div>
 
               {/* User Info */}
-              <div className="flex-1 min-w-0">
-                <Skeleton className="h-4 w-32 mb-1" />
+              <div className="min-w-0 flex-1">
+                <Skeleton className="mb-1 h-4 w-32" />
                 <Skeleton className="h-3 w-20" />
               </div>
 
               {/* Stats Grid */}
               <div className="hidden md:grid md:grid-cols-4 md:gap-8 md:text-center">
                 <div>
-                  <Skeleton className="h-4 w-12 mx-auto mb-1" />
-                  <Skeleton className="h-3 w-6 mx-auto" />
+                  <Skeleton className="mx-auto mb-1 h-4 w-12" />
+                  <Skeleton className="mx-auto h-3 w-6" />
                 </div>
                 <div>
-                  <Skeleton className="h-4 w-12 mx-auto mb-1" />
-                  <Skeleton className="h-3 w-6 mx-auto" />
+                  <Skeleton className="mx-auto mb-1 h-4 w-12" />
+                  <Skeleton className="mx-auto h-3 w-6" />
                 </div>
                 <div>
-                  <Skeleton className="h-4 w-8 mx-auto mb-1" />
-                  <Skeleton className="h-3 w-4 mx-auto" />
+                  <Skeleton className="mx-auto mb-1 h-4 w-8" />
+                  <Skeleton className="mx-auto h-3 w-4" />
                 </div>
                 <div>
-                  <Skeleton className="h-4 w-10 mx-auto mb-1" />
-                  <Skeleton className="h-3 w-6 mx-auto" />
+                  <Skeleton className="mx-auto mb-1 h-4 w-10" />
+                  <Skeleton className="mx-auto h-3 w-6" />
                 </div>
               </div>
 
               {/* Streak */}
               <div className="flex-shrink-0">
-                <Skeleton className="w-16 h-6 rounded-full" />
+                <Skeleton className="h-6 w-16 rounded-full" />
               </div>
 
               {/* Change */}
-              <div className="flex-shrink-0 w-8">
-                <Skeleton className="w-6 h-6 mx-auto rounded" />
+              <div className="w-8 flex-shrink-0">
+                <Skeleton className="mx-auto h-6 w-6 rounded" />
               </div>
             </div>
           </CardContent>

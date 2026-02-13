@@ -47,10 +47,7 @@ const COLORS = [
   "#6366f1", // indigo-500
 ];
 
-export function AdminCharts({
-  teamPoints,
-  teamXp,
-}: AdminChartsProps) {
+export function AdminCharts({ teamPoints, teamXp }: AdminChartsProps) {
   // Team points data (top 10, exclude teams with 0 points), sorted ascending for horizontal bars
   const teamPointsData = teamPoints
     .filter((team) => team.team_points > 0)
@@ -74,11 +71,9 @@ export function AdminCharts({
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="rounded-lg border bg-background p-2 shadow-sm">
-          <p className="text-sm font-medium">
-            {payload[0].payload.fullName}
-          </p>
-          <p className="text-sm text-muted-foreground">
+        <div className="bg-background rounded-lg border p-2 shadow-sm">
+          <p className="text-sm font-medium">{payload[0].payload.fullName}</p>
+          <p className="text-muted-foreground text-sm">
             {payload[0].value.toLocaleString()}
           </p>
         </div>

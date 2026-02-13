@@ -37,14 +37,10 @@ export function AvatarStack({
       {visibleUsers.map((user, index) => (
         <Avatar
           key={user.id}
-          className={`
-            ${sizeClasses[size]} 
-            ${index > 0 ? offsetClasses[size] : ""} 
-            border-2 border-background relative z-${10 - index}
-          `}
+          className={` ${sizeClasses[size]} ${index > 0 ? offsetClasses[size] : ""} border-background relative border-2 z-${10 - index} `}
         >
           <AvatarImage src={user.avatar} alt={user.name} />
-          <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
+          <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
             {user.name
               .split(" ")
               .map((n) => n[0])
@@ -56,13 +52,9 @@ export function AvatarStack({
 
       {remainingCount > 0 && (
         <Avatar
-          className={`
-            ${sizeClasses[size]} 
-            ${offsetClasses[size]} 
-            border-2 border-background bg-muted relative z-0
-          `}
+          className={` ${sizeClasses[size]} ${offsetClasses[size]} border-background bg-muted relative z-0 border-2`}
         >
-          <AvatarFallback className="bg-muted text-muted-foreground font-semibold text-xs">
+          <AvatarFallback className="bg-muted text-muted-foreground text-xs font-semibold">
             +{remainingCount}
           </AvatarFallback>
         </Avatar>

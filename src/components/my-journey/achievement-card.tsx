@@ -51,57 +51,57 @@ export function AchievementCard({
     <Card
       className={`${
         config.cardClass
-      } transition-all hover:shadow-md hover:-translate-y-1 p-0 h-full flex flex-col ${
-        selected ? "border-2 border-primary" : ""
+      } flex h-full flex-col p-0 transition-all hover:-translate-y-1 hover:shadow-md ${
+        selected ? "border-primary border-2" : ""
       }`}
     >
-      <CardHeader className="pt-4 px-4 flex-shrink-0">
+      <CardHeader className="flex-shrink-0 px-4 pt-4">
         <div className="flex items-center justify-between">
           <Badge
             variant="outline"
-            className={`${config.badgeClass} px-3 py-1 border`}
+            className={`${config.badgeClass} border px-3 py-1`}
           >
             {config.badgeText}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="px-4 pb-4 flex-1 flex flex-col">
-        <div className="flex items-start gap-2 mb-4 flex-1">
-          <Medal className="h-12 w-12 text-black dark:text-white flex-shrink-0 bg-muted rounded-md p-2 mt-1" />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-lg leading-tight">{title}</h3>
-              <ChevronRight className="h-4 w-4 text-muted-foreground opacity-60 flex-shrink-0" />
+      <CardContent className="flex flex-1 flex-col px-4 pb-4">
+        <div className="mb-4 flex flex-1 items-start gap-2">
+          <Medal className="bg-muted mt-1 h-12 w-12 flex-shrink-0 rounded-md p-2 text-black dark:text-white" />
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 flex items-center gap-2">
+              <h3 className="text-lg leading-tight font-semibold">{title}</h3>
+              <ChevronRight className="text-muted-foreground h-4 w-4 flex-shrink-0 opacity-60" />
             </div>
-            <p className="text-sm text-muted-foreground line-clamp-2">
+            <p className="text-muted-foreground line-clamp-2 text-sm">
               {description}
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mt-auto">
+        <div className="mt-auto grid grid-cols-2 gap-2">
           {/* Points Box */}
-          <div className="border border-border rounded-lg p-2 bg-background">
+          <div className="border-border bg-background rounded-lg border p-2">
             <div className="flex items-center gap-2">
-              <CreditCard className="h-8 w-8 text-black dark:text-white flex-shrink-0 bg-muted rounded-md p-2" />
+              <CreditCard className="bg-muted h-8 w-8 flex-shrink-0 rounded-md p-2 text-black dark:text-white" />
               <div className="min-w-0">
-                <div className="font-semibold text-base text-foreground">
+                <div className="text-foreground text-base font-semibold">
                   {points}
                 </div>
-                <div className="text-xs text-muted-foreground">Points</div>
+                <div className="text-muted-foreground text-xs">Points</div>
               </div>
             </div>
           </div>
 
           {/* XP Box */}
-          <div className="border border-border rounded-lg p-2 bg-background">
+          <div className="border-border bg-background rounded-lg border p-2">
             <div className="flex items-center gap-2">
-              <Zap className="h-8 w-8 text-black dark:text-white flex-shrink-0 bg-muted rounded-md p-2" />
+              <Zap className="bg-muted h-8 w-8 flex-shrink-0 rounded-md p-2 text-black dark:text-white" />
               <div className="min-w-0">
-                <div className="font-semibold text-base text-foreground">
+                <div className="text-foreground text-base font-semibold">
                   {xp}
                 </div>
-                <div className="text-xs text-muted-foreground">XP</div>
+                <div className="text-muted-foreground text-xs">XP</div>
               </div>
             </div>
           </div>

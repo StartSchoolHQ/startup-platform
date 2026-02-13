@@ -267,7 +267,7 @@ export default function SupportPage() {
   };
 
   return (
-    <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
+    <div className="flex-1 space-y-8 p-4 pt-6 md:p-8">
       {/* Breadcrumb */}
       <Breadcrumb>
         <BreadcrumbList>
@@ -280,10 +280,10 @@ export default function SupportPage() {
       </Breadcrumb>
 
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
+      <div className="mb-8 flex items-center gap-4">
         <HelpCircle className="h-10 w-10 text-blue-600" />
         <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">
+          <h1 className="mb-2 text-3xl font-bold tracking-tight">
             Support & Bug Reports
           </h1>
           <p className="text-muted-foreground text-lg">
@@ -294,7 +294,7 @@ export default function SupportPage() {
 
       {/* Success Alert */}
       {submitStatus === "success" && (
-        <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4">
           <CheckCircle className="h-4 w-4 text-green-600" />
           <div className="text-green-800">
             <strong>Ticket submitted successfully!</strong> Our team has been
@@ -305,7 +305,7 @@ export default function SupportPage() {
 
       {/* Error Alert */}
       {errorMessage && (
-        <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-4">
           <AlertCircle className="h-4 w-4 text-red-600" />
           <div className="text-red-800">{errorMessage}</div>
         </div>
@@ -320,17 +320,17 @@ export default function SupportPage() {
           <CardContent className="pt-0">
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* User Info (Read-only) */}
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-700 mb-4">
+              <div className="rounded-lg bg-gray-50 p-6">
+                <h3 className="mb-4 text-sm font-medium text-gray-700">
                   User Information
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div>
                     <Label className="text-sm font-medium">Your Name</Label>
                     <Input
                       value={user?.name || "Loading..."}
                       disabled
-                      className="bg-white mt-2"
+                      className="mt-2 bg-white"
                     />
                   </div>
                   <div>
@@ -338,14 +338,14 @@ export default function SupportPage() {
                     <Input
                       value={user?.email || "Loading..."}
                       disabled
-                      className="bg-white mt-2"
+                      className="mt-2 bg-white"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Priority and Category */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
                   <Label htmlFor="priority" className="text-sm font-medium">
                     Priority *
@@ -429,7 +429,7 @@ export default function SupportPage() {
                   maxLength={100}
                   required
                 />
-                <div className="text-xs text-muted-foreground mt-1">
+                <div className="text-muted-foreground mt-1 text-xs">
                   {ticket.title.length}/100 characters
                 </div>
               </div>
@@ -452,16 +452,16 @@ export default function SupportPage() {
                     }
                   }}
                   placeholder="Please provide detailed information about the issue, including steps to reproduce if applicable."
-                  className="min-h-[140px] mt-2"
+                  className="mt-2 min-h-[140px]"
                   required
                 />
-                <div className="text-xs text-muted-foreground mt-1">
+                <div className="text-muted-foreground mt-1 text-xs">
                   {ticket.description.length}/2000 characters
                 </div>
               </div>
 
               {/* File Upload */}
-              <div className="border-2 border-dashed border-gray-200 rounded-lg p-6">
+              <div className="rounded-lg border-2 border-dashed border-gray-200 p-6">
                 <Label htmlFor="file-upload" className="text-sm font-medium">
                   Attachments (Optional)
                 </Label>
@@ -474,10 +474,10 @@ export default function SupportPage() {
                     accept="image/*,.txt,.csv,.log,.pdf,.doc,.docx,.xls,.xlsx"
                     className="cursor-pointer"
                   />
-                  <div className="text-sm text-muted-foreground mt-3">
-                    Max {MAX_FILES} files, 8MB each. Supported: Images (PNG, JPG,
-                    GIF, WebP, SVG), Documents (PDF, Word, Excel), Text (TXT,
-                    CSV, LOG)
+                  <div className="text-muted-foreground mt-3 text-sm">
+                    Max {MAX_FILES} files, 8MB each. Supported: Images (PNG,
+                    JPG, GIF, WebP, SVG), Documents (PDF, Word, Excel), Text
+                    (TXT, CSV, LOG)
                   </div>
                 </div>
 
@@ -487,11 +487,11 @@ export default function SupportPage() {
                     {ticket.attachments.map((file, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
+                        className="flex items-center justify-between rounded-md bg-gray-50 p-2"
                       >
                         <div className="flex items-center gap-2">
                           <Upload className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm truncate">{file.name}</span>
+                          <span className="truncate text-sm">{file.name}</span>
                           <span className="text-xs text-gray-500">
                             ({(file.size / 1024 / 1024).toFixed(1)}MB)
                           </span>
@@ -511,21 +511,21 @@ export default function SupportPage() {
               </div>
 
               {/* Submit Button */}
-              <div className="pt-4 border-t">
+              <div className="border-t pt-4">
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 text-base font-medium"
+                  className="h-12 w-full text-base font-medium"
                   size="lg"
                 >
                   {isSubmitting ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                       Submitting...
                     </>
                   ) : (
                     <>
-                      <Send className="h-4 w-4 mr-2" />
+                      <Send className="mr-2 h-4 w-4" />
                       Submit Support Ticket
                     </>
                   )}

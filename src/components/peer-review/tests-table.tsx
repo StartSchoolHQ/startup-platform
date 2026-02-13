@@ -70,23 +70,23 @@ export function TestsTable({
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+            <tr className="border-border border-b">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 {columns.taskToTest}
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 {columns.submittedBy}
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 {columns.difficulty}
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 {columns.xp}
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 {columns.points}
               </th>
-              <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                 {columns.action}
               </th>
             </tr>
@@ -99,32 +99,32 @@ export function TestsTable({
               return (
                 <tr
                   key={item.id}
-                  className="border-b border-border hover:bg-muted/10 transition-colors duration-150"
+                  className="border-border hover:bg-muted/10 border-b transition-colors duration-150"
                 >
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
+                      <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
                         {/* Assuming Medal icon is no longer needed or replaced */}
                         {/* <Medal className="h-4 w-4" /> */}
                       </div>
                       <div>
-                        <div className="font-medium text-sm text-foreground">
+                        <div className="text-foreground text-sm font-medium">
                           {item.taskToTest}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-muted-foreground text-xs">
                           {item.description}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
                         <AvatarImage
                           src="/avatars/john-doe.jpg"
                           alt={personData}
                         />
-                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
+                        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold text-white">
                           {personData
                             .split(" ")
                             .map((n) => n[0])
@@ -133,16 +133,16 @@ export function TestsTable({
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-medium text-sm text-foreground">
+                        <div className="text-foreground text-sm font-medium">
                           {personData}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-muted-foreground text-xs">
                           2 days ago
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <Badge
                       variant="secondary"
                       className={difficultyConfig.class}
@@ -150,25 +150,25 @@ export function TestsTable({
                       {difficultyConfig.text}
                     </Badge>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-1">
                       {/* Assuming Zap icon is no longer needed or replaced */}
                       {/* <Zap className="h-4 w-4 text-green-500" /> */}
-                      <span className="text-sm font-medium text-foreground">
+                      <span className="text-foreground text-sm font-medium">
                         {item.xp}
                       </span>
                     </div>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-1">
                       {/* Assuming Banknote icon is no longer needed or replaced */}
                       {/* <Banknote className="h-4 w-4 text-blue-500" /> */}
-                      <span className="text-sm font-medium text-foreground">
+                      <span className="text-foreground text-sm font-medium">
                         {item.points}
                       </span>
                     </div>
                   </td>
-                  <td className="py-4 px-4">{renderActionColumn(item)}</td>
+                  <td className="px-4 py-4">{renderActionColumn(item)}</td>
                 </tr>
               );
             })}

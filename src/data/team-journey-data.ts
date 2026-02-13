@@ -1,4 +1,4 @@
-import { TeamJourneyData } from "@/types/team-journey"
+import { TeamJourneyData } from "@/types/team-journey";
 
 export const teamJourneyData: TeamJourneyData = {
   allProducts: [
@@ -9,203 +9,203 @@ export const teamJourneyData: TeamJourneyData = {
       status: "Active",
       customers: {
         count: 2,
-        label: "Active users"
+        label: "Active users",
       },
       revenue: {
         amount: 1500,
-        label: "Total Revenue"
+        label: "Total Revenue",
       },
       points: {
         amount: 8900,
-        label: "8/25 Achievements"
+        label: "8/25 Achievements",
       },
       avatar: "/avatars/suppdocs.jpg",
       teamMembers: [
         {
           id: "1",
           name: "John Doe",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
-          id: "2", 
+          id: "2",
           name: "Jane Smith",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "3",
-          name: "Mike Johnson", 
-          avatar: "/avatars/john-doe.jpg"
+          name: "Mike Johnson",
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "4",
           name: "Sarah Wilson",
-          avatar: "/avatars/john-doe.jpg"
-        }
-      ]
+          avatar: "/avatars/john-doe.jpg",
+        },
+      ],
     },
     {
-      id: "2", 
+      id: "2",
       name: "suppdocs",
       description: "From outdated docs to fresh docs in seconds",
       status: "Active",
       customers: {
         count: 2,
-        label: "Active users"
+        label: "Active users",
       },
       revenue: {
         amount: 1500,
-        label: "Total Revenue"
+        label: "Total Revenue",
       },
       points: {
         amount: 8900,
-        label: "8/25 Achievements"
+        label: "8/25 Achievements",
       },
       avatar: "/avatars/suppdocs.jpg",
       teamMembers: [
         {
           id: "1",
           name: "John Doe",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
-          id: "2", 
+          id: "2",
           name: "Jane Smith",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "3",
-          name: "Mike Johnson", 
-          avatar: "/avatars/john-doe.jpg"
+          name: "Mike Johnson",
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "4",
           name: "Sarah Wilson",
-          avatar: "/avatars/john-doe.jpg"
-        }
-      ]
+          avatar: "/avatars/john-doe.jpg",
+        },
+      ],
     },
     {
       id: "3",
-      name: "suppdocs", 
+      name: "suppdocs",
       description: "From outdated docs to fresh docs in seconds",
       status: "Active",
       customers: {
         count: 2,
-        label: "Active users"
+        label: "Active users",
       },
       revenue: {
         amount: 1500,
-        label: "Total Revenue"
+        label: "Total Revenue",
       },
       points: {
         amount: 8900,
-        label: "8/25 Achievements"
+        label: "8/25 Achievements",
       },
       avatar: "/avatars/suppdocs.jpg",
       teamMembers: [
         {
           id: "1",
           name: "John Doe",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
-          id: "2", 
+          id: "2",
           name: "Jane Smith",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "3",
-          name: "Mike Johnson", 
-          avatar: "/avatars/john-doe.jpg"
+          name: "Mike Johnson",
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "4",
           name: "Sarah Wilson",
-          avatar: "/avatars/john-doe.jpg"
-        }
-      ]
+          avatar: "/avatars/john-doe.jpg",
+        },
+      ],
     },
     {
       id: "4",
       name: "suppdocs",
-      description: "From outdated docs to fresh docs in seconds", 
+      description: "From outdated docs to fresh docs in seconds",
       status: "Active",
       customers: {
         count: 2,
-        label: "Active users"
+        label: "Active users",
       },
       revenue: {
         amount: 1500,
-        label: "Total Revenue"
+        label: "Total Revenue",
       },
       points: {
         amount: 8900,
-        label: "8/25 Achievements"
+        label: "8/25 Achievements",
       },
       avatar: "/avatars/suppdocs.jpg",
       teamMembers: [
         {
           id: "1",
           name: "John Doe",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
-          id: "2", 
+          id: "2",
           name: "Jane Smith",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "3",
-          name: "Mike Johnson", 
-          avatar: "/avatars/john-doe.jpg"
+          name: "Mike Johnson",
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "4",
           name: "Sarah Wilson",
-          avatar: "/avatars/john-doe.jpg"
-        }
-      ]
+          avatar: "/avatars/john-doe.jpg",
+        },
+      ],
     },
     {
       id: "5",
       name: "suppdocs",
       description: "From outdated docs to fresh docs in seconds",
-      status: "Active", 
+      status: "Active",
       customers: {
         count: 2,
-        label: "Active users"
+        label: "Active users",
       },
       revenue: {
         amount: 1500,
-        label: "Total Revenue"
+        label: "Total Revenue",
       },
       points: {
         amount: 8900,
-        label: "8/25 Achievements"
+        label: "8/25 Achievements",
       },
       avatar: "/avatars/suppdocs.jpg",
       teamMembers: [
         {
           id: "1",
           name: "John Doe",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
-          id: "2", 
+          id: "2",
           name: "Jane Smith",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "3",
-          name: "Mike Johnson", 
-          avatar: "/avatars/john-doe.jpg"
+          name: "Mike Johnson",
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "4",
           name: "Sarah Wilson",
-          avatar: "/avatars/john-doe.jpg"
-        }
-      ]
+          avatar: "/avatars/john-doe.jpg",
+        },
+      ],
     },
     {
       id: "6",
@@ -214,40 +214,40 @@ export const teamJourneyData: TeamJourneyData = {
       status: "Active",
       customers: {
         count: 2,
-        label: "Active users"
+        label: "Active users",
       },
       revenue: {
         amount: 1500,
-        label: "Total Revenue"
+        label: "Total Revenue",
       },
       points: {
         amount: 8900,
-        label: "8/25 Achievements"
+        label: "8/25 Achievements",
       },
       avatar: "/avatars/suppdocs.jpg",
       teamMembers: [
         {
           id: "1",
           name: "John Doe",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
-          id: "2", 
+          id: "2",
           name: "Jane Smith",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "3",
-          name: "Mike Johnson", 
-          avatar: "/avatars/john-doe.jpg"
+          name: "Mike Johnson",
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "4",
           name: "Sarah Wilson",
-          avatar: "/avatars/john-doe.jpg"
-        }
-      ]
-    }
+          avatar: "/avatars/john-doe.jpg",
+        },
+      ],
+    },
   ],
   myProducts: [
     {
@@ -257,39 +257,39 @@ export const teamJourneyData: TeamJourneyData = {
       status: "Active",
       customers: {
         count: 2,
-        label: "Active users"
+        label: "Active users",
       },
       revenue: {
         amount: 1500,
-        label: "Total Revenue"
+        label: "Total Revenue",
       },
       points: {
         amount: 8900,
-        label: "8/25 Achievements"
+        label: "8/25 Achievements",
       },
       avatar: "/avatars/suppdocs.jpg",
       teamMembers: [
         {
           id: "1",
           name: "John Doe",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
-          id: "2", 
+          id: "2",
           name: "Jane Smith",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "3",
-          name: "Mike Johnson", 
-          avatar: "/avatars/john-doe.jpg"
+          name: "Mike Johnson",
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "4",
           name: "Sarah Wilson",
-          avatar: "/avatars/john-doe.jpg"
-        }
-      ]
+          avatar: "/avatars/john-doe.jpg",
+        },
+      ],
     },
     {
       id: "my-2",
@@ -298,40 +298,40 @@ export const teamJourneyData: TeamJourneyData = {
       status: "Active",
       customers: {
         count: 2,
-        label: "Active users"
+        label: "Active users",
       },
       revenue: {
         amount: 1500,
-        label: "Total Revenue"
+        label: "Total Revenue",
       },
       points: {
         amount: 8900,
-        label: "8/25 Achievements"
+        label: "8/25 Achievements",
       },
       avatar: "/avatars/suppdocs.jpg",
       teamMembers: [
         {
           id: "1",
           name: "John Doe",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
-          id: "2", 
+          id: "2",
           name: "Jane Smith",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "3",
-          name: "Mike Johnson", 
-          avatar: "/avatars/john-doe.jpg"
+          name: "Mike Johnson",
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "4",
           name: "Sarah Wilson",
-          avatar: "/avatars/john-doe.jpg"
-        }
-      ]
-    }
+          avatar: "/avatars/john-doe.jpg",
+        },
+      ],
+    },
   ],
   archive: [
     {
@@ -341,39 +341,39 @@ export const teamJourneyData: TeamJourneyData = {
       status: "Inactive",
       customers: {
         count: 0,
-        label: "Active users"
+        label: "Active users",
       },
       revenue: {
         amount: 750,
-        label: "Total Revenue"
+        label: "Total Revenue",
       },
       points: {
         amount: 4500,
-        label: "Points Received"
+        label: "Points Received",
       },
       avatar: "/avatars/suppdocs.jpg",
       teamMembers: [
         {
           id: "1",
           name: "John Doe",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
-          id: "2", 
+          id: "2",
           name: "Jane Smith",
-          avatar: "/avatars/john-doe.jpg"
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "3",
-          name: "Mike Johnson", 
-          avatar: "/avatars/john-doe.jpg"
+          name: "Mike Johnson",
+          avatar: "/avatars/john-doe.jpg",
         },
         {
           id: "4",
           name: "Sarah Wilson",
-          avatar: "/avatars/john-doe.jpg"
-        }
-      ]
-    }
-  ]
-}
+          avatar: "/avatars/john-doe.jpg",
+        },
+      ],
+    },
+  ],
+};

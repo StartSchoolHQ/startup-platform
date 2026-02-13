@@ -1,4 +1,4 @@
-import { LeaderboardEntry } from "@/types/leaderboard"
+import { LeaderboardEntry } from "@/types/leaderboard";
 
 export const leaderboardData: LeaderboardEntry[] = [
   {
@@ -7,33 +7,33 @@ export const leaderboardData: LeaderboardEntry[] = [
       name: "John Doe",
       avatar: "/avatars/john-doe.jpg",
       teams: "1 Teams",
-      isCurrentUser: false
+      isCurrentUser: false,
     },
     xp: {
       current: 4850,
-      change: 320
+      change: 320,
     },
     points: {
       current: 2940,
-      change: 320
+      change: 320,
     },
     achievements: {
       current: 20,
-      change: 3
+      change: 3,
     },
     tasks: {
       current: 140,
-      change: 15
+      change: 15,
     },
     streak: {
       days: 21,
-      type: "active"
+      type: "active",
     },
     change: {
       direction: "up",
-      amount: 1
+      amount: 1,
     },
-    rankIcon: "crown"
+    rankIcon: "crown",
   },
   {
     rank: 2,
@@ -41,33 +41,33 @@ export const leaderboardData: LeaderboardEntry[] = [
       name: "John Doe",
       avatar: "/avatars/john-doe.jpg",
       teams: "4 Teams",
-      isCurrentUser: false
+      isCurrentUser: false,
     },
     xp: {
       current: 4850,
-      change: 320
+      change: 320,
     },
     points: {
       current: 2940,
-      change: 320
+      change: 320,
     },
     achievements: {
       current: 20,
-      change: 3
+      change: 3,
     },
     tasks: {
       current: 140,
-      change: 15
+      change: 15,
     },
     streak: {
       days: 18,
-      type: "active"
+      type: "active",
     },
     change: {
       direction: "down",
-      amount: 1
+      amount: 1,
     },
-    rankIcon: "trophy"
+    rankIcon: "trophy",
   },
   {
     rank: 3,
@@ -75,33 +75,33 @@ export const leaderboardData: LeaderboardEntry[] = [
       name: "John Doe",
       avatar: "/avatars/john-doe.jpg",
       teams: "2 Teams",
-      isCurrentUser: false
+      isCurrentUser: false,
     },
     xp: {
       current: 4850,
-      change: 320
+      change: 320,
     },
     points: {
       current: 2940,
-      change: 320
+      change: 320,
     },
     achievements: {
       current: 20,
-      change: 3
+      change: 3,
     },
     tasks: {
       current: 140,
-      change: 15
+      change: 15,
     },
     streak: {
       days: 15,
-      type: "active"
+      type: "active",
     },
     change: {
       direction: "none",
-      amount: 0
+      amount: 0,
     },
-    rankIcon: "medal"
+    rankIcon: "medal",
   },
   {
     rank: 4,
@@ -109,33 +109,33 @@ export const leaderboardData: LeaderboardEntry[] = [
       name: "You",
       avatar: "/avatars/you.jpg",
       teams: "No Teams",
-      isCurrentUser: true
+      isCurrentUser: true,
     },
     xp: {
       current: 4850,
-      change: 320
+      change: 320,
     },
     points: {
       current: 2940,
-      change: 320
+      change: 320,
     },
     achievements: {
       current: 20,
-      change: 3
+      change: 3,
     },
     tasks: {
       current: 140,
-      change: 15
+      change: 15,
     },
     streak: {
       days: 12,
-      type: "warning"
+      type: "warning",
     },
     change: {
       direction: "up",
-      amount: 1
+      amount: 1,
     },
-    rankIcon: "flame"
+    rankIcon: "flame",
   },
   {
     rank: 5,
@@ -143,32 +143,32 @@ export const leaderboardData: LeaderboardEntry[] = [
       name: "John Doe",
       avatar: "/avatars/john-doe.jpg",
       teams: "No Teams",
-      isCurrentUser: false
+      isCurrentUser: false,
     },
     xp: {
       current: 4850,
-      change: 320
+      change: 320,
     },
     points: {
       current: 2940,
-      change: 320
+      change: 320,
     },
     achievements: {
       current: 20,
-      change: 3
+      change: 3,
     },
     tasks: {
       current: 140,
-      change: 15
+      change: 15,
     },
     streak: {
       days: 3,
-      type: "inactive"
+      type: "inactive",
     },
     change: {
       direction: "down",
-      amount: 1
+      amount: 1,
     },
-    rankIcon: "none"
-  }
-] 
+    rankIcon: "none",
+  },
+];

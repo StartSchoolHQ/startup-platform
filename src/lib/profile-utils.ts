@@ -65,5 +65,5 @@ export async function waitForProfile(
  * Checks if a user profile is complete (has name, avatar is optional)
  */
 export function isProfileComplete(profile: UserProfile | null): boolean {
-  return !!(profile?.name);
+  return !!profile?.name;
 }

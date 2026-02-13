@@ -143,7 +143,7 @@ export function IndividualWeeklyReportModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Submit Individual Weekly Report</DialogTitle>
           <DialogDescription>
@@ -175,7 +175,7 @@ export function IndividualWeeklyReportModal({
             />
             {formData.tasksCompleted.trim().length > 0 &&
               formData.tasksCompleted.trim().length < MIN_TEXT_LENGTH && (
-                <p className="text-sm text-destructive">
+                <p className="text-destructive text-sm">
                   Minimum {MIN_TEXT_LENGTH} characters required
                 </p>
               )}
@@ -203,7 +203,7 @@ export function IndividualWeeklyReportModal({
             />
             {formData.skillsLearned.trim().length > 0 &&
               formData.skillsLearned.trim().length < MIN_TEXT_LENGTH && (
-                <p className="text-sm text-destructive">
+                <p className="text-destructive text-sm">
                   Minimum {MIN_TEXT_LENGTH} characters required
                 </p>
               )}
@@ -231,7 +231,7 @@ export function IndividualWeeklyReportModal({
             />
             {formData.challengesFaced.trim().length > 0 &&
               formData.challengesFaced.trim().length < MIN_TEXT_LENGTH && (
-                <p className="text-sm text-destructive">
+                <p className="text-destructive text-sm">
                   Minimum {MIN_TEXT_LENGTH} characters required
                 </p>
               )}
@@ -258,7 +258,7 @@ export function IndividualWeeklyReportModal({
             />
             {formData.goalsNextWeek.trim().length > 0 &&
               formData.goalsNextWeek.trim().length < MIN_TEXT_LENGTH && (
-                <p className="text-sm text-destructive">
+                <p className="text-destructive text-sm">
                   Minimum {MIN_TEXT_LENGTH} characters required
                 </p>
               )}
@@ -297,7 +297,7 @@ export function IndividualWeeklyReportModal({
                 formData.challengesFaced.trim().length < MIN_TEXT_LENGTH ||
                 formData.goalsNextWeek.trim().length < MIN_TEXT_LENGTH
               }
-              className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted"
+              className="disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
             >
               {isSubmitting ? "Submitting..." : "Submit Report"}
             </Button>

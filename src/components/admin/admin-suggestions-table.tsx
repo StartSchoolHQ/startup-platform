@@ -25,7 +25,7 @@ interface Suggestion {
 export function AdminSuggestionsTable() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<"pending" | "reviewed" | "all">(
-    "pending",
+    "pending"
   );
 
   const { data: suggestions = [], isLoading } = useQuery({
@@ -48,7 +48,7 @@ export function AdminSuggestionsTable() {
             name,
             email
           )
-        `,
+        `
         )
         .order("created_at", { ascending: false });
 
@@ -95,7 +95,7 @@ export function AdminSuggestionsTable() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
+        <div className="text-muted-foreground text-sm">
           {suggestions.length}{" "}
           {suggestions.length === 1 ? "suggestion" : "suggestions"}
         </div>
@@ -125,30 +125,30 @@ export function AdminSuggestionsTable() {
       </div>
 
       {suggestions.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
+        <div className="text-muted-foreground py-8 text-center">
           No suggestions found
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <tr className="border-border border-b">
+                <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                   Task
                 </th>
-                <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                   Suggestion
                 </th>
-                <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                   Submitted By
                 </th>
-                <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                   Date
                 </th>
-                <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                   Status
                 </th>
-                <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+                <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                   Action
                 </th>
               </tr>
@@ -159,35 +159,35 @@ export function AdminSuggestionsTable() {
                   key={suggestion.id}
                   className={`${
                     index < suggestions.length - 1
-                      ? "border-b border-border"
+                      ? "border-border border-b"
                       : ""
                   } hover:bg-muted/20 transition-colors`}
                 >
-                  <td className="py-3 px-4">
-                    <div className="font-medium text-sm max-w-xs truncate">
+                  <td className="px-4 py-3">
+                    <div className="max-w-xs truncate text-sm font-medium">
                       {suggestion.task_title}
                     </div>
                   </td>
-                  <td className="py-3 px-4">
-                    <div className="text-sm text-muted-foreground max-w-md whitespace-pre-wrap line-clamp-3">
+                  <td className="px-4 py-3">
+                    <div className="text-muted-foreground line-clamp-3 max-w-md text-sm whitespace-pre-wrap">
                       {suggestion.suggestion_text}
                     </div>
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="px-4 py-3">
                     <div className="text-sm">
                       {suggestion.users?.name ||
                         suggestion.users?.email ||
                         "Unknown"}
                     </div>
                   </td>
-                  <td className="py-3 px-4">
-                    <div className="text-xs text-muted-foreground whitespace-nowrap">
+                  <td className="px-4 py-3">
+                    <div className="text-muted-foreground text-xs whitespace-nowrap">
                       {formatDistanceToNow(new Date(suggestion.created_at), {
                         addSuffix: true,
                       })}
                     </div>
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="px-4 py-3">
                     <Badge
                       variant="secondary"
                       className={
@@ -196,12 +196,10 @@ export function AdminSuggestionsTable() {
                           : "bg-green-500/10 text-green-700"
                       }
                     >
-                      {suggestion.status === "pending"
-                        ? "Pending"
-                        : "Reviewed"}
+                      {suggestion.status === "pending" ? "Pending" : "Reviewed"}
                     </Badge>
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="px-4 py-3">
                     <div className="flex justify-end">
                       {suggestion.status === "pending" && (
                         <Button

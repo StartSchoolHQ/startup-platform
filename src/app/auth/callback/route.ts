@@ -86,7 +86,7 @@ export async function GET(request: Request) {
 
       // No session and code failed - invite link expired or already used
       return NextResponse.redirect(
-        `${origin}/auth/invite-expired?error=${encodeURIComponent(error.message)}`,
+        `${origin}/auth/invite-expired?error=${encodeURIComponent(error.message)}`
       );
     }
   } else {

@@ -116,21 +116,21 @@ export function TaskPreviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col overflow-hidden p-0">
+      <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden p-0 sm:max-w-[700px]">
         <DialogHeader className="px-6 pt-6 pb-4">
           <div className="flex items-start gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted shrink-0">
-              <Medal className="h-5 w-5 text-primary" />
+            <div className="bg-muted flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+              <Medal className="text-primary h-5 w-5" />
             </div>
-            <div className="flex-1 min-w-0">
-              <DialogTitle className="text-xl leading-tight pr-6">
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="pr-6 text-xl leading-tight">
                 {task.title}
               </DialogTitle>
-              <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 {task.isRecurring && (
                   <Badge
                     variant="secondary"
-                    className="text-xs flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 text-blue-800"
+                    className="flex items-center gap-1 bg-blue-100 px-1.5 py-0.5 text-xs text-blue-800"
                   >
                     <RotateCcw className="h-2.5 w-2.5" />
                     Recurring
@@ -139,7 +139,7 @@ export function TaskPreviewModal({
                 {task.is_confidential && (
                   <Badge
                     variant="destructive"
-                    className="text-xs flex items-center gap-1 px-1.5 py-0.5"
+                    className="flex items-center gap-1 px-1.5 py-0.5 text-xs"
                   >
                     <Lock className="h-2.5 w-2.5" />
                     Confidential
@@ -153,12 +153,12 @@ export function TaskPreviewModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-6">
           <div className="space-y-5 pb-4">
             {/* Reward Stats */}
-            <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg flex-wrap">
+            <div className="bg-muted/50 flex flex-wrap items-center gap-4 rounded-lg p-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   Difficulty:
                 </span>
                 <DifficultyBadge
@@ -173,7 +173,7 @@ export function TaskPreviewModal({
               </div>
               <Separator
                 orientation="vertical"
-                className="h-6 hidden sm:block"
+                className="hidden h-6 sm:block"
               />
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-black dark:text-white" />
@@ -181,7 +181,7 @@ export function TaskPreviewModal({
               </div>
               <Separator
                 orientation="vertical"
-                className="h-6 hidden sm:block"
+                className="hidden h-6 sm:block"
               />
               <div className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-black dark:text-white" />
@@ -194,21 +194,21 @@ export function TaskPreviewModal({
             {/* Detailed Instructions (with Markdown support) */}
             {task.detailed_instructions ? (
               <div>
-                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                  <FileText className="text-muted-foreground h-4 w-4" />
                   Task Instructions
                 </h4>
-                <div className="prose prose-sm max-w-none text-muted-foreground [&_h1]:text-lg [&_h1]:font-bold [&_h1]:mb-2 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mb-2 [&_h2]:mt-4 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mb-1 [&_ul]:list-disc [&_ul]:ml-4 [&_ul]:space-y-1 [&_ol]:list-decimal [&_ol]:ml-4 [&_ol]:space-y-1 [&_li]:text-sm [&_p]:text-sm [&_p]:leading-relaxed [&_p]:mb-2 [&_strong]:font-semibold [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs">
+                <div className="prose prose-sm text-muted-foreground [&_code]:bg-muted max-w-none [&_code]:rounded [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs [&_h1]:mb-2 [&_h1]:text-lg [&_h1]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-base [&_h2]:font-semibold [&_h3]:mb-1 [&_h3]:text-sm [&_h3]:font-semibold [&_li]:text-sm [&_ol]:ml-4 [&_ol]:list-decimal [&_ol]:space-y-1 [&_p]:mb-2 [&_p]:text-sm [&_p]:leading-relaxed [&_strong]:font-semibold [&_ul]:ml-4 [&_ul]:list-disc [&_ul]:space-y-1">
                   <ReactMarkdown>{task.detailed_instructions}</ReactMarkdown>
                 </div>
               </div>
             ) : (
               <div>
-                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                  <BookOpen className="text-muted-foreground h-4 w-4" />
                   Description
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   {task.description || "No description available."}
                 </p>
               </div>
@@ -217,8 +217,8 @@ export function TaskPreviewModal({
             {/* Learning Objectives */}
             {learningObjectives.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Target className="h-4 w-4 text-muted-foreground" />
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                  <Target className="text-muted-foreground h-4 w-4" />
                   Learning Objectives
                 </h4>
                 <ul className="space-y-2">
@@ -226,12 +226,12 @@ export function TaskPreviewModal({
                     (objective: string, index: number) => (
                       <li
                         key={index}
-                        className="flex items-start gap-2 text-sm text-muted-foreground"
+                        className="text-muted-foreground flex items-start gap-2 text-sm"
                       >
-                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 shrink-0" />
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
                         <span>{objective}</span>
                       </li>
-                    ),
+                    )
                   )}
                 </ul>
               </div>
@@ -240,17 +240,17 @@ export function TaskPreviewModal({
             {/* Expected Deliverables */}
             {deliverables.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                  <CheckCircle className="text-muted-foreground h-4 w-4" />
                   Expected Deliverables
                 </h4>
                 <ul className="space-y-2">
                   {deliverables.map((deliverable: string, index: number) => (
                     <li
                       key={index}
-                      className="flex items-start gap-2 text-sm text-muted-foreground"
+                      className="text-muted-foreground flex items-start gap-2 text-sm"
                     >
-                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
                       <span>{deliverable}</span>
                     </li>
                   ))}
@@ -261,8 +261,8 @@ export function TaskPreviewModal({
             {/* Resources */}
             {resources.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                  <ExternalLink className="text-muted-foreground h-4 w-4" />
                   Helpful Resources
                 </h4>
                 <div className="space-y-2">
@@ -272,21 +272,21 @@ export function TaskPreviewModal({
                       href={resource.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 hover:border-blue-300 transition-colors group"
+                      className="hover:bg-muted/50 group flex items-start gap-3 rounded-lg border p-3 transition-colors hover:border-blue-300"
                     >
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 group-hover:bg-blue-200 shrink-0">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 group-hover:bg-blue-200">
                         <FileText className="h-4 w-4 text-blue-600" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm text-blue-700 group-hover:text-blue-800">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-blue-700 group-hover:text-blue-800">
                           {resource.title}
                         </div>
                         {resource.description && (
-                          <div className="text-xs text-muted-foreground mt-0.5">
+                          <div className="text-muted-foreground mt-0.5 text-xs">
                             {resource.description}
                           </div>
                         )}
-                        <div className="text-xs text-blue-600 capitalize mt-1">
+                        <div className="mt-1 text-xs text-blue-600 capitalize">
                           {resource.type} • Click to open
                         </div>
                       </div>
@@ -298,7 +298,7 @@ export function TaskPreviewModal({
 
             {/* Recurring Task Info */}
             {task.isRecurring && task.cooldownHours && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
                 <p className="text-sm text-blue-800">
                   <span className="font-medium">Recurring Task:</span> This task
                   can be completed multiple times. After completing,
@@ -310,7 +310,7 @@ export function TaskPreviewModal({
 
             {/* Confidential Task Warning */}
             {task.is_confidential && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3">
                 <p className="text-sm text-red-800">
                   <span className="font-medium">Confidential Task:</span> This
                   task can only be reviewed by admin users due to sensitive
@@ -321,8 +321,8 @@ export function TaskPreviewModal({
 
             {/* No detailed content message */}
             {!hasDetailedContent && !task.description && (
-              <div className="text-center py-6 text-muted-foreground">
-                <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
+              <div className="text-muted-foreground py-6 text-center">
+                <FileText className="mx-auto mb-2 h-10 w-10 opacity-50" />
                 <p className="text-sm">
                   No detailed information available for this task.
                 </p>
@@ -331,7 +331,7 @@ export function TaskPreviewModal({
           </div>
         </div>
 
-        <DialogFooter className="px-6 py-4 border-t gap-2 sm:gap-0">
+        <DialogFooter className="gap-2 border-t px-6 py-4 sm:gap-0">
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
@@ -340,7 +340,7 @@ export function TaskPreviewModal({
               onClick={handleStartTask}
               className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
             >
-              <Play className="h-4 w-4 mr-2" />
+              <Play className="mr-2 h-4 w-4" />
               Start Task
             </Button>
           )}

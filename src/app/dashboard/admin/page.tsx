@@ -76,20 +76,20 @@ export default function AdminPage() {
 
       {/* Quick Navigation */}
       <div className="pt-6">
-        <h3 className="text-xl font-semibold mb-4">Management Sections</h3>
+        <h3 className="mb-4 text-xl font-semibold">Management Sections</h3>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {adminSections.map((section) => {
             const Icon = section.icon;
             return (
               <Card
                 key={section.href}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
+                className="cursor-pointer transition-shadow hover:shadow-lg"
                 onClick={() => router.push(section.href)}
               >
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <Icon className={`h-8 w-8 ${section.color}`} />
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    <ArrowRight className="text-muted-foreground h-4 w-4" />
                   </div>
                   <CardTitle className="text-lg">{section.title}</CardTitle>
                   <CardDescription>{section.description}</CardDescription>

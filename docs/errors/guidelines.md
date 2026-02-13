@@ -1,6 +1,6 @@
 # Error Handling Guidelines
 
-**Last Updated:** January 8, 2026  
+**Last Updated:** January 8, 2026
 **Status:** Active - Follow these rules for all new code
 
 ---
@@ -224,7 +224,7 @@ export async function POST(request: Request) {
     console.error("Error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -254,7 +254,7 @@ export async function POST(request: Request) {
           details: apiError.details,
         },
       },
-      { status: apiError.httpStatus }
+      { status: apiError.httpStatus },
     );
   }
 }
@@ -463,13 +463,13 @@ export async function POST(request: Request) {
             message: err.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

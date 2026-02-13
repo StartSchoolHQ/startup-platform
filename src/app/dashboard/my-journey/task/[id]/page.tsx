@@ -112,7 +112,7 @@ export default function IndividualTaskDetailPage() {
 
   if (!task) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <div className="text-gray-500">Task not found</div>
       </div>
     );
@@ -137,7 +137,7 @@ export default function IndividualTaskDetailPage() {
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <span
-              className="font-medium truncate max-w-[200px]"
+              className="max-w-[200px] truncate font-medium"
               title={task.title}
             >
               {task.title}
@@ -159,7 +159,7 @@ export default function IndividualTaskDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
         {/* Main Content */}
         <div className="lg:col-span-3">
           <Tabs defaultValue="task" className="w-full">
@@ -174,7 +174,7 @@ export default function IndividualTaskDetailPage() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="task" className="space-y-6 mt-6">
+            <TabsContent value="task" className="mt-6 space-y-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                   <CardTitle className="text-lg font-semibold">
@@ -182,7 +182,7 @@ export default function IndividualTaskDetailPage() {
                   </CardTitle>
                   <Button
                     variant="link"
-                    className="text-blue-500 p-0 h-auto"
+                    className="h-auto p-0 text-blue-500"
                     onClick={() => setShowSuggestEditsModal(true)}
                   >
                     Suggest Edits
@@ -192,7 +192,7 @@ export default function IndividualTaskDetailPage() {
                   {task.detailed_instructions ? (
                     <div className="prose max-w-none">
                       <div
-                        className="text-gray-700 leading-relaxed whitespace-pre-wrap"
+                        className="leading-relaxed whitespace-pre-wrap text-gray-700"
                         dangerouslySetInnerHTML={{
                           __html: task.detailed_instructions.replace(
                             /\n/g,
@@ -203,10 +203,10 @@ export default function IndividualTaskDetailPage() {
                     </div>
                   ) : (
                     <div>
-                      <h3 className="text-lg font-semibold mb-3">
+                      <h3 className="mb-3 text-lg font-semibold">
                         Task Description
                       </h3>
-                      <p className="text-gray-700 leading-relaxed">
+                      <p className="leading-relaxed text-gray-700">
                         {task.description ||
                           "No detailed instructions available for this task yet."}
                       </p>
@@ -218,13 +218,13 @@ export default function IndividualTaskDetailPage() {
                     Array.isArray(task.learning_objectives) &&
                     task.learning_objectives.length > 0 && (
                       <div>
-                        <h3 className="text-lg font-semibold mb-3">
+                        <h3 className="mb-3 text-lg font-semibold">
                           Learning Objectives
                         </h3>
                         <ul className="space-y-2 text-gray-700">
                           {task.learning_objectives.map((objective, index) => (
                             <li key={index} className="flex items-start gap-2">
-                              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
+                              <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-500"></span>
                               <span className="break-words">{objective}</span>
                             </li>
                           ))}
@@ -237,13 +237,13 @@ export default function IndividualTaskDetailPage() {
                     Array.isArray(task.deliverables) &&
                     task.deliverables.length > 0 && (
                       <div>
-                        <h3 className="text-lg font-semibold mb-3">
+                        <h3 className="mb-3 text-lg font-semibold">
                           Expected Deliverables
                         </h3>
                         <ul className="space-y-2 text-gray-700">
                           {task.deliverables.map((deliverable, index) => (
                             <li key={index} className="flex items-start gap-2">
-                              <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                              <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
                               <span className="break-words">{deliverable}</span>
                             </li>
                           ))}
@@ -254,7 +254,7 @@ export default function IndividualTaskDetailPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="tips" className="space-y-6 mt-6">
+            <TabsContent value="tips" className="mt-6 space-y-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                   <CardTitle className="text-lg font-semibold">
@@ -262,7 +262,7 @@ export default function IndividualTaskDetailPage() {
                   </CardTitle>
                   <Button
                     variant="link"
-                    className="text-blue-500 p-0 h-auto"
+                    className="h-auto p-0 text-blue-500"
                     onClick={() => setShowSuggestEditsModal(true)}
                   >
                     Suggest Edits
@@ -277,20 +277,20 @@ export default function IndividualTaskDetailPage() {
                         key={index}
                         className="border-l-4 border-blue-500 pl-4"
                       >
-                        <h3 className="text-lg font-semibold mb-3 text-blue-900">
+                        <h3 className="mb-3 text-lg font-semibold text-blue-900">
                           {tip.title}
                         </h3>
-                        <p className="text-gray-700 leading-relaxed">
+                        <p className="leading-relaxed text-gray-700">
                           {tip.content}
                         </p>
                       </div>
                     ))
                   ) : (
                     <div>
-                      <h3 className="text-lg font-semibold mb-3">
+                      <h3 className="mb-3 text-lg font-semibold">
                         No tips available
                       </h3>
-                      <p className="text-gray-700 leading-relaxed">
+                      <p className="leading-relaxed text-gray-700">
                         {typeof task.tips_content === "string"
                           ? task.tips_content ||
                             "Tips and best practices for this task haven't been added yet. Check back later or reach out to your mentor for guidance."
@@ -304,7 +304,7 @@ export default function IndividualTaskDetailPage() {
                     Array.isArray(task.resources) &&
                     task.resources.length > 0 && (
                       <div className="border-t pt-6">
-                        <h3 className="text-lg font-semibold mb-3">
+                        <h3 className="mb-3 text-lg font-semibold">
                           Helpful Resources
                         </h3>
                         <div className="grid gap-3">
@@ -323,9 +323,9 @@ export default function IndividualTaskDetailPage() {
                                 href={resource.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 hover:border-blue-300 transition-colors group cursor-pointer"
+                                className="group flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:border-blue-300 hover:bg-gray-50"
                               >
-                                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 group-hover:bg-blue-200">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 group-hover:bg-blue-200">
                                   <FileText className="h-4 w-4 text-blue-600" />
                                 </div>
                                 <div className="flex-1">
@@ -341,7 +341,7 @@ export default function IndividualTaskDetailPage() {
                                     {resource.type || "external"} • Click to
                                     open
                                   </div>
-                                  <div className="text-xs text-gray-400 mt-1 truncate">
+                                  <div className="mt-1 truncate text-xs text-gray-400">
                                     {resource.url}
                                   </div>
                                 </div>
@@ -393,9 +393,9 @@ export default function IndividualTaskDetailPage() {
               {/* User Info */}
               {user && (
                 <div className="flex items-center gap-3">
-                  <Avatar className="w-8 h-8">
+                  <Avatar className="h-8 w-8">
                     <AvatarImage src={user.avatar_url || undefined} />
-                    <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
+                    <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold text-white">
                       {user.name
                         ?.split(" ")
                         .map((n) => n[0])
@@ -407,7 +407,7 @@ export default function IndividualTaskDetailPage() {
                     <div className="text-sm font-medium">
                       {user.name || "Unknown User"}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-muted-foreground text-xs">
                       {task.started_at
                         ? new Date(task.started_at).toLocaleDateString(
                             "en-US",
@@ -448,13 +448,13 @@ export default function IndividualTaskDetailPage() {
                 </Button>
               ) : (
                 <Button className="w-full" disabled>
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <CheckCircle className="mr-2 h-4 w-4" />
                   Task Status: {task.status}
                 </Button>
               )}
 
               {task.status === "approved" && (
-                <div className="text-center text-xs text-green-600 mt-2">
+                <div className="mt-2 text-center text-xs text-green-600">
                   XP and points have been awarded!
                 </div>
               )}

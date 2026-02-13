@@ -46,7 +46,9 @@ export function ReviewStrikeModal({
         <DialogHeader>
           <DialogTitle>Review Strike</DialogTitle>
           <DialogDescription>
-            {isResolved ? "This strike has been resolved" : "Review and accept the user's explanation"}
+            {isResolved
+              ? "This strike has been resolved"
+              : "Review and accept the user's explanation"}
           </DialogDescription>
         </DialogHeader>
 
@@ -54,13 +56,17 @@ export function ReviewStrikeModal({
           {/* Strike Info */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-xs text-muted-foreground mb-1">Team</div>
-              <div className="text-sm font-medium">{strike.teams?.name || "Unknown"}</div>
+              <div className="text-muted-foreground mb-1 text-xs">Team</div>
+              <div className="text-sm font-medium">
+                {strike.teams?.name || "Unknown"}
+              </div>
             </div>
             <div>
-              <div className="text-xs text-muted-foreground mb-1">User</div>
+              <div className="text-muted-foreground mb-1 text-xs">User</div>
               <div className="text-sm font-medium">
-                {strike.strike_user?.name || strike.strike_user?.email || "Unknown"}
+                {strike.strike_user?.name ||
+                  strike.strike_user?.email ||
+                  "Unknown"}
               </div>
             </div>
           </div>
@@ -68,7 +74,7 @@ export function ReviewStrikeModal({
           {/* Strike Details */}
           <div className="space-y-2">
             <div className="text-sm font-medium">Strike Details</div>
-            <div className="rounded-md bg-muted p-4 space-y-2">
+            <div className="bg-muted space-y-2 rounded-md p-4">
               <div className="flex items-center justify-between">
                 <div className="font-medium">{strike.title}</div>
                 <Badge variant="secondary">
@@ -76,10 +82,17 @@ export function ReviewStrikeModal({
                 </Badge>
               </div>
               {strike.description && (
-                <div className="text-sm text-muted-foreground">{strike.description}</div>
+                <div className="text-muted-foreground text-sm">
+                  {strike.description}
+                </div>
               )}
-              <div className="text-xs text-muted-foreground">
-                Created {strike.created_at ? formatDistanceToNow(new Date(strike.created_at), { addSuffix: true }) : 'Unknown'}
+              <div className="text-muted-foreground text-xs">
+                Created{" "}
+                {strike.created_at
+                  ? formatDistanceToNow(new Date(strike.created_at), {
+                      addSuffix: true,
+                    })
+                  : "Unknown"}
               </div>
             </div>
           </div>
@@ -88,24 +101,32 @@ export function ReviewStrikeModal({
           {strike.explanation ? (
             <div className="space-y-2">
               <div className="text-sm font-medium">User's Explanation</div>
-              <div className="rounded-md border p-4 bg-background">
-                <div className="text-sm whitespace-pre-wrap">{strike.explanation}</div>
+              <div className="bg-background rounded-md border p-4">
+                <div className="text-sm whitespace-pre-wrap">
+                  {strike.explanation}
+                </div>
                 {strike.explained_at && (
-                  <div className="text-xs text-muted-foreground mt-3 pt-3 border-t">
-                    Submitted {formatDistanceToNow(new Date(strike.explained_at), { addSuffix: true })}
+                  <div className="text-muted-foreground mt-3 border-t pt-3 text-xs">
+                    Submitted{" "}
+                    {formatDistanceToNow(new Date(strike.explained_at), {
+                      addSuffix: true,
+                    })}
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+            <div className="text-muted-foreground rounded-md border border-dashed p-4 text-center text-sm">
               No explanation provided yet
             </div>
           )}
 
           {isResolved && (
-            <div className="rounded-md bg-primary/10 text-primary p-3 text-sm">
-              ✓ Strike resolved {formatDistanceToNow(new Date(strike.resolved_at!), { addSuffix: true })}
+            <div className="bg-primary/10 text-primary rounded-md p-3 text-sm">
+              ✓ Strike resolved{" "}
+              {formatDistanceToNow(new Date(strike.resolved_at!), {
+                addSuffix: true,
+              })}
             </div>
           )}
         </div>
@@ -119,10 +140,7 @@ export function ReviewStrikeModal({
             Close
           </Button>
           {!isResolved && strike.explanation && (
-            <Button
-              onClick={onResolve}
-              disabled={isResolving}
-            >
+            <Button onClick={onResolve} disabled={isResolving}>
               {isResolving ? "Resolving..." : "Accept & Resolve"}
             </Button>
           )}

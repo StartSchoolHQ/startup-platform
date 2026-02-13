@@ -23,7 +23,7 @@ export function TeamListSkeleton() {
       </div>
 
       {/* Product Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, index) => (
           <Card key={index} className="overflow-hidden">
             <CardHeader className="space-y-3 pb-4">
@@ -51,7 +51,7 @@ export function TeamListSkeleton() {
                 {Array.from({ length: 3 }).map((_, i) => (
                   <Skeleton
                     key={i}
-                    className="h-8 w-8 rounded-full border-2 border-background"
+                    className="border-background h-8 w-8 rounded-full border-2"
                   />
                 ))}
               </div>

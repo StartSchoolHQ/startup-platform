@@ -73,7 +73,7 @@ export default function InvitationsPage() {
       queryKey: ["invitations", "pending", user?.id],
       queryFn: () => getPendingInvitations(user!.id),
       enabled: !!user?.id,
-    },
+    }
   );
 
   const { data: sentInvitations = [], isPending: loadingSent } = useQuery({
@@ -100,12 +100,12 @@ export default function InvitationsPage() {
           invitation_id: vars.invitationId,
           team_id: vars.teamId,
           team_name: vars.teamName,
-        },
+        }
       );
       toast.success(
         vars.response === "accepted"
           ? "Invitation accepted! You are now a team member."
-          : "Invitation declined.",
+          : "Invitation declined."
       );
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
       invalidateInvitationCount(queryClient, user?.id);
@@ -122,7 +122,7 @@ export default function InvitationsPage() {
     invitationId: string,
     response: "accepted" | "declined",
     teamId?: string,
-    teamName?: string,
+    teamName?: string
   ) => {
     respondMutation.mutate({ invitationId, response, teamId, teamName });
   };
@@ -166,7 +166,7 @@ export default function InvitationsPage() {
         <div>
           <h1 className="text-2xl font-bold">Invitations</h1>
         </div>
-        <div className="flex items-center justify-center h-64">
+        <div className="flex h-64 items-center justify-center">
           <div className="text-gray-500">Loading invitations...</div>
         </div>
       </div>
@@ -199,7 +199,7 @@ export default function InvitationsPage() {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Mail className="h-5 w-5 text-blue-500" />
-            <span className="text-sm text-muted-foreground">
+            <span className="text-muted-foreground text-sm">
               {pendingInvitations.length} pending
             </span>
           </div>
@@ -219,15 +219,15 @@ export default function InvitationsPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pending" className="space-y-4 mt-6">
+        <TabsContent value="pending" className="mt-6 space-y-4">
           {pendingInvitations.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Inbox className="h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                <Inbox className="mb-4 h-12 w-12 text-gray-400" />
+                <h3 className="mb-2 text-lg font-semibold text-gray-600">
                   No pending invitations
                 </h3>
-                <p className="text-gray-500 text-center">
+                <p className="text-center text-gray-500">
                   You don&apos;t have any pending team invitations at the
                   moment.
                 </p>
@@ -240,14 +240,14 @@ export default function InvitationsPage() {
                   <CardHeader className="pb-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
                           <Users className="h-6 w-6 text-blue-600" />
                         </div>
                         <div className="space-y-1">
                           <CardTitle className="text-lg">
                             {invitation.teams.name}
                           </CardTitle>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             {invitation.teams.description ||
                               "No description provided"}
                           </p>
@@ -280,7 +280,7 @@ export default function InvitationsPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-muted-foreground text-xs">
                           {invitation.created_at
                             ? formatDate(invitation.created_at)
                             : "N/A"}
@@ -291,12 +291,12 @@ export default function InvitationsPage() {
                   <CardContent className="pt-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <Avatar className="w-8 h-8">
+                        <Avatar className="h-8 w-8">
                           <AvatarImage
                             src={invitation.invited_by?.avatar_url || undefined}
                             alt={invitation.invited_by?.name || undefined}
                           />
-                          <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
+                          <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold text-white">
                             {invitation.invited_by?.name
                               ? invitation.invited_by.name
                                   .split(" ")
@@ -311,7 +311,7 @@ export default function InvitationsPage() {
                             Invited by{" "}
                             {invitation.invited_by?.name || "Unknown User"}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-muted-foreground text-xs">
                             {invitation.invited_by?.email}
                           </div>
                         </div>
@@ -325,7 +325,7 @@ export default function InvitationsPage() {
                               invitation.id,
                               "declined",
                               invitation.team_id,
-                              invitation.teams?.name,
+                              invitation.teams?.name
                             )
                           }
                           disabled={respondMutation.isPending}
@@ -341,7 +341,7 @@ export default function InvitationsPage() {
                               invitation.id,
                               "accepted",
                               invitation.team_id,
-                              invitation.teams?.name,
+                              invitation.teams?.name
                             )
                           }
                           disabled={respondMutation.isPending}
@@ -359,15 +359,15 @@ export default function InvitationsPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="sent" className="space-y-4 mt-6">
+        <TabsContent value="sent" className="mt-6 space-y-4">
           {sentInvitations.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Send className="h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                <Send className="mb-4 h-12 w-12 text-gray-400" />
+                <h3 className="mb-2 text-lg font-semibold text-gray-600">
                   No sent invitations
                 </h3>
-                <p className="text-gray-500 text-center">
+                <p className="text-center text-gray-500">
                   You haven&apos;t sent any team invitations yet.
                 </p>
               </CardContent>
@@ -379,14 +379,14 @@ export default function InvitationsPage() {
                   <CardHeader className="pb-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-purple-100">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100">
                           <Users className="h-6 w-6 text-purple-600" />
                         </div>
                         <div className="space-y-1">
                           <CardTitle className="text-lg">
                             {invitation.teams.name}
                           </CardTitle>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             Invited{" "}
                             {invitation.invited_user?.name || "Unknown User"} as{" "}
                             <span className="font-medium">
@@ -402,7 +402,7 @@ export default function InvitationsPage() {
                               </Badge>
                             )}
                             {invitation.responded_at && (
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <div className="text-muted-foreground flex items-center gap-1 text-xs">
                                 <Clock className="h-3 w-3" />
                                 Responded {formatDate(invitation.responded_at)}
                               </div>
@@ -411,7 +411,7 @@ export default function InvitationsPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-muted-foreground text-xs">
                           Sent{" "}
                           {invitation.created_at
                             ? formatDate(invitation.created_at)
@@ -422,12 +422,12 @@ export default function InvitationsPage() {
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="flex items-center gap-3">
-                      <Avatar className="w-8 h-8">
+                      <Avatar className="h-8 w-8">
                         <AvatarImage
                           src={invitation.invited_user?.avatar_url || undefined}
                           alt={invitation.invited_user?.name || undefined}
                         />
-                        <AvatarFallback className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold text-xs">
+                        <AvatarFallback className="bg-gradient-to-r from-blue-400 to-cyan-400 text-xs font-bold text-white">
                           {invitation.invited_user?.name
                             ? invitation.invited_user.name
                                 .split(" ")
@@ -441,7 +441,7 @@ export default function InvitationsPage() {
                         <div className="text-sm font-medium">
                           {invitation.invited_user?.name || "Unknown User"}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-muted-foreground text-xs">
                           {invitation.invited_user?.email}
                         </div>
                       </div>

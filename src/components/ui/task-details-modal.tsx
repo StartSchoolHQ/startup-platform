@@ -174,12 +174,24 @@ export function TaskDetailsModal({
         }
         // Also restore any custom form fields from previous submission
         for (const [key, value] of Object.entries(initialData)) {
-          if (key !== "description" && key !== "external_urls" && key !== "files" && key !== "submitted_at" && key !== "completed_by" && key !== "completion_date" && typeof value === "string") {
+          if (
+            key !== "description" &&
+            key !== "external_urls" &&
+            key !== "files" &&
+            key !== "submitted_at" &&
+            key !== "completed_by" &&
+            key !== "completion_date" &&
+            typeof value === "string"
+          ) {
             prefill[key] = value;
           }
         }
         setFormData(prefill);
-        setExternalUrls(Array.isArray(initialData.external_urls) ? initialData.external_urls : []);
+        setExternalUrls(
+          Array.isArray(initialData.external_urls)
+            ? initialData.external_urls
+            : []
+        );
       } else {
         setFormData({});
         setExternalUrls([]);
@@ -374,13 +386,13 @@ export function TaskDetailsModal({
       </DialogHeader>
 
       {validationErrors.length > 0 && (
-        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-          <p className="text-sm font-medium text-destructive mb-2">
+        <div className="bg-destructive/10 border-destructive/20 rounded-lg border p-3">
+          <p className="text-destructive mb-2 text-sm font-medium">
             Please fix the following errors:
           </p>
-          <ul className="list-disc list-inside space-y-1">
+          <ul className="list-inside list-disc space-y-1">
             {validationErrors.map((error, idx) => (
-              <li key={idx} className="text-sm text-destructive">
+              <li key={idx} className="text-destructive text-sm">
                 {error}
               </li>
             ))}
@@ -463,7 +475,7 @@ export function TaskDetailsModal({
                   }
                   className="w-full"
                 >
-                  <Link className="h-4 w-4 mr-2" />
+                  <Link className="mr-2 h-4 w-4" />
                   Add URL
                 </Button>
               </div>
@@ -471,7 +483,7 @@ export function TaskDetailsModal({
 
             <div className="space-y-2">
               <Label>File Attachments (Optional)</Label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+              <div className="rounded-lg border-2 border-dashed border-gray-300 p-4">
                 <input
                   type="file"
                   multiple
@@ -485,9 +497,9 @@ export function TaskDetailsModal({
                 />
                 <label
                   htmlFor="file-upload"
-                  className="flex flex-col items-center justify-center cursor-pointer"
+                  className="flex cursor-pointer flex-col items-center justify-center"
                 >
-                  <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                  <Upload className="mb-2 h-8 w-8 text-gray-400" />
                   <span className="text-sm text-gray-600">
                     Click to upload files or drag and drop
                   </span>
@@ -497,7 +509,7 @@ export function TaskDetailsModal({
                     {uploadedFiles.map((file, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                        className="flex items-center justify-between rounded bg-gray-50 p-2"
                       >
                         <span className="text-sm">{file.name}</span>
                         <Button
@@ -554,11 +566,11 @@ export function TaskDetailsModal({
           <DialogTitle>Review Task: {taskData.tasks?.title}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 overflow-y-auto flex-1 pr-4">
+        <div className="flex-1 space-y-6 overflow-y-auto pr-4">
           {/* Task Info */}
-          <div className="bg-muted/50 p-4 rounded-lg">
-            <h3 className="font-medium mb-2">Task Details</h3>
-            <p className="text-sm text-muted-foreground mb-2">
+          <div className="bg-muted/50 rounded-lg p-4">
+            <h3 className="mb-2 font-medium">Task Details</h3>
+            <p className="text-muted-foreground mb-2 text-sm">
               {taskData.tasks?.description}
             </p>
             <div className="flex gap-4 text-sm">
@@ -572,24 +584,24 @@ export function TaskDetailsModal({
           </div>
 
           {/* Submission Data */}
-          <div className="bg-muted/50 p-4 rounded-lg">
-            <h3 className="font-medium mb-2">Submission</h3>
+          <div className="bg-muted/50 rounded-lg p-4">
+            <h3 className="mb-2 font-medium">Submission</h3>
             {renderSubmissionDisplay(submission)}
           </div>
 
           {/* Peer Review Criteria */}
-          <div className="bg-muted/50 p-4 rounded-lg">
-            <h3 className="font-medium mb-3">Peer Review Criteria</h3>
+          <div className="bg-muted/50 rounded-lg p-4">
+            <h3 className="mb-3 font-medium">Peer Review Criteria</h3>
             {taskData.tasks?.peer_review_criteria &&
             Array.isArray(taskData.tasks.peer_review_criteria) &&
             taskData.tasks.peer_review_criteria.length > 0 ? (
               <div className="space-y-4">
                 {taskData.tasks.peer_review_criteria.map((criteria, index) => (
                   <div key={index}>
-                    <h4 className="text-sm font-semibold mb-2 text-purple-900">
+                    <h4 className="mb-2 text-sm font-semibold text-purple-900">
                       {criteria.category}
                     </h4>
-                    <div className="text-sm text-muted-foreground space-y-3 [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mb-2 [&_h2]:mt-4 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:space-y-1.5 [&_li]:leading-relaxed [&_p]:leading-relaxed [&_strong]:font-bold">
+                    <div className="text-muted-foreground space-y-3 text-sm [&_h1]:mb-3 [&_h1]:text-xl [&_h1]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_li]:leading-relaxed [&_p]:leading-relaxed [&_strong]:font-bold [&_ul]:ml-6 [&_ul]:list-disc [&_ul]:space-y-1.5">
                       {criteria.points.map((point, pointIndex) => (
                         <div key={pointIndex}>
                           <ReactMarkdown>{point}</ReactMarkdown>
@@ -600,7 +612,7 @@ export function TaskDetailsModal({
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 No review criteria available for this task.
               </p>
             )}
@@ -609,7 +621,7 @@ export function TaskDetailsModal({
           {/* Review Form */}
           <div className="space-y-4 px-1 pb-2">
             <div>
-              <label className="text-sm font-medium mb-2 block">
+              <label className="mb-2 block text-sm font-medium">
                 Review Feedback
               </label>
               <Textarea
@@ -628,12 +640,12 @@ export function TaskDetailsModal({
                 onClick={() => setReviewDecision("accepted")}
                 className={`flex-1 transition-all duration-200 ${
                   reviewDecision === "accepted"
-                    ? "bg-green-600 hover:bg-green-700 text-white border-green-600"
-                    : "hover:bg-green-50 hover:border-green-300 dark:hover:bg-green-950/30"
+                    ? "border-green-600 bg-green-600 text-white hover:bg-green-700"
+                    : "hover:border-green-300 hover:bg-green-50 dark:hover:bg-green-950/30"
                 }`}
               >
                 {reviewDecision === "accepted" && (
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <CheckCircle className="mr-2 h-4 w-4" />
                 )}
                 Accept Task
               </Button>
@@ -646,11 +658,11 @@ export function TaskDetailsModal({
                 className={`flex-1 transition-all duration-200 ${
                   reviewDecision === "rejected"
                     ? ""
-                    : "hover:bg-red-50 hover:border-red-300 dark:hover:bg-red-950/30"
+                    : "hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-950/30"
                 }`}
               >
                 {reviewDecision === "rejected" && (
-                  <XCircle className="h-4 w-4 mr-2" />
+                  <XCircle className="mr-2 h-4 w-4" />
                 )}
                 Reject Task
               </Button>
@@ -664,22 +676,22 @@ export function TaskDetailsModal({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  className={`flex items-center gap-2 p-3 rounded-lg border-2 ${
+                  className={`flex items-center gap-2 rounded-lg border-2 p-3 ${
                     reviewDecision === "accepted"
-                      ? "bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800/50"
-                      : "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800/50"
+                      ? "border-green-200 bg-green-50 dark:border-green-800/50 dark:bg-green-950/30"
+                      : "border-red-200 bg-red-50 dark:border-red-800/50 dark:bg-red-950/30"
                   }`}
                 >
                   {reviewDecision === "accepted" ? (
                     <>
-                      <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                      <CheckCircle className="h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400" />
                       <span className="text-sm font-medium text-green-900 dark:text-green-100">
                         You will accept this task
                       </span>
                     </>
                   ) : (
                     <>
-                      <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+                      <XCircle className="h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400" />
                       <span className="text-sm font-medium text-red-900 dark:text-red-100">
                         You will reject this task
                       </span>
@@ -692,7 +704,7 @@ export function TaskDetailsModal({
         </div>
 
         {/* Fixed Footer with Action Buttons */}
-        <div className="flex gap-2 pt-4 border-t bg-background flex-shrink-0">
+        <div className="bg-background flex flex-shrink-0 gap-2 border-t pt-4">
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancel
           </Button>
@@ -701,22 +713,22 @@ export function TaskDetailsModal({
             disabled={!reviewDecision || submittingReview}
             className={`flex-1 transition-all duration-200 ${
               reviewDecision === "accepted"
-                ? "bg-green-600 hover:bg-green-700 text-white"
+                ? "bg-green-600 text-white hover:bg-green-700"
                 : reviewDecision === "rejected"
-                ? "bg-red-600 hover:bg-red-700 text-white"
-                : "bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+                  ? "bg-red-600 text-white hover:bg-red-700"
+                  : "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
             }`}
           >
             {submittingReview ? (
               "Submitting..."
             ) : reviewDecision === "accepted" ? (
               <>
-                <CheckCircle className="h-4 w-4 mr-2" />
+                <CheckCircle className="mr-2 h-4 w-4" />
                 Submit Acceptance
               </>
             ) : reviewDecision === "rejected" ? (
               <>
-                <XCircle className="h-4 w-4 mr-2" />
+                <XCircle className="mr-2 h-4 w-4" />
                 Submit Rejection
               </>
             ) : (
@@ -742,11 +754,11 @@ export function TaskDetailsModal({
 
         <div className="space-y-4">
           {/* Task Info */}
-          <div className="bg-muted/50 p-4 rounded-lg">
-            <h3 className="font-medium text-sm mb-1">
+          <div className="bg-muted/50 rounded-lg p-4">
+            <h3 className="mb-1 text-sm font-medium">
               {taskData.tasks?.title}
             </h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Team: {taskData.teams?.name}
             </p>
           </div>
@@ -756,8 +768,8 @@ export function TaskDetailsModal({
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Reviewer Feedback:</span>
             </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <p className="leading-relaxed whitespace-pre-wrap text-gray-700">
                 {(() => {
                   const notes = taskData.submission_notes;
                   if (!notes) {
@@ -781,13 +793,13 @@ export function TaskDetailsModal({
 
           {/* Reviewer Info */}
           {taskData.reviewer && (
-            <div className="flex items-center gap-3 pt-4 border-t">
-              <Avatar className="w-10 h-10">
+            <div className="flex items-center gap-3 border-t pt-4">
+              <Avatar className="h-10 w-10">
                 <AvatarImage
                   src={taskData.reviewer.avatar_url}
                   alt={taskData.reviewer.name || "Reviewer"}
                 />
-                <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-sm">
+                <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-sm font-bold text-white">
                   {taskData.reviewer.name
                     ?.split(" ")
                     .map((n) => n[0])
@@ -799,7 +811,7 @@ export function TaskDetailsModal({
                 <div className="text-sm font-medium">
                   {taskData.reviewer.name || "Peer Reviewer"}
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-muted-foreground text-xs">
                   Reviewed on{" "}
                   {taskData.completed_at
                     ? formatDate(taskData.completed_at)
@@ -820,7 +832,7 @@ export function TaskDetailsModal({
   const renderSubmissionDisplay = (submission: Record<string, unknown>) => {
     if (!submission || Object.keys(submission).length === 0) {
       return (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           No submission data available
         </p>
       );
@@ -831,14 +843,14 @@ export function TaskDetailsModal({
         {typeof submission.description === "string" &&
           submission.description && (
             <div>
-              <span className="font-medium text-sm">Description:</span>
-              <p className="text-sm mt-1">{submission.description}</p>
+              <span className="text-sm font-medium">Description:</span>
+              <p className="mt-1 text-sm">{submission.description}</p>
             </div>
           )}
 
         {Array.isArray(submission.files) && submission.files.length > 0 && (
           <div>
-            <span className="font-medium text-sm">Files:</span>
+            <span className="text-sm font-medium">Files:</span>
             <div className="mt-2 space-y-3">
               {submission.files.map((file: unknown, index: number) => {
                 const fileUrl = String(file);
@@ -854,22 +866,22 @@ export function TaskDetailsModal({
                       href={fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm block"
+                      className="block text-sm text-blue-600 hover:text-blue-800"
                     >
                       📎 {fileName}
                     </a>
                     {isImage && (
-                      <div className="border rounded-lg p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 mt-2">
-                        <div className="text-sm font-medium text-blue-800 mb-3 flex items-center gap-2">
-                          <FileText className="w-4 h-4" />
+                      <div className="mt-2 rounded-lg border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+                        <div className="mb-3 flex items-center gap-2 text-sm font-medium text-blue-800">
+                          <FileText className="h-4 w-4" />
                           Image Preview
                         </div>
-                        <div className="relative bg-white rounded-lg p-2 shadow-sm">
+                        <div className="relative rounded-lg bg-white p-2 shadow-sm">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={fileUrl}
                             alt={fileName}
-                            className="w-full max-h-80 object-contain rounded border"
+                            className="max-h-80 w-full rounded border object-contain"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = "none";
@@ -893,7 +905,7 @@ export function TaskDetailsModal({
         {Array.isArray(submission.external_urls) &&
           submission.external_urls.length > 0 && (
             <div>
-              <span className="font-medium text-sm">External URLs:</span>
+              <span className="text-sm font-medium">External URLs:</span>
               <div className="mt-2 space-y-2">
                 {(submission.external_urls || []).map(
                   (urlItem: any, index: number) => {
@@ -908,10 +920,10 @@ export function TaskDetailsModal({
                     return (
                       <div
                         key={index}
-                        className="border rounded-lg p-3 bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+                        className="rounded-lg border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-3"
                       >
-                        <div className="flex items-center gap-2 mb-1">
-                          <Link className="w-4 h-4 text-green-600" />
+                        <div className="mb-1 flex items-center gap-2">
+                          <Link className="h-4 w-4 text-green-600" />
                           <span className="text-sm font-medium text-green-800">
                             {title}
                           </span>
@@ -920,7 +932,7 @@ export function TaskDetailsModal({
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 text-sm break-all underline"
+                          className="text-sm break-all text-blue-600 underline hover:text-blue-800"
                         >
                           {url}
                         </a>
@@ -935,8 +947,8 @@ export function TaskDetailsModal({
         {typeof submission.submitted_at === "string" &&
           submission.submitted_at && (
             <div>
-              <span className="font-medium text-sm">Submitted:</span>
-              <p className="text-sm text-muted-foreground mt-1">
+              <span className="text-sm font-medium">Submitted:</span>
+              <p className="text-muted-foreground mt-1 text-sm">
                 {formatDate(submission.submitted_at)}
               </p>
             </div>
@@ -1016,19 +1028,19 @@ export function TaskDetailsModal({
               </Button>
             </div>
             {urlError && (
-              <p className="text-sm text-destructive mt-1">{urlError}</p>
+              <p className="text-destructive mt-1 text-sm">{urlError}</p>
             )}
             {externalUrls.length > 0 && (
               <div className="mt-2 space-y-2">
                 {externalUrls.map((url, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 p-2 border rounded"
+                    className="flex items-center gap-2 rounded border p-2"
                   >
                     <Badge variant="outline" className="text-xs">
                       {url.type.replace("_", " ")}
                     </Badge>
-                    <span className="text-sm flex-1 truncate">{url.url}</span>
+                    <span className="flex-1 truncate text-sm">{url.url}</span>
                     <Button
                       type="button"
                       variant="ghost"
@@ -1051,7 +1063,7 @@ export function TaskDetailsModal({
               {field.label}{" "}
               {field.required && <span className="text-red-500">*</span>}
             </Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+            <div className="rounded-lg border-2 border-dashed border-gray-300 p-4">
               <input
                 type="file"
                 accept={field.accept}
@@ -1062,7 +1074,7 @@ export function TaskDetailsModal({
               />
               <Label
                 htmlFor={`file-${field.name}`}
-                className="cursor-pointer flex flex-col items-center gap-2"
+                className="flex cursor-pointer flex-col items-center gap-2"
               >
                 <Upload className="h-8 w-8 text-gray-400" />
                 <span className="text-sm text-gray-600">
@@ -1078,10 +1090,10 @@ export function TaskDetailsModal({
                 {uploadedFiles.map((file, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 p-2 border rounded"
+                    className="flex items-center gap-2 rounded border p-2"
                   >
                     <FileText className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm flex-1">{file.name}</span>
+                    <span className="flex-1 text-sm">{file.name}</span>
                     <span className="text-xs text-gray-400">
                       {(file.size / 1024 / 1024).toFixed(2)} MB
                     </span>
@@ -1110,7 +1122,7 @@ export function TaskDetailsModal({
       <DialogContent
         className={`max-w-${mode === "review" ? "4xl" : "2xl"} max-h-[90vh] ${
           mode === "review"
-            ? "overflow-hidden flex flex-col"
+            ? "flex flex-col overflow-hidden"
             : "overflow-y-auto"
         }`}
       >

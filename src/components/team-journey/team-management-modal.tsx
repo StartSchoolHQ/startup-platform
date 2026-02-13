@@ -95,7 +95,7 @@ export function TeamManagementModal({
   const [showDisbandConfirm, setShowDisbandConfirm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [allAvailableUsers, setAllAvailableUsers] = useState<AvailableUser[]>(
-    [],
+    []
   );
   const [loading, setLoading] = useState(false);
   const [invitingUsers, setInvitingUsers] = useState<Set<string>>(new Set());
@@ -117,13 +117,13 @@ export function TeamManagementModal({
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "founder":
-        return <Crown className="h-4 w-4 text-primary" />;
+        return <Crown className="text-primary h-4 w-4" />;
       case "co_founder":
-        return <Shield className="h-4 w-4 text-primary" />;
+        return <Shield className="text-primary h-4 w-4" />;
       case "leader":
-        return <Shield className="h-4 w-4 text-primary" />;
+        return <Shield className="text-primary h-4 w-4" />;
       default:
-        return <User className="h-4 w-4 text-muted-foreground" />;
+        return <User className="text-muted-foreground h-4 w-4" />;
     }
   };
 
@@ -159,7 +159,7 @@ export function TeamManagementModal({
 
   const handleChangeRole = async (
     memberId: string,
-    newRole: "member" | "leader" | "founder" | "co_founder",
+    newRole: "member" | "leader" | "founder" | "co_founder"
   ) => {
     try {
       await updateTeamMemberRole(team.id, memberId, newRole);
@@ -253,7 +253,7 @@ export function TeamManagementModal({
     } catch (error) {
       console.error("Error sending invitation:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to send invitation",
+        error instanceof Error ? error.message : "Failed to send invitation"
       );
     } finally {
       setInvitingUsers((prev) => {
@@ -351,7 +351,7 @@ export function TeamManagementModal({
           error.message.includes("fetch")
         ) {
           setEditError(
-            "Network error. Please check your connection and try again.",
+            "Network error. Please check your connection and try again."
           );
         } else {
           setEditError(error.message);
@@ -383,7 +383,7 @@ export function TeamManagementModal({
     if (hasChanges && !isUpdating) {
       if (
         window.confirm(
-          "You have unsaved changes. Are you sure you want to close?",
+          "You have unsaved changes. Are you sure you want to close?"
         )
       ) {
         resetEditForm();
@@ -416,7 +416,7 @@ export function TeamManagementModal({
     <>
       <Dialog open={isOpen} onOpenChange={handleModalClose}>
         <DialogContent
-          className="max-w-4xl h-[80vh] flex flex-col"
+          className="flex h-[80vh] max-w-4xl flex-col"
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
         >
@@ -433,7 +433,7 @@ export function TeamManagementModal({
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
-            className="w-full flex-1 flex flex-col overflow-hidden"
+            className="flex w-full flex-1 flex-col overflow-hidden"
           >
             <TabsList
               className={`grid w-full ${
@@ -468,7 +468,7 @@ export function TeamManagementModal({
             {/* Current Team Tab */}
             <TabsContent
               value="current-team"
-              className="space-y-4 mt-6 flex-1 overflow-y-auto"
+              className="mt-6 flex-1 space-y-4 overflow-y-auto"
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Team Members</h3>
@@ -480,7 +480,7 @@ export function TeamManagementModal({
                       className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
                       onClick={handleDisbandTeam}
                     >
-                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      <AlertTriangle className="mr-2 h-4 w-4" />
                       Disband Team
                     </Button>
                   </div>
@@ -492,7 +492,7 @@ export function TeamManagementModal({
                   <Card key={member.user_id} className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <Avatar className="w-12 h-12">
+                        <Avatar className="h-12 w-12">
                           <AvatarImage src={member.users?.avatar_url || ""} />
                           <AvatarFallback className="bg-primary text-primary-foreground font-bold">
                             {member.users?.name
@@ -512,10 +512,10 @@ export function TeamManagementModal({
                             </h4>
                             {getRoleIcon(member.team_role)}
                           </div>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             {member.users?.email}
                           </p>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="mt-1 flex items-center gap-2">
                             <Badge
                               variant="secondary"
                               className={getRoleBadgeColor(member.team_role)}
@@ -524,7 +524,7 @@ export function TeamManagementModal({
                                 .replace("_", " ")
                                 .replace(/\b\w/g, (l) => l.toUpperCase())}
                             </Badge>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-muted-foreground text-xs">
                               Joined {formatDate(member.joined_at)}
                             </span>
                           </div>
@@ -536,28 +536,32 @@ export function TeamManagementModal({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleChangeRole(member.user_id, "leader")}
+                            onClick={() =>
+                              handleChangeRole(member.user_id, "leader")
+                            }
                             className="h-8 px-2 text-xs"
                           >
-                            <Shield className="h-3 w-3 mr-1" />
+                            <Shield className="mr-1 h-3 w-3" />
                             Make Leader
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleChangeRole(member.user_id, "member")}
+                            onClick={() =>
+                              handleChangeRole(member.user_id, "member")
+                            }
                             className="h-8 px-2 text-xs"
                           >
-                            <User className="h-3 w-3 mr-1" />
+                            <User className="mr-1 h-3 w-3" />
                             Make Member
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleKickMember(member.user_id)}
-                            className="h-8 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 px-2 text-xs"
                           >
-                            <UserMinus className="h-3 w-3 mr-1" />
+                            <UserMinus className="mr-1 h-3 w-3" />
                             Remove
                           </Button>
                         </div>
@@ -571,7 +575,7 @@ export function TeamManagementModal({
             {/* Invite Users Tab */}
             <TabsContent
               value="invite-users"
-              className="space-y-4 mt-6 flex-1 overflow-y-auto"
+              className="mt-6 flex-1 space-y-4 overflow-y-auto"
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Invite New Members</h3>
@@ -579,7 +583,7 @@ export function TeamManagementModal({
 
               {/* Search Bar */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
                 <Input
                   placeholder="Search users by name or email..."
                   value={searchTerm}
@@ -591,14 +595,14 @@ export function TeamManagementModal({
               {/* Users List */}
               <div className="space-y-3">
                 {loading ? (
-                  <div className="text-center py-8">
+                  <div className="py-8 text-center">
                     <p className="text-muted-foreground">Loading users...</p>
                   </div>
                 ) : filteredUsers.length === 0 ? (
                   <Card className="p-6">
                     <div className="text-center">
-                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h4 className="font-semibold mb-2">No users found</h4>
+                      <Users className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+                      <h4 className="mb-2 font-semibold">No users found</h4>
                       <p className="text-muted-foreground text-sm">
                         {searchTerm
                           ? "Try adjusting your search terms"
@@ -611,7 +615,7 @@ export function TeamManagementModal({
                     <Card key={user.id} className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Avatar className="w-10 h-10">
+                          <Avatar className="h-10 w-10">
                             <AvatarImage src={user.avatar_url || ""} />
                             <AvatarFallback className="bg-secondary text-secondary-foreground font-bold">
                               {user.name
@@ -628,11 +632,11 @@ export function TeamManagementModal({
                             <h4 className="font-semibold">
                               {user.name || "Unknown User"}
                             </h4>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-muted-foreground text-sm">
                               {user.email}
                             </p>
                             {user.graduation_level && (
-                              <Badge variant="outline" className="text-xs mt-1">
+                              <Badge variant="outline" className="mt-1 text-xs">
                                 Level {user.graduation_level}
                               </Badge>
                             )}
@@ -660,7 +664,7 @@ export function TeamManagementModal({
             {userRole === "founder" ? (
               <TabsContent
                 value="team-details"
-                className="space-y-4 mt-6 flex-1 overflow-y-auto"
+                className="mt-6 flex-1 space-y-4 overflow-y-auto"
               >
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">Edit Team Details</h3>
@@ -668,13 +672,13 @@ export function TeamManagementModal({
                     variant="secondary"
                     className="bg-primary/10 text-primary"
                   >
-                    <Crown className="h-3 w-3 mr-1" />
+                    <Crown className="mr-1 h-3 w-3" />
                     Founder Only
                   </Badge>
                 </div>
 
                 {editError && (
-                  <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+                  <div className="bg-destructive/10 border-destructive/20 text-destructive rounded-lg border p-3 text-sm">
                     {editError}
                   </div>
                 )}
@@ -803,11 +807,11 @@ export function TeamManagementModal({
             ) : (
               <TabsContent
                 value="team-details"
-                className="space-y-4 mt-6 flex-1 overflow-y-auto"
+                className="mt-6 flex-1 space-y-4 overflow-y-auto"
               >
-                <div className="text-center py-8">
-                  <Crown className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h4 className="font-semibold mb-2">
+                <div className="py-8 text-center">
+                  <Crown className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+                  <h4 className="mb-2 font-semibold">
                     Founder Access Required
                   </h4>
                   <p className="text-muted-foreground text-sm">
@@ -821,11 +825,11 @@ export function TeamManagementModal({
 
           {/* Inline Disband Team Confirmation */}
           {showDisbandConfirm && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/95 rounded-lg p-6">
-              <div className="max-w-sm text-center space-y-4">
-                <AlertTriangle className="h-10 w-10 text-destructive mx-auto" />
+            <div className="bg-background/95 absolute inset-0 z-10 flex items-center justify-center rounded-lg p-6">
+              <div className="max-w-sm space-y-4 text-center">
+                <AlertTriangle className="text-destructive mx-auto h-10 w-10" />
                 <h3 className="text-lg font-semibold">Disband Team?</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Are you sure you want to disband &quot;{team.name}&quot;? This
                   action cannot be undone. All team members will lose access and
                   all team data will be archived.
@@ -845,7 +849,7 @@ export function TeamManagementModal({
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-4 border-t flex-shrink-0">
+          <div className="flex flex-shrink-0 justify-end gap-2 border-t pt-4">
             <Button
               variant="outline"
               onClick={handleModalClose}

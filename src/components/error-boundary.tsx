@@ -30,11 +30,11 @@ export class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center space-y-4">
+        <div className="flex h-64 items-center justify-center">
+          <div className="space-y-4 text-center">
             <div className="text-red-500">Something went wrong.</div>
             <button
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
               onClick={() => window.location.reload()}
             >
               Refresh Page

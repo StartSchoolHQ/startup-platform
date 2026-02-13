@@ -68,7 +68,7 @@ export default function LoginPage() {
           if (!user && email) {
             // Check if this email has pending invitation
             setError(
-              "Invalid credentials. If you were invited but haven't completed setup, please contact an admin to resend your invitation link.",
+              "Invalid credentials. If you were invited but haven't completed setup, please contact an admin to resend your invitation link."
             );
           } else {
             setError(error.message);
@@ -93,7 +93,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden p-4 bg-[#0000dd]">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0000dd] p-4">
       {/* Grid background - always dark theme styling */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
 
@@ -104,8 +104,8 @@ export default function LoginPage() {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="relative z-10 w-full max-w-md"
       >
-        <Card className="border-zinc-800/50 bg-zinc-900/80 backdrop-blur-xl shadow-2xl">
-          <CardHeader className="text-center pb-8">
+        <Card className="border-zinc-800/50 bg-zinc-900/80 shadow-2xl backdrop-blur-xl">
+          <CardHeader className="pb-8 text-center">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -114,7 +114,7 @@ export default function LoginPage() {
               <CardTitle className="text-2xl font-bold text-[#ff78c8]">
                 Welcome Back
               </CardTitle>
-              <CardDescription className="text-zinc-400 mt-2">
+              <CardDescription className="mt-2 text-zinc-400">
                 Sign in to continue building your startup
               </CardDescription>
             </motion.div>
@@ -134,14 +134,14 @@ export default function LoginPage() {
                     x: { duration: 0.4, times: [0, 0.2, 0.4, 0.6, 0.8, 1] },
                     opacity: { duration: 0.2 },
                   }}
-                  className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm flex items-start gap-2"
+                  className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/20 px-4 py-3 text-sm text-red-400"
                 >
                   <motion.div
                     initial={{ scale: 0, rotate: -180 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: "spring", stiffness: 200, damping: 15 }}
                   >
-                    <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                    <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
                   </motion.div>
                   <span className="flex-1">{error}</span>
                 </motion.div>
@@ -172,7 +172,7 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={loading}
                     required
-                    className="bg-zinc-800 border-zinc-600 text-zinc-100 placeholder:text-zinc-400 focus:border-[#ff78c8] focus:ring-[#ff78c8]/30 focus:bg-zinc-700/50 transition-all duration-200"
+                    className="border-zinc-600 bg-zinc-800 text-zinc-100 transition-all duration-200 placeholder:text-zinc-400 focus:border-[#ff78c8] focus:bg-zinc-700/50 focus:ring-[#ff78c8]/30"
                   />
                 </motion.div>
               </motion.div>
@@ -202,7 +202,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading}
                     required
-                    className="bg-zinc-800 border-zinc-600 text-zinc-100 placeholder:text-zinc-400 focus:border-[#ff78c8] focus:ring-[#ff78c8]/30 focus:bg-zinc-700/50 transition-all duration-200"
+                    className="border-zinc-600 bg-zinc-800 text-zinc-100 transition-all duration-200 placeholder:text-zinc-400 focus:border-[#ff78c8] focus:bg-zinc-700/50 focus:ring-[#ff78c8]/30"
                   />
                 </motion.div>
               </motion.div>
@@ -223,7 +223,7 @@ export default function LoginPage() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full group relative overflow-hidden bg-[#ff78c8] hover:bg-[#ff60b8] text-white py-6 text-base font-semibold rounded-lg transition-all duration-300 hover:scale-[1.02] active:scale-95 hover:shadow-xl hover:shadow-[#ff78c8]/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    className="group relative w-full overflow-hidden rounded-lg bg-[#ff78c8] py-6 text-base font-semibold text-white transition-all duration-300 hover:scale-[1.02] hover:bg-[#ff60b8] hover:shadow-xl hover:shadow-[#ff78c8]/25 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                   >
                     <span className="relative z-10 flex items-center justify-center gap-2">
                       {loading && <Loader2 className="h-5 w-5 animate-spin" />}
@@ -245,7 +245,7 @@ export default function LoginPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
-                className="text-center space-y-2"
+                className="space-y-2 text-center"
               >
                 <button
                   type="button"
@@ -256,7 +256,7 @@ export default function LoginPage() {
                     }
                     if (resetCooldown > 0) {
                       setError(
-                        `Please wait ${resetCooldown} seconds before requesting another reset`,
+                        `Please wait ${resetCooldown} seconds before requesting another reset`
                       );
                       return;
                     }
@@ -279,7 +279,7 @@ export default function LoginPage() {
                           email: email,
                         });
                         setError(
-                          "Password reset email sent! Check your inbox.",
+                          "Password reset email sent! Check your inbox."
                         );
                         setResetCooldown(60); // 60 second cooldown
                       }
@@ -290,7 +290,7 @@ export default function LoginPage() {
                     }
                   }}
                   disabled={loading || resetCooldown > 0}
-                  className="text-sm text-zinc-300 hover:text-[#ff78c8] transition-colors duration-200 disabled:opacity-50"
+                  className="text-sm text-zinc-300 transition-colors duration-200 hover:text-[#ff78c8] disabled:opacity-50"
                 >
                   {resetCooldown > 0
                     ? `Wait ${resetCooldown}s`

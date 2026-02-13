@@ -359,7 +359,7 @@ export function ImportTasksDialog() {
           Import from CSV
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Import Tasks from CSV</DialogTitle>
           <DialogDescription>
@@ -369,15 +369,15 @@ export function ImportTasksDialog() {
         </DialogHeader>
 
         {error && (
-          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <div className="bg-destructive/10 border-destructive/20 text-destructive flex items-start gap-2 rounded-lg border p-3 text-sm">
+            <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {success && (
-          <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg text-primary text-sm flex items-start gap-2">
-            <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <div className="bg-primary/10 border-primary/20 text-primary flex items-start gap-2 rounded-lg border p-3 text-sm">
+            <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>{success}</span>
           </div>
         )}
@@ -393,25 +393,25 @@ export function ImportTasksDialog() {
               disabled={isProcessing}
               ref={fileInputRef}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Supported formats: .csv
             </p>
           </div>
 
           {file && parsedTasks.length > 0 && (
-            <div className="rounded-lg border p-4 space-y-3">
+            <div className="space-y-3 rounded-lg border p-4">
               <div className="flex items-center gap-2">
-                <FileSpreadsheet className="h-4 w-4 text-primary" />
+                <FileSpreadsheet className="text-primary h-4 w-4" />
                 <span className="font-medium">
                   Preview: {parsedTasks.length} tasks found
                 </span>
               </div>
 
-              <div className="max-h-48 overflow-y-auto space-y-2">
+              <div className="max-h-48 space-y-2 overflow-y-auto">
                 {parsedTasks.slice(0, 5).map((task, index) => (
                   <div
                     key={index}
-                    className="text-sm p-2 bg-muted rounded border-l-4 border-primary"
+                    className="bg-muted border-primary rounded border-l-4 p-2 text-sm"
                   >
                     <div className="font-medium">
                       {task.template_code}: {task.title}
@@ -425,7 +425,7 @@ export function ImportTasksDialog() {
                   </div>
                 ))}
                 {parsedTasks.length > 5 && (
-                  <div className="text-sm text-muted-foreground text-center py-2">
+                  <div className="text-muted-foreground py-2 text-center text-sm">
                     ... and {parsedTasks.length - 5} more tasks
                   </div>
                 )}
@@ -434,16 +434,16 @@ export function ImportTasksDialog() {
           )}
 
           {importResults.errors.length > 0 && (
-            <div className="rounded-lg border border-destructive/20 p-4 space-y-2">
-              <div className="font-medium text-destructive flex items-center gap-2">
+            <div className="border-destructive/20 space-y-2 rounded-lg border p-4">
+              <div className="text-destructive flex items-center gap-2 font-medium">
                 <AlertCircle className="h-4 w-4" />
                 Import Errors ({importResults.errors.length})
               </div>
-              <div className="max-h-32 overflow-y-auto space-y-1">
+              <div className="max-h-32 space-y-1 overflow-y-auto">
                 {importResults.errors.map((error, index) => (
                   <div
                     key={index}
-                    className="text-sm text-destructive bg-destructive/5 p-2 rounded"
+                    className="text-destructive bg-destructive/5 rounded p-2 text-sm"
                   >
                     {error}
                   </div>

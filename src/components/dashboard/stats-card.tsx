@@ -27,7 +27,7 @@ export function StatsCardComponent({
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{displayValue}</div>
-        <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+        <p className="text-muted-foreground mt-1 text-xs">{subtitle}</p>
       </CardContent>
     </Card>
   );

@@ -187,7 +187,7 @@ export default function PeerReviewPage() {
             name,
             avatar_url
           )
-        `,
+        `
         )
         .eq("reviewer_user_id", user!.id)
         .eq("status", "pending_review");
@@ -260,7 +260,7 @@ export default function PeerReviewPage() {
       const supabase = createClient();
       const { data, error } = await (supabase as any).rpc(
         "accept_external_task_for_review",
-        { p_progress_id: taskId },
+        { p_progress_id: taskId }
       );
       if (error) throw error;
       if (!data?.success)
@@ -281,18 +281,18 @@ export default function PeerReviewPage() {
 
       // Find the task being accepted
       const acceptedTask = currentAvailableTasks.find(
-        (task) => task.id === taskId,
+        (task) => task.id === taskId
       );
       if (!acceptedTask) return;
 
       // Optimistically update cache
       queryClient.setQueryData(
         ["peerReview", "accepted", user?.id],
-        (old: AvailableTask[] = []) => [...old, acceptedTask],
+        (old: AvailableTask[] = []) => [...old, acceptedTask]
       );
       queryClient.setQueryData(
         ["peerReview", "available", user?.id],
-        (old: AvailableTask[] = []) => old.filter((task) => task.id !== taskId),
+        (old: AvailableTask[] = []) => old.filter((task) => task.id !== taskId)
       );
 
       // Switch tab and open modal
@@ -369,7 +369,7 @@ export default function PeerReviewPage() {
           p_decision: decision,
           p_feedback: feedback || null,
           p_is_continuation: isContinuation,
-        },
+        }
       );
       if (error) throw error;
       if (!data?.success)
@@ -383,7 +383,7 @@ export default function PeerReviewPage() {
       queryClient.setQueryData(
         ["peerReview", "accepted", user?.id],
         (old: AvailableTask[] = []) =>
-          old.filter((task) => task.id !== progressId),
+          old.filter((task) => task.id !== progressId)
       );
 
       // Close modal immediately
@@ -454,13 +454,13 @@ export default function PeerReviewPage() {
 
   const submitReview = (
     feedback: string,
-    decision: "accepted" | "rejected",
+    decision: "accepted" | "rejected"
   ) => {
     if (!modalState.selectedTask || !decision || !user?.id) return;
     if (modalState.isSubmitting) return;
 
     const hasPreviouslyReviewedTask = completedReviews.some(
-      (review) => review.task_id === modalState.selectedTask!.task_id,
+      (review) => review.task_id === modalState.selectedTask!.task_id
     );
     const isAssignedReviewer = modalState.selectedTask.reviewer?.id === user.id;
     const isValidContinuation = isAssignedReviewer || hasPreviouslyReviewedTask;
@@ -508,7 +508,7 @@ export default function PeerReviewPage() {
       </div>
 
       {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatsCardComponent
           title="Reviews Available"
           value={
@@ -567,7 +567,7 @@ export default function PeerReviewPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="available-tests" className="space-y-6 mt-6">
+        <TabsContent value="available-tests" className="mt-6 space-y-6">
           {alertState && (
             <InlineAlert
               variant={alertState.variant}
@@ -578,8 +578,8 @@ export default function PeerReviewPage() {
           )}
 
           {myAcceptedTasks.length > 0 && (
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-              <p className="text-sm text-primary">
+            <div className="bg-primary/5 border-primary/20 rounded-lg border p-4">
+              <p className="text-primary text-sm">
                 <strong>Note:</strong> You currently have{" "}
                 {myAcceptedTasks.length} task(s) for review. Complete your
                 current review before accepting new tasks.
@@ -588,8 +588,8 @@ export default function PeerReviewPage() {
           )}
 
           {loading ? (
-            <div className="text-center py-8">
-              <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+            <div className="py-8 text-center">
+              <Clock className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
               <p className="text-muted-foreground">
                 Loading available tasks...
               </p>
@@ -598,26 +598,26 @@ export default function PeerReviewPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                  <tr className="border-border border-b">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Task to Test
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Team
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Difficulty
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Reviewer XP (10%)
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Reviewer Points (10%)
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Submitted
                     </th>
-                    <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                       Action
                     </th>
                   </tr>
@@ -627,7 +627,7 @@ export default function PeerReviewPage() {
                     <tr>
                       <td
                         colSpan={7}
-                        className="text-center py-8 text-muted-foreground"
+                        className="text-muted-foreground py-8 text-center"
                       >
                         No submitted tasks for review
                       </td>
@@ -664,7 +664,7 @@ export default function PeerReviewPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="my-tests" className="space-y-6 mt-6">
+        <TabsContent value="my-tests" className="mt-6 space-y-6">
           {alertState && (
             <InlineAlert
               variant={alertState.variant}
@@ -677,26 +677,26 @@ export default function PeerReviewPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                <tr className="border-border border-b">
+                  <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                     Task to Review
                   </th>
-                  <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                  <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                     Team
                   </th>
-                  <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                  <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                     Difficulty
                   </th>
-                  <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                  <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                     Reviewer XP (10%)
                   </th>
-                  <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                  <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                     Reviewer Points (10%)
                   </th>
-                  <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                  <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                     Submitted
                   </th>
-                  <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+                  <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                     Action
                   </th>
                 </tr>
@@ -706,7 +706,7 @@ export default function PeerReviewPage() {
                   <tr>
                     <td
                       colSpan={7}
-                      className="text-center py-8 text-muted-foreground"
+                      className="text-muted-foreground py-8 text-center"
                     >
                       No tasks accepted for review yet
                     </td>
@@ -728,7 +728,7 @@ export default function PeerReviewPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="my-tasks" className="space-y-6 mt-6">
+        <TabsContent value="my-tasks" className="mt-6 space-y-6">
           {alertState && (
             <InlineAlert
               variant={alertState.variant}
@@ -739,31 +739,31 @@ export default function PeerReviewPage() {
           )}
 
           {loading ? (
-            <div className="text-center py-8">
-              <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+            <div className="py-8 text-center">
+              <Clock className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
               <p className="text-muted-foreground">Loading my tasks...</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                  <tr className="border-border border-b">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Task
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Team
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Difficulty
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Status
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Submitted
                     </th>
-                    <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                       Action
                     </th>
                   </tr>
@@ -773,7 +773,7 @@ export default function PeerReviewPage() {
                     <tr>
                       <td
                         colSpan={7}
-                        className="text-center py-8 text-muted-foreground"
+                        className="text-muted-foreground py-8 text-center"
                       >
                         You haven&apos;t submitted any tasks for review
                       </td>
@@ -788,7 +788,7 @@ export default function PeerReviewPage() {
                           variant="submitted"
                           onAction={() => {
                             router.push(
-                              `/dashboard/team-journey/task/${task.id}`,
+                              `/dashboard/team-journey/task/${task.id}`
                             );
                           }}
                           actionLoading={false}
@@ -811,39 +811,39 @@ export default function PeerReviewPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="history" className="space-y-6 mt-6">
+        <TabsContent value="history" className="mt-6 space-y-6">
           {loading ? (
-            <div className="text-center py-8">
-              <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+            <div className="py-8 text-center">
+              <Clock className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
               <p className="text-muted-foreground">Loading review history...</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                  <tr className="border-border border-b">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Task Reviewed
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Team
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Assignee
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Difficulty
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       XP Earned
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Points Earned
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Status
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Reviewed
                     </th>
                   </tr>
@@ -853,7 +853,7 @@ export default function PeerReviewPage() {
                     <tr>
                       <td
                         colSpan={8}
-                        className="text-center py-8 text-muted-foreground"
+                        className="text-muted-foreground py-8 text-center"
                       >
                         You haven&apos;t completed any peer reviews yet
                       </td>
@@ -864,17 +864,17 @@ export default function PeerReviewPage() {
                       .map((review) => (
                         <tr
                           key={review.id}
-                          className="border-b border-border/50"
+                          className="border-border/50 border-b"
                         >
                           {/* Task Name */}
-                          <td className="py-4 px-4">
+                          <td className="px-4 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
+                              <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
                                 <Medal className="h-4 w-4 text-black dark:text-white" />
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <div className="font-medium text-sm">
+                                  <div className="text-sm font-medium">
                                     {review.tasks &&
                                     typeof review.tasks === "object" &&
                                     "title" in review.tasks
@@ -892,7 +892,7 @@ export default function PeerReviewPage() {
                                       </Badge>
                                     )}
                                 </div>
-                                <div className="text-xs text-muted-foreground max-w-xs truncate">
+                                <div className="text-muted-foreground max-w-xs truncate text-xs">
                                   {review.tasks &&
                                   typeof review.tasks === "object" &&
                                   "description" in review.tasks
@@ -904,9 +904,9 @@ export default function PeerReviewPage() {
                           </td>
 
                           {/* Team */}
-                          <td className="py-4 px-4">
+                          <td className="px-4 py-4">
                             <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-black dark:bg-white rounded-full"></div>
+                              <div className="h-2 w-2 rounded-full bg-black dark:bg-white"></div>
                               <span className="text-sm font-medium">
                                 {review.teams &&
                                 typeof review.teams === "object" &&
@@ -918,9 +918,9 @@ export default function PeerReviewPage() {
                           </td>
 
                           {/* Assignee */}
-                          <td className="py-4 px-4">
+                          <td className="px-4 py-4">
                             <div className="flex items-center gap-2">
-                              <Avatar className="w-6 h-6">
+                              <Avatar className="h-6 w-6">
                                 <AvatarImage
                                   src={
                                     review.assigned_user?.avatar_url ||
@@ -928,7 +928,7 @@ export default function PeerReviewPage() {
                                   }
                                   alt={review.assigned_user?.name || "User"}
                                 />
-                                <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-primary-foreground font-bold text-xs">
+                                <AvatarFallback className="text-primary-foreground bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold">
                                   {review.assigned_user?.name
                                     ?.charAt(0)
                                     .toUpperCase() || "U"}
@@ -941,7 +941,7 @@ export default function PeerReviewPage() {
                           </td>
 
                           {/* Difficulty */}
-                          <td className="py-4 px-4">
+                          <td className="px-4 py-4">
                             <DifficultyBadge
                               level={
                                 review.tasks &&
@@ -954,7 +954,7 @@ export default function PeerReviewPage() {
                           </td>
 
                           {/* XP Earned */}
-                          <td className="py-4 px-4">
+                          <td className="px-4 py-4">
                             <div className="flex items-center gap-1">
                               <Zap className="h-4 w-4 text-black dark:text-white" />
                               <span className="text-sm font-medium">
@@ -965,15 +965,15 @@ export default function PeerReviewPage() {
                                     typeof review.tasks === "object" &&
                                     "base_xp_reward" in review.tasks
                                       ? Number(review.tasks.base_xp_reward) || 0
-                                      : 0) * 0.1,
-                                  ),
+                                      : 0) * 0.1
+                                  )
                                 )}
                               </span>
                             </div>
                           </td>
 
                           {/* Points Earned */}
-                          <td className="py-4 px-4">
+                          <td className="px-4 py-4">
                             <div className="flex items-center gap-1">
                               <Medal className="h-4 w-4 text-black dark:text-white" />
                               <span className="text-sm font-medium">
@@ -984,17 +984,17 @@ export default function PeerReviewPage() {
                                     typeof review.tasks === "object" &&
                                     "base_points_reward" in review.tasks
                                       ? Number(
-                                          review.tasks.base_points_reward,
+                                          review.tasks.base_points_reward
                                         ) || 0
-                                      : 0) * 0.1,
-                                  ),
+                                      : 0) * 0.1
+                                  )
                                 )}
                               </span>
                             </div>
                           </td>
 
                           {/* Status */}
-                          <td className="py-4 px-4">
+                          <td className="px-4 py-4">
                             <Badge
                               variant={
                                 review.status === "approved"
@@ -1014,15 +1014,15 @@ export default function PeerReviewPage() {
                           </td>
 
                           {/* Reviewed Date */}
-                          <td className="py-4 px-4">
-                            <div className="text-sm text-muted-foreground">
+                          <td className="px-4 py-4">
+                            <div className="text-muted-foreground text-sm">
                               {new Date(review.updated_at).toLocaleDateString(
                                 "en-US",
                                 {
                                   year: "numeric",
                                   month: "short",
                                   day: "numeric",
-                                },
+                                }
                               )}
                             </div>
                           </td>
@@ -1050,7 +1050,7 @@ export default function PeerReviewPage() {
         taskData={modalState.selectedTask || undefined}
         onReviewSubmit={async (
           feedback: string,
-          decision: "accepted" | "rejected",
+          decision: "accepted" | "rejected"
         ) => {
           await submitReview(feedback, decision);
         }}

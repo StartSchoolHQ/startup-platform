@@ -126,7 +126,7 @@ export function WeeklyReportModal({
         localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
       }
     },
-    [DRAFT_KEY],
+    [DRAFT_KEY]
   );
 
   // Clear draft from localStorage
@@ -181,7 +181,7 @@ export function WeeklyReportModal({
                       text: c.text || "",
                       status: c.status || "completed",
                       explanation: c.explanation || "",
-                    }),
+                    })
                   )
                 : getEmptyFormData().commitments,
             blockers: savedData.blockers || "",
@@ -279,7 +279,7 @@ export function WeeklyReportModal({
 
       const submissionData = {
         commitments: draftData.commitments.filter(
-          (c) => c.text.trim().length > 0,
+          (c) => c.text.trim().length > 0
         ),
         blockers: draftData.blockers,
         meetingsHeld: draftData.meetingsHeld,
@@ -289,7 +289,7 @@ export function WeeklyReportModal({
         biggestAchievement: draftData.biggestAchievement,
         achievementImpact: draftData.achievementImpact,
         nextWeekCommitments: draftData.nextWeekCommitments.filter((c) =>
-          c.trim(),
+          c.trim()
         ),
         teamRecognition: draftData.teamRecognition,
         alignmentScore: draftData.alignmentScore,
@@ -307,7 +307,7 @@ export function WeeklyReportModal({
           p_week_number: currentWeek.week_number,
           p_week_year: currentWeek.week_year,
           p_submission_data: submissionData,
-        },
+        }
       );
 
       if (error) throw new Error(`Failed to save draft: ${error.message}`);
@@ -375,7 +375,7 @@ export function WeeklyReportModal({
 
       const submissionData = {
         commitments: formData.commitments.filter(
-          (c) => c.text.trim().length > 0,
+          (c) => c.text.trim().length > 0
         ),
         blockers: formData.blockers,
         meetingsHeld: formData.meetingsHeld,
@@ -385,7 +385,7 @@ export function WeeklyReportModal({
         biggestAchievement: formData.biggestAchievement,
         achievementImpact: formData.achievementImpact,
         nextWeekCommitments: formData.nextWeekCommitments.filter((c) =>
-          c.trim(),
+          c.trim()
         ),
         teamRecognition: formData.teamRecognition,
         alignmentScore: formData.alignmentScore,
@@ -444,13 +444,13 @@ export function WeeklyReportModal({
         commitments_count: formData.commitments.filter((c) => c.text.trim())
           .length,
         commitments_completed: formData.commitments.filter(
-          (c) => c.status === "completed",
+          (c) => c.status === "completed"
         ).length,
         has_blockers: Boolean(formData.blockers),
         meetings_held: formData.meetingsHeld,
         alignment_score: formData.alignmentScore,
         next_week_commitments_count: formData.nextWeekCommitments.filter((c) =>
-          c.trim(),
+          c.trim()
         ).length,
         was_draft: Boolean(existingDraftId),
       });
@@ -465,7 +465,7 @@ export function WeeklyReportModal({
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to submit weekly report. Please try again.",
+          : "Failed to submit weekly report. Please try again."
       );
     } finally {
       setIsSubmitting(false);
@@ -491,7 +491,7 @@ export function WeeklyReportModal({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleDiscardDraft}>
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="mr-2 h-4 w-4" />
               Discard Draft
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleRestoreDraft}>
@@ -502,12 +502,12 @@ export function WeeklyReportModal({
       </AlertDialog>
 
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[650px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               Submit Weekly Report
               {hasFormContent && (
-                <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                <span className="text-muted-foreground bg-muted rounded px-2 py-0.5 text-xs font-normal">
                   Draft auto-saved
                 </span>
               )}
@@ -524,13 +524,13 @@ export function WeeklyReportModal({
                 1. What were your top 3 commitments from last week?{" "}
                 <span className="text-red-500">*</span>
               </Label>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Provide status. Explanation is optional (shown only for
                 incomplete items).
               </p>
 
               {formData.commitments.map((commitment, index) => (
-                <div key={index} className="space-y-2 p-3 border rounded-lg">
+                <div key={index} className="space-y-2 rounded-lg border p-3">
                   <Label htmlFor={`commitment-${index}`}>
                     Commitment #{index + 1}
                   </Label>
@@ -548,7 +548,7 @@ export function WeeklyReportModal({
                     }}
                     rows={2}
                   />
-                  <div className="flex gap-2 items-center">
+                  <div className="flex items-center gap-2">
                     <Label htmlFor={`status-${index}`} className="text-sm">
                       Status:
                     </Label>
@@ -673,7 +673,7 @@ export function WeeklyReportModal({
                 4. What measurable progress did you make toward traction or
                 product improvements? <span className="text-red-500">*</span>
               </Label>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Data, not opinions: users onboarded, signups, conversions,
                 prototype tested, etc.
               </p>
@@ -743,7 +743,7 @@ export function WeeklyReportModal({
                 6. Top 3 commitments for next week{" "}
                 <span className="text-red-500">*</span>
               </Label>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 What are you committing to accomplish next week?
               </p>
               {formData.nextWeekCommitments.map((commitment, index) => (
@@ -850,7 +850,7 @@ export function WeeklyReportModal({
               />
             </div>
 
-            <DialogFooter className="flex-col sm:flex-row gap-2">
+            <DialogFooter className="flex-col gap-2 sm:flex-row">
               {hasFormContent && (
                 <Button
                   type="button"
@@ -863,7 +863,7 @@ export function WeeklyReportModal({
                   }}
                   className="text-muted-foreground hover:text-destructive mr-auto"
                 >
-                  <Trash2 className="h-4 w-4 mr-1" />
+                  <Trash2 className="mr-1 h-4 w-4" />
                   Clear Draft
                 </Button>
               )}
@@ -881,13 +881,13 @@ export function WeeklyReportModal({
                 disabled={isPending}
                 className="border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
               >
-                <Save className="h-4 w-4 mr-1" />
+                <Save className="mr-1 h-4 w-4" />
                 {saveDraftMutation.isPending ? "Saving..." : "Save as Draft"}
               </Button>
               <Button
                 type="submit"
                 disabled={isPending}
-                className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted"
+                className="disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
               >
                 {isSubmitting ? "Submitting..." : "Submit Report"}
               </Button>

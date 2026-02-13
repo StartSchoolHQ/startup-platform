@@ -100,9 +100,9 @@ function InviteAcceptContent() {
 
   if (status === "processing") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="bg-background flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff78c8] mx-auto"></div>
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-[#ff78c8]"></div>
           <p className="mt-4 text-gray-600">Processing your invitation...</p>
         </div>
       </div>
@@ -111,9 +111,9 @@ function InviteAcceptContent() {
 
   if (status === "redirecting") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="bg-background flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-green-600"></div>
           <p className="mt-4 text-gray-600">Redirecting you...</p>
         </div>
       </div>
@@ -121,12 +121,12 @@ function InviteAcceptContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center max-w-md mx-auto p-8">
+    <div className="bg-background flex min-h-screen items-center justify-center">
+      <div className="mx-auto max-w-md p-8 text-center">
         <div className="mb-6">
-          <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
             <svg
-              className="w-8 h-8 text-red-600"
+              className="h-8 w-8 text-red-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -139,13 +139,13 @@ function InviteAcceptContent() {
               ></path>
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="mb-2 text-2xl font-bold text-gray-900">
             Invitation Error
           </h1>
-          <p className="text-gray-600 mb-6">{errorMessage}</p>
+          <p className="mb-6 text-gray-600">{errorMessage}</p>
           <button
             onClick={() => router.push("/login")}
-            className="bg-[#ff78c8] text-white px-6 py-2 rounded-md hover:bg-[#ff78c8]/90 transition-colors"
+            className="rounded-md bg-[#ff78c8] px-6 py-2 text-white transition-colors hover:bg-[#ff78c8]/90"
           >
             Go to Login
           </button>
@@ -159,9 +159,9 @@ export default function InviteAcceptPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="bg-background flex min-h-screen items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff78c8] mx-auto"></div>
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-[#ff78c8]"></div>
             <p className="mt-4 text-gray-600">Loading invitation...</p>
           </div>
         </div>

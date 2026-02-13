@@ -121,24 +121,24 @@ function RecurringTaskItem({
     task.recurring_status === "available" && !task.has_active_instance;
 
   return (
-    <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-      <div className="flex items-center space-x-4 flex-1">
+    <div className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-gray-50">
+      <div className="flex flex-1 items-center space-x-4">
         {/* Task Icon */}
-        <div className={`p-2 rounded-lg ${statusConfig.bgColor}`}>
+        <div className={`rounded-lg p-2 ${statusConfig.bgColor}`}>
           <RotateCcw className={`h-5 w-5 ${statusConfig.color}`} />
         </div>
 
         {/* Task Details */}
-        <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-gray-900 truncate">{task.title}</h4>
-          <p className="text-sm text-gray-500 truncate">
+        <div className="min-w-0 flex-1">
+          <h4 className="truncate font-medium text-gray-900">{task.title}</h4>
+          <p className="truncate text-sm text-gray-500">
             {task.template_code} • Repeats every {task.cooldown_days} days
           </p>
 
-          <div className="flex items-center space-x-2 mt-2">
+          <div className="mt-2 flex items-center space-x-2">
             <Badge
               variant={statusConfig.variant}
-              className="text-xs flex items-center gap-1"
+              className="flex items-center gap-1 text-xs"
             >
               <StatusIcon className="h-3 w-3" />
               {statusConfig.label}
@@ -150,7 +150,7 @@ function RecurringTaskItem({
           </div>
 
           {task.next_available && (
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="mt-1 text-xs text-gray-500">
               {formatNextAvailable()}
             </div>
           )}
@@ -197,8 +197,8 @@ function RecurringTaskItem({
                 {canStart
                   ? `Start a new instance of ${task.title}`
                   : task.has_active_instance
-                  ? "Task is already in progress"
-                  : `Available ${formatNextAvailable()}`}
+                    ? "Task is already in progress"
+                    : `Available ${formatNextAvailable()}`}
               </p>
             </TooltipContent>
           </Tooltip>
@@ -272,7 +272,7 @@ export function RecurringTasksCard({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8">
-            <p className="text-sm text-red-600 mb-2">
+            <p className="mb-2 text-sm text-red-600">
               Failed to load recurring tasks
             </p>
             <Button variant="outline" size="sm" onClick={refetch}>
@@ -295,7 +295,7 @@ export function RecurringTasksCard({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8">
-            <RefreshCw className="h-8 w-8 text-gray-400 mb-2" />
+            <RefreshCw className="mb-2 h-8 w-8 text-gray-400" />
             <p className="text-sm text-gray-500">
               No recurring tasks available
             </p>
@@ -321,8 +321,8 @@ export function RecurringTasksCard({
       <CardContent>
         <div className="space-y-3">
           {actionError && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
+            <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3">
+              <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-600" />
               <p className="text-sm text-red-700">{actionError}</p>
             </div>
           )}

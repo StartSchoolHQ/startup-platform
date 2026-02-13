@@ -55,7 +55,7 @@ interface WeeklyReportsTableProps {
 
 export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
   const [selectedReport, setSelectedReport] = useState<WeeklyReport | null>(
-    null,
+    null
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -77,14 +77,14 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
         return {
           buttonText: "Done",
           buttonClass: "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90",
-          icon: <CheckCircle className="h-3 w-3 mr-1" />,
+          icon: <CheckCircle className="mr-1 h-3 w-3" />,
         };
       case "missed":
         return {
           buttonText: "Missed",
           buttonClass:
             "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-          icon: <X className="h-3 w-3 mr-1" />,
+          icon: <X className="mr-1 h-3 w-3" />,
         };
     }
   };
@@ -105,20 +105,20 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+            <tr className="border-border border-b">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Week
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Weekly Fill
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Clients
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Meetings
               </th>
-              <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                 Action
               </th>
             </tr>
@@ -131,51 +131,51 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   key={report.id}
                   className={`${
                     index < reports.length - 1
-                      ? "border-b border-border/50"
+                      ? "border-border/50 border-b"
                       : ""
                   } hover:bg-muted/20 transition-colors ${getRowBackgroundColor(
-                    report.status,
+                    report.status
                   )}`}
                 >
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
+                      <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
                         <Calendar className="h-4 w-4 text-black dark:text-white" />
                       </div>
                       <div>
-                        <div className="font-medium text-sm text-foreground">
+                        <div className="text-foreground text-sm font-medium">
                           {report.week}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-muted-foreground text-xs">
                           {report.dateRange}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-1">
                       {report.weeklyFill.avatars.map((avatar, idx) => (
-                        <Avatar key={idx} className="w-8 h-8">
+                        <Avatar key={idx} className="h-8 w-8">
                           <AvatarImage
                             src={avatar}
                             alt={report.weeklyFill.names[idx]}
                           />
-                          <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-primary-foreground font-bold text-xs">
+                          <AvatarFallback className="text-primary-foreground bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold">
                             DP
                           </AvatarFallback>
                         </Avatar>
                       ))}
                     </div>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4 text-black dark:text-white" />
-                      <span className="text-sm font-medium text-foreground">
+                      <span className="text-foreground text-sm font-medium">
                         {report.clients}
                       </span>
                     </div>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4 text-black dark:text-white" />
                       <span className="text-sm font-medium">
@@ -183,13 +183,13 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                       </span>
                     </div>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="px-4 py-4">
                     <div className="flex justify-end gap-2">
                       {report.status === "done" && (
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-xs border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
+                          className="border-[#0000ff] text-xs text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                           onClick={() => handleViewReport(report)}
                         >
                           View Report
@@ -218,20 +218,20 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
 
       {/* View Report Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[900px] max-h-[85vh]">
+        <DialogContent className="max-h-[85vh] sm:max-w-[900px]">
           <DialogHeader>
             <DialogTitle>Weekly Report - {selectedReport?.week}</DialogTitle>
             <DialogDescription>{selectedReport?.dateRange}</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 max-h-[calc(85vh-8rem)] overflow-y-auto">
+          <div className="max-h-[calc(85vh-8rem)] space-y-4 overflow-y-auto">
             {selectedReport?.submissions?.map((submission, index) => (
-              <div key={index} className="border rounded-lg p-4 space-y-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="font-semibold text-sm">
+              <div key={index} className="space-y-4 rounded-lg border p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="text-sm font-semibold">
                     {submission.users?.name || "Unknown User"}
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-muted-foreground text-xs">
                     • {submission.submission_data?.meetingsHeld || 0} meetings
                     {submission.submission_data?.alignmentScore && (
                       <>
@@ -248,14 +248,14 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   {submission.submission_data?.commitments &&
                     submission.submission_data.commitments.length > 0 && (
                       <div>
-                        <div className="text-sm font-semibold mb-2">
+                        <div className="mb-2 text-sm font-semibold">
                           Top 3 Commitments
                         </div>
                         {submission.submission_data.commitments.map(
                           (commitment, idx) => (
                             <div
                               key={idx}
-                              className="text-sm mb-2 pl-3 border-l-2"
+                              className="mb-2 border-l-2 pl-3 text-sm"
                             >
                               <div className="flex items-center gap-2">
                                 <span className="font-medium">
@@ -266,12 +266,12 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                                 <span>{commitment.text}</span>
                               </div>
                               {commitment.explanation && (
-                                <div className="text-muted-foreground text-xs mt-1">
+                                <div className="text-muted-foreground mt-1 text-xs">
                                   {commitment.explanation}
                                 </div>
                               )}
                             </div>
-                          ),
+                          )
                         )}
                       </div>
                     )}
@@ -279,20 +279,20 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   {/* Q2: Blockers */}
                   {submission.submission_data?.blockers && (
                     <div>
-                      <div className="text-sm font-semibold mb-1">
+                      <div className="mb-1 text-sm font-semibold">
                         Blockers/Challenges
                       </div>
                       <div className="text-sm">
                         {submission.submission_data.blockers}
                       </div>
                       {submission.submission_data.blockersAnalysis && (
-                        <div className="text-sm text-muted-foreground mt-1">
+                        <div className="text-muted-foreground mt-1 text-sm">
                           Analysis:{" "}
                           {submission.submission_data.blockersAnalysis}
                         </div>
                       )}
                       {submission.submission_data.helpNeeded && (
-                        <div className="text-sm text-muted-foreground mt-1">
+                        <div className="text-muted-foreground mt-1 text-sm">
                           Help needed: {submission.submission_data.helpNeeded}
                         </div>
                       )}
@@ -303,11 +303,11 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   {(submission.submission_data?.keyInsight ||
                     submission.submission_data?.mostImportantOutcome) && (
                     <div>
-                      <div className="text-sm font-semibold mb-1">
+                      <div className="mb-1 text-sm font-semibold">
                         Customer Interactions
                       </div>
                       {submission.submission_data.keyInsight && (
-                        <div className="text-sm mb-1">
+                        <div className="mb-1 text-sm">
                           Key insight: {submission.submission_data.keyInsight}
                         </div>
                       )}
@@ -323,7 +323,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   {/* Q5: Measurable Progress */}
                   {submission.submission_data?.measurableProgress && (
                     <div>
-                      <div className="text-sm font-semibold mb-1">
+                      <div className="mb-1 text-sm font-semibold">
                         Measurable Progress
                       </div>
                       <div className="text-sm">
@@ -335,14 +335,14 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   {/* Q6: Achievement */}
                   {submission.submission_data?.biggestAchievement && (
                     <div>
-                      <div className="text-sm font-semibold mb-1">
+                      <div className="mb-1 text-sm font-semibold">
                         Most Important Achievement
                       </div>
                       <div className="text-sm">
                         {submission.submission_data.biggestAchievement}
                       </div>
                       {submission.submission_data.achievementImpact && (
-                        <div className="text-sm text-muted-foreground mt-1">
+                        <div className="text-muted-foreground mt-1 text-sm">
                           Impact: {submission.submission_data.achievementImpact}
                         </div>
                       )}
@@ -353,18 +353,18 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   {(submission.submission_data?.nextWeekCommitments?.length ||
                     submission.submission_data?.nextWeekPriority) && (
                     <div>
-                      <div className="text-sm font-semibold mb-1">
+                      <div className="mb-1 text-sm font-semibold">
                         {submission.submission_data?.nextWeekCommitments?.length
                           ? "Top 3 Commitments for Next Week"
                           : "Next Week Priority"}
                       </div>
                       {submission.submission_data?.nextWeekCommitments
                         ?.length ? (
-                        <ul className="text-sm list-disc list-inside space-y-1">
+                        <ul className="list-inside list-disc space-y-1 text-sm">
                           {submission.submission_data.nextWeekCommitments.map(
                             (commitment: string, idx: number) => (
                               <li key={idx}>{commitment}</li>
-                            ),
+                            )
                           )}
                         </ul>
                       ) : (
@@ -378,7 +378,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   {/* Q8: Team Recognition */}
                   {submission.submission_data?.teamRecognition && (
                     <div>
-                      <div className="text-sm font-semibold mb-1">
+                      <div className="mb-1 text-sm font-semibold">
                         Team Recognition
                       </div>
                       <div className="text-sm">
@@ -390,7 +390,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                   {/* Q9: Alignment */}
                   {submission.submission_data?.alignmentReason && (
                     <div>
-                      <div className="text-sm font-semibold mb-1">
+                      <div className="mb-1 text-sm font-semibold">
                         Alignment/Motivation (
                         {submission.submission_data.alignmentScore}/10)
                       </div>
@@ -405,7 +405,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
 
             {(!selectedReport?.submissions ||
               selectedReport.submissions.length === 0) && (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-muted-foreground py-8 text-center">
                 No submissions found for this week.
               </div>
             )}

@@ -89,10 +89,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex items-center justify-between w-full px-2">
+            <div className="flex w-full items-center justify-between px-2">
               <SidebarMenuButton size="lg" asChild className="flex-1">
                 <Link href="/dashboard">
-                  <div className="flex items-center justify-center w-full">
+                  <div className="flex w-full items-center justify-center">
                     <Image
                       src="/images/startschool-logo.png"
                       alt="StartSchool"
@@ -104,7 +104,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </div>
                 </Link>
               </SidebarMenuButton>
-              <div className="flex-shrink-0 ml-2">
+              <div className="ml-2 flex-shrink-0">
                 <NotificationCenter />
               </div>
             </div>

@@ -19,7 +19,7 @@ export function StreakBadge({ days, type }: StreakBadgeProps) {
 
   return (
     <span
-      className={`px-2 py-1 rounded text-xs font-medium ${getBadgeColor()}`}
+      className={`rounded px-2 py-1 text-xs font-medium ${getBadgeColor()}`}
     >
       {days} days
     </span>

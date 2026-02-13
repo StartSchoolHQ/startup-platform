@@ -71,7 +71,7 @@ export function PendingInvitationsTable() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+        <RefreshCw className="text-muted-foreground h-6 w-6 animate-spin" />
       </div>
     );
   }
@@ -79,7 +79,7 @@ export function PendingInvitationsTable() {
   if (invitations.length === 0) {
     return (
       <div className="rounded-md border p-8">
-        <p className="text-sm text-muted-foreground text-center">
+        <p className="text-muted-foreground text-center text-sm">
           No pending invitations. All users have accepted their invites!
         </p>
       </div>
@@ -88,12 +88,13 @@ export function PendingInvitationsTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">
-          {invitations.length} pending invitation{invitations.length !== 1 ? "s" : ""}
+      <div className="flex items-center justify-between">
+        <p className="text-muted-foreground text-sm">
+          {invitations.length} pending invitation
+          {invitations.length !== 1 ? "s" : ""}
         </p>
         <Button onClick={fetchInvitations} variant="outline" size="sm">
-          <RefreshCw className="w-4 h-4 mr-2" />
+          <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
       </div>
@@ -101,48 +102,54 @@ export function PendingInvitationsTable() {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+            <tr className="border-border border-b">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Name
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Email
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Status
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Invited
               </th>
-              <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                 Actions
               </th>
             </tr>
           </thead>
           <tbody>
             {invitations.map((invite) => (
-              <tr key={invite.id} className="border-b border-border last:border-0">
-                <td className="py-4 px-4">
-                  {invite.user_metadata.first_name} {invite.user_metadata.last_name}
+              <tr
+                key={invite.id}
+                className="border-border border-b last:border-0"
+              >
+                <td className="px-4 py-4">
+                  {invite.user_metadata.first_name}{" "}
+                  {invite.user_metadata.last_name}
                 </td>
-                <td className="py-4 px-4">{invite.email}</td>
-                <td className="py-4 px-4">
+                <td className="px-4 py-4">{invite.email}</td>
+                <td className="px-4 py-4">
                   <Badge variant="secondary">Pending</Badge>
                 </td>
-                <td className="py-4 px-4">
+                <td className="px-4 py-4">
                   {new Date(invite.created_at).toLocaleDateString()}
                 </td>
-                <td className="py-4 px-4 text-right">
+                <td className="px-4 py-4 text-right">
                   <Button
-                    onClick={() => resendInvite(invite.email, invite.user_metadata)}
+                    onClick={() =>
+                      resendInvite(invite.email, invite.user_metadata)
+                    }
                     variant="outline"
                     size="sm"
                     disabled={resending === invite.email}
                   >
                     {resending === invite.email ? (
-                      <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                      <RefreshCw className="mr-1 h-4 w-4 animate-spin" />
                     ) : (
-                      <Send className="w-4 h-4 mr-1" />
+                      <Send className="mr-1 h-4 w-4" />
                     )}
                     Resend
                   </Button>

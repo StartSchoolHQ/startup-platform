@@ -52,7 +52,7 @@ async function fetchUserProfile(): Promise<User | null> {
   const { data: userProfile, error: profileError } = await supabase
     .from("users")
     .select(
-      "id, name, email, avatar_url, primary_role, total_xp, total_points, graduation_level, created_at",
+      "id, name, email, avatar_url, primary_role, total_xp, total_points, graduation_level, created_at"
     )
     .eq("id", authUser.id)
     .single();
@@ -113,7 +113,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Memoize computed value to prevent recalculation
   const firstName = useMemo(
     () => user?.name?.split(" ")[0] || "User",
-    [user?.name],
+    [user?.name]
   );
 
   // Memoize context value to prevent unnecessary re-renders of all consumers
@@ -125,7 +125,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       firstName,
       refreshUserData,
     }),
-    [user, isLoading, mounted, firstName, refreshUserData],
+    [user, isLoading, mounted, firstName, refreshUserData]
   );
 
   // Always provide context (no hydration issues since we're client-only after server auth check)

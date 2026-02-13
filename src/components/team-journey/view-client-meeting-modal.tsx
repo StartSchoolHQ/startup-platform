@@ -158,10 +158,10 @@ export function ViewClientMeetingModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-primary" />
+            <Building2 className="text-primary h-5 w-5" />
             Client Meeting Details
           </DialogTitle>
           <DialogDescription>
@@ -171,23 +171,23 @@ export function ViewClientMeetingModal({
 
         <div className="space-y-5 py-4">
           {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b">
+          <div className="grid grid-cols-1 gap-4 border-b pb-4 md:grid-cols-2">
             <div className="space-y-2">
-              <h3 className="font-semibold text-sm uppercase tracking-wide">
+              <h3 className="text-sm font-semibold tracking-wide uppercase">
                 Client
               </h3>
-              <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center justify-center w-10 h-10 rounded-md bg-primary/10">
-                  <Building2 className="h-5 w-5 text-primary" />
+              <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
+                <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-md">
+                  <Building2 className="text-primary h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <div className="font-medium flex items-center gap-2">
+                  <div className="flex items-center gap-2 font-medium">
                     {meeting.client_name}
                     {meeting.is_client_name_masked && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                            <EyeOff className="text-muted-foreground h-3.5 w-3.5" />
                           </TooltipTrigger>
                           <TooltipContent>
                             <p className="text-xs">
@@ -204,16 +204,16 @@ export function ViewClientMeetingModal({
             </div>
 
             <div className="space-y-2">
-              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+              <h3 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
                 Responsible Person
               </h3>
-              <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                <Avatar className="w-10 h-10">
+              <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
+                <Avatar className="h-10 w-10">
                   <AvatarImage
                     src={meeting.users?.avatar_url || "/avatars/john-doe.jpg"}
                     alt={meeting.users?.name || "Unknown User"}
                   />
-                  <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-primary-foreground font-bold text-sm">
+                  <AvatarFallback className="text-primary-foreground bg-gradient-to-r from-purple-400 to-pink-400 text-sm font-bold">
                     {(meeting.users?.name || "U")
                       .split(" ")
                       .map((n) => n[0])
@@ -225,7 +225,7 @@ export function ViewClientMeetingModal({
                   <div className="font-medium">
                     {meeting.users?.name || "Unknown User"}
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-muted-foreground text-sm">
                     Team Member
                   </div>
                 </div>
@@ -243,7 +243,7 @@ export function ViewClientMeetingModal({
               </h3>
               {meeting.meeting_data.clientRole && (
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">
+                  <div className="text-muted-foreground text-sm font-medium">
                     Role
                   </div>
                   <div className="text-sm">
@@ -253,7 +253,7 @@ export function ViewClientMeetingModal({
               )}
               {meeting.meeting_data.clientResponsibilities && (
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">
+                  <div className="text-muted-foreground text-sm font-medium">
                     Responsibilities
                   </div>
                   <div className="text-sm">
@@ -263,7 +263,7 @@ export function ViewClientMeetingModal({
               )}
               {meeting.meeting_data.segmentRelevance && (
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">
+                  <div className="text-muted-foreground text-sm font-medium">
                     Target Segment Match
                   </div>
                   <div className="text-sm">
@@ -281,7 +281,7 @@ export function ViewClientMeetingModal({
               <h3 className="font-semibold">Meeting Goal & Assumptions</h3>
               {meeting.meeting_data.meetingGoal && (
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">
+                  <div className="text-muted-foreground text-sm font-medium">
                     Goal
                   </div>
                   <div className="text-sm">
@@ -291,7 +291,7 @@ export function ViewClientMeetingModal({
               )}
               {meeting.meeting_data.assumptionsTested && (
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">
+                  <div className="text-muted-foreground text-sm font-medium">
                     Assumptions Tested
                   </div>
                   <div className="text-sm">
@@ -309,7 +309,7 @@ export function ViewClientMeetingModal({
             <div className="space-y-3">
               <h3 className="font-semibold">Client Feedback</h3>
               {meeting.meeting_data.clientFeedback && (
-                <div className="p-3 bg-muted/50 rounded-lg">
+                <div className="bg-muted/50 rounded-lg p-3">
                   <div className="text-sm">
                     {meeting.meeting_data.clientFeedback}
                   </div>
@@ -342,7 +342,7 @@ export function ViewClientMeetingModal({
           {meeting.meeting_data?.mainLearnings && (
             <div className="space-y-2">
               <h3 className="font-semibold">Main Learnings</h3>
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950/20">
                 <p className="text-sm whitespace-pre-wrap">
                   {meeting.meeting_data.mainLearnings}
                 </p>
@@ -374,7 +374,7 @@ export function ViewClientMeetingModal({
           {(meeting.meeting_data?.internalActions ||
             meeting.meeting_data?.actionDeadline ||
             meeting.meeting_data?.actionResponsible) && (
-            <div className="space-y-3 p-4 border-l-4 border-l-orange-500 bg-orange-50/50 dark:bg-orange-950/10">
+            <div className="space-y-3 border-l-4 border-l-orange-500 bg-orange-50/50 p-4 dark:bg-orange-950/10">
               <h3 className="font-semibold">Internal Actions</h3>
               {meeting.meeting_data.internalActions && (
                 <div className="text-sm">
@@ -404,7 +404,7 @@ export function ViewClientMeetingModal({
           {meeting.meeting_data?.teamImprovements && (
             <div className="space-y-2">
               <h3 className="font-semibold">Team Learnings</h3>
-              <div className="p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
+              <div className="rounded-lg bg-purple-50 p-3 dark:bg-purple-950/20">
                 <p className="text-sm whitespace-pre-wrap">
                   {meeting.meeting_data.teamImprovements}
                 </p>
@@ -415,11 +415,11 @@ export function ViewClientMeetingModal({
           {/* Learning Notes */}
           {meeting.meeting_data?.mainLearnings && (
             <div className="space-y-2">
-              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+              <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
                 <MessageSquare className="h-4 w-4" />
                 New Things Learned
               </h3>
-              <div className="p-3 bg-muted/50 rounded-lg">
+              <div className="bg-muted/50 rounded-lg p-3">
                 <p className="text-sm whitespace-pre-wrap">
                   {meeting.meeting_data.mainLearnings}
                 </p>
@@ -428,8 +428,8 @@ export function ViewClientMeetingModal({
           )}
 
           {/* Timeline */}
-          <div className="space-y-2 pt-4 border-t">
-            <h3 className="font-semibold text-sm flex items-center gap-2">
+          <div className="space-y-2 border-t pt-4">
+            <h3 className="flex items-center gap-2 text-sm font-semibold">
               <Calendar className="h-4 w-4" />
               Timeline
             </h3>

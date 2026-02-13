@@ -37,7 +37,7 @@ const InvitationSchema = z.object({
     .max(50, "First name must be at most 50 characters")
     .regex(
       /^[\p{L}\s'-]+$/u,
-      "First name can only contain letters, spaces, hyphens, and apostrophes",
+      "First name can only contain letters, spaces, hyphens, and apostrophes"
     )
     .trim(),
   last_name: z
@@ -46,7 +46,7 @@ const InvitationSchema = z.object({
     .max(50, "Last name must be at most 50 characters")
     .regex(
       /^[\p{L}\s'-]+$/u,
-      "Last name can only contain letters, spaces, hyphens, and apostrophes",
+      "Last name can only contain letters, spaces, hyphens, and apostrophes"
     )
     .trim(),
 });
@@ -84,11 +84,11 @@ export const WeeklyReportSchema = z.object({
         text: z.string().min(5, "Commitment must be at least 5 characters"),
         status: z.enum(["completed", "in_progress", "not_done"]),
         explanation: z.string().optional(),
-      }),
+      })
     )
     .refine(
       (commitments) => commitments.some((c) => c.text.trim().length >= 5),
-      { message: "At least one commitment is required" },
+      { message: "At least one commitment is required" }
     ),
   // Q2: Blockers - now optional single field
   blockers: z.string().optional(),
@@ -160,7 +160,7 @@ export const ClientMeetingSchema = z.object({
     .min(1, "Please describe the meeting goal and assumptions you tested")
     .min(
       5,
-      "Meeting goal is too short - please provide more detail (minimum 5 characters)",
+      "Meeting goal is too short - please provide more detail (minimum 5 characters)"
     ),
   assumptionsTested: z
     .string()
@@ -173,7 +173,7 @@ export const ClientMeetingSchema = z.object({
     .min(1, "Please describe what feedback the client gave")
     .min(
       5,
-      "Client feedback is too short - what did they say? (minimum 5 characters)",
+      "Client feedback is too short - what did they say? (minimum 5 characters)"
     ),
   feedbackValidation: z
     .string()
@@ -191,7 +191,7 @@ export const ClientMeetingSchema = z.object({
     .min(1, "Please share what you learned from this meeting")
     .min(
       5,
-      "Main learnings is too short - what insights did you gain? (minimum 5 characters)",
+      "Main learnings is too short - what insights did you gain? (minimum 5 characters)"
     ),
   // Q5: Next steps
   nextStepsClient: z
@@ -199,7 +199,7 @@ export const ClientMeetingSchema = z.object({
     .min(1, "Please describe the next steps agreed with the client")
     .min(
       5,
-      "Next steps is too short - what was agreed? (minimum 5 characters)",
+      "Next steps is too short - what was agreed? (minimum 5 characters)"
     ),
   interestLevel: z
     .string()
@@ -210,7 +210,7 @@ export const ClientMeetingSchema = z.object({
     .min(1, "Please describe what your team will do next")
     .min(
       5,
-      "Internal actions is too short - what will you do? (minimum 5 characters)",
+      "Internal actions is too short - what will you do? (minimum 5 characters)"
     ),
   actionDeadline: z
     .string()

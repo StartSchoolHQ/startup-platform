@@ -74,35 +74,35 @@ export function NotificationCenter() {
       notificationIcon === "check-circle"
         ? CheckCircle
         : notificationIcon === "x-circle"
-        ? XCircle
-        : notificationIcon === "refresh-cw"
-        ? RefreshCw
-        : notificationIcon === "user-check"
-        ? UserCheck
-        : notificationIcon === "user-x"
-        ? UserX
-        : notificationIcon === "users"
-        ? Users
-        : notificationIcon === "users-x"
-        ? Users
-        : notificationIcon === "calendar-clock"
-        ? CalendarClock
-        : notificationIcon === "bell"
-        ? Bell
-        : Bell;
+          ? XCircle
+          : notificationIcon === "refresh-cw"
+            ? RefreshCw
+            : notificationIcon === "user-check"
+              ? UserCheck
+              : notificationIcon === "user-x"
+                ? UserX
+                : notificationIcon === "users"
+                  ? Users
+                  : notificationIcon === "users-x"
+                    ? Users
+                    : notificationIcon === "calendar-clock"
+                      ? CalendarClock
+                      : notificationIcon === "bell"
+                        ? Bell
+                        : Bell;
 
     const iconColor =
       notificationIcon === "check-circle" || notificationIcon === "user-check"
         ? "text-green-500"
         : notificationIcon === "x-circle" ||
-          notificationIcon === "user-x" ||
-          notificationIcon === "users-x"
-        ? "text-red-500"
-        : notificationIcon === "refresh-cw" ||
-          notificationIcon === "users" ||
-          notificationIcon === "calendar-clock"
-        ? "text-blue-500"
-        : "text-gray-500";
+            notificationIcon === "user-x" ||
+            notificationIcon === "users-x"
+          ? "text-red-500"
+          : notificationIcon === "refresh-cw" ||
+              notificationIcon === "users" ||
+              notificationIcon === "calendar-clock"
+            ? "text-blue-500"
+            : "text-gray-500";
 
     return { Icon: IconComponent, color: iconColor };
   };
@@ -231,18 +231,18 @@ export function NotificationCenter() {
       <div className="space-y-1 p-1">
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <Bell className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-sm text-muted-foreground">
+            <Bell className="text-muted-foreground mb-4 h-12 w-12" />
+            <p className="text-muted-foreground text-sm">
               No new notifications
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-xs">
               We&apos;ll notify you when something important happens
             </p>
           </div>
         ) : (
           <>
             <div className="flex items-center justify-between p-2">
-              <h4 className="font-medium text-sm">
+              <h4 className="text-sm font-medium">
                 Notifications ({notificationCount})
               </h4>
               {notificationCount > 0 && (
@@ -250,9 +250,9 @@ export function NotificationCenter() {
                   variant="ghost"
                   size="sm"
                   onClick={handleMarkAllAsRead}
-                  className="h-auto p-1 text-xs text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground h-auto p-1 text-xs"
                 >
-                  <Check className="h-3 w-3 mr-1" />
+                  <Check className="mr-1 h-3 w-3" />
                   Mark all read
                 </Button>
               )}
@@ -276,8 +276,8 @@ export function NotificationCenter() {
                 "created_at" in notification
                   ? (notification.created_at as string)
                   : "createdAt" in notification
-                  ? (notification.createdAt as string)
-                  : "";
+                    ? (notification.createdAt as string)
+                    : "";
 
               return (
                 <div
@@ -287,28 +287,28 @@ export function NotificationCenter() {
                 >
                   <button
                     onClick={() => handleNotificationClick(notification)}
-                    className="w-full text-left p-3 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors"
+                    className="hover:bg-accent hover:text-accent-foreground w-full rounded-lg p-3 text-left transition-colors"
                   >
                     <div className="flex gap-3">
                       <div className="flex-shrink-0 pt-0.5">
                         <Icon className={`h-4 w-4 ${color}`} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm leading-tight mb-1">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 text-sm leading-tight font-medium">
                           {title}
                         </div>
                         {message && title !== message && (
-                          <div className="text-xs text-muted-foreground leading-tight mb-1 line-clamp-2">
+                          <div className="text-muted-foreground mb-1 line-clamp-2 text-xs leading-tight">
                             {message}
                           </div>
                         )}
                         {taskTitle && (
-                          <div className="text-xs text-muted-foreground font-medium">
+                          <div className="text-muted-foreground text-xs font-medium">
                             Task: {taskTitle}
                           </div>
                         )}
                         {createdAt && (
-                          <div className="text-xs text-muted-foreground mt-1">
+                          <div className="text-muted-foreground mt-1 text-xs">
                             {formatNotificationTime(createdAt)}
                           </div>
                         )}
@@ -342,7 +342,7 @@ export function NotificationCenter() {
           {notificationCount > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-1 -right-1 h-4 min-w-4 text-xs p-0 flex items-center justify-center"
+              className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center p-0 text-xs"
             >
               {notificationCount > 99 ? "99+" : notificationCount}
             </Badge>

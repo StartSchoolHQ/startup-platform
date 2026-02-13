@@ -116,7 +116,7 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
 
   const getSortIcon = (column: typeof sortBy) => {
     if (sortBy !== column) {
-      return <ArrowUpDown className="h-4 w-4 text-muted-foreground" />;
+      return <ArrowUpDown className="text-muted-foreground h-4 w-4" />;
     }
     return sortOrder === "asc" ? (
       <ArrowUp className="h-4 w-4 text-black dark:text-white" />
@@ -171,11 +171,11 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
 
   if (tasks.length === 0) {
     return (
-      <div className="text-center p-8">
+      <div className="p-8 text-center">
         <div className="text-muted-foreground mb-2">
           No {activityType} tasks found
         </div>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-muted-foreground text-sm">
           Create your first {activityType} task using the &quot;Add Task&quot;
           button above
         </div>
@@ -188,12 +188,12 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
       {/* Sorting Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="text-sm text-muted-foreground">
+          <div className="text-muted-foreground text-sm">
             {tasks.length} task{tasks.length !== 1 ? "s" : ""} found
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Sort by:</span>
+          <span className="text-muted-foreground text-sm">Sort by:</span>
           <Select
             value={sortBy}
             onValueChange={(value: typeof sortBy) => handleSort(value)}
@@ -224,9 +224,9 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border">
+            <tr className="border-border border-b">
               <th
-                className="text-left py-4 px-4 font-medium text-muted-foreground cursor-pointer hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground cursor-pointer px-4 py-4 text-left font-medium"
                 onClick={() => handleSort("title")}
               >
                 <div className="flex items-center gap-2">
@@ -235,7 +235,7 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
                 </div>
               </th>
               <th
-                className="text-left py-4 px-4 font-medium text-muted-foreground cursor-pointer hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground cursor-pointer px-4 py-4 text-left font-medium"
                 onClick={() => handleSort("category")}
               >
                 <div className="flex items-center gap-2">
@@ -244,7 +244,7 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
                 </div>
               </th>
               <th
-                className="text-left py-4 px-4 font-medium text-muted-foreground cursor-pointer hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground cursor-pointer px-4 py-4 text-left font-medium"
                 onClick={() => handleSort("priority")}
               >
                 <div className="flex items-center gap-2">
@@ -253,7 +253,7 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
                 </div>
               </th>
               <th
-                className="text-left py-4 px-4 font-medium text-muted-foreground cursor-pointer hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground cursor-pointer px-4 py-4 text-left font-medium"
                 onClick={() => handleSort("difficulty_level")}
               >
                 <div className="flex items-center gap-2">
@@ -261,11 +261,11 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
                   {getSortIcon("difficulty_level")}
                 </div>
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Rewards
               </th>
               <th
-                className="text-left py-4 px-4 font-medium text-muted-foreground cursor-pointer hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground cursor-pointer px-4 py-4 text-left font-medium"
                 onClick={() => handleSort("created_at")}
               >
                 <div className="flex items-center gap-2">
@@ -273,7 +273,7 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
                   {getSortIcon("created_at")}
                 </div>
               </th>
-              <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                 Actions
               </th>
             </tr>
@@ -283,26 +283,26 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
               <tr
                 key={task.id}
                 className={`${
-                  index < tasks.length - 1 ? "border-b border-border" : ""
+                  index < tasks.length - 1 ? "border-border border-b" : ""
                 } hover:bg-muted/20 transition-colors ${
                   task.is_confidential ? "bg-red-50/50" : ""
                 }`}
               >
-                <td className="py-4 px-4">
+                <td className="px-4 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
+                    <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
                       <FileText className="h-4 w-4 text-black dark:text-white" />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="font-medium text-sm">{task.title}</div>
+                      <div className="mb-1 flex items-center gap-2">
+                        <div className="text-sm font-medium">{task.title}</div>
                         {task.is_confidential && (
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge
                                   variant="destructive"
-                                  className="text-xs flex items-center gap-1 px-1.5 py-0.5"
+                                  className="flex items-center gap-1 px-1.5 py-0.5 text-xs"
                                 >
                                   <Lock className="h-2.5 w-2.5" />
                                   Confidential
@@ -318,14 +318,14 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
                         )}
                       </div>
                       {task.description && (
-                        <div className="text-xs text-muted-foreground line-clamp-2 max-w-md">
+                        <div className="text-muted-foreground line-clamp-2 max-w-md text-xs">
                           {task.description}
                         </div>
                       )}
                     </div>
                   </div>
                 </td>
-                <td className="py-4 px-4">
+                <td className="px-4 py-4">
                   <span
                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getCategoryColor(
                       task.category || ""
@@ -334,24 +334,24 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
                     {task.category}
                   </span>
                 </td>
-                <td className="py-4 px-4">
+                <td className="px-4 py-4">
                   <Badge variant={getPriorityColor(task.priority || "medium")}>
                     {task.priority}
                   </Badge>
                 </td>
-                <td className="py-4 px-4">
+                <td className="px-4 py-4">
                   <DifficultyBadge
                     level={
                       task.difficulty_level ||
                       (task.difficulty === "Easy"
                         ? 1
                         : task.difficulty === "Medium"
-                        ? 2
-                        : 3)
+                          ? 2
+                          : 3)
                     }
                   />
                 </td>
-                <td className="py-4 px-4">
+                <td className="px-4 py-4">
                   <div className="text-sm">
                     <div>{task.xp || 0} XP</div>
                     <div className="text-muted-foreground">
@@ -359,14 +359,14 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
                     </div>
                   </div>
                 </td>
-                <td className="py-4 px-4">
-                  <div className="text-sm text-muted-foreground">
+                <td className="px-4 py-4">
+                  <div className="text-muted-foreground text-sm">
                     {task.updated_at
                       ? new Date(task.updated_at).toLocaleDateString()
                       : "N/A"}
                   </div>
                 </td>
-                <td className="py-4 px-4 text-right">
+                <td className="px-4 py-4 text-right">
                   <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">

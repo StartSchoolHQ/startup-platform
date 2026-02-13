@@ -26,7 +26,7 @@ export function AdminSkeleton() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <div className="space-y-2 flex-1">
+                <div className="flex-1 space-y-2">
                   <Skeleton className="h-6 w-48" />
                   <Skeleton className="h-4 w-64" />
                 </div>
@@ -40,7 +40,7 @@ export function AdminSkeleton() {
             <CardContent>
               <div className="space-y-3">
                 {/* Table Header */}
-                <div className="grid grid-cols-5 gap-4 pb-3 border-b">
+                <div className="grid grid-cols-5 gap-4 border-b pb-3">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Skeleton key={i} className="h-4 w-full" />
                   ))}

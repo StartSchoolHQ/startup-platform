@@ -66,7 +66,7 @@ export function AdminUsersTable() {
     <div className="space-y-4">
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
           <Input
             placeholder="Search by name or email..."
             value={search}
@@ -149,7 +149,7 @@ export function AdminUsersTable() {
                   <TableCell>
                     {user.total_points?.toLocaleString() || 0}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-muted-foreground text-sm">
                     {new Date(user.created_at).toLocaleDateString()}
                   </TableCell>
                 </TableRow>
@@ -160,7 +160,7 @@ export function AdminUsersTable() {
       </div>
 
       <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
+        <div className="text-muted-foreground text-sm">
           Showing {users.length} of {total} users
         </div>
         <div className="flex gap-2">

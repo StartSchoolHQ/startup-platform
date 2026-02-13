@@ -117,9 +117,9 @@ export default function Home() {
 
   if (isProcessingInvite) {
     return (
-      <main className="min-h-screen w-full bg-background flex items-center justify-center">
+      <main className="bg-background flex min-h-screen w-full items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
           <p className="mt-4 text-gray-600">Processing invitation...</p>
         </div>
       </main>
@@ -127,7 +127,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen w-full bg-background">
+    <main className="bg-background min-h-screen w-full">
       <HeroLanding />
     </main>
   );

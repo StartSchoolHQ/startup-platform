@@ -71,7 +71,7 @@ export default function AdminUsersPage() {
             </CardHeader>
             <CardContent>
               <div className="rounded-md border p-4">
-                <p className="text-sm text-muted-foreground text-center">
+                <p className="text-muted-foreground text-center text-sm">
                   Roles & Permissions functionality coming soon
                 </p>
               </div>

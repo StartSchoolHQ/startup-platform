@@ -56,7 +56,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
 
   return (
     <Dialog open={!!teamId} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto transition-all duration-300 ease-in-out">
+      <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto transition-all duration-300 ease-in-out">
         <DialogHeader>
           <DialogTitle className="text-2xl">
             {loading ? "Loading..." : data?.team?.name}
@@ -89,7 +89,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
               {/* Overview Tab */}
               <TabsContent
                 value="overview"
-                className="space-y-4 mt-4 animate-in fade-in-50 duration-300"
+                className="animate-in fade-in-50 mt-4 space-y-4 duration-300"
               >
                 <div className="grid gap-4 md:grid-cols-2">
                   <Card>
@@ -158,7 +158,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                         <span className="text-muted-foreground">
                           Team Points:
                         </span>
-                        <span className="font-medium text-lg">
+                        <span className="text-lg font-medium">
                           {data.team.team_points?.toLocaleString() || 0}
                         </span>
                       </div>
@@ -185,13 +185,13 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                       <CardTitle className="text-sm font-medium">
                         Tasks Completed
                       </CardTitle>
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                      <CheckCircle2 className="text-muted-foreground h-4 w-4" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">
                         {data.tasks.stats.completed}
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         of {data.tasks.stats.total} total
                       </p>
                     </CardContent>
@@ -202,13 +202,13 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                       <CardTitle className="text-sm font-medium">
                         Meetings Held
                       </CardTitle>
-                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <Users className="text-muted-foreground h-4 w-4" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">
                         {data.meetings.stats.completed}
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {data.meetings.stats.scheduled} scheduled
                       </p>
                     </CardContent>
@@ -217,13 +217,13 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">MRR</CardTitle>
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      <DollarSign className="text-muted-foreground h-4 w-4" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">
                         ${data.revenue.total_mrr}
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {data.revenue.verified_streams} verified streams
                       </p>
                     </CardContent>
@@ -234,13 +234,13 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                       <CardTitle className="text-sm font-medium">
                         Strikes
                       </CardTitle>
-                      <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                      <AlertTriangle className="text-muted-foreground h-4 w-4" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">
                         {data.strikes.stats.active}
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {data.strikes.stats.resolved} resolved
                       </p>
                     </CardContent>
@@ -253,7 +253,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                       <CardTitle className="text-base">Description</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {data.team.description}
                       </p>
                     </CardContent>
@@ -264,7 +264,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
               {/* Members Tab */}
               <TabsContent
                 value="members"
-                className="mt-4 animate-in fade-in-50 duration-300"
+                className="animate-in fade-in-50 mt-4 duration-300"
               >
                 <Card>
                   <CardHeader>
@@ -299,7 +299,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                             <TableCell>
                               {member.user?.total_points?.toLocaleString() || 0}
                             </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
+                            <TableCell className="text-muted-foreground text-sm">
                               {new Date(member.joined_at).toLocaleDateString()}
                             </TableCell>
                             <TableCell>
@@ -320,7 +320,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
               {/* Tasks Tab */}
               <TabsContent
                 value="tasks"
-                className="mt-4 animate-in fade-in-50 duration-300"
+                className="animate-in fade-in-50 mt-4 duration-300"
               >
                 <Card>
                   <CardHeader>
@@ -342,7 +342,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                           <TableRow>
                             <TableCell
                               colSpan={5}
-                              className="text-center text-muted-foreground"
+                              className="text-muted-foreground text-center"
                             >
                               No tasks found
                             </TableCell>
@@ -374,7 +374,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                                   task.task?.base_points_reward ||
                                   0}
                               </TableCell>
-                              <TableCell className="text-sm text-muted-foreground">
+                              <TableCell className="text-muted-foreground text-sm">
                                 {task.completed_at
                                   ? new Date(
                                       task.completed_at
@@ -393,7 +393,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
               {/* Meetings Tab */}
               <TabsContent
                 value="meetings"
-                className="mt-4 animate-in fade-in-50 duration-300"
+                className="animate-in fade-in-50 mt-4 duration-300"
               >
                 <Card>
                   <CardHeader>
@@ -415,7 +415,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                           <TableRow>
                             <TableCell
                               colSpan={5}
-                              className="text-center text-muted-foreground"
+                              className="text-muted-foreground text-center"
                             >
                               No meetings found
                             </TableCell>
@@ -445,7 +445,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                                   {meeting.status}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="text-sm text-muted-foreground">
+                              <TableCell className="text-muted-foreground text-sm">
                                 {new Date(
                                   meeting.meeting_date
                                 ).toLocaleDateString()}
@@ -462,7 +462,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
               {/* Strikes Tab */}
               <TabsContent
                 value="strikes"
-                className="mt-4 animate-in fade-in-50 duration-300"
+                className="animate-in fade-in-50 mt-4 duration-300"
               >
                 <Card>
                   <CardHeader>
@@ -485,7 +485,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                           <TableRow>
                             <TableCell
                               colSpan={6}
-                              className="text-center text-muted-foreground"
+                              className="text-muted-foreground text-center"
                             >
                               No strikes found
                             </TableCell>
@@ -519,7 +519,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                                   {strike.status}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="text-sm text-muted-foreground">
+                              <TableCell className="text-muted-foreground text-sm">
                                 {new Date(
                                   strike.created_at
                                 ).toLocaleDateString()}
@@ -536,7 +536,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
               {/* Transactions Tab */}
               <TabsContent
                 value="transactions"
-                className="mt-4 animate-in fade-in-50 duration-300"
+                className="animate-in fade-in-50 mt-4 duration-300"
               >
                 <Card>
                   <CardHeader>
@@ -561,7 +561,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                           <TableRow>
                             <TableCell
                               colSpan={6}
-                              className="text-center text-muted-foreground"
+                              className="text-muted-foreground text-center"
                             >
                               No transactions found
                             </TableCell>
@@ -569,7 +569,7 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                         ) : (
                           data.transactions.map((tx: any) => (
                             <TableRow key={tx.id}>
-                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                              <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                                 {new Date(tx.created_at).toLocaleDateString()}
                               </TableCell>
                               <TableCell>
@@ -583,8 +583,8 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                                   tx.xp_change > 0
                                     ? "text-green-600"
                                     : tx.xp_change < 0
-                                    ? "text-red-600"
-                                    : ""
+                                      ? "text-red-600"
+                                      : ""
                                 }`}
                               >
                                 {tx.xp_change > 0 ? "+" : ""}
@@ -595,14 +595,14 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                                   tx.points_change > 0
                                     ? "text-green-600"
                                     : tx.points_change < 0
-                                    ? "text-red-600"
-                                    : ""
+                                      ? "text-red-600"
+                                      : ""
                                 }`}
                               >
                                 {tx.points_change > 0 ? "+" : ""}
                                 {tx.points_change}
                               </TableCell>
-                              <TableCell className="text-sm max-w-xs truncate">
+                              <TableCell className="max-w-xs truncate text-sm">
                                 {tx.description}
                               </TableCell>
                             </TableRow>

@@ -386,12 +386,12 @@ export function CreateTaskDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white">
+        <Button className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90">
           <Plus className="mr-2 h-4 w-4" />
           Add New {defaultTaskType === "team" ? "Team" : "Individual"} Task
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl h-[80vh] flex flex-col">
+      <DialogContent className="flex h-[80vh] max-w-2xl flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>
             Create New {taskContext === "team" ? "Team" : "Individual"} Task
@@ -405,22 +405,22 @@ export function CreateTaskDialog({
         </DialogHeader>
 
         {error && (
-          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+          <div className="bg-destructive/10 border-destructive/20 text-destructive rounded-lg border p-3 text-sm">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg text-primary text-sm">
+          <div className="bg-primary/10 border-primary/20 text-primary rounded-lg border p-3 text-sm">
             {success}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
-            className="flex flex-col flex-1 min-h-0"
+            className="flex min-h-0 flex-1 flex-col"
           >
             <TabsList
               className={`grid w-full ${
@@ -438,7 +438,7 @@ export function CreateTaskDialog({
 
             <TabsContent
               value="basic"
-              className="flex-1 min-h-0 overflow-y-auto space-y-4"
+              className="min-h-0 flex-1 space-y-4 overflow-y-auto"
             >
               <Card>
                 <CardHeader>
@@ -454,7 +454,7 @@ export function CreateTaskDialog({
                   {/* Task Type Display */}
                   <div className="space-y-2">
                     <Label>Task Type</Label>
-                    <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                    <div className="bg-muted flex items-center gap-2 rounded-lg p-3">
                       <Badge
                         variant="secondary"
                         className={
@@ -467,7 +467,7 @@ export function CreateTaskDialog({
                           ? "Team Task"
                           : "Individual Task"}
                       </Badge>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-muted-foreground text-sm">
                         {taskContext === "team"
                           ? "Collaborative project work assigned to teams"
                           : "Personal learning/skill building assigned to individuals"}
@@ -591,7 +591,7 @@ export function CreateTaskDialog({
                           🔄
                         </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         Sequential numbering based on existing tasks
                       </p>
                     </div>
@@ -742,17 +742,17 @@ export function CreateTaskDialog({
                       placeholder="0"
                       disabled={isSubmitting}
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       Leave as 0 if you don&apos;t want to track time estimates
                     </p>
                   </div>
 
                   {/* Recurring Task Options */}
-                  <div className="space-y-4 pt-4 border-t">
+                  <div className="space-y-4 border-t pt-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label htmlFor="isRecurring">Recurring Task</Label>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           Task can be completed multiple times with cooldown
                           period
                         </p>
@@ -784,7 +784,7 @@ export function CreateTaskDialog({
                           }}
                           disabled={isSubmitting}
                         />
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           Days before task can be completed again
                         </p>
                       </div>
@@ -795,7 +795,7 @@ export function CreateTaskDialog({
                         <Label htmlFor="isConfidential">
                           Confidential Task
                         </Label>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           Hide task details from public view
                         </p>
                       </div>
@@ -811,7 +811,7 @@ export function CreateTaskDialog({
                   </div>
 
                   {/* Template Loading */}
-                  <div className="pt-4 border-t">
+                  <div className="border-t pt-4">
                     <Button
                       type="button"
                       variant="outline"
@@ -822,7 +822,7 @@ export function CreateTaskDialog({
                       <Lightbulb className="mr-2 h-4 w-4" />
                       Load Content Template
                     </Button>
-                    <p className="text-xs text-muted-foreground text-center mt-2">
+                    <p className="text-muted-foreground mt-2 text-center text-xs">
                       Populate rich content fields with example content based on
                       category
                     </p>
@@ -833,7 +833,7 @@ export function CreateTaskDialog({
 
             <TabsContent
               value="content"
-              className="flex-1 min-h-0 overflow-y-auto space-y-4"
+              className="min-h-0 flex-1 space-y-4 overflow-y-auto"
             >
               <Card>
                 <CardHeader>
@@ -858,7 +858,7 @@ export function CreateTaskDialog({
                       className="min-h-[200px] font-mono text-sm"
                       disabled={isSubmitting}
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       Supports Markdown formatting. This content will be
                       displayed prominently in the task details.
                     </p>
@@ -879,7 +879,7 @@ export function CreateTaskDialog({
                       </Button>
                     </div>
                     {learningObjectives.map((objective, index) => (
-                      <div key={index} className="flex gap-2 items-center">
+                      <div key={index} className="flex items-center gap-2">
                         <Input
                           value={objective}
                           onChange={(e) =>
@@ -900,7 +900,7 @@ export function CreateTaskDialog({
                       </div>
                     ))}
                     {learningObjectives.length === 0 && (
-                      <p className="text-sm text-muted-foreground italic">
+                      <p className="text-muted-foreground text-sm italic">
                         No learning objectives added yet
                       </p>
                     )}
@@ -921,7 +921,7 @@ export function CreateTaskDialog({
                       </Button>
                     </div>
                     {deliverables.map((deliverable, index) => (
-                      <div key={index} className="flex gap-2 items-center">
+                      <div key={index} className="flex items-center gap-2">
                         <Input
                           value={deliverable}
                           onChange={(e) =>
@@ -942,7 +942,7 @@ export function CreateTaskDialog({
                       </div>
                     ))}
                     {deliverables.length === 0 && (
-                      <p className="text-sm text-muted-foreground italic">
+                      <p className="text-muted-foreground text-sm italic">
                         No deliverables specified yet
                       </p>
                     )}
@@ -953,7 +953,7 @@ export function CreateTaskDialog({
 
             <TabsContent
               value="tips"
-              className="flex-1 min-h-0 overflow-y-auto space-y-4"
+              className="min-h-0 flex-1 space-y-4 overflow-y-auto"
             >
               <Card>
                 <CardHeader>
@@ -983,9 +983,9 @@ export function CreateTaskDialog({
                     {tipsContent.map((tip, index) => (
                       <div
                         key={index}
-                        className="border rounded-lg p-4 space-y-2"
+                        className="space-y-2 rounded-lg border p-4"
                       >
-                        <div className="flex gap-2 items-center">
+                        <div className="flex items-center gap-2">
                           <Input
                             value={tip.title}
                             onChange={(e) =>
@@ -1016,7 +1016,7 @@ export function CreateTaskDialog({
                       </div>
                     ))}
                     {tipsContent.length === 0 && (
-                      <p className="text-sm text-muted-foreground italic">
+                      <p className="text-muted-foreground text-sm italic">
                         No tips added yet
                       </p>
                     )}
@@ -1039,9 +1039,9 @@ export function CreateTaskDialog({
                     {resources.map((resource, index) => (
                       <div
                         key={index}
-                        className="border rounded-lg p-4 space-y-2"
+                        className="space-y-2 rounded-lg border p-4"
                       >
-                        <div className="flex gap-2 items-center">
+                        <div className="flex items-center gap-2">
                           <Input
                             value={resource.title}
                             onChange={(e) =>
@@ -1101,7 +1101,7 @@ export function CreateTaskDialog({
                       </div>
                     ))}
                     {resources.length === 0 && (
-                      <p className="text-sm text-muted-foreground italic">
+                      <p className="text-muted-foreground text-sm italic">
                         No resources added yet
                       </p>
                     )}
@@ -1112,7 +1112,7 @@ export function CreateTaskDialog({
 
             <TabsContent
               value="review"
-              className="flex-1 min-h-0 overflow-y-auto space-y-4"
+              className="min-h-0 flex-1 space-y-4 overflow-y-auto"
             >
               <Card>
                 <CardHeader>
@@ -1143,9 +1143,9 @@ export function CreateTaskDialog({
                       {peerReviewCriteria.map((criteria, categoryIndex) => (
                         <div
                           key={categoryIndex}
-                          className="border rounded-lg p-4 space-y-2"
+                          className="space-y-2 rounded-lg border p-4"
                         >
-                          <div className="flex gap-2 items-center">
+                          <div className="flex items-center gap-2">
                             <Input
                               value={criteria.category}
                               onChange={(e) =>
@@ -1170,7 +1170,7 @@ export function CreateTaskDialog({
                             </Button>
                           </div>
 
-                          <div className="space-y-2 pl-4 border-l-2 border-muted">
+                          <div className="border-muted space-y-2 border-l-2 pl-4">
                             <div className="flex items-center justify-between">
                               <Label className="text-sm">Review Points</Label>
                               <Button
@@ -1188,7 +1188,7 @@ export function CreateTaskDialog({
                             {criteria.points.map((point, pointIndex) => (
                               <div
                                 key={pointIndex}
-                                className="flex gap-2 items-center"
+                                className="flex items-center gap-2"
                               >
                                 <Input
                                   value={point}
@@ -1223,7 +1223,7 @@ export function CreateTaskDialog({
                         </div>
                       ))}
                       {peerReviewCriteria.length === 0 && (
-                        <p className="text-sm text-muted-foreground italic">
+                        <p className="text-muted-foreground text-sm italic">
                           No review criteria defined yet
                         </p>
                       )}
@@ -1243,16 +1243,16 @@ export function CreateTaskDialog({
                           className="min-h-[100px]"
                           disabled={isSubmitting}
                         />
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           Optional: Any special instructions for how peer
                           reviews should be conducted
                         </p>
                       </div>
                     </>
                   ) : (
-                    <div className="text-center py-8">
-                      <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium mb-2">
+                    <div className="py-8 text-center">
+                      <Users className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+                      <h3 className="mb-2 text-lg font-medium">
                         No Peer Review Required
                       </h3>
                       <p className="text-muted-foreground mb-4">
@@ -1279,7 +1279,7 @@ export function CreateTaskDialog({
 
             <TabsContent
               value="preview"
-              className="flex-1 min-h-0 overflow-y-auto space-y-4"
+              className="min-h-0 flex-1 space-y-4 overflow-y-auto"
             >
               <Card>
                 <CardHeader>
@@ -1292,11 +1292,11 @@ export function CreateTaskDialog({
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="border rounded-lg p-6 bg-muted/20">
+                  <div className="bg-muted/20 rounded-lg border p-6">
                     <div className="space-y-4">
                       {/* Task Header */}
                       <div>
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="mb-2 flex items-center gap-2">
                           <Badge variant="secondary">{templateCode}</Badge>
                           <Badge
                             variant={
@@ -1318,12 +1318,12 @@ export function CreateTaskDialog({
                       </div>
 
                       {/* Task Details */}
-                      <div className="grid grid-cols-3 gap-4 py-4 border-y">
+                      <div className="grid grid-cols-3 gap-4 border-y py-4">
                         <div className="text-center">
                           <div className="text-2xl font-bold">
                             {difficultyLevel}
                           </div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-muted-foreground text-sm">
                             Difficulty
                           </div>
                         </div>
@@ -1331,7 +1331,7 @@ export function CreateTaskDialog({
                           <div className="text-2xl font-bold">
                             {baseXpReward}
                           </div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-muted-foreground text-sm">
                             XP Reward
                           </div>
                         </div>
@@ -1339,7 +1339,7 @@ export function CreateTaskDialog({
                           <div className="text-2xl font-bold">
                             {basePointsReward}
                           </div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-muted-foreground text-sm">
                             Points
                           </div>
                         </div>
@@ -1348,7 +1348,7 @@ export function CreateTaskDialog({
                       {/* Detailed Instructions */}
                       {detailedInstructions && (
                         <div>
-                          <h3 className="font-semibold mb-2">
+                          <h3 className="mb-2 font-semibold">
                             Detailed Instructions
                           </h3>
                           <div className="prose prose-sm max-w-none space-y-2">
@@ -1365,7 +1365,7 @@ export function CreateTaskDialog({
                                   return (
                                     <h3
                                       key={index}
-                                      className="text-sm font-medium my-2"
+                                      className="my-2 text-sm font-medium"
                                     >
                                       {trimmedLine.slice(4)}
                                     </h3>
@@ -1375,7 +1375,7 @@ export function CreateTaskDialog({
                                   return (
                                     <h2
                                       key={index}
-                                      className="text-base font-semibold my-2"
+                                      className="my-2 text-base font-semibold"
                                     >
                                       {trimmedLine.slice(3)}
                                     </h2>
@@ -1385,7 +1385,7 @@ export function CreateTaskDialog({
                                   return (
                                     <h1
                                       key={index}
-                                      className="text-lg font-bold my-2"
+                                      className="my-2 text-lg font-bold"
                                     >
                                       {trimmedLine.slice(2)}
                                     </h1>
@@ -1397,9 +1397,9 @@ export function CreateTaskDialog({
                                   return (
                                     <div
                                       key={index}
-                                      className="flex items-start gap-2 my-1"
+                                      className="my-1 flex items-start gap-2"
                                     >
-                                      <span className="text-gray-400 mt-1">
+                                      <span className="mt-1 text-gray-400">
                                         •
                                       </span>
                                       <span>{trimmedLine.slice(2)}</span>
@@ -1414,9 +1414,9 @@ export function CreateTaskDialog({
                                     return (
                                       <div
                                         key={index}
-                                        className="flex items-start gap-2 my-1"
+                                        className="my-1 flex items-start gap-2"
                                       >
-                                        <span className="text-gray-400 mt-1">
+                                        <span className="mt-1 text-gray-400">
                                           {match[1]}.
                                         </span>
                                         <span>{match[2]}</span>
@@ -1440,10 +1440,10 @@ export function CreateTaskDialog({
                       {learningObjectives.filter((obj) => obj.trim()).length >
                         0 && (
                         <div>
-                          <h3 className="font-semibold mb-2">
+                          <h3 className="mb-2 font-semibold">
                             Learning Objectives
                           </h3>
-                          <ul className="list-disc list-inside space-y-1">
+                          <ul className="list-inside list-disc space-y-1">
                             {learningObjectives
                               .filter((obj) => obj.trim())
                               .map((objective, index) => (
@@ -1458,10 +1458,10 @@ export function CreateTaskDialog({
                       {/* Deliverables */}
                       {deliverables.filter((del) => del.trim()).length > 0 && (
                         <div>
-                          <h3 className="font-semibold mb-2">
+                          <h3 className="mb-2 font-semibold">
                             Expected Deliverables
                           </h3>
-                          <ul className="list-disc list-inside space-y-1">
+                          <ul className="list-inside list-disc space-y-1">
                             {deliverables
                               .filter((del) => del.trim())
                               .map((deliverable, index) => (
@@ -1476,19 +1476,19 @@ export function CreateTaskDialog({
                       {/* Tips */}
                       {tipsContent.length > 0 && (
                         <div>
-                          <h3 className="font-semibold mb-2">
+                          <h3 className="mb-2 font-semibold">
                             Tips & Best Practices
                           </h3>
                           <div className="space-y-2">
                             {tipsContent.map((tip, index) => (
                               <div
                                 key={index}
-                                className="bg-blue-50 border border-blue-200 rounded-lg p-3"
+                                className="rounded-lg border border-blue-200 bg-blue-50 p-3"
                               >
                                 <h4 className="font-medium text-blue-900">
                                   {tip.title}
                                 </h4>
-                                <p className="text-sm text-blue-700 mt-1">
+                                <p className="mt-1 text-sm text-blue-700">
                                   {tip.content}
                                 </p>
                               </div>
@@ -1500,16 +1500,16 @@ export function CreateTaskDialog({
                       {/* Resources */}
                       {resources.length > 0 && (
                         <div>
-                          <h3 className="font-semibold mb-2">
+                          <h3 className="mb-2 font-semibold">
                             Helpful Resources
                           </h3>
                           <div className="grid gap-2">
                             {resources.map((resource, index) => (
                               <div
                                 key={index}
-                                className="border rounded-lg p-3"
+                                className="rounded-lg border p-3"
                               >
-                                <div className="flex items-center gap-2 mb-1">
+                                <div className="mb-1 flex items-center gap-2">
                                   <Badge variant="outline" className="text-xs">
                                     {resource.type}
                                   </Badge>
@@ -1517,7 +1517,7 @@ export function CreateTaskDialog({
                                     {resource.title}
                                   </h4>
                                 </div>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-muted-foreground text-sm">
                                   {resource.description}
                                 </p>
                                 {resource.url && (
@@ -1539,19 +1539,19 @@ export function CreateTaskDialog({
                       {/* Review Criteria */}
                       {requiresReview && peerReviewCriteria.length > 0 && (
                         <div>
-                          <h3 className="font-semibold mb-2">
+                          <h3 className="mb-2 font-semibold">
                             Peer Review Criteria
                           </h3>
                           <div className="space-y-2">
                             {peerReviewCriteria.map((criteria, index) => (
                               <div
                                 key={index}
-                                className="border rounded-lg p-3"
+                                className="rounded-lg border p-3"
                               >
-                                <h4 className="font-medium mb-2">
+                                <h4 className="mb-2 font-medium">
                                   {criteria.category}
                                 </h4>
-                                <ul className="list-disc list-inside space-y-1 pl-2">
+                                <ul className="list-inside list-disc space-y-1 pl-2">
                                   {criteria.points.map((point, pointIndex) => (
                                     <li key={pointIndex} className="text-sm">
                                       {point}
@@ -1570,7 +1570,7 @@ export function CreateTaskDialog({
             </TabsContent>
           </Tabs>
 
-          <DialogFooter className="flex-shrink-0 mt-4">
+          <DialogFooter className="mt-4 flex-shrink-0">
             <Button
               type="button"
               variant="outline"
@@ -1582,7 +1582,7 @@ export function CreateTaskDialog({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+              className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
             >
               {isSubmitting ? "Creating..." : "Create Task"}
             </Button>

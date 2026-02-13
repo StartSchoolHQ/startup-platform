@@ -18,14 +18,19 @@ export default async function LeaderboardPage() {
   } = await supabase.auth.getUser();
 
   // Fetch initial data server-side (individual + team in parallel)
-  const [initialLeaderboardData, availableWeeks, initialTeamData, teamAvailableWeeks, userTeamIds] =
-    await Promise.all([
-      getServerSideLeaderboardData(),
-      getServerSideAvailableWeeks(),
-      getServerSideTeamLeaderboardData(),
-      getServerSideTeamAvailableWeeks(),
-      user?.id ? getServerSideUserTeamIds(user.id) : Promise.resolve([]),
-    ]);
+  const [
+    initialLeaderboardData,
+    availableWeeks,
+    initialTeamData,
+    teamAvailableWeeks,
+    userTeamIds,
+  ] = await Promise.all([
+    getServerSideLeaderboardData(),
+    getServerSideAvailableWeeks(),
+    getServerSideTeamLeaderboardData(),
+    getServerSideTeamAvailableWeeks(),
+    user?.id ? getServerSideUserTeamIds(user.id) : Promise.resolve([]),
+  ]);
 
   return (
     <LeaderboardPageClient

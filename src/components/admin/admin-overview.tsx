@@ -45,12 +45,12 @@ export function AdminOverview() {
 
   if (loading) {
     return (
-      <div className="text-sm text-muted-foreground">Loading stats...</div>
+      <div className="text-muted-foreground text-sm">Loading stats...</div>
     );
   }
 
   if (!stats) {
-    return <div className="text-sm text-destructive">Failed to load stats</div>;
+    return <div className="text-destructive text-sm">Failed to load stats</div>;
   }
 
   return (
@@ -59,11 +59,11 @@ export function AdminOverview() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.users.total}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {stats.users.confirmed} confirmed, {stats.users.pending} pending
             </p>
           </CardContent>
@@ -72,11 +72,11 @@ export function AdminOverview() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Teams</CardTitle>
-            <UsersRound className="h-4 w-4 text-muted-foreground" />
+            <UsersRound className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.teams.active}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {stats.teams.total} total teams
             </p>
           </CardContent>
@@ -87,11 +87,11 @@ export function AdminOverview() {
             <CardTitle className="text-sm font-medium">
               Tasks Available
             </CardTitle>
-            <ListTodo className="h-4 w-4 text-muted-foreground" />
+            <ListTodo className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.tasks.total}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Template tasks created
             </p>
           </CardContent>
@@ -102,11 +102,11 @@ export function AdminOverview() {
             <CardTitle className="text-sm font-medium">
               Completed Tasks
             </CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <CheckCircle className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.tasks.completed}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {stats.tasks.inProgress} in progress
             </p>
           </CardContent>

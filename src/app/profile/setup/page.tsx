@@ -168,7 +168,7 @@ export default function ProfileSetupPage() {
 
       if (passwordError) {
         setError(
-          passwordError.message || "Failed to set password. Please try again.",
+          passwordError.message || "Failed to set password. Please try again."
         );
         return;
       }
@@ -188,7 +188,7 @@ export default function ProfileSetupPage() {
       if (!response.ok) {
         const errorData = await response.json();
         setError(
-          errorData.error || "Failed to save profile. Please try again.",
+          errorData.error || "Failed to save profile. Please try again."
         );
         return;
       }
@@ -212,9 +212,9 @@ export default function ProfileSetupPage() {
   // Show loading while validating access
   if (isValidating) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="bg-background flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
           <p className="mt-4 text-gray-600">Validating access...</p>
         </div>
       </div>
@@ -222,31 +222,31 @@ export default function ProfileSetupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="max-w-md w-full space-y-8">
+    <div className="bg-background flex min-h-screen items-center justify-center">
+      <div className="w-full max-w-md space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
+          <h2 className="text-foreground mt-6 text-center text-3xl font-extrabold">
             Complete Your Profile
           </h2>
-          <p className="mt-2 text-center text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-2 text-center text-sm">
             Please provide your details to get started
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded relative">
+            <div className="bg-destructive/10 border-destructive/20 text-destructive relative rounded border px-4 py-3">
               {error}
             </div>
           )}
 
           {/* Avatar Upload */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground">
+            <label className="text-foreground block text-sm font-medium">
               Profile Picture *
             </label>
             <div className="flex items-center space-x-4">
-              <Avatar className="w-20 h-20">
+              <Avatar className="h-20 w-20">
                 {avatarPreview ? (
                   <AvatarImage
                     src={avatarPreview}
@@ -264,11 +264,11 @@ export default function ProfileSetupPage() {
                   type="file"
                   accept="image/*"
                   onChange={handleAvatarChange}
-                  className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                  className="text-muted-foreground file:bg-primary/10 file:text-primary hover:file:bg-primary/20 block w-full text-sm file:mr-4 file:rounded-full file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold"
                   disabled={loading}
                   required
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-muted-foreground mt-1 text-xs">
                   JPG, PNG or GIF (max 5MB)
                 </p>
               </div>
@@ -279,7 +279,7 @@ export default function ProfileSetupPage() {
           <div>
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-foreground"
+              className="text-foreground block text-sm font-medium"
             >
               Full Name *
             </label>
@@ -291,12 +291,12 @@ export default function ProfileSetupPage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your full name"
               disabled={loading || isNamePrefilled}
-              className={`mt-1 block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder:text-muted-foreground bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring ${
+              className={`border-input placeholder:text-muted-foreground bg-background text-foreground focus:ring-ring focus:border-ring mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:ring-2 focus:outline-none ${
                 isNamePrefilled ? "bg-muted cursor-not-allowed" : ""
               }`}
             />
             {isNamePrefilled && (
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-xs">
                 ✓ Name pre-filled from invitation
               </p>
             )}

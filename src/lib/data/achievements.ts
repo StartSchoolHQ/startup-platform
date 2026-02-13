@@ -324,8 +324,8 @@ export async function getTeamAchievements(teamId: string) {
         status: completedTeamAchievementIds.has(ach.id)
           ? ("completed" as const)
           : isInProgress
-          ? ("in-progress" as const)
-          : ("not-started" as const),
+            ? ("in-progress" as const)
+            : ("not-started" as const),
         is_completed: completedTeamAchievementIds.has(ach.id),
       };
     }) || [];

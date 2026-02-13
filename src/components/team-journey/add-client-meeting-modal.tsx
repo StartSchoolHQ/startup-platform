@@ -89,7 +89,7 @@ export function AddClientMeetingModal({
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [showDraftDialog, setShowDraftDialog] = useState(false);
   const [pendingDraft, setPendingDraft] = useState<typeof formData | null>(
-    null,
+    null
   );
   const isInitialized = useRef(false);
 
@@ -134,7 +134,7 @@ export function AddClientMeetingModal({
         localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
       }
     },
-    [DRAFT_KEY],
+    [DRAFT_KEY]
   );
 
   // Clear draft from localStorage
@@ -339,7 +339,7 @@ export function AddClientMeetingModal({
     onError: (error: Error) => {
       console.error("Error creating client meeting:", error);
       toast.error(
-        error.message || "Failed to create client meeting. Please try again.",
+        error.message || "Failed to create client meeting. Please try again."
       );
     },
   });
@@ -392,7 +392,7 @@ export function AddClientMeetingModal({
     onError: (error: Error) => {
       console.error("Error updating client meeting:", error);
       toast.error(
-        error.message || "Failed to update client meeting. Please try again.",
+        error.message || "Failed to update client meeting. Please try again."
       );
     },
   });
@@ -431,7 +431,7 @@ export function AddClientMeetingModal({
           p_client_name: meetingFormData.clientName || "Untitled Draft",
           p_responsible_user_id: meetingFormData.responsibleUserId,
           p_meeting_data: meetingData,
-        },
+        }
       );
 
       if (error) {
@@ -537,7 +537,7 @@ export function AddClientMeetingModal({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleDiscardDraft}>
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="mr-2 h-4 w-4" />
               Discard Draft
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleRestoreDraft}>
@@ -548,7 +548,7 @@ export function AddClientMeetingModal({
       </AlertDialog>
 
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[650px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {isEditMode ? (
@@ -560,7 +560,7 @@ export function AddClientMeetingModal({
                 <>
                   Add Client Meeting
                   {hasFormContent && (
-                    <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                    <span className="text-muted-foreground bg-muted rounded px-2 py-0.5 text-xs font-normal">
                       Draft auto-saved
                     </span>
                   )}
@@ -638,7 +638,7 @@ export function AddClientMeetingModal({
                   }))
                 }
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Select the date when the meeting took place (can be a past date)
               </p>
             </div>
@@ -648,7 +648,7 @@ export function AddClientMeetingModal({
               <Label className="text-base font-semibold">
                 Who did you meet and why is this person relevant?
               </Label>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Role, responsibilities (optional), how they match your target
                 segment (optional)
               </p>
@@ -668,7 +668,7 @@ export function AddClientMeetingModal({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-sm text-muted-foreground">
+                <Label className="text-muted-foreground text-sm">
                   Responsibilities & decision authority (optional)
                 </Label>
                 <Textarea
@@ -684,7 +684,7 @@ export function AddClientMeetingModal({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-sm text-muted-foreground">
+                <Label className="text-muted-foreground text-sm">
                   Target segment match (optional)
                 </Label>
                 <Textarea
@@ -707,7 +707,7 @@ export function AddClientMeetingModal({
                 Meeting Goal & Assumptions{" "}
                 <span className="text-red-500">*</span>
               </Label>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 What did you want to learn? What assumptions were you testing?
               </p>
               <Textarea
@@ -730,7 +730,7 @@ export function AddClientMeetingModal({
               <Label className="text-base font-semibold">
                 Client Feedback <span className="text-red-500">*</span>
               </Label>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 What did the client say? Note what validated and challenged your
                 assumptions.
               </p>
@@ -746,7 +746,7 @@ export function AddClientMeetingModal({
                 rows={2}
               />
               <div className="space-y-1">
-                <Label className="text-sm text-muted-foreground">
+                <Label className="text-muted-foreground text-sm">
                   What validated your assumptions? (optional)
                 </Label>
                 <Textarea
@@ -762,7 +762,7 @@ export function AddClientMeetingModal({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-sm text-muted-foreground">
+                <Label className="text-muted-foreground text-sm">
                   What challenged your assumptions? (optional)
                 </Label>
                 <Textarea
@@ -806,7 +806,7 @@ export function AddClientMeetingModal({
               <Label className="text-base font-semibold">
                 Next Steps <span className="text-red-500">*</span>
               </Label>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 What was agreed with the client? What&apos;s their level of
                 interest?
               </p>
@@ -858,7 +858,7 @@ export function AddClientMeetingModal({
               <Label className="text-base font-semibold">
                 Internal Actions <span className="text-red-500">*</span>
               </Label>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 What do you need to do next? Set a deadline and assign
                 responsibility.
               </p>
@@ -934,7 +934,7 @@ export function AddClientMeetingModal({
               >
                 Any learnings for the team? (optional)
               </Label>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 How to improve the next meeting
               </p>
               <Textarea
@@ -951,7 +951,7 @@ export function AddClientMeetingModal({
               />
             </div>
 
-            <DialogFooter className="flex-col sm:flex-row gap-2">
+            <DialogFooter className="flex-col gap-2 sm:flex-row">
               {hasFormContent && !isEditMode && (
                 <Button
                   type="button"
@@ -964,7 +964,7 @@ export function AddClientMeetingModal({
                   }}
                   className="text-muted-foreground hover:text-destructive mr-auto"
                 >
-                  <Trash2 className="h-4 w-4 mr-1" />
+                  <Trash2 className="mr-1 h-4 w-4" />
                   Clear Draft
                 </Button>
               )}
@@ -984,7 +984,7 @@ export function AddClientMeetingModal({
                   disabled={isPending}
                   className="border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
                 >
-                  <Save className="h-4 w-4 mr-1" />
+                  <Save className="mr-1 h-4 w-4" />
                   {saveDraftMutation.isPending ? "Saving..." : "Save as Draft"}
                 </Button>
               )}

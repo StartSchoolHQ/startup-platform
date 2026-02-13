@@ -64,28 +64,28 @@ export function CreateTeamDialog({
     // Validation
     if (teamName.trim().length < MIN_TEAM_NAME_LENGTH) {
       setError(
-        `Product/Team name must be at least ${MIN_TEAM_NAME_LENGTH} characters long.`,
+        `Product/Team name must be at least ${MIN_TEAM_NAME_LENGTH} characters long.`
       );
       return;
     }
 
     if (description.trim().length < MIN_DESCRIPTION_LENGTH) {
       setError(
-        `Description must be at least ${MIN_DESCRIPTION_LENGTH} characters long.`,
+        `Description must be at least ${MIN_DESCRIPTION_LENGTH} characters long.`
       );
       return;
     }
 
     if (description.trim().length > MAX_DESCRIPTION_LENGTH) {
       setError(
-        `Description must be at most ${MAX_DESCRIPTION_LENGTH} characters long.`,
+        `Description must be at most ${MAX_DESCRIPTION_LENGTH} characters long.`
       );
       return;
     }
 
     if (user.total_points && user.total_points < TEAM_CREATION_COST) {
       setError(
-        `Insufficient credits. You need ${TEAM_CREATION_COST} credits to create a team.`,
+        `Insufficient credits. You need ${TEAM_CREATION_COST} credits to create a team.`
       );
       return;
     }
@@ -124,7 +124,7 @@ export function CreateTeamDialog({
       });
 
       setError(
-        error instanceof Error ? error.message : "Failed to create team",
+        error instanceof Error ? error.message : "Failed to create team"
       );
     } finally {
       setIsLoading(false);
@@ -147,13 +147,13 @@ export function CreateTeamDialog({
         </DialogHeader>
 
         {error && (
-          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+          <div className="bg-destructive/10 border-destructive/20 text-destructive rounded-lg border p-3 text-sm">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg text-primary text-sm">
+          <div className="bg-primary/10 border-primary/20 text-primary rounded-lg border p-3 text-sm">
             {success}
           </div>
         )}
@@ -170,7 +170,7 @@ export function CreateTeamDialog({
               placeholder="Enter product/team name..."
               required
               disabled={isLoading}
-              className="border-[#ff78c8] focus:border-[#ff78c8] focus:ring-[#ff78c8] ring-[#ff78c8]/20"
+              className="border-[#ff78c8] ring-[#ff78c8]/20 focus:border-[#ff78c8] focus:ring-[#ff78c8]"
             />
           </div>
 
@@ -189,7 +189,7 @@ export function CreateTeamDialog({
               rows={3}
               disabled={isLoading}
               maxLength={MAX_DESCRIPTION_LENGTH}
-              className="border-[#ff78c8] focus:border-[#ff78c8] focus:ring-[#ff78c8] ring-[#ff78c8]/20"
+              className="border-[#ff78c8] ring-[#ff78c8]/20 focus:border-[#ff78c8] focus:ring-[#ff78c8]"
             />
           </div>
 
@@ -202,19 +202,19 @@ export function CreateTeamDialog({
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="https://example.com or example.com"
               disabled={isLoading}
-              className="border-[#ff78c8] focus:border-[#ff78c8] focus:ring-[#ff78c8] ring-[#ff78c8]/20"
+              className="border-[#ff78c8] ring-[#ff78c8]/20 focus:border-[#ff78c8] focus:ring-[#ff78c8]"
             />
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+          <div className="bg-muted flex items-center justify-between rounded-lg p-3">
             <div className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
+              <CreditCard className="text-muted-foreground h-4 w-4" />
               <span className="text-sm">Creation Cost</span>
             </div>
             <span className="font-semibold">{TEAM_CREATION_COST} Credits</span>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+          <div className="bg-muted flex items-center justify-between rounded-lg p-3">
             <div className="flex items-center gap-2">
               <span className="text-sm">Your Balance</span>
             </div>
@@ -245,11 +245,11 @@ export function CreateTeamDialog({
                 description.trim().length < MIN_DESCRIPTION_LENGTH ||
                 description.trim().length > MAX_DESCRIPTION_LENGTH
               }
-              className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted"
+              className="disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Creating...
                 </>
               ) : (

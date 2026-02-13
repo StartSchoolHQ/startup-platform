@@ -258,19 +258,19 @@ export function TaskSubmissionModal({
               </Button>
             </div>
             {urlError && (
-              <p className="text-sm text-destructive mt-1">{urlError}</p>
+              <p className="text-destructive mt-1 text-sm">{urlError}</p>
             )}
             {externalUrls.length > 0 && (
               <div className="mt-2 space-y-2">
                 {externalUrls.map((url, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 p-2 border rounded"
+                    className="flex items-center gap-2 rounded border p-2"
                   >
                     <Badge variant="outline" className="text-xs">
                       {url.type.replace("_", " ")}
                     </Badge>
-                    <span className="text-sm flex-1 truncate">{url.url}</span>
+                    <span className="flex-1 truncate text-sm">{url.url}</span>
                     <Button
                       type="button"
                       variant="ghost"
@@ -293,7 +293,7 @@ export function TaskSubmissionModal({
               {field.label}{" "}
               {field.required && <span className="text-destructive">*</span>}
             </Label>
-            <div className="border-2 border-dashed border-border rounded-lg p-4">
+            <div className="border-border rounded-lg border-2 border-dashed p-4">
               <input
                 type="file"
                 accept={field.accept}
@@ -304,13 +304,13 @@ export function TaskSubmissionModal({
               />
               <Label
                 htmlFor={`file-${field.name}`}
-                className="cursor-pointer flex flex-col items-center gap-2"
+                className="flex cursor-pointer flex-col items-center gap-2"
               >
-                <Upload className="h-8 w-8 text-muted-foreground" />
-                <span className="text-sm text-foreground">
+                <Upload className="text-muted-foreground h-8 w-8" />
+                <span className="text-foreground text-sm">
                   Click to upload files or drag and drop
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {field.accept || "Any file type"}
                 </span>
               </Label>
@@ -320,11 +320,11 @@ export function TaskSubmissionModal({
                 {uploadedFiles.map((file, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 p-2 border rounded"
+                    className="flex items-center gap-2 rounded border p-2"
                   >
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm flex-1">{file.name}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <FileText className="text-muted-foreground h-4 w-4" />
+                    <span className="flex-1 text-sm">{file.name}</span>
+                    <span className="text-muted-foreground text-xs">
                       {(file.size / 1024 / 1024).toFixed(2)} MB
                     </span>
                     <Button
@@ -349,7 +349,7 @@ export function TaskSubmissionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isIndividualTask ? "Submit Task" : "Submit Task for Review"}
@@ -363,13 +363,13 @@ export function TaskSubmissionModal({
         </DialogHeader>
 
         {validationErrors.length > 0 && (
-          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-            <p className="text-sm font-medium text-destructive mb-2">
+          <div className="bg-destructive/10 border-destructive/20 rounded-lg border p-3">
+            <p className="text-destructive mb-2 text-sm font-medium">
               Please fix the following errors:
             </p>
-            <ul className="list-disc list-inside space-y-1">
+            <ul className="list-inside list-disc space-y-1">
               {validationErrors.map((error, idx) => (
-                <li key={idx} className="text-sm text-destructive">
+                <li key={idx} className="text-destructive text-sm">
                   {error}
                 </li>
               ))}
@@ -396,8 +396,8 @@ export function TaskSubmissionModal({
             {isLoading
               ? "Submitting..."
               : isIndividualTask
-              ? "Submit Task"
-              : "Submit for Review"}
+                ? "Submit Task"
+                : "Submit for Review"}
           </Button>
         </DialogFooter>
       </DialogContent>

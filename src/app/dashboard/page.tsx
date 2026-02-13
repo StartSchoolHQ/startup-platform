@@ -92,9 +92,9 @@ export default function OverviewPage() {
           <p className="text-muted-foreground">Loading your dashboard...</p>
         </div>
         <StatsGridSkeleton />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-64 bg-accent animate-pulse rounded-lg" />
-          <div className="h-64 bg-accent animate-pulse rounded-lg" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="bg-accent h-64 animate-pulse rounded-lg" />
+          <div className="bg-accent h-64 animate-pulse rounded-lg" />
         </div>
       </div>
     );
@@ -112,7 +112,7 @@ export default function OverviewPage() {
       </div>
 
       {/* Stats cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statsCards.map((card, index) => (
           <motion.div
             key={index}
@@ -138,7 +138,7 @@ export default function OverviewPage() {
       </div>
 
       {/* Progress cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {teamProgressData && <TeamProgressCard data={teamProgressData} />}
         {/* TODO: Re-enable Personal Progress for full release */}
         {/* {personalProgressData && (
@@ -177,7 +177,7 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
       : "Your Teams Progress";
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="flex h-full flex-col">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
         <div className="flex items-center gap-3">
           <IconContainer
@@ -195,8 +195,8 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
           {data.joinTeamsText}
         </Button>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col">
-        <div className="space-y-6 flex-1">
+      <CardContent className="flex flex-1 flex-col">
+        <div className="flex-1 space-y-6">
           {!data.hasTeams ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <p className="text-muted-foreground">
@@ -218,7 +218,7 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
               {data.teams.map((team) => (
                 <div key={team.id}>
                   {data.teams.length > 1 && (
-                    <h3 className="text-sm font-semibold mb-3 text-muted-foreground">
+                    <h3 className="text-muted-foreground mb-3 text-sm font-semibold">
                       {team.name}
                     </h3>
                   )}
@@ -278,7 +278,7 @@ function PersonalProgressCard({
 }) {
   const router = useRouter();
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="flex h-full flex-col">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
         <div className="flex items-center gap-3">
           <IconContainer
@@ -290,8 +290,8 @@ function PersonalProgressCard({
         </div>
         <div className="w-[80px]"></div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col">
-        <div className="space-y-6 flex-1">
+      <CardContent className="flex flex-1 flex-col">
+        <div className="flex-1 space-y-6">
           {/* Stats row */}
           <div className="grid grid-cols-2 gap-4">
             {data.stats.map((stat, index) => (
@@ -309,7 +309,7 @@ function PersonalProgressCard({
 
         {/* Action buttons */}
         <div className="mt-6">
-          <BorderedContainer className="justify-center w-full">
+          <BorderedContainer className="w-full justify-center">
             <Button
               variant="outline"
               size="sm"
@@ -317,7 +317,7 @@ function PersonalProgressCard({
               disabled={true}
               onClick={onOpenReportModal}
             >
-              <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
+              <FileText className="mr-2 h-4 w-4 flex-shrink-0" />
               <span className="truncate">
                 {hasSubmittedThisWeek
                   ? "Report Submitted"
@@ -330,7 +330,7 @@ function PersonalProgressCard({
               onClick={() => router.push("/dashboard/my-journey")}
               disabled
             >
-              <WandSparkles className="h-4 w-4 mr-2 flex-shrink-0" />
+              <WandSparkles className="mr-2 h-4 w-4 flex-shrink-0" />
               <span className="truncate">View Progress</span>
             </Button>
           </BorderedContainer>

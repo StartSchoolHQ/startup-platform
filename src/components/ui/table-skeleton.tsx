@@ -17,7 +17,7 @@ export function TableSkeleton({
       {showHeader && (
         <CardHeader>
           <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-64 mt-2" />
+          <Skeleton className="mt-2 h-4 w-64" />
         </CardHeader>
       )}
       <CardContent>
@@ -36,7 +36,7 @@ export function TableSkeleton({
           {Array.from({ length: rows }).map((_, rowIndex) => (
             <div
               key={`row-${rowIndex}`}
-              className="grid gap-4 py-3 border-t"
+              className="grid gap-4 border-t py-3"
               style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
             >
               {Array.from({ length: columns }).map((_, colIndex) => (

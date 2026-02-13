@@ -214,13 +214,18 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
   // React Query: Member submission statuses
   const { data: memberSubmissionStatus = {} } = useQuery({
-    queryKey: ["teamJourney", "memberSubmissions", teamId, team?.members?.length ?? 0],
+    queryKey: [
+      "teamJourney",
+      "memberSubmissions",
+      teamId,
+      team?.members?.length ?? 0,
+    ],
     queryFn: async () => {
       if (!team?.members || team.members.length === 0) return {};
       const statusPromises = team.members.map(async (member: any) => {
         const hasSubmitted = await hasUserSubmittedThisWeek(
           member.user_id,
-          teamId!,
+          teamId!
         );
         return { userId: member.user_id, hasSubmitted };
       });
@@ -230,7 +235,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
           acc[userId] = hasSubmitted;
           return acc;
         },
-        {} as Record<string, boolean>,
+        {} as Record<string, boolean>
       );
     },
     enabled: !!teamId && !!team?.members && team.members.length > 0,
@@ -242,7 +247,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
     queryFn: async () => {
       const dashboardData = await getTeamAchievementDashboard(
         teamId!,
-        user!.id,
+        user!.id
       );
 
       // Transform tasks
@@ -347,7 +352,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         datetime:
           strike.strike_date || strike.created_at
             ? new Date(
-                strike.strike_date || strike.created_at,
+                strike.strike_date || strike.created_at
               ).toLocaleDateString()
             : "N/A",
         description: strike.description,
@@ -400,7 +405,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         .map((weekData) => {
           const hasSubmissions = weekData.submissions.length > 0;
           const startDate = new Date(
-            weekData.week_start_date,
+            weekData.week_start_date
           ).toLocaleDateString("en-US", {
             month: "2-digit",
             day: "2-digit",
@@ -410,7 +415,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             {
               month: "2-digit",
               day: "2-digit",
-            },
+            }
           );
 
           return {
@@ -419,21 +424,21 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             dateRange: `${startDate} - ${endDate}`,
             weeklyFill: {
               avatars: weekData.submissions.map(
-                (s: any) => s.users?.avatar_url || "/avatars/default.jpg",
+                (s: any) => s.users?.avatar_url || "/avatars/default.jpg"
               ),
               names: weekData.submissions.map(
-                (s: any) => s.users?.name || "Unknown",
+                (s: any) => s.users?.name || "Unknown"
               ),
             },
             clients: weekData.submissions.reduce(
               (sum: number, s: any) =>
                 sum + (Number(s.submission_data?.clientsContacted) || 0),
-              0,
+              0
             ),
             meetings: weekData.submissions.reduce(
               (sum: number, s: any) =>
                 sum + (Number(s.submission_data?.meetingsHeld) || 0),
-              0,
+              0
             ),
             status: (hasSubmissions ? "complete" : "missed") as
               | "complete"
@@ -492,7 +497,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
       ]);
 
       const assignedMember = team?.members.find(
-        (m: any) => m.user_id === userId,
+        (m: any) => m.user_id === userId
       );
 
       queryClient.setQueryData(
@@ -511,10 +516,10 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                       assignedMember?.users?.avatar_url || undefined,
                     assigned_at: new Date().toISOString(),
                   }
-                : task,
+                : task
             ),
           };
-        },
+        }
       );
 
       return { previousData };
@@ -523,7 +528,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
       if (context?.previousData) {
         queryClient.setQueryData(
           ["teamJourney", "achievements", teamId, user?.id],
-          context.previousData,
+          context.previousData
         );
       }
       console.error("Error assigning task:", err);
@@ -547,7 +552,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
       if (!team?.id || !user?.id) throw new Error("Team or user not found");
 
       const task = allTasks.find(
-        (t) => t.progress_id === taskId || t.task_id === taskId,
+        (t) => t.progress_id === taskId || t.task_id === taskId
       );
       const isRecurringTask = task?.is_recurring === true;
       const isNewTask =
@@ -580,7 +585,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
       const tempProgressId = `temp-${Date.now()}`;
       const currentMember = team?.members.find(
-        (m: any) => m.user_id === user?.id,
+        (m: any) => m.user_id === user?.id
       );
 
       queryClient.setQueryData(
@@ -605,10 +610,10 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                     status: "in_progress" as const,
                     progress_id: task.progress_id || tempProgressId,
                   }
-                : task,
+                : task
             ),
           };
-        },
+        }
       );
 
       return { previousData, tempProgressId };
@@ -626,12 +631,12 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
           try {
             const freshTasks = await getTeamTasksVisible(
               team?.id || "",
-              user?.id,
+              user?.id
             );
             const freshTask = freshTasks.find(
               (t: any) =>
                 t.task_id === data.actualTaskId &&
-                t.assigned_to_user_id === user?.id,
+                t.assigned_to_user_id === user?.id
             );
 
             if (freshTask?.progress_id) {
@@ -645,10 +650,10 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                       task.progress_id === context?.tempProgressId &&
                       task.task_id === data.actualTaskId
                         ? { ...task, progress_id: freshTask.progress_id }
-                        : task,
+                        : task
                     ),
                   };
-                },
+                }
               );
             }
           } catch (error) {
@@ -664,12 +669,12 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
       if (context?.previousData) {
         queryClient.setQueryData(
           ["teamJourney", "achievements", teamId, user?.id],
-          context.previousData,
+          context.previousData
         );
       }
       const task = allTasks.find(
         (t) =>
-          t.progress_id === variables.taskId || t.task_id === variables.taskId,
+          t.progress_id === variables.taskId || t.task_id === variables.taskId
       );
       setFeedback({
         type: "error",
@@ -717,7 +722,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
   // Helper: map a raw task to its filter category
   const getTaskFilterCategory = (
-    task: (typeof allTasks)[number],
+    task: (typeof allTasks)[number]
   ): "not_started" | "in_progress" | "completed" => {
     const isRecurring = (task as any).is_recurring === true;
 
@@ -743,13 +748,13 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
     if (selectedAchievementId) {
       tasks = tasks.filter(
-        (task) => task.achievement_id === selectedAchievementId,
+        (task) => task.achievement_id === selectedAchievementId
       );
     }
 
     if (statusFilter !== "all") {
       tasks = tasks.filter(
-        (task) => getTaskFilterCategory(task) === statusFilter,
+        (task) => getTaskFilterCategory(task) === statusFilter
       );
     }
 
@@ -783,7 +788,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
   // Calculate dynamic achievement progress
   const completedAchievements = achievements.filter(
-    (a) => a.status === "completed",
+    (a) => a.status === "completed"
   ).length;
   const totalAchievements = achievements.length;
   const achievementProgress =
@@ -851,7 +856,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
               variant={team.status === "active" ? "default" : "secondary"}
               className={
                 team.status === "active"
-                  ? "bg-[#ff78c8]/10 text-[#ff78c8] hover:bg-[#ff78c8]/15 border-[#ff78c8]/20"
+                  ? "border-[#ff78c8]/20 bg-[#ff78c8]/10 text-[#ff78c8] hover:bg-[#ff78c8]/15"
                   : "bg-muted text-muted-foreground"
               }
             >
@@ -868,7 +873,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             {isTeamMember && userRole && (
               <Badge
                 variant="outline"
-                className="bg-[#ff78c8]/10 text-[#ff78c8] border-[#ff78c8]/20"
+                className="border-[#ff78c8]/20 bg-[#ff78c8]/10 text-[#ff78c8]"
               >
                 {userRole
                   .replace("_", " ")
@@ -880,7 +885,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             {team.description || "No description provided"}
           </p>
           {!isTeamMember && (
-            <p className="text-sm text-[#ff78c8] bg-[#ff78c8]/5 px-3 py-2 rounded-md border border-[#ff78c8]/20">
+            <p className="rounded-md border border-[#ff78c8]/20 bg-[#ff78c8]/5 px-3 py-2 text-sm text-[#ff78c8]">
               💡 You&apos;re viewing this team as a guest. Join the team to
               participate in activities and submit reports.
             </p>
@@ -918,7 +923,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         </div>
       </div>
       {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {statsCards.map((card, index) => (
           <StatsCardComponent
             key={index}
@@ -931,12 +936,12 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         ))}
       </div>
       {/* Team & Experience and Status & Progress Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Team & Experience Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800">
                 <Users className="h-4 w-4 text-black dark:text-white" />
               </div>
               <CardTitle className="text-lg font-semibold">
@@ -949,7 +954,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                 userRole === "leader") && (
                 <Button
                   variant="link"
-                  className="text-blue-500 p-0 h-auto font-medium"
+                  className="h-auto p-0 font-medium text-blue-500"
                   onClick={() => setActiveModal("teamManagement")}
                 >
                   Modify Team
@@ -961,27 +966,27 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             <div className="grid grid-cols-2 gap-4">
               {" "}
               {/* Team Size */}
-              <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+              <div className="border-border flex items-center gap-3 rounded-md border p-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800">
                   <Users className="h-4 w-4 text-black dark:text-white" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm">
+                  <div className="text-sm font-semibold">
                     {actualMemberCount} People
                   </div>
-                  <div className="text-xs text-muted-foreground">Team Size</div>
+                  <div className="text-muted-foreground text-xs">Team Size</div>
                 </div>
               </div>
               {/* Total Experience Earned */}
-              <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+              <div className="border-border flex items-center gap-3 rounded-md border p-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800">
                   <Zap className="h-4 w-4 text-black dark:text-white" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm">
+                  <div className="text-sm font-semibold">
                     {totalTeamXP.toLocaleString()}
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-muted-foreground text-xs">
                     Total Experience Earned
                   </div>
                 </div>
@@ -994,11 +999,11 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                 {team.members.slice(0, 4).map((member: any) => (
                   <div
                     key={member.user_id}
-                    className="flex items-center gap-3 border border-border p-2 rounded-md group"
+                    className="border-border group flex items-center gap-3 rounded-md border p-2"
                   >
-                    <Avatar className="w-10 h-10 transition-transform duration-300 ease-out group-hover:scale-115 peer">
+                    <Avatar className="peer h-10 w-10 transition-transform duration-300 ease-out group-hover:scale-115">
                       <AvatarImage src={member.users?.avatar_url || ""} />
-                      <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold">
+                      <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 font-bold text-white">
                         {member.users?.name
                           ? member.users.name
                               .split(" ")
@@ -1009,10 +1014,10 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <div className="font-semibold text-sm">
+                      <div className="text-sm font-semibold">
                         {member.users?.name || "Unknown User"}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-muted-foreground text-xs">
                         {(member.users?.total_xp || 0).toLocaleString()} XP |{" "}
                         {(member.users?.total_points || 0).toLocaleString()}{" "}
                         Points
@@ -1026,15 +1031,15 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
               {team.members.length > 4 && (
                 <CollapsibleContent>
                   <div className="min-h-0">
-                    <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className="mt-4 grid grid-cols-2 gap-4">
                       {team.members.slice(4).map((member: any) => (
                         <div
                           key={member.user_id}
-                          className="flex items-center gap-3 border border-border p-2 rounded-md group"
+                          className="border-border group flex items-center gap-3 rounded-md border p-2"
                         >
-                          <Avatar className="w-10 h-10 transition-transform duration-300 ease-out group-hover:scale-115">
+                          <Avatar className="h-10 w-10 transition-transform duration-300 ease-out group-hover:scale-115">
                             <AvatarImage src={member.users?.avatar_url || ""} />
-                            <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold">
+                            <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 font-bold text-white">
                               {member.users?.name
                                 ? member.users.name
                                     .split(" ")
@@ -1045,10 +1050,10 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
-                            <div className="font-semibold text-sm">
+                            <div className="text-sm font-semibold">
                               {member.users?.name || "Unknown User"}
                             </div>
-                            <div className="text-xs text-muted-foreground">
+                            <div className="text-muted-foreground text-xs">
                               {(member.users?.total_xp || 0).toLocaleString()}{" "}
                               XP |{" "}
                               {(
@@ -1069,7 +1074,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                 <CollapsibleTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="w-full flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mt-4"
+                    className="text-muted-foreground hover:text-foreground mt-4 flex w-full items-center gap-2 text-sm"
                   >
                     <ChevronDown
                       className={`h-4 w-4 transition-transform duration-200 ${
@@ -1092,7 +1097,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800">
                 <Trophy className="h-4 w-4 text-black dark:text-white" />
               </div>
               <CardTitle className="text-lg font-semibold">
@@ -1104,39 +1109,39 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             {/* Top Row - Date Created and Strikes */}
             <div className="grid grid-cols-2 gap-4">
               {/* Date Created */}
-              <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+              <div className="border-border flex items-center gap-3 rounded-md border p-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800">
                   <Calendar className="h-4 w-4 text-black dark:text-white" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm">
+                  <div className="text-sm font-semibold">
                     {team.created_at
                       ? new Date(team.created_at).toLocaleDateString()
                       : "N/A"}
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-muted-foreground text-xs">
                     Date Created
                   </div>
                 </div>
               </div>
 
               {/* Strikes */}
-              <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+              <div className="border-border flex items-center gap-3 rounded-md border p-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800">
                   <AlertTriangle className="h-4 w-4 text-black dark:text-white" />
                 </div>
                 <div className="flex items-center gap-2">
                   <div>
-                    <div className="font-semibold text-sm">
+                    <div className="text-sm font-semibold">
                       {team.strikes_count || 0}
                     </div>
-                    <div className="text-xs text-muted-foreground">Strikes</div>
+                    <div className="text-muted-foreground text-xs">Strikes</div>
                   </div>
                   <div className="flex gap-1">
                     {Array.from({ length: 5 }, (_, index) => (
                       <div
                         key={index}
-                        className={`w-2 h-2 rounded-full ${
+                        className={`h-2 w-2 rounded-full ${
                           index < (team.strikes_count || 0)
                             ? "bg-red-500"
                             : "bg-gray-300"
@@ -1151,34 +1156,34 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             {/* Bottom Row - Points and Invested */}
             <div className="grid grid-cols-2 gap-4">
               {/* Total Points Earned */}
-              <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+              <div className="border-border flex items-center gap-3 rounded-md border p-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800">
                   <CreditCard className="h-4 w-4 text-black dark:text-white" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm">
+                  <div className="text-sm font-semibold">
                     {loadingState.stats
                       ? "..."
                       : teamPointsEarned.toLocaleString()}
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-muted-foreground text-xs">
                     Total Points Earned
                   </div>
                 </div>
               </div>
 
               {/* Total Points Invested */}
-              <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+              <div className="border-border flex items-center gap-3 rounded-md border p-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800">
                   <CreditCard className="h-4 w-4 text-black dark:text-white" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm">
+                  <div className="text-sm font-semibold">
                     {loadingState.stats
                       ? "..."
                       : teamStats.pointsInvested.toLocaleString()}
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-muted-foreground text-xs">
                     Total Points Invested
                   </div>
                 </div>
@@ -1189,7 +1194,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             {(() => {
               const totalMembers = team.members.length;
               const submittedCount = team.members.filter(
-                (member) => memberSubmissionStatus[member.user_id],
+                (member) => memberSubmissionStatus[member.user_id]
               ).length;
               const allSubmitted =
                 submittedCount === totalMembers && totalMembers > 0;
@@ -1199,7 +1204,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                 : "border-red-100";
               return (
                 <div
-                  className={`flex items-center justify-between border p-2 rounded-md ${bgColor} ${borderColor}`}
+                  className={`flex items-center justify-between rounded-md border p-2 ${bgColor} ${borderColor}`}
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex -space-x-2">
@@ -1210,11 +1215,11 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                           member.user_id in memberSubmissionStatus;
                         return (
                           <div key={member.user_id} className="relative">
-                            <Avatar className="w-8 h-8 border-2 border-white">
+                            <Avatar className="h-8 w-8 border-2 border-white">
                               <AvatarImage
                                 src={member.users?.avatar_url || ""}
                               />
-                              <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-xs">
+                              <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold text-white">
                                 {member.users?.name
                                   ? member.users.name
                                       .split(" ")
@@ -1226,7 +1231,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                             </Avatar>
                             {hasStatus && (
                               <div
-                                className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+                                className={`absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-white ${
                                   hasSubmitted ? "bg-green-500" : "bg-red-500"
                                 }`}
                               />
@@ -1236,15 +1241,15 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                       })}
                     </div>
                     <div>
-                      <div className="font-semibold text-sm">Weekly Report</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-sm font-semibold">Weekly Report</div>
+                      <div className="text-muted-foreground text-xs">
                         Every member needs to fill out the weekly report
                       </div>
                     </div>
                   </div>
                   {isTeamMember && (
                     <Button
-                      className="gap-2 bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="gap-2 bg-black text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
                       onClick={() => setActiveModal("weeklyReport")}
                       disabled={loadingState.submission || hasSubmittedThisWeek}
                     >
@@ -1291,7 +1296,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="achievements" className="space-y-6 mt-6">
+        <TabsContent value="achievements" className="mt-6 space-y-6">
           {/* Achievements Header */}
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Tasks</h2>
@@ -1323,12 +1328,12 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
           {/* Client Meetings Requirement Notice */}
           {!teamStats.achievementsUnlocked && (
-            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
               <div className="flex items-center gap-2 text-amber-800">
                 <AlertTriangle className="h-5 w-5" />
                 <div>
                   <div className="font-medium">Tasks Locked</div>
-                  <div className="text-sm text-amber-700 mt-1">
+                  <div className="mt-1 text-sm text-amber-700">
                     {isTeamMember ? (
                       <>
                         Complete at least 8 client meetings to unlock tasks.
@@ -1345,19 +1350,19 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
           {/* Achievement Cards Grid */}
           {loadingState.achievements ? (
-            <div className="flex items-center justify-center py-8 gap-2">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center gap-2 py-8">
+              <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
               <span className="text-muted-foreground">
                 Loading achievements...
               </span>
             </div>
           ) : achievements.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center">
               No achievements available for this team
             </div>
           ) : (
             <TooltipProvider>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {achievements.map((achievement) => (
                   <Tooltip key={achievement.achievement_id}>
                     <TooltipTrigger asChild>
@@ -1366,7 +1371,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                           handleAchievementClick(
                             selectedAchievementId === achievement.achievement_id
                               ? null
-                              : achievement.achievement_id,
+                              : achievement.achievement_id
                           )
                         }
                         className={`transition-all duration-200 ${
@@ -1430,19 +1435,19 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
           {/* Filter Status */}
           {selectedAchievementId && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-blue-800">
                   <span className="font-medium">Showing tasks for:</span>{" "}
                   {
                     achievements.find(
-                      (a) => a.achievement_id === selectedAchievementId,
+                      (a) => a.achievement_id === selectedAchievementId
                     )?.achievement_name
                   }
                 </div>
                 <button
                   onClick={() => handleAchievementClick(null)}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-800"
                 >
                   Show All Tasks
                 </button>
@@ -1452,8 +1457,8 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
           {/* Task Status Filter */}
           {teamStats.achievementsUnlocked && (
-            <div className="flex items-center gap-2 mt-4">
-              <span className="text-sm text-muted-foreground mr-1">
+            <div className="mt-4 flex items-center gap-2">
+              <span className="text-muted-foreground mr-1 text-sm">
                 Status:
               </span>
               {(
@@ -1478,12 +1483,12 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
           {/* Tasks Table */}
           {loadingState.achievements ? (
-            <div className="flex items-center justify-center py-8 gap-2">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center gap-2 py-8">
+              <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
               <span className="text-muted-foreground">Loading tasks...</span>
             </div>
           ) : !teamStats.achievementsUnlocked ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center">
               <div className="mb-2">Tasks are locked</div>
               <div className="text-sm">
                 {isTeamMember
@@ -1494,7 +1499,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
               </div>
             </div>
           ) : filteredTasks.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center">
               {selectedAchievementId || statusFilter !== "all"
                 ? "No tasks match the current filters"
                 : "No tasks available for this team."}
@@ -1503,7 +1508,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             <div className="space-y-4">
               {/* User feedback notifications */}
               {feedback.type === "success" && feedback.message && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2 animate-in slide-in-from-top-2">
+                <div className="animate-in slide-in-from-top-2 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3">
                   <CheckCircle className="h-4 w-4 text-green-600" />
                   <span className="text-sm text-green-800">
                     {feedback.message}
@@ -1511,7 +1516,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                 </div>
               )}
               {feedback.type === "error" && feedback.message && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2 animate-in slide-in-from-top-2">
+                <div className="animate-in slide-in-from-top-2 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3">
                   <AlertTriangle className="h-4 w-4 text-red-600" />
                   <span className="text-sm text-red-800">
                     {feedback.message}
@@ -1654,7 +1659,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
           )}
         </TabsContent>
 
-        <TabsContent value="weekly-reports" className="space-y-6 mt-6">
+        <TabsContent value="weekly-reports" className="mt-6 space-y-6">
           {/* Weekly Reports Header */}
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">This Week Progress</h2>
@@ -1666,14 +1671,14 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
           {/* Weekly Reports Table */}
           {loadingState.weeklyReports ? (
-            <div className="flex items-center justify-center py-8 gap-2">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center gap-2 py-8">
+              <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
               <span className="text-muted-foreground">
                 Loading weekly reports...
               </span>
             </div>
           ) : weeklyReports.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center">
               No weekly reports found for this team yet.
             </div>
           ) : (
@@ -1681,7 +1686,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
           )}
         </TabsContent>
 
-        <TabsContent value="client-meetings" className="space-y-6 mt-6">
+        <TabsContent value="client-meetings" className="mt-6 space-y-6">
           {/* Client Meetings Header */}
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Client Meetings</h2>
@@ -1708,7 +1713,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
           )}
         </TabsContent>
 
-        <TabsContent value="strikes" className="space-y-6 mt-6">
+        <TabsContent value="strikes" className="mt-6 space-y-6">
           {/* Strikes Header */}
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Strikes & Issues</h2>
@@ -1724,7 +1729,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
               <div className="text-gray-500">Loading strikes...</div>
             </div>
           ) : strikes.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center">
               No strikes found for this team. Great job! 🎉
             </div>
           ) : (

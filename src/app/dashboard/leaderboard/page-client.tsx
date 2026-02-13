@@ -20,10 +20,7 @@ import { RankIcon } from "@/components/leaderboard/rank-icon";
 import { ChangeIndicator } from "@/components/leaderboard/change-indicator";
 import { StreakBadge } from "@/components/leaderboard/streak-badge";
 import { LeaderboardSkeleton } from "@/components/leaderboard/leaderboard-skeleton";
-import {
-  LeaderboardEntry,
-  TeamLeaderboardEntry,
-} from "@/types/leaderboard";
+import { LeaderboardEntry, TeamLeaderboardEntry } from "@/types/leaderboard";
 import { createClient } from "@/lib/supabase/client";
 import {
   type LeaderboardEntry as DBLeaderboardEntry,
@@ -72,7 +69,10 @@ function convertToLeaderboardEntry(
     },
     tasks: { current: dbEntry.tasks_completed, change: dbEntry.tasks_change },
     streak: userStreak,
-    change: { direction: changeDirection, amount: Math.abs(dbEntry.rank_change) },
+    change: {
+      direction: changeDirection,
+      amount: Math.abs(dbEntry.rank_change),
+    },
     rankIcon,
   };
 }
@@ -105,7 +105,10 @@ function convertToTeamLeaderboardEntry(
       current: dbEntry.meetings_count,
       change: dbEntry.meetings_change,
     },
-    change: { direction: changeDirection, amount: Math.abs(dbEntry.rank_change) },
+    change: {
+      direction: changeDirection,
+      amount: Math.abs(dbEntry.rank_change),
+    },
     rankIcon,
   };
 }
@@ -182,17 +185,17 @@ function LeaderboardRow({
         </Avatar>
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-medium text-sm">{entry.user.name}</span>
+            <span className="text-sm font-medium">{entry.user.name}</span>
             {entry.user.isCurrentUser && (
               <Badge
                 variant="secondary"
-                className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700"
+                className="bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700"
               >
                 You
               </Badge>
             )}
           </div>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {entry.user.teams}
           </span>
         </div>
@@ -201,8 +204,8 @@ function LeaderboardRow({
       {/* XP */}
       <div>
         <div className="flex items-center gap-1">
-          <span className="text-green-600 text-xs">⚡</span>
-          <span className="font-semibold text-sm">
+          <span className="text-xs text-green-600">⚡</span>
+          <span className="text-sm font-semibold">
             {animatedXP.toLocaleString()}
           </span>
         </div>
@@ -215,8 +218,8 @@ function LeaderboardRow({
       {/* Points */}
       <div>
         <div className="flex items-center gap-1">
-          <span className="text-blue-600 text-xs">💎</span>
-          <span className="font-semibold text-sm">
+          <span className="text-xs text-blue-600">💎</span>
+          <span className="text-sm font-semibold">
             {animatedPoints.toLocaleString()}
           </span>
         </div>
@@ -229,8 +232,8 @@ function LeaderboardRow({
       {/* Achievements */}
       <div>
         <div className="flex items-center gap-1">
-          <span className="text-yellow-600 text-xs">🏆</span>
-          <span className="font-semibold text-sm">{animatedAchievements}</span>
+          <span className="text-xs text-yellow-600">🏆</span>
+          <span className="text-sm font-semibold">{animatedAchievements}</span>
         </div>
         <div className="flex items-center gap-1 text-xs text-yellow-500">
           <TrendingUp className="h-3 w-3" />
@@ -241,8 +244,8 @@ function LeaderboardRow({
       {/* Tasks */}
       <div>
         <div className="flex items-center gap-1">
-          <span className="text-green-600 text-xs">📋</span>
-          <span className="font-semibold text-sm">{animatedTasks}</span>
+          <span className="text-xs text-green-600">📋</span>
+          <span className="text-sm font-semibold">{animatedTasks}</span>
         </div>
         <div className="flex items-center gap-1 text-xs text-green-500">
           <TrendingUp className="h-3 w-3" />
@@ -327,24 +330,24 @@ function TeamLeaderboardRow({
 
       {/* Team */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center justify-center h-8 w-8 rounded-full bg-muted shrink-0">
-          <Users className="h-4 w-4 text-muted-foreground" />
+        <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
+          <Users className="text-muted-foreground h-4 w-4" />
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-medium text-sm truncate max-w-[140px]">
+            <span className="max-w-[140px] truncate text-sm font-medium">
               {entry.team.name}
             </span>
             {entry.team.isCurrentUserTeam && (
               <Badge
                 variant="secondary"
-                className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700"
+                className="bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700"
               >
                 Your Team
               </Badge>
             )}
           </div>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {entry.team.memberCount}{" "}
             {entry.team.memberCount === 1 ? "member" : "members"}
           </span>
@@ -354,8 +357,8 @@ function TeamLeaderboardRow({
       {/* XP */}
       <div>
         <div className="flex items-center gap-1">
-          <span className="text-green-600 text-xs">⚡</span>
-          <span className="font-semibold text-sm">
+          <span className="text-xs text-green-600">⚡</span>
+          <span className="text-sm font-semibold">
             {animatedXP.toLocaleString()}
           </span>
         </div>
@@ -368,8 +371,8 @@ function TeamLeaderboardRow({
       {/* Points */}
       <div>
         <div className="flex items-center gap-1">
-          <span className="text-blue-600 text-xs">💎</span>
-          <span className="font-semibold text-sm">
+          <span className="text-xs text-blue-600">💎</span>
+          <span className="text-sm font-semibold">
             {animatedPoints.toLocaleString()}
           </span>
         </div>
@@ -382,8 +385,8 @@ function TeamLeaderboardRow({
       {/* Tasks */}
       <div>
         <div className="flex items-center gap-1">
-          <span className="text-green-600 text-xs">📋</span>
-          <span className="font-semibold text-sm">{animatedTasks}</span>
+          <span className="text-xs text-green-600">📋</span>
+          <span className="text-sm font-semibold">{animatedTasks}</span>
         </div>
         <div className="flex items-center gap-1 text-xs text-green-500">
           <TrendingUp className="h-3 w-3" />
@@ -394,8 +397,8 @@ function TeamLeaderboardRow({
       {/* Meetings */}
       <div>
         <div className="flex items-center gap-1">
-          <span className="text-purple-600 text-xs">🤝</span>
-          <span className="font-semibold text-sm">{animatedMeetings}</span>
+          <span className="text-xs text-purple-600">🤝</span>
+          <span className="text-sm font-semibold">{animatedMeetings}</span>
         </div>
         <div className="flex items-center gap-1 text-xs text-purple-500">
           <TrendingUp className="h-3 w-3" />
@@ -672,7 +675,7 @@ export default function LeaderboardPageClient({
           {/* Filters */}
           <div className="flex items-center gap-4">
             {streaksLoading && activeTab === "individual" && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Loading streaks...
               </div>
@@ -714,7 +717,7 @@ export default function LeaderboardPageClient({
         <Card className="border-none shadow-none">
           <CardContent className="p-0">
             <div
-              className="grid gap-4 p-3 border-b border-border text-sm font-medium text-muted-foreground"
+              className="border-border text-muted-foreground grid gap-4 border-b p-3 text-sm font-medium"
               style={{
                 gridTemplateColumns: "80px 200px 1fr 1fr 1fr 1fr 1fr 100px",
               }}
@@ -768,10 +771,10 @@ export default function LeaderboardPageClient({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="p-8 text-center text-muted-foreground"
+                  className="text-muted-foreground p-8 text-center"
                 >
                   <p>No leaderboard data available for this week.</p>
-                  <p className="text-sm mt-1">
+                  <p className="mt-1 text-sm">
                     Weekly snapshots will be generated automatically.
                   </p>
                 </motion.div>
@@ -786,7 +789,7 @@ export default function LeaderboardPageClient({
         <Card className="border-none shadow-none">
           <CardContent className="p-0">
             <div
-              className="grid gap-4 p-3 border-b border-border text-sm font-medium text-muted-foreground"
+              className="border-border text-muted-foreground grid gap-4 border-b p-3 text-sm font-medium"
               style={{
                 gridTemplateColumns: "80px 200px 1fr 1fr 1fr 1fr 100px",
               }}
@@ -839,10 +842,10 @@ export default function LeaderboardPageClient({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="p-8 text-center text-muted-foreground"
+                  className="text-muted-foreground p-8 text-center"
                 >
                   <p>No team leaderboard data available for this week.</p>
-                  <p className="text-sm mt-1">
+                  <p className="mt-1 text-sm">
                     Weekly snapshots will be generated automatically.
                   </p>
                 </motion.div>

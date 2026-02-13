@@ -57,32 +57,32 @@ function RealTaskRow({
         return {
           buttonText: "Done",
           buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
-          icon: <CheckCircle className="h-3 w-3 mr-1" />,
+          icon: <CheckCircle className="mr-1 h-3 w-3" />,
         };
       case "In Progress":
         return {
           buttonText: "Continue",
           buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
-          icon: <Clock className="h-3 w-3 mr-1" />,
+          icon: <Clock className="mr-1 h-3 w-3" />,
         };
       case "Not Accepted":
         return {
           buttonText: "Retry",
           buttonClass:
             "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-          icon: <AlertTriangle className="h-3 w-3 mr-1" />,
+          icon: <AlertTriangle className="mr-1 h-3 w-3" />,
         };
       case "Peer Review":
         return {
           buttonText: "Waiting",
           buttonClass: "bg-primary text-primary-foreground hover:bg-primary/90",
-          icon: <Clock className="h-3 w-3 mr-1" />,
+          icon: <Clock className="mr-1 h-3 w-3" />,
         };
       case "Cooldown":
         return {
           buttonText: "Cooldown",
           buttonClass: "bg-blue-500 text-white hover:bg-blue-600",
-          icon: <Clock className="h-3 w-3 mr-1" />,
+          icon: <Clock className="mr-1 h-3 w-3" />,
         };
       case "Not Started":
       default:
@@ -90,7 +90,7 @@ function RealTaskRow({
           buttonText: "Start",
           buttonClass:
             "bg-background border border-input text-foreground hover:bg-accent",
-          icon: <Clock className="h-3 w-3 mr-1" />,
+          icon: <Clock className="mr-1 h-3 w-3" />,
         };
     }
   };
@@ -99,69 +99,69 @@ function RealTaskRow({
 
   return (
     <>
-      <tr className="border-b border-border hover:bg-muted/50">
-        <td className="py-4 px-4">
+      <tr className="border-border hover:bg-muted/50 border-b">
+        <td className="px-4 py-4">
           <div className="flex items-center gap-3">
             <div
-              className={`flex items-center justify-center w-8 h-8 rounded-md ${
+              className={`flex h-8 w-8 items-center justify-center rounded-md ${
                 task.status === "Finished" ? "bg-primary/10" : "bg-muted"
               }`}
             >
               <Medal className="h-4 w-4 text-black dark:text-white" />
             </div>
             <div className="flex-1">
-              <div className="font-medium text-sm">{task.title}</div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-sm font-medium">{task.title}</div>
+              <div className="text-muted-foreground text-xs">
                 {task.description}
               </div>
               {task.teamName && (
-                <div className="text-xs text-primary mt-1">
+                <div className="text-primary mt-1 text-xs">
                   Team: {task.teamName}
                 </div>
               )}
             </div>
           </div>
         </td>
-        <td className="py-4 px-4">
+        <td className="px-4 py-4">
           <DifficultyBadge
             level={
               task.difficulty === "Easy"
                 ? 1
                 : task.difficulty === "Medium"
-                ? 2
-                : 3
+                  ? 2
+                  : 3
             }
           />
         </td>
-        <td className="py-4 px-4">
+        <td className="px-4 py-4">
           <StatusBadge
             status={
               task.status === "Finished"
                 ? "approved"
                 : task.status === "Not Accepted"
-                ? "rejected"
-                : task.status === "Peer Review"
-                ? "pending_review"
-                : task.status === "In Progress"
-                ? "in_progress"
-                : "not_started"
+                  ? "rejected"
+                  : task.status === "Peer Review"
+                    ? "pending_review"
+                    : task.status === "In Progress"
+                      ? "in_progress"
+                      : "not_started"
             }
             variant="journey"
           />
         </td>
-        <td className="py-4 px-4">
+        <td className="px-4 py-4">
           <div className="flex items-center gap-1">
             <Zap className="h-4 w-4 text-black dark:text-white" />
             <span className="text-sm font-medium">{task.xp}</span>
           </div>
         </td>
-        <td className="py-4 px-4">
+        <td className="px-4 py-4">
           <div className="flex items-center gap-1">
             <Banknote className="h-4 w-4 text-black dark:text-white" />
             <span className="text-sm font-medium">{task.points}</span>
           </div>
         </td>
-        <td className="py-4 px-4">
+        <td className="px-4 py-4">
           <div className="flex justify-end gap-2">
             {task.status === "Finished" ? (
               <>
@@ -170,13 +170,13 @@ function RealTaskRow({
                   className="h-8 bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
                   disabled
                 >
-                  <CheckCircle className="h-3 w-3 mr-1 text-white" />
+                  <CheckCircle className="mr-1 h-3 w-3 text-white" />
                   Done
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs px-3 py-2 border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
+                  className="h-8 border-[#0000ff] px-3 py-2 text-xs text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                   onClick={() => {
                     router.push(`/dashboard/my-journey/task/${task.id}`);
                   }}
@@ -212,17 +212,17 @@ function RealTaskRow({
       </tr>
       {/* Peer Review Feedback Row */}
       {task.reviewFeedback && (
-        <tr className="bg-primary/5 border-b border-border">
-          <td colSpan={6} className="py-3 px-4">
+        <tr className="bg-primary/5 border-border border-b">
+          <td colSpan={6} className="px-4 py-3">
             <div className="flex items-start gap-3">
-              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 flex-shrink-0 mt-0.5">
+              <div className="bg-primary/10 mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full">
                 <MessageSquare className="h-3 w-3 text-black dark:text-white" />
               </div>
               <div className="flex-1">
-                <div className="text-sm font-medium text-primary mb-1">
+                <div className="text-primary mb-1 text-sm font-medium">
                   Peer Review Feedback:
                 </div>
-                <div className="text-sm text-foreground bg-card rounded-md p-2 border border-border">
+                <div className="text-foreground bg-card border-border rounded-md border p-2 text-sm">
                   {task.reviewFeedback}
                 </div>
               </div>
@@ -259,14 +259,14 @@ function StrikeRow({ strike }: { strike: Strike }) {
         return {
           buttonText: "Done",
           buttonClass: "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90",
-          icon: <CheckCircle className="h-3 w-3 mr-1 text-white" />,
+          icon: <CheckCircle className="mr-1 h-3 w-3 text-white" />,
         };
       case "explain":
         return {
           buttonText: "Explain",
           buttonClass:
             "border border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white bg-background",
-          icon: <Clock className="h-3 w-3 mr-1" />,
+          icon: <Clock className="mr-1 h-3 w-3" />,
         };
     }
   };
@@ -275,38 +275,38 @@ function StrikeRow({ strike }: { strike: Strike }) {
   const actionConfig = getActionConfig(strike.action);
 
   return (
-    <tr className="border-b border-border hover:bg-muted/50">
-      <td className="py-4 px-4">
+    <tr className="border-border hover:bg-muted/50 border-b">
+      <td className="px-4 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
+          <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
             <AlertTriangle className="h-4 w-4 text-black dark:text-white" />
           </div>
           <div>
-            <div className="font-medium text-sm">{strike.title}</div>
-            <div className="text-xs text-muted-foreground">{strike.date}</div>
+            <div className="text-sm font-medium">{strike.title}</div>
+            <div className="text-muted-foreground text-xs">{strike.date}</div>
           </div>
         </div>
       </td>
-      <td className="py-4 px-4">
+      <td className="px-4 py-4">
         <Badge variant="secondary" className={statusConfig.badgeClass}>
           {statusConfig.badgeText}
         </Badge>
       </td>
-      <td className="py-4 px-4">
+      <td className="px-4 py-4">
         <div className="flex items-center gap-1">
           <Zap className="h-4 w-4 text-black dark:text-white" />
           <span className="text-sm font-medium">-{strike.xpPenalty}</span>
         </div>
       </td>
-      <td className="py-4 px-4">
+      <td className="px-4 py-4">
         <div className="flex items-center gap-1">
           <Banknote className="h-4 w-4 text-black dark:text-white" />
           <span className="text-sm font-medium">-{strike.pointsPenalty}</span>
         </div>
       </td>
-      <td className="py-4 px-4">
+      <td className="px-4 py-4">
         <div className="flex justify-end">
-          <Button size="sm" className={`h-8  ${actionConfig.buttonClass}`}>
+          <Button size="sm" className={`h-8 ${actionConfig.buttonClass}`}>
             {actionConfig.icon}
             {actionConfig.buttonText}
           </Button>
@@ -577,14 +577,14 @@ export default function MyJourneyPage() {
   return (
     <main className="p-8">
       {/* Profile Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="mb-2 text-3xl font-bold">
             {loading ? "Loading..." : profile?.name || "User"}
           </h1>
           <Badge
             variant="secondary"
-            className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90 px-3 py-1"
+            className="bg-[#ff78c8] px-3 py-1 text-white hover:bg-[#ff78c8]/90"
           >
             {loading ? "Loading..." : profile?.status || "Active"}
           </Badge>
@@ -600,21 +600,21 @@ export default function MyJourneyPage() {
             onClick={() => setIsIndividualReportModalOpen(true)}
             disabled={hasSubmittedThisWeek}
           >
-            <FileText className="h-4 w-4 mr-2 text-white" />
+            <FileText className="mr-2 h-4 w-4 text-white" />
             {hasSubmittedThisWeek ? "Report Submitted" : "Submit Weekly Report"}
           </Button>
         </div>
       </div>
 
       {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {loading
           ? // Loading skeleton for stats cards
             Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="bg-card rounded-lg p-6 animate-pulse">
-                <div className="h-4 bg-muted rounded w-1/2 mb-2"></div>
-                <div className="h-8 bg-muted rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-muted rounded w-full"></div>
+              <div key={index} className="bg-card animate-pulse rounded-lg p-6">
+                <div className="bg-muted mb-2 h-4 w-1/2 rounded"></div>
+                <div className="bg-muted mb-2 h-8 w-3/4 rounded"></div>
+                <div className="bg-muted h-3 w-full rounded"></div>
               </div>
             ))
           : statsCards.map((card, index) => (
@@ -631,7 +631,7 @@ export default function MyJourneyPage() {
 
       {/* Tabs Section */}
       <Tabs defaultValue="achievements" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-8">
+        <TabsList className="mb-8 grid w-full grid-cols-3">
           <TabsTrigger value="achievements" className="flex items-center gap-2">
             <Trophy className="h-4 w-4 text-black dark:text-white" />
             Achievements
@@ -660,7 +660,7 @@ export default function MyJourneyPage() {
           </div>
 
           {/* Achievement Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             {loading ? (
               <div className="col-span-full flex items-center justify-center py-8">
                 <div className="text-muted-foreground">
@@ -668,7 +668,7 @@ export default function MyJourneyPage() {
                 </div>
               </div>
             ) : achievements.length === 0 ? (
-              <div className="col-span-full text-center py-8 text-muted-foreground">
+              <div className="text-muted-foreground col-span-full py-8 text-center">
                 No achievements available yet
               </div>
             ) : (
@@ -709,7 +709,7 @@ export default function MyJourneyPage() {
 
           {/* Filter Status */}
           {selectedAchievementId && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-blue-800">
                   <span className="font-medium">Showing tasks for:</span>{" "}
@@ -721,7 +721,7 @@ export default function MyJourneyPage() {
                 </div>
                 <button
                   onClick={() => handleAchievementClick(null)}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-800"
                 >
                   Show All Tasks
                 </button>
@@ -731,13 +731,13 @@ export default function MyJourneyPage() {
 
           {/* Tasks Table */}
           <div className="bg-card rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">My Tasks</h3>
+            <h3 className="mb-4 text-lg font-semibold">My Tasks</h3>
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="text-muted-foreground">Loading tasks...</div>
               </div>
             ) : filteredTasks.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-muted-foreground py-8 text-center">
                 {selectedAchievementId
                   ? "No tasks found for this achievement"
                   : "No individual tasks assigned yet. Check back later for new challenges!"}
@@ -746,23 +746,23 @@ export default function MyJourneyPage() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <tr className="border-border border-b">
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                         Task
                       </th>
-                      <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                         Difficulty
                       </th>
-                      <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                         Status
                       </th>
-                      <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                         XP
                       </th>
-                      <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                         Points
                       </th>
-                      <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+                      <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                         Action
                       </th>
                     </tr>
@@ -799,24 +799,24 @@ export default function MyJourneyPage() {
 
           {/* Strikes Table */}
           <div className="bg-card rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Strikes</h3>
+            <h3 className="mb-4 text-lg font-semibold">Strikes</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                  <tr className="border-border border-b">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Strike
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Status
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       XP Penalty
                     </th>
-                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Points Penalty
                     </th>
-                    <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+                    <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                       Action
                     </th>
                   </tr>

@@ -18,19 +18,19 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   return (
     <Card
-      className={`w-full max-w-[500px] h-full flex flex-col transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${
+      className={`flex h-full w-full max-w-[500px] flex-col transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${
         product.isCurrentUserMember
-          ? "ring-2 ring-[#0000ff]/20 border-[#0000ff]/30 bg-[#0000ff]/5"
+          ? "border-[#0000ff]/30 bg-[#0000ff]/5 ring-2 ring-[#0000ff]/20"
           : ""
       }`}
     >
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
-          <div className="space-y-1 flex-1 mr-3">
-            <h3 className="font-semibold text-lg">{product.name}</h3>
+          <div className="mr-3 flex-1 space-y-1">
+            <h3 className="text-lg font-semibold">{product.name}</h3>
             <div className="h-10 overflow-hidden">
               <p
-                className="text-sm text-muted-foreground leading-5"
+                className="text-muted-foreground text-sm leading-5"
                 style={{
                   display: "-webkit-box",
                   WebkitLineClamp: 2,
@@ -47,7 +47,7 @@ export function ProductCard({ product }: ProductCardProps) {
             variant={product.status === "Active" ? "default" : "secondary"}
             className={
               product.status === "Active"
-                ? "bg-[#ff78c8]/10 text-[#ff78c8] hover:bg-[#ff78c8]/20 border-[#ff78c8]/20"
+                ? "border-[#ff78c8]/20 bg-[#ff78c8]/10 text-[#ff78c8] hover:bg-[#ff78c8]/20"
                 : "bg-muted text-muted-foreground"
             }
           >
@@ -56,53 +56,53 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4 pb-4 flex-grow">
+      <CardContent className="flex-grow space-y-4 pb-4">
         {/* Metrics */}
         <div className="space-y-4">
           {/* Clients */}
-          <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+          <div className="border-border flex items-center gap-3 rounded-md border p-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800">
               <Users className="h-4 w-4 text-black dark:text-white" />
             </div>
             <div>
-              <div className="font-semibold text-sm">
+              <div className="text-sm font-semibold">
                 {product.customers.count}
               </div>
-              <div className="text-xs text-muted-foreground">Members</div>
+              <div className="text-muted-foreground text-xs">Members</div>
             </div>
           </div>
 
           {/* Revenue */}
-          <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+          <div className="border-border flex items-center gap-3 rounded-md border p-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800">
               <DollarSign className="h-4 w-4 text-black dark:text-white" />
             </div>
             <div>
-              <div className="font-semibold text-sm">
+              <div className="text-sm font-semibold">
                 ${product.revenue.amount}
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-muted-foreground text-xs">
                 {product.revenue.label}
               </div>
             </div>
           </div>
 
           {/* Points */}
-          <div className="flex items-center gap-3 border border-border p-2 rounded-md">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800">
+          <div className="border-border flex items-center gap-3 rounded-md border p-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800">
               <Trophy className="h-4 w-4 text-black dark:text-white" />
             </div>
             <div>
-              <div className="font-semibold text-sm">
+              <div className="text-sm font-semibold">
                 {product.points.amount.toLocaleString()}
               </div>
-              <div className="text-xs text-muted-foreground">Points Earned</div>
+              <div className="text-muted-foreground text-xs">Points Earned</div>
             </div>
           </div>
         </div>
       </CardContent>
 
-      <CardFooter className="pt-0 flex flex-col gap-3 mt-auto">
+      <CardFooter className="mt-auto flex flex-col gap-3 pt-0">
         {/* Website Link (if available) */}
         {product.website && (
           <div className="w-full">
@@ -129,7 +129,7 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
 
         {/* Bottom row */}
-        <div className="w-full flex items-center justify-between">
+        <div className="flex w-full items-center justify-between">
           {/* Team Members Avatar Stack */}
           <AvatarStack users={product.teamMembers} maxVisible={4} size="md" />
 

@@ -90,8 +90,8 @@ export function IndividualWeeklyReportsTable({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-pulse text-muted-foreground">
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-muted-foreground animate-pulse">
           Loading reports...
         </div>
       </div>
@@ -107,7 +107,7 @@ export function IndividualWeeklyReportsTable({
           onClick={() => setIsModalOpen(true)}
           disabled={hasSubmittedThisWeek}
           size="sm"
-          className="gap-2 bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+          className="gap-2 bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
         >
           <Plus className="h-4 w-4 text-white" />
           {hasSubmittedThisWeek ? "Report Submitted" : "Submit This Week"}
@@ -119,20 +119,20 @@ export function IndividualWeeklyReportsTable({
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <tr className="border-border border-b">
+                <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                   Week
                 </th>
-                <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                   Learning Highlights
                 </th>
-                <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                   Goals Achieved
                 </th>
-                <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+                <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                   Submitted
                 </th>
-                <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+                <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                   Action
                 </th>
               </tr>
@@ -142,7 +142,7 @@ export function IndividualWeeklyReportsTable({
                 <tr>
                   <td
                     colSpan={5}
-                    className="text-center py-8 text-muted-foreground"
+                    className="text-muted-foreground py-8 text-center"
                   >
                     No individual reports submitted yet. Start by submitting
                     your first weekly report!
@@ -161,20 +161,20 @@ export function IndividualWeeklyReportsTable({
                       key={report.id}
                       className={`${
                         index < reports.length - 1
-                          ? "border-b border-border/50"
+                          ? "border-border/50 border-b"
                           : ""
-                      } hover:bg-muted/20 transition-colors bg-primary/5 border-l-4 border-l-primary`}
+                      } hover:bg-muted/20 bg-primary/5 border-l-primary border-l-4 transition-colors`}
                     >
-                      <td className="py-4 px-4">
+                      <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
+                          <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
                             <Calendar className="h-4 w-4 text-black dark:text-white" />
                           </div>
                           <div>
-                            <div className="font-medium text-sm text-foreground">
+                            <div className="text-foreground text-sm font-medium">
                               Week {report.week_number}
                             </div>
-                            <div className="text-xs text-muted-foreground">
+                            <div className="text-muted-foreground text-xs">
                               {formatWeekRange(
                                 report.week_start_date,
                                 report.week_end_date
@@ -183,38 +183,38 @@ export function IndividualWeeklyReportsTable({
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 px-4">
-                        <div className="max-w-[300px] truncate text-sm text-foreground">
+                      <td className="px-4 py-4">
+                        <div className="text-foreground max-w-[300px] truncate text-sm">
                           {(submissionData?.skillsLearned as string) ||
                             "No skills noted"}
                         </div>
                       </td>
-                      <td className="py-4 px-4">
-                        <div className="max-w-[300px] truncate text-sm text-foreground">
+                      <td className="px-4 py-4">
+                        <div className="text-foreground max-w-[300px] truncate text-sm">
                           {(submissionData?.tasksCompleted as string) ||
                             "No tasks noted"}
                         </div>
                       </td>
-                      <td className="py-4 px-4">
-                        <div className="text-sm text-muted-foreground">
+                      <td className="px-4 py-4">
+                        <div className="text-muted-foreground text-sm">
                           {new Date(report.submitted_at!).toLocaleDateString()}
                         </div>
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="px-4 py-4">
                         <div className="flex justify-end gap-2">
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-xs border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
+                            className="border-[#0000ff] text-xs text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                             onClick={() => handleViewReport(report)}
                           >
                             View Report
                           </Button>
                           <Button
                             size="sm"
-                            className="text-xs bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+                            className="bg-[#ff78c8] text-xs text-white hover:bg-[#ff78c8]/90"
                           >
-                            <CheckCircle className="h-3 w-3 mr-1 text-white" />
+                            <CheckCircle className="mr-1 h-3 w-3 text-white" />
                             Done
                           </Button>
                         </div>
@@ -268,12 +268,12 @@ function ViewIndividualReportModal({
         className="fixed inset-0 bg-black/50"
         onClick={() => onOpenChange(false)}
       />
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-background border rounded-lg shadow-lg max-h-[80vh] overflow-y-auto">
+      <div className="bg-background fixed top-1/2 left-1/2 max-h-[80vh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border shadow-lg">
         <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="mb-6 flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold">Weekly Learning Report</h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Week {report.week_number} •{" "}
                 {formatWeekRange(report.week_start_date, report.week_end_date)}
               </p>
@@ -285,22 +285,22 @@ function ViewIndividualReportModal({
 
           <div className="space-y-6">
             <div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="mb-2 flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-black dark:text-white" />
                 <h3 className="font-medium">Tasks/Projects Completed</h3>
               </div>
-              <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
+              <p className="text-muted-foreground bg-muted rounded p-3 text-sm">
                 {(submissionData?.tasksCompleted as string) ||
                   "No tasks completed"}
               </p>
             </div>
 
             <div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="mb-2 flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-black dark:text-white" />
                 <h3 className="font-medium">New Skills/Knowledge Acquired</h3>
               </div>
-              <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
+              <p className="text-muted-foreground bg-muted rounded p-3 text-sm">
                 {(submissionData?.skillsLearned as string) ||
                   "No skills learned"}
               </p>
@@ -308,39 +308,39 @@ function ViewIndividualReportModal({
 
             {(submissionData?.challengesFaced as string) && (
               <div>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="mb-2 flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-black dark:text-white" />
                   <h3 className="font-medium">Challenges & Solutions</h3>
                 </div>
-                <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
+                <p className="text-muted-foreground bg-muted rounded p-3 text-sm">
                   {submissionData.challengesFaced as string}
                 </p>
               </div>
             )}
 
             <div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="mb-2 flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-black dark:text-white" />
                 <h3 className="font-medium">Goals for Next Week</h3>
               </div>
-              <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
+              <p className="text-muted-foreground bg-muted rounded p-3 text-sm">
                 {(submissionData?.goalsNextWeek as string) || "No goals set"}
               </p>
             </div>
 
             {(submissionData?.additionalNotes as string) && (
               <div>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="mb-2 flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-black dark:text-white" />
                   <h3 className="font-medium">Additional Notes</h3>
                 </div>
-                <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
+                <p className="text-muted-foreground bg-muted rounded p-3 text-sm">
                   {submissionData.additionalNotes as string}
                 </p>
               </div>
             )}
 
-            <div className="text-xs text-muted-foreground pt-4 border-t">
+            <div className="text-muted-foreground border-t pt-4 text-xs">
               Submitted on {new Date(report.submitted_at!).toLocaleString()}
             </div>
           </div>

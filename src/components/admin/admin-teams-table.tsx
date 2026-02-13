@@ -88,7 +88,7 @@ export function AdminTeamsTable() {
                       <Badge variant="secondary">{team.status}</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-muted-foreground text-sm">
                     {new Date(team.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
@@ -97,7 +97,7 @@ export function AdminTeamsTable() {
                       size="sm"
                       onClick={() => setSelectedTeamId(team.id)}
                     >
-                      <Eye className="h-4 w-4 mr-1" />
+                      <Eye className="mr-1 h-4 w-4" />
                       Details
                     </Button>
                   </TableCell>

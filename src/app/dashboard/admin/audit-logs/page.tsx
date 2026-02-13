@@ -146,7 +146,7 @@ export default function AuditLogsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {/* Table Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Table</label>
@@ -214,7 +214,7 @@ export default function AuditLogsPage() {
             </div>
           </div>
 
-          <div className="flex gap-2 mt-4">
+          <div className="mt-4 flex gap-2">
             <Button onClick={fetchLogs}>Apply Filters</Button>
             <Button variant="outline" onClick={handleReset}>
               Reset
@@ -249,11 +249,11 @@ export default function AuditLogsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center">
               Loading...
             </div>
           ) : logs.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center">
               No audit logs found
             </div>
           ) : (
@@ -265,7 +265,7 @@ export default function AuditLogsPage() {
                 return (
                   <div
                     key={log.id}
-                    className="border rounded-lg p-4 space-y-3 hover:bg-muted/50 transition-colors"
+                    className="hover:bg-muted/50 space-y-3 rounded-lg border p-4 transition-colors"
                   >
                     {/* Main Info */}
                     <div className="flex items-start justify-between gap-4">
@@ -274,7 +274,7 @@ export default function AuditLogsPage() {
                         <div className="flex items-center gap-2">
                           <span className="text-xl">{formatted.icon}</span>
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex flex-wrap items-center gap-2">
                               {log.changed_by_name && (
                                 <span className="font-medium">
                                   {log.changed_by_name}
@@ -290,7 +290,7 @@ export default function AuditLogsPage() {
                               )}
                             </div>
                             {formatted.description && (
-                              <p className="text-sm text-muted-foreground mt-1">
+                              <p className="text-muted-foreground mt-1 text-sm">
                                 {formatted.description}
                               </p>
                             )}
@@ -319,7 +319,7 @@ export default function AuditLogsPage() {
                                       </span>
                                     </>
                                   )}
-                                  <span className="text-green-600 font-medium">
+                                  <span className="font-medium text-green-600">
                                     {change.newValue}
                                   </span>
                                 </div>
@@ -330,8 +330,8 @@ export default function AuditLogsPage() {
                       </div>
 
                       {/* Right side - Time and badges */}
-                      <div className="flex flex-col items-end gap-2 min-w-[180px]">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex min-w-[180px] flex-col items-end gap-2">
+                        <div className="text-muted-foreground flex items-center gap-2 text-xs">
                           <Calendar className="h-3 w-3" />
                           {formatDate(log.created_at)}
                         </div>
@@ -346,11 +346,11 @@ export default function AuditLogsPage() {
 
                     {/* Raw Data (Collapsible) */}
                     <details className="pl-7">
-                      <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 w-fit">
+                      <summary className="text-muted-foreground hover:text-foreground flex w-fit cursor-pointer items-center gap-1 text-xs">
                         <ChevronDown className="h-3 w-3" />
                         View raw data
                       </summary>
-                      <div className="mt-2 space-y-2 p-3 bg-muted/50 rounded text-xs">
+                      <div className="bg-muted/50 mt-2 space-y-2 rounded p-3 text-xs">
                         {log.changed_by_email && (
                           <div>
                             <span className="font-medium">Changed by: </span>
@@ -361,16 +361,16 @@ export default function AuditLogsPage() {
                         )}
                         {log.old_data && (
                           <div>
-                            <p className="font-medium mb-1">Old Data:</p>
-                            <pre className="overflow-x-auto bg-background p-2 rounded">
+                            <p className="mb-1 font-medium">Old Data:</p>
+                            <pre className="bg-background overflow-x-auto rounded p-2">
                               {JSON.stringify(log.old_data, null, 2)}
                             </pre>
                           </div>
                         )}
                         {log.new_data && (
                           <div>
-                            <p className="font-medium mb-1">New Data:</p>
-                            <pre className="overflow-x-auto bg-background p-2 rounded">
+                            <p className="mb-1 font-medium">New Data:</p>
+                            <pre className="bg-background overflow-x-auto rounded p-2">
                               {JSON.stringify(log.new_data, null, 2)}
                             </pre>
                           </div>

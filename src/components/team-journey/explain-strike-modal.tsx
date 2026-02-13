@@ -86,13 +86,13 @@ export function ExplainStrikeModal({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <div className="text-sm font-medium">Strike Details</div>
-            <div className="rounded-md bg-muted p-3 space-y-1">
+            <div className="bg-muted space-y-1 rounded-md p-3">
               <div className="text-sm font-medium">{strike?.title}</div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-muted-foreground text-xs">
                 {strike?.datetime}
               </div>
               {strike?.description && (
-                <div className="text-xs text-muted-foreground mt-2">
+                <div className="text-muted-foreground mt-2 text-xs">
                   {strike.description}
                 </div>
               )}

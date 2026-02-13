@@ -105,8 +105,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
       setDetailedInstructions(fullTask.detailed_instructions || "");
       setTipsContent((fullTask.tips_content as unknown as TipContent[]) || []);
       setPeerReviewCriteria(
-        (fullTask.peer_review_criteria as unknown as PeerReviewCriteria[]) ||
-          [],
+        (fullTask.peer_review_criteria as unknown as PeerReviewCriteria[]) || []
       );
       setLearningObjectives(fullTask.learning_objectives || []);
       setDeliverables(fullTask.deliverables || []);
@@ -137,7 +136,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
   const updateTip = (
     index: number,
     field: "title" | "content",
-    value: string,
+    value: string
   ) => {
     const updated = [...tipsContent];
     updated[index][field] = value;
@@ -186,7 +185,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
   const updateResource = (
     index: number,
     field: keyof ResourceItem,
-    value: string,
+    value: string
   ) => {
     const updated = [...resources];
     updated[index] = { ...updated[index], [field]: value };
@@ -227,7 +226,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
   const updatePeerReviewPoint = (
     categoryIndex: number,
     pointIndex: number,
-    value: string,
+    value: string
   ) => {
     const updated = [...peerReviewCriteria];
     const updatedPoints = [...updated[categoryIndex].points];
@@ -334,7 +333,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
-        className="max-w-2xl h-[80vh] flex flex-col"
+        className="flex h-[80vh] max-w-2xl flex-col"
         onEscapeKeyDown={() => {
           if (!isSubmitting) {
             setOpen(false);
@@ -351,24 +350,24 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
         </DialogHeader>
 
         {error && (
-          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+          <div className="bg-destructive/10 border-destructive/20 text-destructive rounded-lg border p-3 text-sm">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg text-primary text-sm">
+          <div className="bg-primary/10 border-primary/20 text-primary rounded-lg border p-3 text-sm">
             {success}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
-            className="flex flex-col flex-1 min-h-0"
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <TabsList className={`grid w-full grid-cols-4 flex-shrink-0`}>
+            <TabsList className={`grid w-full flex-shrink-0 grid-cols-4`}>
               <TabsTrigger value="basic">Basic</TabsTrigger>
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="tips">Tips</TabsTrigger>
@@ -377,7 +376,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
 
             <TabsContent
               value="basic"
-              className="flex-1 min-h-0 overflow-y-auto space-y-4"
+              className="min-h-0 flex-1 space-y-4 overflow-y-auto"
             >
               <Card>
                 <CardHeader>
@@ -393,7 +392,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                   {/* Task Type Display */}
                   <div className="space-y-2">
                     <Label>Task Type</Label>
-                    <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                    <div className="bg-muted flex items-center gap-2 rounded-lg p-3">
                       <Badge
                         variant="secondary"
                         className={
@@ -406,7 +405,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                           ? "Team Task"
                           : "Individual Task"}
                       </Badge>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-muted-foreground text-sm">
                         {taskContext === "team"
                           ? "Collaborative project work assigned to teams"
                           : "Personal learning/skill building assigned to individuals"}
@@ -567,7 +566,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
 
             <TabsContent
               value="content"
-              className="flex-1 min-h-0 overflow-y-auto space-y-4"
+              className="min-h-0 flex-1 space-y-4 overflow-y-auto"
             >
               <Card>
                 <CardHeader>
@@ -606,7 +605,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                       </Button>
                     </div>
                     {learningObjectives.map((objective, index) => (
-                      <div key={index} className="flex gap-2 items-center">
+                      <div key={index} className="flex items-center gap-2">
                         <Input
                           value={objective}
                           onChange={(e) =>
@@ -643,7 +642,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                       </Button>
                     </div>
                     {deliverables.map((deliverable, index) => (
-                      <div key={index} className="flex gap-2 items-center">
+                      <div key={index} className="flex items-center gap-2">
                         <Input
                           value={deliverable}
                           onChange={(e) =>
@@ -666,13 +665,13 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                   </div>
 
                   {/* Peer Review Criteria */}
-                  <div className="space-y-3 pt-4 border-t">
+                  <div className="space-y-3 border-t pt-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <Label className="text-base font-semibold">
                           Peer Review Criteria
                         </Label>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           Define what reviewers should check when evaluating
                           submissions
                         </p>
@@ -690,15 +689,15 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                     {peerReviewCriteria.map((criteria, categoryIndex) => (
                       <div
                         key={categoryIndex}
-                        className="border rounded-lg p-4 space-y-3 bg-muted/30"
+                        className="bg-muted/30 space-y-3 rounded-lg border p-4"
                       >
-                        <div className="flex gap-2 items-center">
+                        <div className="flex items-center gap-2">
                           <Input
                             value={criteria.category}
                             onChange={(e) =>
                               updatePeerReviewCategory(
                                 categoryIndex,
-                                e.target.value,
+                                e.target.value
                               )
                             }
                             placeholder="Category name (e.g., 'What to evaluate', 'Reject if')"
@@ -717,11 +716,11 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                        <div className="space-y-2 pl-4 border-l-2 border-muted-foreground/20">
+                        <div className="border-muted-foreground/20 space-y-2 border-l-2 pl-4">
                           {criteria.points.map((point, pointIndex) => (
                             <div
                               key={pointIndex}
-                              className="flex gap-2 items-start"
+                              className="flex items-start gap-2"
                             >
                               <Textarea
                                 value={point}
@@ -729,7 +728,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                                   updatePeerReviewPoint(
                                     categoryIndex,
                                     pointIndex,
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                                 placeholder="Review criterion point (supports markdown)"
@@ -743,7 +742,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                                 onClick={() =>
                                   removePeerReviewPoint(
                                     categoryIndex,
-                                    pointIndex,
+                                    pointIndex
                                   )
                                 }
                                 disabled={
@@ -768,7 +767,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                       </div>
                     ))}
                     {peerReviewCriteria.length === 0 && (
-                      <p className="text-sm text-muted-foreground italic">
+                      <p className="text-muted-foreground text-sm italic">
                         No peer review criteria defined. Click "Add Category" to
                         create one.
                       </p>
@@ -780,7 +779,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
 
             <TabsContent
               value="tips"
-              className="flex-1 min-h-0 overflow-y-auto space-y-4"
+              className="min-h-0 flex-1 space-y-4 overflow-y-auto"
             >
               <Card>
                 <CardHeader>
@@ -807,9 +806,9 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                     {tipsContent.map((tip, index) => (
                       <div
                         key={index}
-                        className="border rounded-lg p-4 space-y-2"
+                        className="space-y-2 rounded-lg border p-4"
                       >
-                        <div className="flex gap-2 items-center">
+                        <div className="flex items-center gap-2">
                           <Input
                             value={tip.title}
                             onChange={(e) =>
@@ -858,9 +857,9 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                     {resources.map((resource, index) => (
                       <div
                         key={index}
-                        className="border rounded-lg p-4 space-y-2"
+                        className="space-y-2 rounded-lg border p-4"
                       >
-                        <div className="flex gap-2 items-center">
+                        <div className="flex items-center gap-2">
                           <Input
                             value={resource.title}
                             onChange={(e) =>
@@ -906,7 +905,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
 
             <TabsContent
               value="preview"
-              className="flex-1 min-h-0 overflow-y-auto space-y-4"
+              className="min-h-0 flex-1 space-y-4 overflow-y-auto"
             >
               <Card>
                 <CardHeader>
@@ -916,10 +915,10 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="border rounded-lg p-6 bg-muted/20">
+                  <div className="bg-muted/20 rounded-lg border p-6">
                     <div className="space-y-4">
                       <div>
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="mb-2 flex items-center gap-2">
                           <Badge variant="secondary">{category}</Badge>
                           <Badge
                             variant={
@@ -939,12 +938,12 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-4 py-4 border-y">
+                      <div className="grid grid-cols-3 gap-4 border-y py-4">
                         <div className="text-center">
                           <div className="text-2xl font-bold">
                             {difficultyLevel}
                           </div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-muted-foreground text-sm">
                             Difficulty
                           </div>
                         </div>
@@ -952,7 +951,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                           <div className="text-2xl font-bold">
                             {baseXpReward}
                           </div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-muted-foreground text-sm">
                             XP Reward
                           </div>
                         </div>
@@ -960,7 +959,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                           <div className="text-2xl font-bold">
                             {basePointsReward}
                           </div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-muted-foreground text-sm">
                             Points
                           </div>
                         </div>
@@ -968,7 +967,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
 
                       {detailedInstructions && (
                         <div>
-                          <h3 className="font-semibold mb-2">
+                          <h3 className="mb-2 font-semibold">
                             Detailed Instructions
                           </h3>
                           <div className="prose prose-sm max-w-none">
@@ -983,7 +982,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
             </TabsContent>
           </Tabs>
 
-          <DialogFooter className="flex-shrink-0 mt-4">
+          <DialogFooter className="mt-4 flex-shrink-0">
             <Button
               type="button"
               variant="outline"
@@ -995,7 +994,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+              className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
             >
               {isSubmitting ? "Updating..." : "Update Task"}
             </Button>

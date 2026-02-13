@@ -1,0 +1,13 @@
+{
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.tsserver.maxTsServerMemory": 4096,
+  "explorer.confirmRename": true,
+  "files.enableTrash": true,
+  "search.useIgnoreFiles": true,
+  "search.smartCase": true,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  }
+}

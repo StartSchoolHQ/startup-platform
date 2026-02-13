@@ -15,11 +15,11 @@ export function AchievementGrid({
 }: AchievementGridProps) {
   if (achievements.length === 0) {
     return (
-      <div className="text-center py-8">
-        <div className="text-gray-500 text-lg mb-2">
+      <div className="py-8 text-center">
+        <div className="mb-2 text-lg text-gray-500">
           No achievements available
         </div>
-        <div className="text-gray-400 text-sm">
+        <div className="text-sm text-gray-400">
           Complete tasks to unlock achievements!
         </div>
       </div>
@@ -37,7 +37,7 @@ export function AchievementGrid({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {achievements.map((achievement) => (
           <AchievementCard
             key={achievement.achievement_id}
@@ -49,7 +49,7 @@ export function AchievementGrid({
       </div>
 
       {selectedAchievementId && (
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
           <div className="flex items-center justify-between">
             <div className="text-sm text-blue-800">
               <span className="font-medium">Filtering tasks by:</span>{" "}
@@ -61,7 +61,7 @@ export function AchievementGrid({
             </div>
             <button
               onClick={() => onAchievementClick(null)}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              className="text-sm font-medium text-blue-600 hover:text-blue-800"
             >
               Show All Tasks
             </button>

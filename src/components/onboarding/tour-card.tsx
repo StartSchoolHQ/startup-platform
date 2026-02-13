@@ -30,8 +30,8 @@ export function TourCard({
   }
 
   return (
-    <Card className="w-[320px] shadow-lg border-primary/30">
-      <CardHeader className="pb-2 relative">
+    <Card className="border-primary/30 w-[320px] shadow-lg">
+      <CardHeader className="relative pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {step.icon && <span className="text-lg">{step.icon}</span>}
@@ -48,12 +48,12 @@ export function TourCard({
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           Step {currentStep + 1} of {totalSteps}
         </p>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="text-sm text-muted-foreground mb-4">{step.content}</div>
+        <div className="text-muted-foreground mb-4 text-sm">{step.content}</div>
         <div className="flex items-center justify-between">
           <div>
             {currentStep > 0 && (

@@ -37,26 +37,26 @@ function DashboardItem({ stat, activity }: DashboardItemProps) {
         iconColor={iconColor}
         backgroundColor="bg-gray-100 dark:bg-gray-800"
       />
-      <div className={isActivity ? "flex-1" : "flex-1 min-w-0"}>
+      <div className={isActivity ? "flex-1" : "min-w-0 flex-1"}>
         <div className="text-lg font-bold">{value}</div>
         {label && (
           <div
             className={
               isActivity
-                ? "text-xs text-muted-foreground"
-                : "text-sm text-muted-foreground"
+                ? "text-muted-foreground text-xs"
+                : "text-muted-foreground text-sm"
             }
           >
             {label}
           </div>
         )}
         {isActivity && activity.indicators && (
-          <div className="flex gap-1 mt-1">
-            <div className="w-2 h-2 bg-destructive rounded-full"></div>
-            <div className="w-2 h-2 bg-destructive rounded-full"></div>
-            <div className="w-2 h-2 bg-muted-foreground/30 rounded-full"></div>
-            <div className="w-2 h-2 bg-muted-foreground/30 rounded-full"></div>
-            <div className="w-2 h-2 bg-muted-foreground/30 rounded-full"></div>
+          <div className="mt-1 flex gap-1">
+            <div className="bg-destructive h-2 w-2 rounded-full"></div>
+            <div className="bg-destructive h-2 w-2 rounded-full"></div>
+            <div className="bg-muted-foreground/30 h-2 w-2 rounded-full"></div>
+            <div className="bg-muted-foreground/30 h-2 w-2 rounded-full"></div>
+            <div className="bg-muted-foreground/30 h-2 w-2 rounded-full"></div>
           </div>
         )}
       </div>

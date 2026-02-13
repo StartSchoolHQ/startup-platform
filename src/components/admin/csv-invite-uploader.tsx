@@ -22,7 +22,7 @@ interface InvitationResult {
 export function CSVInviteUploader() {
   const [csvData, setCsvData] = useState<CSVRow[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
-    [],
+    []
   );
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<InvitationResult[] | null>(null);
@@ -86,7 +86,7 @@ export function CSVInviteUploader() {
       });
 
       toast.success(
-        `${data.summary.succeeded} succeeded, ${data.summary.failed} failed`,
+        `${data.summary.succeeded} succeeded, ${data.summary.failed} failed`
       );
 
       if (data.summary.succeeded > 0) {
@@ -94,7 +94,7 @@ export function CSVInviteUploader() {
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to send invitations",
+        error instanceof Error ? error.message : "Failed to send invitations"
       );
     } finally {
       setLoading(false);
@@ -111,11 +111,11 @@ export function CSVInviteUploader() {
     <div className="space-y-4">
       {/* File Upload */}
       {csvData.length === 0 ? (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+        <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center">
           <Upload className="mx-auto h-12 w-12 text-gray-400" />
           <div className="mt-4">
             <label htmlFor="csv-upload" className="cursor-pointer">
-              <span className="text-sm font-medium text-primary hover:text-primary/80">
+              <span className="text-primary hover:text-primary/80 text-sm font-medium">
                 Upload CSV file
               </span>
               <input
@@ -126,7 +126,7 @@ export function CSVInviteUploader() {
                 className="sr-only"
               />
             </label>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-muted-foreground mt-2 text-xs">
               CSV must have columns: email, first_name, last_name
             </p>
           </div>
@@ -140,29 +140,29 @@ export function CSVInviteUploader() {
                 {csvData.length} {csvData.length === 1 ? "user" : "users"} ready
               </h3>
               {validationErrors.length > 0 && (
-                <p className="text-sm text-destructive flex items-center gap-1">
+                <p className="text-destructive flex items-center gap-1 text-sm">
                   <AlertCircle className="h-4 w-4" />
                   {validationErrors.length} validation errors
                 </p>
               )}
               {validationErrors.length === 0 && (
-                <p className="text-sm text-green-600 flex items-center gap-1">
+                <p className="flex items-center gap-1 text-sm text-green-600">
                   <CheckCircle2 className="h-4 w-4" />
                   All rows valid
                 </p>
               )}
             </div>
             <Button variant="outline" size="sm" onClick={handleClear}>
-              <X className="h-4 w-4 mr-2" />
+              <X className="mr-2 h-4 w-4" />
               Clear
             </Button>
           </div>
 
           {/* Validation Errors */}
           {validationErrors.length > 0 && (
-            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-              <h4 className="font-semibold text-sm mb-2">Validation Errors:</h4>
-              <ul className="text-sm space-y-1">
+            <div className="bg-destructive/10 border-destructive/20 rounded-lg border p-4">
+              <h4 className="mb-2 text-sm font-semibold">Validation Errors:</h4>
+              <ul className="space-y-1 text-sm">
                 {validationErrors.slice(0, 10).map((err, idx) => (
                   <li key={idx} className="text-destructive">
                     Row {err.row}: {err.field} - {err.error}
@@ -178,7 +178,7 @@ export function CSVInviteUploader() {
           )}
 
           {/* Preview Table */}
-          <div className="border rounded-lg overflow-hidden">
+          <div className="overflow-hidden rounded-lg border">
             <div className="max-h-64 overflow-y-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted sticky top-0">
@@ -196,7 +196,7 @@ export function CSVInviteUploader() {
                 <tbody>
                   {csvData.map((row, idx) => {
                     const rowErrors = validationErrors.filter(
-                      (e) => e.row === idx + 1,
+                      (e) => e.row === idx + 1
                     );
                     return (
                       <tr
@@ -205,10 +205,10 @@ export function CSVInviteUploader() {
                           rowErrors.length > 0 ? "bg-destructive/10" : ""
                         }
                       >
-                        <td className="px-4 py-2 border-t">{idx + 1}</td>
-                        <td className="px-4 py-2 border-t">{row.email}</td>
-                        <td className="px-4 py-2 border-t">{row.first_name}</td>
-                        <td className="px-4 py-2 border-t">{row.last_name}</td>
+                        <td className="border-t px-4 py-2">{idx + 1}</td>
+                        <td className="border-t px-4 py-2">{row.email}</td>
+                        <td className="border-t px-4 py-2">{row.first_name}</td>
+                        <td className="border-t px-4 py-2">{row.last_name}</td>
                       </tr>
                     );
                   })}
@@ -219,7 +219,7 @@ export function CSVInviteUploader() {
 
           {/* Loading */}
           {loading && (
-            <div className="text-sm text-muted-foreground text-center py-4">
+            <div className="text-muted-foreground py-4 text-center text-sm">
               Sending invitations...
             </div>
           )}
@@ -229,13 +229,13 @@ export function CSVInviteUploader() {
             <div className="space-y-3">
               {/* Success Summary */}
               {results.some((r) => r.success) && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="text-sm font-semibold text-green-800 mb-2">
-                    <CheckCircle2 className="inline w-4 h-4 mr-1" />
+                <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                  <p className="mb-2 text-sm font-semibold text-green-800">
+                    <CheckCircle2 className="mr-1 inline h-4 w-4" />
                     Successfully invited (
                     {results.filter((r) => r.success).length})
                   </p>
-                  <ul className="text-sm text-green-700 space-y-1">
+                  <ul className="space-y-1 text-sm text-green-700">
                     {results
                       .filter((r) => r.success)
                       .map((result, idx) => (
@@ -247,13 +247,13 @@ export function CSVInviteUploader() {
 
               {/* Failed Summary */}
               {results.some((r) => !r.success) && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-sm font-semibold text-red-800 mb-2">
-                    <AlertCircle className="inline w-4 h-4 mr-1" />
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                  <p className="mb-2 text-sm font-semibold text-red-800">
+                    <AlertCircle className="mr-1 inline h-4 w-4" />
                     Failed to invite ({results.filter((r) => !r.success).length}
                     )
                   </p>
-                  <ul className="text-sm text-red-700 space-y-1">
+                  <ul className="space-y-1 text-sm text-red-700">
                     {results
                       .filter((r) => !r.success)
                       .map((result, idx) => (

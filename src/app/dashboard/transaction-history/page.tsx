@@ -97,7 +97,7 @@ export default function TransactionHistoryPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total XP</CardTitle>
@@ -105,7 +105,7 @@ export default function TransactionHistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{user?.total_xp || 0}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Experience points earned
             </p>
           </CardContent>
@@ -118,7 +118,7 @@ export default function TransactionHistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{user?.total_points || 0}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Available startup capital
             </p>
           </CardContent>
@@ -132,9 +132,9 @@ export default function TransactionHistoryPage() {
         </CardHeader>
         <CardContent>
           {transactions.length === 0 ? (
-            <div className="text-center py-8">
+            <div className="py-8 text-center">
               <p className="text-muted-foreground">No transactions yet</p>
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-muted-foreground mt-2 text-sm">
                 Start completing tasks or joining teams to see your transaction
                 history
               </p>
@@ -148,17 +148,17 @@ export default function TransactionHistoryPage() {
                 return (
                   <div
                     key={transaction.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className="flex items-center justify-between rounded-lg border p-4"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-muted">
+                      <div className="bg-muted rounded-full p-2">
                         <Icon className={`h-4 w-4 ${iconColor}`} />
                       </div>
                       <div>
                         <p className="font-medium">
                           {formatTransactionDescription(transaction)}
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           {new Date(
                             transaction.created_at || ""
                           ).toLocaleDateString("en-US", {
@@ -182,7 +182,7 @@ export default function TransactionHistoryPage() {
                           }
                           className={
                             transaction.xp_change > 0
-                              ? "bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+                              ? "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
                               : ""
                           }
                         >
@@ -199,7 +199,7 @@ export default function TransactionHistoryPage() {
                           }
                           className={
                             transaction.points_change > 0
-                              ? "bg-[#ff78c8] hover:bg-[#ff78c8]/90 text-white"
+                              ? "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
                               : ""
                           }
                         >

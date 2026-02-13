@@ -71,26 +71,26 @@ export function TasksTable({
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+            <tr className="border-border border-b">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Task
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Responsible
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Difficulty
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 XP
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Points
               </th>
-              <th className="text-left py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Status
               </th>
-              <th className="text-right py-4 px-4 font-medium text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                 Action
               </th>
             </tr>
@@ -100,26 +100,26 @@ export function TasksTable({
               <tr
                 key={task.id}
                 className={`${
-                  index < tasks.length - 1 ? "border-b border-border" : ""
-                } hover:bg-muted/20 hover:shadow-md transition-all duration-200 ${
+                  index < tasks.length - 1 ? "border-border border-b" : ""
+                } hover:bg-muted/20 transition-all duration-200 hover:shadow-md ${
                   task.is_confidential ? "bg-red-50/50" : ""
                 }`}
               >
-                <td className="py-4 px-4">
+                <td className="px-4 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-                      <Medal className="h-4 w-4 text-primary" />
+                    <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
+                      <Medal className="text-primary h-4 w-4" />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="font-medium text-sm">{task.title}</div>
+                      <div className="mb-1 flex items-center gap-2">
+                        <div className="text-sm font-medium">{task.title}</div>
                         {task.isRecurring && (
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge
                                   variant="secondary"
-                                  className="text-xs flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 text-blue-800 hover:bg-blue-200"
+                                  className="flex items-center gap-1 bg-blue-100 px-1.5 py-0.5 text-xs text-blue-800 hover:bg-blue-200"
                                 >
                                   <RotateCcw className="h-2.5 w-2.5" />
                                   Recurring
@@ -142,7 +142,7 @@ export function TasksTable({
                               <TooltipTrigger asChild>
                                 <Badge
                                   variant="destructive"
-                                  className="text-xs flex items-center gap-1 px-1.5 py-0.5"
+                                  className="flex items-center gap-1 px-1.5 py-0.5 text-xs"
                                 >
                                   <Lock className="h-2.5 w-2.5" />
                                   Confidential
@@ -157,21 +157,21 @@ export function TasksTable({
                           </TooltipProvider>
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-muted-foreground text-xs">
                         {task.description}
                       </div>
                     </div>
                   </div>
                 </td>
-                <td className="py-4 px-4">
+                <td className="px-4 py-4">
                   {task.responsible ? (
                     <div className="flex items-center gap-2">
-                      <Avatar className="w-6 h-6">
+                      <Avatar className="h-6 w-6">
                         <AvatarImage
                           src={task.responsible.avatar}
                           alt={task.responsible.name}
                         />
-                        <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                           {task.responsible.name
                             .split(" ")
                             .map((n) => n[0])
@@ -183,24 +183,24 @@ export function TasksTable({
                         <div className="text-xs font-medium">
                           {task.responsible.name}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-muted-foreground text-xs">
                           {(() => {
                             try {
                               const date = new Date(task.responsible.date);
                               const day = String(date.getDate()).padStart(
                                 2,
-                                "0",
+                                "0"
                               );
                               const month = String(
-                                date.getMonth() + 1,
+                                date.getMonth() + 1
                               ).padStart(2, "0");
                               const year = String(date.getFullYear()).slice(-2);
                               const hours = String(date.getHours()).padStart(
                                 2,
-                                "0",
+                                "0"
                               );
                               const minutes = String(
-                                date.getMinutes(),
+                                date.getMinutes()
                               ).padStart(2, "0");
                               return `${day}-${month}-${year} ${hours}:${minutes}`;
                             } catch {
@@ -218,14 +218,14 @@ export function TasksTable({
                         }
                       }}
                     >
-                      <SelectTrigger className="w-[140px] h-8 text-xs">
+                      <SelectTrigger className="h-8 w-[140px] text-xs">
                         <SelectValue placeholder="Choose Member" />
                       </SelectTrigger>
                       <SelectContent>
                         {teamMembers.map((member) => (
                           <SelectItem key={member.id} value={member.id}>
                             <div className="flex items-center gap-2">
-                              <Avatar className="w-4 h-4">
+                              <Avatar className="h-4 w-4">
                                 <AvatarImage src={member.avatar} />
                                 <AvatarFallback className="text-xs">
                                   {member.name
@@ -241,20 +241,20 @@ export function TasksTable({
                       </SelectContent>
                     </Select>
                   ) : task.isAvailable === false ? (
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       Locked
                     </span>
                   ) : !isTeamMember ? (
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       Unassigned
                     </span>
                   ) : (
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       Choose Member
                     </span>
                   )}
                 </td>
-                <td className="py-4 px-4">
+                <td className="px-4 py-4">
                   <DifficultyBadge
                     level={
                       task.difficulty === "Easy"
@@ -265,19 +265,19 @@ export function TasksTable({
                     }
                   />
                 </td>
-                <td className="py-4 px-4">
+                <td className="px-4 py-4">
                   <div className="flex items-center gap-1">
                     <Zap className="h-4 w-4 text-black dark:text-white" />
                     <span className="text-sm font-medium">{task.xp}</span>
                   </div>
                 </td>
-                <td className="py-4 px-4">
+                <td className="px-4 py-4">
                   <div className="flex items-center gap-1">
                     <CreditCard className="h-4 w-4 text-black dark:text-white" />
                     <span className="text-sm font-medium">{task.points}</span>
                   </div>
                 </td>
-                <td className="py-4 px-4">
+                <td className="px-4 py-4">
                   {task.status === "Cooldown" &&
                   task.isRecurring &&
                   task.nextAvailableAt ? (
@@ -287,7 +287,7 @@ export function TasksTable({
                           status={mapUIStatusToBadge(task.status)}
                           variant="journey"
                         />
-                        <span className="text-xs text-blue-600 font-medium">
+                        <span className="text-xs font-medium text-blue-600">
                           🔄
                         </span>
                       </div>
@@ -301,12 +301,12 @@ export function TasksTable({
                           if (diffMs <= 0) {
                             return (
                               <div className="flex items-center gap-1">
-                                <span className="text-xs text-green-600 font-medium animate-pulse">
+                                <span className="animate-pulse text-xs font-medium text-green-600">
                                   ✅ Available Now
                                 </span>
                                 <Button
                                   size="sm"
-                                  className="text-xs px-2 py-1 h-6 bg-green-500 hover:bg-green-600 text-white"
+                                  className="h-6 bg-green-500 px-2 py-1 text-xs text-white hover:bg-green-600"
                                   onClick={() => window.location.reload()}
                                 >
                                   Refresh
@@ -320,7 +320,7 @@ export function TasksTable({
                           const diffDays = Math.floor(diffMinutes / (24 * 60));
                           const remainingMinutes = diffMinutes % (24 * 60);
                           const remainingHours = Math.floor(
-                            remainingMinutes / 60,
+                            remainingMinutes / 60
                           );
                           const finalMinutes = remainingMinutes % 60;
 
@@ -340,7 +340,7 @@ export function TasksTable({
                           const elapsedMs = totalCooldownMs - diffMs;
                           const progressPercent = Math.max(
                             0,
-                            Math.min(100, (elapsedMs / totalCooldownMs) * 100),
+                            Math.min(100, (elapsedMs / totalCooldownMs) * 100)
                           );
 
                           return (
@@ -348,17 +348,17 @@ export function TasksTable({
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="w-full">
-                                    <div className="flex items-center justify-between mb-1">
-                                      <span className="text-xs text-blue-600 font-medium">
+                                    <div className="mb-1 flex items-center justify-between">
+                                      <span className="text-xs font-medium text-blue-600">
                                         🕒 {timeText} left
                                       </span>
-                                      <span className="text-xs text-muted-foreground">
+                                      <span className="text-muted-foreground text-xs">
                                         {Math.round(progressPercent)}%
                                       </span>
                                     </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-1">
+                                    <div className="h-1 w-full rounded-full bg-gray-200">
                                       <div
-                                        className="bg-blue-500 h-1 rounded-full transition-all duration-300"
+                                        className="h-1 rounded-full bg-blue-500 transition-all duration-300"
                                         style={{ width: `${progressPercent}%` }}
                                       />
                                     </div>
@@ -370,7 +370,7 @@ export function TasksTable({
                                       Next Available:
                                     </p>
                                     <p>{nextAvailable.toLocaleString()}</p>
-                                    <p className="text-xs text-muted-foreground mt-1">
+                                    <p className="text-muted-foreground mt-1 text-xs">
                                       Cooldown Progress:{" "}
                                       {Math.round(progressPercent)}%
                                     </p>
@@ -398,7 +398,7 @@ export function TasksTable({
                     />
                   )}
                 </td>
-                <td className="py-4 px-4">
+                <td className="px-4 py-4">
                   <div className="flex justify-end gap-2">
                     {(() => {
                       // Handle recurring tasks: distinguish between different states
@@ -424,7 +424,7 @@ export function TasksTable({
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="text-xs px-2"
+                                    className="px-2 text-xs"
                                     onClick={() => setPreviewTask(task)}
                                   >
                                     <Eye className="h-3 w-3" />
@@ -437,10 +437,10 @@ export function TasksTable({
                             </TooltipProvider>
                             <Button
                               size="sm"
-                              className="bg-green-500 text-white hover:bg-green-600 text-xs"
+                              className="bg-green-500 text-xs text-white hover:bg-green-600"
                               onClick={() => onStartTask?.(task.id)}
                             >
-                              <Play className="h-3 w-3 mr-1" />
+                              <Play className="mr-1 h-3 w-3" />
                               Start
                             </Button>
                           </>
@@ -457,7 +457,7 @@ export function TasksTable({
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="text-xs px-2"
+                                    className="px-2 text-xs"
                                     onClick={() => setPreviewTask(task)}
                                   >
                                     <Eye className="h-3 w-3" />
@@ -470,10 +470,10 @@ export function TasksTable({
                             </TooltipProvider>
                             <Button
                               size="sm"
-                              className="bg-green-500 text-white hover:bg-green-600 text-xs"
+                              className="bg-green-500 text-xs text-white hover:bg-green-600"
                               onClick={() => onStartTask?.(task.id)}
                             >
-                              <Play className="h-3 w-3 mr-1" />
+                              <Play className="mr-1 h-3 w-3" />
                               Start Again
                             </Button>
                             {task.id &&
@@ -481,7 +481,7 @@ export function TasksTable({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-xs px-3 py-2"
+                                className="px-3 py-2 text-xs"
                                 disabled
                               >
                                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -490,10 +490,10 @@ export function TasksTable({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-xs px-3 py-2 border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
+                                className="border-[#0000ff] px-3 py-2 text-xs text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                                 onClick={() =>
                                   router.push(
-                                    `/dashboard/team-journey/task/${task.id}`,
+                                    `/dashboard/team-journey/task/${task.id}`
                                   )
                                 }
                               >
@@ -514,19 +514,19 @@ export function TasksTable({
                               size="sm"
                               className={`${
                                 task.isRecurring && task.status === "Cooldown"
-                                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md"
+                                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md hover:from-blue-600 hover:to-blue-700"
                                   : "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
                               } text-xs transition-all duration-200`}
                               disabled
                             >
                               {task.isRecurring && task.nextAvailableAt ? (
                                 <>
-                                  <Clock className="h-3 w-3 mr-1 animate-spin" />
+                                  <Clock className="mr-1 h-3 w-3 animate-spin" />
                                   Cooldown
                                 </>
                               ) : (
                                 <>
-                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  <CheckCircle className="mr-1 h-3 w-3" />
                                   Done
                                 </>
                               )}
@@ -536,7 +536,7 @@ export function TasksTable({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-xs px-3 py-2"
+                                className="px-3 py-2 text-xs"
                                 disabled
                               >
                                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -545,10 +545,10 @@ export function TasksTable({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-xs px-3 py-2 border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
+                                className="border-[#0000ff] px-3 py-2 text-xs text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                                 onClick={() =>
                                   router.push(
-                                    `/dashboard/team-journey/task/${task.id}`,
+                                    `/dashboard/team-journey/task/${task.id}`
                                   )
                                 }
                               >
@@ -566,7 +566,7 @@ export function TasksTable({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-xs px-2 text-[#ff78c8] hover:bg-[#ff78c8]/10"
+                              className="px-2 text-xs text-[#ff78c8] hover:bg-[#ff78c8]/10"
                             >
                               Tips
                             </Button>
@@ -584,7 +584,7 @@ export function TasksTable({
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="text-xs px-2"
+                                      className="px-2 text-xs"
                                       onClick={() => setPreviewTask(task)}
                                     >
                                       <Eye className="h-3 w-3" />
@@ -598,10 +598,10 @@ export function TasksTable({
                               <Button
                                 variant="default"
                                 size="sm"
-                                className="text-xs px-3 py-2 bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
+                                className="bg-[#ff78c8] px-3 py-2 text-xs text-white hover:bg-[#ff78c8]/90"
                                 onClick={() => onStartTask(task.id)}
                               >
-                                <Play className="h-3 w-3 mr-1" />
+                                <Play className="mr-1 h-3 w-3" />
                                 Start
                               </Button>
                             </>
@@ -612,7 +612,7 @@ export function TasksTable({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-xs px-3 py-2"
+                                className="px-3 py-2 text-xs"
                                 disabled
                               >
                                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -621,10 +621,10 @@ export function TasksTable({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-xs px-3 py-2 border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
+                                className="border-[#0000ff] px-3 py-2 text-xs text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                                 onClick={() =>
                                   router.push(
-                                    `/dashboard/team-journey/task/${task.id}`,
+                                    `/dashboard/team-journey/task/${task.id}`
                                   )
                                 }
                               >
