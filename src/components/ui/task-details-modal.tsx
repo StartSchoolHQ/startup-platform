@@ -103,6 +103,11 @@ interface TaskDetailsModalProps {
   taskTitle?: string;
   formSchema?: FormSchema;
   isLoading?: boolean;
+  initialData?: {
+    description?: string;
+    external_urls?: ExternalUrl[];
+    [key: string]: unknown;
+  };
 
   // Review mode props
   taskData?: TaskProgressData;
@@ -123,6 +128,7 @@ export function TaskDetailsModal({
   taskTitle,
   formSchema,
   isLoading = false,
+  initialData,
   taskData,
   onReviewSubmit,
   submittingReview = false,
@@ -160,9 +166,24 @@ export function TaskDetailsModal({
       setReviewFeedback("");
       setReviewDecision(null);
     } else if (mode === "submission") {
-      // Modal opened for submission - reset submission-specific state
-      setFormData({});
-      setExternalUrls([]);
+      // Modal opened for submission - pre-populate from previous data if available
+      if (initialData) {
+        const prefill: Record<string, string | string[]> = {};
+        if (typeof initialData.description === "string") {
+          prefill.description = initialData.description;
+        }
+        // Also restore any custom form fields from previous submission
+        for (const [key, value] of Object.entries(initialData)) {
+          if (key !== "description" && key !== "external_urls" && key !== "files" && key !== "submitted_at" && key !== "completed_by" && key !== "completion_date" && typeof value === "string") {
+            prefill[key] = value;
+          }
+        }
+        setFormData(prefill);
+        setExternalUrls(Array.isArray(initialData.external_urls) ? initialData.external_urls : []);
+      } else {
+        setFormData({});
+        setExternalUrls([]);
+      }
       setCurrentUrl("");
       setUploadedFiles([]);
       setUrlError(null);

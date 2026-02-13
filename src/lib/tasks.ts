@@ -1023,8 +1023,23 @@ export async function completeTask(
     );
     const isResubmission = hasReviewer && hasBeenReviewed;
 
-    // If this is a resubmission, use atomic RPC function
+    // If this is a resubmission, update submission data first, then use atomic RPC
     if (isResubmission) {
+      // Persist the new submission data before the RPC resets review state
+      const { error: updateError } = await supabase
+        .from("task_progress")
+        .update({
+          submission_data: JSON.stringify(submissionData),
+          submission_notes: (submissionData.notes as string) || null,
+          completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", progressId);
+
+      if (updateError) {
+        return false;
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error: rpcError } = await (supabase as any).rpc(
         "resubmit_task_for_review",

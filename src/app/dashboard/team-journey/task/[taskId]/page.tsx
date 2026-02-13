@@ -2027,6 +2027,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
         taskTitle={task?.title || "Task"}
         formSchema={task?.submission_form_schema}
         isLoading={completeTaskMutation.isPending}
+        initialData={task?.submission_data as { description?: string; external_urls?: Array<{ url: string; title: string; type: string }>; [key: string]: unknown } | undefined}
       />
       {/* Suggest Edits Modal */}
       <SuggestEditsModal
