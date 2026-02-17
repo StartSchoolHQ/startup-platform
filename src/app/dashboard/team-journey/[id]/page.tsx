@@ -78,8 +78,9 @@ import {
   getTeamTasksVisible,
 } from "@/lib/database";
 import { StatsCard } from "@/types/dashboard";
-import { useEffect, useState, use, useMemo } from "react";
+import { useEffect, useState, use, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAppContext } from "@/contexts/app-context";
 import { hasUserSubmittedThisWeek } from "@/lib/weekly-reports";
 import { assignTaskToMember, startTask, startTaskLazy } from "@/lib/tasks";
@@ -158,6 +159,24 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
   const params = use(props.params);
   const { user, loading: userLoading } = useAppContext();
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Tab state synced to URL
+  const validDetailTabs = ["achievements", "weekly-reports", "client-meetings", "strikes"];
+  const detailTabFromUrl = searchParams.get("tab");
+  const activeDetailTab = validDetailTabs.includes(detailTabFromUrl ?? "") ? detailTabFromUrl! : "achievements";
+
+  const setActiveDetailTab = useCallback((tab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "achievements") {
+      params.delete("tab");
+    } else {
+      params.set("tab", tab);
+    }
+    const query = params.toString();
+    router.replace(query ? `?${query}` : window.location.pathname, { scroll: false });
+  }, [searchParams, router]);
 
   // Extract team ID from params (needed for queries)
   const [teamId, setTeamId] = useState<string | null>(null);
@@ -1302,7 +1321,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         </Card>
       </div>
       {/* Tab Section */}
-      <Tabs defaultValue="achievements" className="w-full">
+      <Tabs value={activeDetailTab} onValueChange={setActiveDetailTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="achievements" className="flex items-center gap-2">
             <Trophy className="h-4 w-4" />

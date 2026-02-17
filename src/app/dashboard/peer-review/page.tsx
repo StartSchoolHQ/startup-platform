@@ -1,7 +1,7 @@
 "use client";
 
 import posthog from "posthog-js";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -134,8 +134,23 @@ export default function PeerReviewPage() {
     selectedTask: null as AvailableTask | null,
     isSubmitting: false,
   });
-  const [activeTab, setActiveTab] = useState<string>("available-tests");
   const [acceptingTaskId, setAcceptingTaskId] = useState<string | null>(null);
+
+  // Tab state synced to URL
+  const validTabs = ["available-tests", "my-tests", "my-tasks", "history"];
+  const tabFromUrl = searchParams.get("tab");
+  const activeTab = validTabs.includes(tabFromUrl ?? "") ? tabFromUrl! : "available-tests";
+
+  const setActiveTab = useCallback((tab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "available-tests") {
+      params.delete("tab");
+    } else {
+      params.set("tab", tab);
+    }
+    const query = params.toString();
+    router.replace(query ? `?${query}` : window.location.pathname, { scroll: false });
+  }, [searchParams, router]);
 
   // React Query: Available tasks for review
   const { data: availableTasks = [], isPending: loadingAvailable } = useQuery({
@@ -219,22 +234,11 @@ export default function PeerReviewPage() {
     totalXpEarned: statsData?.totalXpEarned || 0,
   };
 
-  // Handle URL query parameters for tab and task navigation
+  // Handle task ID from notification URL params
   useEffect(() => {
-    const tab = searchParams.get("tab");
     const taskId = searchParams.get("task");
-
-    // Switch to specified tab if provided
-    if (
-      tab &&
-      ["available-tests", "my-tests", "my-tasks", "completed"].includes(tab)
-    ) {
-      setActiveTab(tab);
-    }
-
-    // TODO: If taskId is provided, we could auto-open the task modal
-    // For now, just switching to correct tab is sufficient
     if (taskId) {
+      // TODO: If taskId is provided, we could auto-open the task modal
       console.log("Task ID from notification:", taskId);
     }
   }, [searchParams]);

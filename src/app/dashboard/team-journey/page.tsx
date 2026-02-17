@@ -15,8 +15,9 @@ import { ProductCard } from "@/components/team-journey/product-card";
 import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
 import { TeamListSkeleton } from "@/components/ui/team-list-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAppContext } from "@/contexts/app-context";
 import {
   getAllTeamsForJourney,
@@ -33,12 +34,28 @@ type SortOrder = "asc" | "desc";
 export default function TeamJourneyPage() {
   const { user } = useAppContext();
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [showCreateTeamDialog, setShowCreateTeamDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchInput, setSearchInput] = useState(""); // Separate state for input value
   const [sortBy, setSortBy] = useState<SortOption>("date");
-  const [activeTab, setActiveTab] = useState("all-products");
   const sortOrder: SortOrder = "desc"; // Fixed sort order for now
+
+  const validTabs = ["all-products", "my-products", "archive"];
+  const tabFromUrl = searchParams.get("tab");
+  const activeTab = validTabs.includes(tabFromUrl ?? "") ? tabFromUrl! : "all-products";
+
+  const setActiveTab = useCallback((tab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "all-products") {
+      params.delete("tab");
+    } else {
+      params.set("tab", tab);
+    }
+    const query = params.toString();
+    router.replace(query ? `?${query}` : window.location.pathname, { scroll: false });
+  }, [searchParams, router]);
 
   // React Query: All products
   const { data: allProducts = [], isPending: isLoadingAll } = useQuery({

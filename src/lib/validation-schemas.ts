@@ -76,48 +76,65 @@ export type InvitationData = z.infer<typeof InvitationSchema>;
  * - nextWeekPriority replaced with nextWeekCommitments array
  * - Min chars reduced to 5-10 for required fields
  */
-export const WeeklyReportSchema = z.object({
-  // Q1: Last week's commitments - explanation is optional
-  commitments: z
-    .array(
-      z.object({
-        text: z.string().min(5, "Commitment must be at least 5 characters"),
-        status: z.enum(["completed", "in_progress", "not_done"]),
-        explanation: z.string().optional(),
-      })
-    )
-    .refine(
-      (commitments) => commitments.some((c) => c.text.trim().length >= 5),
-      { message: "At least one commitment is required" }
-    ),
-  // Q2: Blockers - now optional single field
-  blockers: z.string().optional(),
-  meetingsHeld: z.number().int().min(0, "Meetings held cannot be negative"),
-  keyInsight: z.string().min(5, "Key insight must be at least 5 characters"),
-  mostImportantOutcome: z
-    .string()
-    .min(5, "Most important outcome must be at least 5 characters"),
-  measurableProgress: z
-    .string()
-    .min(5, "Measurable progress must be at least 5 characters"),
-  biggestAchievement: z
-    .string()
-    .min(5, "Achievement must be at least 5 characters"),
-  achievementImpact: z
-    .string()
-    .min(5, "Achievement impact must be at least 5 characters"),
-  // Q7: Top 3 commitments for next week (replaces nextWeekPriority)
-  nextWeekCommitments: z
-    .array(z.string())
-    .refine((commitments) => commitments.some((c) => c.trim().length >= 5), {
-      message: "At least one commitment for next week is required",
-    }),
-  teamRecognition: z.string().optional(),
-  alignmentScore: z.number().int().min(1).max(10),
-  alignmentReason: z
-    .string()
-    .min(5, "Alignment reason must be at least 5 characters"),
-});
+export const WeeklyReportSchema = z
+  .object({
+    // Q1: This week's commitments - explanation is optional
+    commitments: z
+      .array(
+        z.object({
+          text: z.string().min(5, "Commitment must be at least 5 characters"),
+          status: z.enum(["completed", "in_progress", "not_done"]),
+          explanation: z.string().optional(),
+        })
+      )
+      .refine(
+        (commitments) => commitments.some((c) => c.text.trim().length >= 5),
+        { message: "At least one commitment is required" }
+      ),
+    // Q2: Blockers - optional single field
+    blockers: z.string().optional(),
+    // Q3: Meetings + conditional fields
+    meetingsHeld: z.number().int().min(0, "Meetings held cannot be negative"),
+    keyInsight: z.string().optional(),
+    mostImportantOutcome: z.string().optional(),
+    measurableProgress: z
+      .string()
+      .min(5, "Measurable progress must be at least 5 characters"),
+    biggestAchievement: z
+      .string()
+      .min(5, "Achievement must be at least 5 characters"),
+    achievementImpact: z
+      .string()
+      .min(5, "Achievement impact must be at least 5 characters"),
+    // Q6: Commitments for next week
+    nextWeekCommitments: z
+      .array(z.string())
+      .refine(
+        (commitments) => commitments.some((c) => c.trim().length >= 5),
+        { message: "At least one commitment for next week is required" }
+      ),
+    teamRecognition: z.string().optional(),
+    alignmentScore: z.number().int().min(1).max(10),
+    alignmentReason: z
+      .string()
+      .min(5, "Alignment reason must be at least 5 characters"),
+  })
+  .refine(
+    (data) => {
+      if (data.meetingsHeld > 0) {
+        return (
+          (data.keyInsight?.trim().length ?? 0) >= 5 &&
+          (data.mostImportantOutcome?.trim().length ?? 0) >= 5
+        );
+      }
+      return true;
+    },
+    {
+      message:
+        "Key insight and most important outcome are required when meetings > 0",
+      path: ["keyInsight"],
+    }
+  );
 
 export type WeeklyReportFormData = z.infer<typeof WeeklyReportSchema>;
 

@@ -1,7 +1,8 @@
 "use client";
 
+import { useCallback } from "react";
 import { useApp } from "@/contexts/app-context";
-import { redirect } from "next/navigation";
+import { redirect, useSearchParams, useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -16,6 +17,23 @@ import { BulkInviteTab } from "@/components/admin/bulk-invite-tab";
 
 export default function AdminUsersPage() {
   const { user, loading } = useApp();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const validTabs = ["all-users", "invitations", "roles"];
+  const tabFromUrl = searchParams.get("tab");
+  const activeTab = validTabs.includes(tabFromUrl ?? "") ? tabFromUrl! : "all-users";
+
+  const setActiveTab = useCallback((tab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "all-users") {
+      params.delete("tab");
+    } else {
+      params.set("tab", tab);
+    }
+    const query = params.toString();
+    router.replace(query ? `?${query}` : window.location.pathname, { scroll: false });
+  }, [searchParams, router]);
 
   // Redirect if not admin
   if (!loading && (!user || user.primary_role !== "admin")) {
@@ -33,7 +51,7 @@ export default function AdminUsersPage() {
         <h2 className="text-3xl font-bold tracking-tight">User Management</h2>
       </div>
 
-      <Tabs defaultValue="all-users" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="all-users">All Users</TabsTrigger>
           <TabsTrigger value="invitations">Bulk Invitations</TabsTrigger>

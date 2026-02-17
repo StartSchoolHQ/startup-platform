@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
-import { createTeam, debugAuthStatus } from "@/lib/database";
+import { createTeam } from "@/lib/database";
 import { useAppContext } from "@/contexts/app-context";
 import { Loader2, CreditCard } from "lucide-react";
 import posthog from "posthog-js";
@@ -50,13 +50,6 @@ export function CreateTeamDialog({
       console.error("No user ID available");
       return;
     }
-
-    console.log("Creating team for user:", user.id);
-    console.log("User credits:", user.total_points);
-
-    // Debug auth status
-    const authStatus = await debugAuthStatus();
-    console.log("Auth debug:", authStatus);
 
     setError("");
     setSuccess("");

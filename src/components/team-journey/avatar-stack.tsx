@@ -37,7 +37,8 @@ export function AvatarStack({
       {visibleUsers.map((user, index) => (
         <Avatar
           key={user.id}
-          className={` ${sizeClasses[size]} ${index > 0 ? offsetClasses[size] : ""} border-background relative border-2 z-${10 - index} `}
+          className={` ${sizeClasses[size]} ${index > 0 ? offsetClasses[size] : ""} border-background relative border-2`}
+          style={{ zIndex: 10 - index }}
         >
           <AvatarImage src={user.avatar} alt={user.name} />
           <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">

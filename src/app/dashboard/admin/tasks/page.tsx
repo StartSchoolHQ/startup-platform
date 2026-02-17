@@ -1,7 +1,8 @@
 "use client";
 
+import { useCallback } from "react";
 import { useApp } from "@/contexts/app-context";
-import { redirect } from "next/navigation";
+import { redirect, useSearchParams, useRouter } from "next/navigation";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +21,23 @@ import { AdminSuggestionsTable } from "@/components/admin/admin-suggestions-tabl
 
 export default function AdminTasksPage() {
   const { user, loading } = useApp();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const validTabs = ["team-tasks", "individual-tasks", "suggestions"];
+  const tabFromUrl = searchParams.get("tab");
+  const activeTab = validTabs.includes(tabFromUrl ?? "") ? tabFromUrl! : "team-tasks";
+
+  const setActiveTab = useCallback((tab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "team-tasks") {
+      params.delete("tab");
+    } else {
+      params.set("tab", tab);
+    }
+    const query = params.toString();
+    router.replace(query ? `?${query}` : window.location.pathname, { scroll: false });
+  }, [searchParams, router]);
 
   // Redirect if not admin
   if (!loading && (!user || user.primary_role !== "admin")) {
@@ -37,7 +55,7 @@ export default function AdminTasksPage() {
         <h2 className="text-3xl font-bold tracking-tight">Task Management</h2>
       </div>
 
-      <Tabs defaultValue="team-tasks" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="team-tasks">Team Tasks</TabsTrigger>
           <TabsTrigger value="individual-tasks">Individual Tasks</TabsTrigger>

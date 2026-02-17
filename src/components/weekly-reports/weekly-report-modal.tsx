@@ -36,7 +36,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { getCurrentWeekBoundaries } from "@/lib/weekly-reports";
 import { WeeklyReportSchema } from "@/lib/validation-schemas";
-import { FileText, Trash2, Save } from "lucide-react";
+import { FileText, Trash2, Save, Plus } from "lucide-react";
 
 interface WeeklyReportModalProps {
   open: boolean;
@@ -70,12 +70,8 @@ interface FormData {
 }
 
 const getEmptyFormData = (): FormData => ({
-  // Q1: Top 3 commitments from last week
-  commitments: [
-    { text: "", status: "completed", explanation: "" },
-    { text: "", status: "completed", explanation: "" },
-    { text: "", status: "completed", explanation: "" },
-  ],
+  // Q1: This week's commitments (start with 1, user can add more)
+  commitments: [{ text: "", status: "completed", explanation: "" }],
   // Q2: Blockers (optional, single field)
   blockers: "",
   // Q3: User/customer interactions
@@ -87,8 +83,8 @@ const getEmptyFormData = (): FormData => ({
   // Q5: Most important achievement
   biggestAchievement: "",
   achievementImpact: "",
-  // Q6: Top 3 commitments for next week
-  nextWeekCommitments: ["", "", ""],
+  // Q6: Commitments for next week (start with 1, user can add more)
+  nextWeekCommitments: [""],
   // Q7: Team recognition
   teamRecognition: "",
   // Q8: Alignment/motivation
@@ -518,10 +514,10 @@ export function WeeklyReportModal({
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Q1: Top 3 commitments from last week */}
+            {/* Q1: This week's commitments */}
             <div className="space-y-3">
               <Label className="text-base font-semibold">
-                1. What were your top 3 commitments from last week?{" "}
+                1. What were your top commitments this week?{" "}
                 <span className="text-red-500">*</span>
               </Label>
               <p className="text-muted-foreground text-sm">
@@ -531,9 +527,29 @@ export function WeeklyReportModal({
 
               {formData.commitments.map((commitment, index) => (
                 <div key={index} className="space-y-2 rounded-lg border p-3">
-                  <Label htmlFor={`commitment-${index}`}>
-                    Commitment #{index + 1}
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor={`commitment-${index}`}>
+                      Commitment #{index + 1}
+                    </Label>
+                    {formData.commitments.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-red-500 hover:text-red-700"
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            commitments: prev.commitments.filter(
+                              (_, i) => i !== index
+                            ),
+                          }));
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                   <Textarea
                     id={`commitment-${index}`}
                     placeholder={`Describe commitment #${index + 1}...`}
@@ -600,6 +616,23 @@ export function WeeklyReportModal({
                   )}
                 </div>
               ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    commitments: [
+                      ...prev.commitments,
+                      { text: "", status: "completed", explanation: "" },
+                    ],
+                  }));
+                }}
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                Add commitment
+              </Button>
             </div>
 
             {/* Q2: Blockers/challenges - OPTIONAL single field */}
@@ -640,28 +673,32 @@ export function WeeklyReportModal({
                   }
                 />
               </div>
-              <Textarea
-                placeholder="Key insight from interactions..."
-                value={formData.keyInsight}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    keyInsight: e.target.value,
-                  }))
-                }
-                rows={2}
-              />
-              <Textarea
-                placeholder="Most important outcome..."
-                value={formData.mostImportantOutcome}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    mostImportantOutcome: e.target.value,
-                  }))
-                }
-                rows={2}
-              />
+              {formData.meetingsHeld > 0 && (
+                <>
+                  <Textarea
+                    placeholder="Key insight from interactions..."
+                    value={formData.keyInsight}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        keyInsight: e.target.value,
+                      }))
+                    }
+                    rows={2}
+                  />
+                  <Textarea
+                    placeholder="Most important outcome..."
+                    value={formData.mostImportantOutcome}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        mostImportantOutcome: e.target.value,
+                      }))
+                    }
+                    rows={2}
+                  />
+                </>
+              )}
             </div>
 
             {/* Q4: Measurable progress */}
@@ -737,45 +774,82 @@ export function WeeklyReportModal({
               />
             </div>
 
-            {/* Q6: Top 3 commitments for next week */}
+            {/* Q6: Commitments for next week */}
             <div className="space-y-3">
               <Label className="text-base font-semibold">
-                6. Top 3 commitments for next week{" "}
+                6. Commitments for next week{" "}
                 <span className="text-red-500">*</span>
               </Label>
               <p className="text-muted-foreground text-sm">
                 What are you committing to accomplish next week?
               </p>
               {formData.nextWeekCommitments.map((commitment, index) => (
-                <div key={index} className="space-y-1">
-                  <Label
-                    htmlFor={`next-commitment-${index}`}
-                    className="text-sm"
-                  >
-                    Commitment #{index + 1}
-                  </Label>
-                  <Input
-                    id={`next-commitment-${index}`}
-                    placeholder={`Next week commitment #${index + 1}...`}
-                    value={commitment}
-                    onChange={(e) => {
-                      const newCommitments = [...formData.nextWeekCommitments];
-                      newCommitments[index] = e.target.value;
-                      setFormData((prev) => ({
-                        ...prev,
-                        nextWeekCommitments: newCommitments,
-                      }));
-                    }}
-                    className={
-                      index === 0 &&
-                      commitment.trim().length > 0 &&
-                      commitment.trim().length < MIN_TEXT_LENGTH
-                        ? "border-red-500"
-                        : ""
-                    }
-                  />
+                <div key={index} className="flex items-center gap-2">
+                  <div className="flex-1 space-y-1">
+                    <Label
+                      htmlFor={`next-commitment-${index}`}
+                      className="text-sm"
+                    >
+                      Commitment #{index + 1}
+                    </Label>
+                    <Input
+                      id={`next-commitment-${index}`}
+                      placeholder={`Next week commitment #${index + 1}...`}
+                      value={commitment}
+                      onChange={(e) => {
+                        const newCommitments = [
+                          ...formData.nextWeekCommitments,
+                        ];
+                        newCommitments[index] = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          nextWeekCommitments: newCommitments,
+                        }));
+                      }}
+                      className={
+                        index === 0 &&
+                        commitment.trim().length > 0 &&
+                        commitment.trim().length < MIN_TEXT_LENGTH
+                          ? "border-red-500"
+                          : ""
+                      }
+                    />
+                  </div>
+                  {formData.nextWeekCommitments.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="mt-5 h-7 w-7 p-0 text-red-500 hover:text-red-700"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          nextWeekCommitments:
+                            prev.nextWeekCommitments.filter(
+                              (_, i) => i !== index
+                            ),
+                        }));
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    nextWeekCommitments: [...prev.nextWeekCommitments, ""],
+                  }));
+                }}
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                Add commitment
+              </Button>
             </div>
 
             {/* Q7: Team recognition */}
