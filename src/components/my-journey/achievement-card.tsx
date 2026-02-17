@@ -9,6 +9,8 @@ interface AchievementCardProps {
   points: number;
   xp: number;
   selected?: boolean;
+  completedTasks?: number;
+  totalTasks?: number;
 }
 
 export function AchievementCard({
@@ -18,6 +20,8 @@ export function AchievementCard({
   points,
   xp,
   selected = false,
+  completedTasks,
+  totalTasks,
 }: AchievementCardProps) {
   const getStatusConfig = (status: AchievementCardProps["status"]) => {
     switch (status) {
@@ -78,6 +82,25 @@ export function AchievementCard({
             </p>
           </div>
         </div>
+
+        {totalTasks != null && totalTasks > 0 && (
+          <div className="mb-3">
+            <div className="mb-1 flex items-center justify-between">
+              <span className="text-muted-foreground text-xs">Progress</span>
+              <span className="text-muted-foreground text-xs">
+                {completedTasks ?? 0} / {totalTasks}
+              </span>
+            </div>
+            <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
+              <div
+                className="bg-primary h-full rounded-full transition-all duration-300"
+                style={{
+                  width: `${Math.round(((completedTasks ?? 0) / totalTasks) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="mt-auto grid grid-cols-2 gap-2">
           {/* Points Box */}

@@ -52,3 +52,5 @@ next-env.d.ts
 mcp.json
 CLAUDE.md
 settings.local.json
+.claude/
+.vscode/

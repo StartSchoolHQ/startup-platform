@@ -4,6 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useApp } from "@/contexts/app-context";
+import { useQuery } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
 import {
   BarChart3,
   Trophy,
@@ -12,6 +14,7 @@ import {
   FileText,
   Settings,
   HelpCircle,
+  Rocket,
 } from "lucide-react";
 
 import { NotificationCenter } from "@/components/notification-center";
@@ -46,7 +49,7 @@ const navMainItems = [
     hidden: true,
   },
   {
-    title: "Team Journey",
+    title: "All Products",
     url: "/dashboard/team-journey",
     icon: Users,
   },
@@ -65,9 +68,41 @@ const navMainItems = [
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useApp();
 
+  // Fetch user's team for dynamic nav link
+  const { data: userTeam } = useQuery({
+    queryKey: ["userTeamNav", user?.id],
+    queryFn: async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("team_members")
+        .select("team_id, teams(id, name)")
+        .eq("user_id", user!.id)
+        .limit(1)
+        .single();
+      if (!data?.teams) return null;
+      const team = data.teams as unknown as { id: string; name: string };
+      return { id: team.id, name: team.name };
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Memoize navigation items to prevent flickering
   const navigationItems = React.useMemo(() => {
     const baseItems = navMainItems.filter((item) => !item.hidden);
+
+    // Insert dynamic team link after Leaderboard
+    if (userTeam) {
+      const leaderboardIndex = baseItems.findIndex(
+        (item) => item.url === "/dashboard/leaderboard"
+      );
+      const teamItem = {
+        title: `${userTeam.name} Team`,
+        url: `/dashboard/team-journey/${userTeam.id}`,
+        icon: Rocket,
+      };
+      baseItems.splice(leaderboardIndex + 1, 0, teamItem);
+    }
 
     // Add admin section if user is admin (show whenever role is available)
     if (user?.primary_role === "admin") {
@@ -82,7 +117,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     return baseItems;
-  }, [user?.primary_role]); // Only recreate when admin role changes
+  }, [user?.primary_role, userTeam]); // Only recreate when admin role or team changes
 
   return (
     <Sidebar variant="inset" {...props}>

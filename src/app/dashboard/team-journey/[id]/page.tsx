@@ -12,6 +12,13 @@ import {
   type UITaskStatus,
 } from "@/lib/status-mapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -172,6 +179,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
   const [statusFilter, setStatusFilter] = useState<
     "all" | "not_started" | "in_progress" | "completed"
   >("all");
+  const [teammateFilter, setTeammateFilter] = useState<string>("all");
   const [selectedStrike, setSelectedStrike] = useState<any>(null);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const [refreshCountdown, setRefreshCountdown] = useState(0);
@@ -484,6 +492,23 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
   const assignTaskMutation = useMutation({
     mutationFn: async ({ taskId, userId }: { taskId: string; userId: string }) => {
       await assignTaskToMember(taskId, userId, team?.id || "");
+
+      // Notify the assigned user via secure API route
+      if (userId !== user?.id) {
+        const task = allTasks.find(
+          (t) => t.task_id === taskId || t.progress_id === taskId
+        );
+        fetch("/api/notifications/task-assigned", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            assigneeId: userId,
+            taskTitle: task?.title,
+            teamId: team?.id,
+            teamName: team?.name,
+          }),
+        }).catch(console.error);
+      }
     },
     onMutate: async ({ taskId, userId }) => {
       await queryClient.cancelQueries({
@@ -743,7 +768,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
     }
   };
 
-  // Filter tasks by selected achievement and status
+  // Filter tasks by selected achievement, status, and teammate
   const filteredTasks = useMemo(() => {
     let tasks = allTasks;
 
@@ -759,8 +784,14 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
       );
     }
 
+    if (teammateFilter !== "all") {
+      tasks = tasks.filter(
+        (task) => task.assigned_to_user_id === teammateFilter
+      );
+    }
+
     return tasks;
-  }, [selectedAchievementId, statusFilter, allTasks]);
+  }, [selectedAchievementId, statusFilter, teammateFilter, allTasks]);
 
   // Countdown timer for refresh button
   useEffect(() => {
@@ -1410,6 +1441,8 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                           }
                           points={achievement.credits_reward}
                           xp={achievement.xp_reward}
+                          completedTasks={achievement.completed_tasks}
+                          totalTasks={achievement.total_tasks}
                           selected={
                             teamStats.achievementsUnlocked &&
                             selectedAchievementId === achievement.achievement_id
@@ -1456,29 +1489,49 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             </div>
           )}
 
-          {/* Task Status Filter */}
+          {/* Task Filters */}
           {teamStats.achievementsUnlocked && (
-            <div className="mt-4 flex items-center gap-2">
-              <span className="text-muted-foreground mr-1 text-sm">
-                Status:
-              </span>
-              {(
-                [
-                  { key: "all", label: "All" },
-                  { key: "not_started", label: "Not Started" },
-                  { key: "in_progress", label: "In Progress" },
-                  { key: "completed", label: "Completed" },
-                ] as const
-              ).map(({ key, label }) => (
-                <Button
-                  key={key}
-                  variant={statusFilter === key ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setStatusFilter(key)}
+            <div className="mt-4 flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm">Status:</span>
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value) =>
+                    setStatusFilter(
+                      value as "all" | "not_started" | "in_progress" | "completed"
+                    )
+                  }
                 >
-                  {label}
-                </Button>
-              ))}
+                  <SelectTrigger className="h-8 w-[150px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="not_started">Not Started</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm">Assigned to:</span>
+                <Select
+                  value={teammateFilter}
+                  onValueChange={setTeammateFilter}
+                >
+                  <SelectTrigger className="h-8 w-[170px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Members</SelectItem>
+                    {team?.members?.map((member) => (
+                      <SelectItem key={member.user_id} value={member.user_id}>
+                        {member.users?.name || "Unknown User"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
 

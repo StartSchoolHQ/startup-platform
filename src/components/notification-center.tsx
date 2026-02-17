@@ -64,6 +64,8 @@ export function NotificationCenter() {
           return { Icon: Trophy, color: "text-yellow-500" };
         case "invitations_auto_declined":
           return { Icon: Users, color: "text-orange-500" };
+        case "task_assigned":
+          return { Icon: UserCheck, color: "text-blue-500" };
         default:
           return { Icon: Bell, color: "text-gray-500" };
       }
@@ -174,6 +176,16 @@ export function NotificationCenter() {
           router.push("/dashboard/my-journey?tab=weekly-reports");
         }
         break;
+
+      case "task_assigned": {
+        const assignedTeamId = data?.team_id;
+        if (assignedTeamId) {
+          router.push(`/dashboard/team-journey/${assignedTeamId}`);
+        } else {
+          router.push("/dashboard/team-journey");
+        }
+        break;
+      }
 
       case "achievement":
         router.push("/dashboard/my-journey");
