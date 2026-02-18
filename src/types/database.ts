@@ -320,6 +320,7 @@ export type Database = {
           started_at: string | null;
           status: Database["public"]["Enums"]["task_status_type"];
           submission_data: Json | null;
+          submission_history: Json | null;
           submission_notes: string | null;
           submission_url: string | null;
           submitted_at: string | null;
@@ -348,6 +349,7 @@ export type Database = {
           started_at?: string | null;
           status?: Database["public"]["Enums"]["task_status_type"];
           submission_data?: Json | null;
+          submission_history?: Json | null;
           submission_notes?: string | null;
           submission_url?: string | null;
           submitted_at?: string | null;
@@ -376,6 +378,7 @@ export type Database = {
           started_at?: string | null;
           status?: Database["public"]["Enums"]["task_status_type"];
           submission_data?: Json | null;
+          submission_history?: Json | null;
           submission_notes?: string | null;
           submission_url?: string | null;
           submitted_at?: string | null;

@@ -1,14 +1,14 @@
+import { createClient } from "@/lib/supabase/client";
+import { peerReviewHistorySchema } from "@/lib/validation-schemas";
+import type { Json } from "@/types/database";
 import {
-  TeamTask,
-  TaskTableItem,
   AdminTaskItem,
-  TaskStatus,
   TaskCategory,
   TaskPriority,
+  TaskStatus,
+  TaskTableItem,
+  TeamTask,
 } from "@/types/team-journey";
-import { createClient } from "@/lib/supabase/client";
-import type { Json } from "@/types/database";
-import { peerReviewHistorySchema } from "@/lib/validation-schemas";
 
 // Type for partial progress data returned from database queries
 type PartialProgressData = {
@@ -24,6 +24,7 @@ type PartialProgressData = {
   reviewer_user_id?: string | null;
   review_feedback?: string | null;
   peer_review_history?: unknown;
+  submission_history?: unknown;
 } | null;
 
 // Function to convert database task to UI format for the simplified architecture
@@ -593,6 +594,7 @@ export async function getTaskByIdLazy(
           reviewer_user_id,
           review_feedback,
           peer_review_history,
+          submission_history,
           context,
           activity_type
         `
@@ -675,6 +677,17 @@ export async function getTaskByIdLazy(
           decision?: "approved" | "rejected";
           feedback?: string;
         }>) || [],
+
+      submission_history: (
+        (progressData?.submission_history as TeamTask["submission_history"]) ||
+        []
+      ).map((entry) => ({
+        ...entry,
+        submission_data:
+          typeof entry.submission_data === "string"
+            ? JSON.parse(entry.submission_data)
+            : entry.submission_data,
+      })),
 
       // Computed fields - base_credits_reward is mapped from base_points_reward in UI components
       // requires_review and review_instructions are part of the database schema but not the TypeScript interface
@@ -1043,9 +1056,7 @@ export async function completeTask(
         .eq("id", progressId);
 
       if (updateError) {
-        throw new Error(
-          "Failed to update submission: " + updateError.message
-        );
+        throw new Error("Failed to update submission: " + updateError.message);
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1191,9 +1202,7 @@ export async function completeIndividualTask(
     );
 
     if (error) {
-      throw new Error(
-        "Failed to complete individual task: " + error.message
-      );
+      throw new Error("Failed to complete individual task: " + error.message);
     }
 
     if (!data?.[0]?.success) {

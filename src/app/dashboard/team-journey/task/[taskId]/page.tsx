@@ -1,12 +1,17 @@
 "use client";
 
-import posthog from "posthog-js";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { SuggestEditsModal } from "@/components/tasks/suggest-edits-modal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -15,50 +20,44 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import {
-  FileText,
-  Zap,
-  CreditCard,
-  Clock,
-  User,
-  CheckCircle,
-  AlertCircle,
-  Play,
-  ExternalLink,
-} from "lucide-react";
-import { useEffect, useState, use } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { TeamTask } from "@/types/team-journey";
-import {
-  getTaskByIdLazy,
-  startTask,
-  startTaskLazy,
-  completeTask,
-  cancelTask,
-  retryTask,
-  checkTaskPermission,
-  reassignTask,
-} from "@/lib/tasks";
-import { useAppContext } from "@/contexts/app-context";
-import { createClient } from "@/lib/supabase/client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { invalidateNotifications } from "@/hooks/use-task-notifications";
-import { toast } from "sonner";
-import { TaskDetailsModal } from "@/components/ui/task-details-modal";
 import { StatusBadge, TaskStatus } from "@/components/ui/status-badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TaskDetailSkeleton } from "@/components/ui/task-detail-skeleton";
+import { TaskDetailsModal } from "@/components/ui/task-details-modal";
+import { useAppContext } from "@/contexts/app-context";
+import { invalidateNotifications } from "@/hooks/use-task-notifications";
 import { formatDate } from "@/lib/date-utils";
 import { uploadTaskFiles } from "@/lib/file-upload";
-import ReactMarkdown from "react-markdown";
-import { TaskDetailSkeleton } from "@/components/ui/task-detail-skeleton";
+import { createClient } from "@/lib/supabase/client";
+import {
+  cancelTask,
+  checkTaskPermission,
+  completeTask,
+  getTaskByIdLazy,
+  reassignTask,
+  retryTask,
+  startTask,
+  startTaskLazy,
+} from "@/lib/tasks";
 import { peerReviewHistorySchema } from "@/lib/validation-schemas";
-import { SuggestEditsModal } from "@/components/tasks/suggest-edits-modal";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  CreditCard,
+  ExternalLink,
+  FileText,
+  Play,
+  User,
+  Zap,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import posthog from "posthog-js";
+import { use, useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
 
 interface TaskDetailPageProps {
   params: Promise<{
@@ -226,42 +225,13 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
-  // Previous submissions query (conditional on recurring task)
-  const { data: previousSubmissions = [], isLoading: loadingSubmissions } =
-    useQuery({
-      queryKey: ["task", "submissions", task?.task_id, task?.team_id],
-      queryFn: async () => {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("task_progress")
-          .select(
-            `
-            id,
-            status,
-            completed_at,
-            assigned_to_user_id,
-            submission_data,
-            submission_url,
-            review_feedback,
-            users!inner(name, avatar_url)
-          `
-          )
-          .eq("task_id", task!.task_id)
-          .eq("team_id", task!.team_id!)
-          .neq("id", task!.id)
-          .in("status", ["approved", "rejected"])
-          .order("completed_at", { ascending: false });
-
-        if (error) {
-          console.error("Error loading previous submissions:", error);
-          return [];
-        }
-
-        return data || [];
-      },
-      enabled: !!task && !!isRecurringTask && !!task.team_id,
-      staleTime: 60 * 1000, // 1 minute
-    });
+  // Previous submissions from submission_history (recurring tasks only)
+  const previousSubmissions = (task?.submission_history || []).sort(
+    (a, b) =>
+      new Date(b.completed_at || 0).getTime() -
+      new Date(a.completed_at || 0).getTime()
+  );
+  const loadingSubmissions = loading;
 
   // Start task mutation
   const startTaskMutation = useMutation({
@@ -1624,27 +1594,17 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                       <div className="space-y-4">
                         {previousSubmissions.map((submission, index) => (
                           <div
-                            key={submission.id}
+                            key={index}
                             className="rounded-lg border p-4 transition-colors hover:bg-gray-50"
                           >
                             <div className="mb-2 flex items-center justify-between">
                               <div className="flex items-center gap-3">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarImage
-                                    src={
-                                      submission.users?.avatar_url || undefined
-                                    }
-                                  />
-                                  <AvatarFallback>
-                                    {submission.users?.name
-                                      ?.split(" ")
-                                      .map((n: string) => n[0])
-                                      .join("") || "U"}
-                                  </AvatarFallback>
-                                </Avatar>
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-600">
+                                  #{previousSubmissions.length - index}
+                                </div>
                                 <div>
                                   <div className="text-sm font-medium">
-                                    {submission.users?.name || "Unknown User"}
+                                    Cycle {previousSubmissions.length - index}
                                   </div>
                                   <div className="text-muted-foreground text-xs">
                                     Completed{" "}
@@ -1657,6 +1617,11 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
+                                {submission.points_awarded && (
+                                  <span className="text-muted-foreground text-xs">
+                                    +{submission.points_awarded} pts
+                                  </span>
+                                )}
                                 <Badge
                                   variant={
                                     submission.status === "approved"
@@ -1669,19 +1634,6 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                     ? "Approved"
                                     : "Rejected"}
                                 </Badge>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-xs"
-                                  onClick={() =>
-                                    window.open(
-                                      `/dashboard/team-journey/task/${submission.id}`,
-                                      "_blank"
-                                    )
-                                  }
-                                >
-                                  View Details
-                                </Button>
                               </div>
                             </div>
                             {submission.review_feedback && (
@@ -1694,16 +1646,26 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                                 </p>
                               </div>
                             )}
-                            {((submission.submission_data as any)?.files || [])
-                              .length > 0 && (
+                            {(
+                              ((
+                                submission.submission_data as Record<
+                                  string,
+                                  unknown
+                                >
+                              )?.files as string[]) || []
+                            ).length > 0 && (
                               <div className="mt-3">
                                 <p className="text-muted-foreground mb-2 text-xs">
                                   Evidence Files:
                                 </p>
                                 <div className="flex flex-wrap gap-2">
                                   {(
-                                    (submission.submission_data as any)
-                                      ?.files || []
+                                    ((
+                                      submission.submission_data as Record<
+                                        string,
+                                        unknown
+                                      >
+                                    )?.files as string[]) || []
                                   ).map((url: string, fileIndex: number) => (
                                     <Button
                                       key={fileIndex}

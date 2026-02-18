@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   getNotifications,
   getNotificationCount,
@@ -8,10 +8,14 @@ import {
   markNotificationSeen,
   type UnifiedNotification,
 } from "@/lib/notifications";
+import { createClient } from "@/lib/supabase/client";
 
 export function useNotifications(userId: string | undefined) {
   const queryClient = useQueryClient();
   const pathname = usePathname();
+  const channelRef = useRef<ReturnType<
+    ReturnType<typeof createClient>["channel"]
+  > | null>(null);
 
   // Query for notifications list
   const { data: notifications = [], isLoading: loading } = useQuery({
@@ -21,9 +25,9 @@ export function useNotifications(userId: string | undefined) {
       return await getNotifications(userId);
     },
     enabled: !!userId,
-    staleTime: 30000, // 30s
+    staleTime: 30000,
     refetchOnWindowFocus: true,
-    refetchInterval: 45000, // Poll every 45s for real-time feel
+    refetchInterval: 5 * 60 * 1000, // 5min fallback poll (safety net if Realtime drops)
   });
 
   // Query for notification count
@@ -36,8 +40,54 @@ export function useNotifications(userId: string | undefined) {
     enabled: !!userId,
     staleTime: 30000,
     refetchOnWindowFocus: true,
-    refetchInterval: 45000,
+    refetchInterval: 5 * 60 * 1000,
   });
+
+  // Realtime subscription for instant notifications
+  useEffect(() => {
+    if (!userId) return;
+
+    const supabase = createClient();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    // Must set auth token on Realtime WebSocket (SSR client doesn't sync it automatically)
+    supabase.auth.getSession().then(({ data }) => {
+      const token = data.session?.access_token;
+      if (!token) return;
+
+      supabase.realtime.setAuth(token);
+
+      channel = supabase
+        .channel(`notifications:${userId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${userId}`,
+          },
+          () => {
+            queryClient.invalidateQueries({
+              queryKey: ["notifications", "list", userId],
+            });
+            queryClient.invalidateQueries({
+              queryKey: ["notifications", "count", userId],
+            });
+          }
+        )
+        .subscribe();
+
+      channelRef.current = channel;
+    });
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [userId, queryClient]);
 
   // Refetch on route change
   useEffect(() => {

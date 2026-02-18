@@ -125,6 +125,15 @@ export interface TeamTask {
     decision?: "approved" | "rejected";
     feedback?: string;
   }>;
+  submission_history?: Array<{
+    submission_data: Record<string, unknown> | null;
+    completed_at: string | null;
+    review_feedback: string | null;
+    reviewer_user_id: string | null;
+    assigned_to_user_id: string | null;
+    points_awarded: number | null;
+    status: string | null;
+  }>;
 
   // For backwards compatibility and convenience
   id: string; // Maps to progress_id for existing code
