@@ -7,6 +7,7 @@ import {
   ListChecks,
   UsersRound,
   FileText,
+  FileSearch,
   ArrowRight,
 } from "lucide-react";
 import {
@@ -55,6 +56,13 @@ export default function AdminPage() {
       icon: UsersRound,
       href: "/dashboard/admin/teams",
       color: "text-purple-600",
+    },
+    {
+      title: "Peer Reviews",
+      description: "View peer review submissions and decisions",
+      icon: FileSearch,
+      href: "/dashboard/admin/peer-reviews",
+      color: "text-pink-600",
     },
     {
       title: "Audit Logs",
