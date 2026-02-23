@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
               last_name: invitation.last_name.trim(),
               invited_by: user.id, // Track who sent the invitation
             },
-            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/profile/setup`,
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/profile/setup`,
           });
 
         if (inviteError) {

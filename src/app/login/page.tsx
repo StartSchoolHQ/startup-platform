@@ -265,12 +265,7 @@ export default function LoginPage() {
                     try {
                       const supabase = createClient();
                       const { error } =
-                        await supabase.auth.resetPasswordForEmail(email, {
-                          redirectTo: `${
-                            process.env.NEXT_PUBLIC_APP_URL ||
-                            "https://startup.startschool.org"
-                          }/auth/callback?next=/auth/reset-password`,
-                        });
+                        await supabase.auth.resetPasswordForEmail(email);
                       if (error) {
                         setError(error.message);
                       } else {

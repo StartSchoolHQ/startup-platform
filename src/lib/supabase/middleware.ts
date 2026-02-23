@@ -43,6 +43,7 @@ export async function updateSession(request: NextRequest) {
     "/",
     "/login",
     "/auth/callback",
+    "/auth/confirm",
     "/auth/reset-password",
     "/profile/setup",
     "/invite",
