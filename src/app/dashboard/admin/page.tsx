@@ -10,14 +10,13 @@ import {
   FileSearch,
   ArrowRight,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import { AdminOverview } from "@/components/admin/admin-overview";
 
@@ -85,36 +84,33 @@ export default function AdminPage() {
       {/* Quick Navigation */}
       <div className="pt-6">
         <h3 className="mb-4 text-xl font-semibold">Management Sections</h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {adminSections.map((section) => {
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {adminSections.map((section, index) => {
             const Icon = section.icon;
             return (
-              <Card
+              <motion.div
                 key={section.href}
-                className="cursor-pointer transition-shadow hover:shadow-lg"
-                onClick={() => router.push(section.href)}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.2,
+                  delay: index * 0.05,
+                }}
               >
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <Icon className={`h-8 w-8 ${section.color}`} />
-                    <ArrowRight className="text-muted-foreground h-4 w-4" />
-                  </div>
-                  <CardTitle className="text-lg">{section.title}</CardTitle>
-                  <CardDescription>{section.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    variant="ghost"
-                    className="w-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(section.href);
-                    }}
-                  >
-                    Open Section
-                  </Button>
-                </CardContent>
-              </Card>
+                <Card
+                  className="cursor-pointer transition-shadow hover:shadow-lg"
+                  onClick={() => router.push(section.href)}
+                >
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <Icon className={`h-8 w-8 ${section.color}`} />
+                      <ArrowRight className="text-muted-foreground h-4 w-4" />
+                    </div>
+                    <CardTitle className="text-lg">{section.title}</CardTitle>
+                    <CardDescription>{section.description}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </motion.div>
             );
           })}
         </div>

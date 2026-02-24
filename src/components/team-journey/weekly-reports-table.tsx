@@ -161,7 +161,11 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
                             alt={report.weeklyFill.names[idx]}
                           />
                           <AvatarFallback className="text-primary-foreground bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold">
-                            DP
+                            {(report.weeklyFill.names[idx] || "U")
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                       ))}

@@ -30,8 +30,7 @@ import {
 import type { DatabaseTeam } from "@/lib/database";
 import { Product } from "@/types/team-journey";
 
-type SortOption = "name" | "date" | "status";
-type SortOrder = "asc" | "desc";
+type SortOption = "name" | "status";
 
 function CardGridSkeleton() {
   return (
@@ -90,8 +89,7 @@ export default function TeamJourneyPage() {
   const [showCreateTeamDialog, setShowCreateTeamDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchInput, setSearchInput] = useState(""); // Separate state for input value
-  const [sortBy, setSortBy] = useState<SortOption>("date");
-  const sortOrder: SortOrder = "desc"; // Fixed sort order for now
+  const [sortBy, setSortBy] = useState<SortOption>("name");
 
   const validTabs = ["all-products", "my-products", "archive"];
   const tabFromUrl = searchParams.get("tab");
@@ -195,10 +193,6 @@ export default function TeamJourneyPage() {
           // A→Z alphabetical
           comparison = a.name.localeCompare(b.name);
           break;
-        case "date":
-          // Sort by name if date field not available
-          comparison = a.name.localeCompare(b.name);
-          break;
         case "status":
           // Alphabetical (Active → Archived, etc.)
           comparison = a.status.localeCompare(b.status);
@@ -294,7 +288,6 @@ export default function TeamJourneyPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="name">Name</SelectItem>
-                  <SelectItem value="date">Date</SelectItem>
                   <SelectItem value="status">Status</SelectItem>
                 </SelectContent>
               </Select>

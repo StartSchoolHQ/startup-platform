@@ -37,6 +37,7 @@ export interface TeamLeaderboardEntry {
   rank: number;
   team: {
     name: string;
+    logoUrl?: string;
     memberCount: number;
     isCurrentUserTeam?: boolean;
   };

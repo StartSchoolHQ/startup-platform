@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Building2,
@@ -122,7 +123,7 @@ export function ClientMeetingsTable({
   const deleteMeetingMutation = useMutation({
     mutationFn: async (meetingId: string) => {
       const supabase = createClient();
-      // Cast to any to bypass type check - deleted_at column exists but types not regenerated
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any)
         .from("client_meetings")
         .update({ deleted_at: new Date().toISOString() })
@@ -146,7 +147,7 @@ export function ClientMeetingsTable({
   const submitDraftMutation = useMutation({
     mutationFn: async (meetingId: string) => {
       const supabase = createClient();
-      // Cast to any - complete_meeting function exists but types not regenerated
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any).rpc("complete_meeting", {
         p_meeting_id: meetingId,
       });
@@ -225,12 +226,15 @@ export function ClientMeetingsTable({
   };
 
   // Interest level display labels
-  const interestLevelLabels: Record<string, string> = {
-    intent_to_try: "Intent to try",
-    willingness_to_pay: "Willingness to pay",
-    introductions: "Introductions",
-    not_interested: "Not interested",
-  };
+  const interestLevelLabels: Record<string, string> = useMemo(
+    () => ({
+      intent_to_try: "Intent to try",
+      willingness_to_pay: "Willingness to pay",
+      introductions: "Introductions",
+      not_interested: "Not interested",
+    }),
+    []
+  );
 
   // CSV Export function
   const exportToCSV = useCallback(() => {
@@ -311,8 +315,24 @@ export function ClientMeetingsTable({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-gray-500">Loading client meetings...</div>
+      <div className="space-y-1">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 border-b px-4 py-4">
+            <Skeleton className="h-8 w-8 rounded-md" />
+            <div className="space-y-1">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <Skeleton className="h-6 w-24 rounded-full" />
+            <Skeleton className="h-4 w-8" />
+            <Skeleton className="h-4 w-8" />
+            <Skeleton className="ml-auto h-8 w-16 rounded-md" />
+          </div>
+        ))}
       </div>
     );
   }

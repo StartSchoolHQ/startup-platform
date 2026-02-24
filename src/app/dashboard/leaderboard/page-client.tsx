@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -15,7 +16,8 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, TrendingUp, Loader2, Users } from "lucide-react";
+import { BookOpen, TrendingUp } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { RankIcon } from "@/components/leaderboard/rank-icon";
 import { ChangeIndicator } from "@/components/leaderboard/change-indicator";
 import { StreakBadge } from "@/components/leaderboard/streak-badge";
@@ -95,6 +97,7 @@ function convertToTeamLeaderboardEntry(
     rank: dbEntry.rank_position,
     team: {
       name: dbEntry.team_name || "Unknown Team",
+      logoUrl: dbEntry.team_logo_url || undefined,
       memberCount: dbEntry.member_count,
       isCurrentUserTeam: userTeamIds?.includes(dbEntry.team_id),
     },
@@ -130,7 +133,7 @@ function LeaderboardRow({
 
   const getRowClassName = () => {
     let baseClass =
-      "grid gap-4 p-4 border-b border-border items-center hover:bg-muted/30 hover:shadow-md transition-all duration-200";
+      "grid min-w-[800px] gap-4 p-4 border-b border-border items-center hover:bg-muted/30 hover:shadow-md transition-all duration-200";
 
     if (entry.user.isCurrentUser) {
       baseClass += " bg-blue-50 animate-[pulse-subtle_3s_ease-in-out_infinite]";
@@ -286,7 +289,7 @@ function TeamLeaderboardRow({
 
   const getRowClassName = () => {
     let baseClass =
-      "grid gap-4 p-4 border-b border-border items-center hover:bg-muted/30 hover:shadow-md transition-all duration-200";
+      "grid min-w-[700px] gap-4 p-4 border-b border-border items-center hover:bg-muted/30 hover:shadow-md transition-all duration-200";
 
     if (entry.team.isCurrentUserTeam) {
       baseClass += " bg-blue-50 animate-[pulse-subtle_3s_ease-in-out_infinite]";
@@ -330,9 +333,18 @@ function TeamLeaderboardRow({
 
       {/* Team */}
       <div className="flex items-center gap-3">
-        <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-          <Users className="text-muted-foreground h-4 w-4" />
-        </div>
+        <Avatar className="h-8 w-8 shrink-0">
+          {entry.team.logoUrl ? (
+            <AvatarImage
+              src={entry.team.logoUrl}
+              alt={entry.team.name}
+              className="object-cover"
+            />
+          ) : null}
+          <AvatarFallback className="bg-muted text-xs">
+            {entry.team.name.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
         <div>
           <div className="flex items-center gap-2">
             <span className="max-w-[140px] truncate text-sm font-medium">
@@ -675,9 +687,9 @@ export default function LeaderboardPageClient({
           {/* Filters */}
           <div className="flex items-center gap-4">
             {streaksLoading && activeTab === "individual" && (
-              <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading streaks...
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4 rounded-full" />
+                <Skeleton className="h-4 w-24" />
               </div>
             )}
             <Select value={selectedWeek} onValueChange={setSelectedWeek}>
@@ -686,16 +698,25 @@ export default function LeaderboardPageClient({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="current">Current Week</SelectItem>
-                {currentWeeks.map((week) => (
-                  <SelectItem
-                    key={`${week.week_year}-${week.week_number}`}
-                    value={`${week.week_year}-${week.week_number}`}
-                  >
-                    Week {week.week_number}, {week.week_year} (
-                    {week.user_count ?? week.team_count}{" "}
-                    {activeTab === "individual" ? "users" : "teams"})
-                  </SelectItem>
-                ))}
+                {currentWeeks.map((week) => {
+                  const start = new Date(week.week_start + "T00:00:00");
+                  const end = new Date(week.week_end + "T00:00:00");
+                  const fmt = (d: Date) =>
+                    d.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    });
+                  const count = week.user_count ?? week.team_count;
+                  const label = activeTab === "individual" ? "users" : "teams";
+                  return (
+                    <SelectItem
+                      key={`${week.week_year}-${week.week_number}`}
+                      value={`${week.week_year}-${week.week_number}`}
+                    >
+                      {fmt(start)}–{fmt(end)} ({count} {label})
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
@@ -715,9 +736,9 @@ export default function LeaderboardPageClient({
       {/* Individual Leaderboard Table */}
       {activeTab === "individual" && (
         <Card className="border-none shadow-none">
-          <CardContent className="p-0">
+          <CardContent className="overflow-x-auto p-0">
             <div
-              className="border-border text-muted-foreground grid gap-4 border-b p-3 text-sm font-medium"
+              className="border-border text-muted-foreground grid min-w-[800px] gap-4 border-b p-4 text-sm font-medium"
               style={{
                 gridTemplateColumns: "80px 200px 1fr 1fr 1fr 1fr 1fr 100px",
               }}
@@ -787,9 +808,9 @@ export default function LeaderboardPageClient({
       {/* Team Leaderboard Table */}
       {activeTab === "teams" && (
         <Card className="border-none shadow-none">
-          <CardContent className="p-0">
+          <CardContent className="overflow-x-auto p-0">
             <div
-              className="border-border text-muted-foreground grid gap-4 border-b p-3 text-sm font-medium"
+              className="border-border text-muted-foreground grid min-w-[700px] gap-4 border-b p-4 text-sm font-medium"
               style={{
                 gridTemplateColumns: "80px 200px 1fr 1fr 1fr 1fr 100px",
               }}

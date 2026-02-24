@@ -41,6 +41,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DifficultyBadge } from "@/components/ui/difficulty-badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getAllTasks } from "@/lib/tasks";
 import { deleteTask } from "@/lib/database";
 import { AdminTaskItem } from "@/types/team-journey";
@@ -163,8 +164,18 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-muted-foreground">Loading tasks...</div>
+      <div className="space-y-3 p-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-4 rounded-lg border p-4"
+          >
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-5 w-16" />
+            <Skeleton className="ml-auto h-5 w-8" />
+          </div>
+        ))}
       </div>
     );
   }

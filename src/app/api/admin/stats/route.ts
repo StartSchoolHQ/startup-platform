@@ -67,13 +67,16 @@ export async function GET(request: NextRequest) {
         .then((res) => res.count || 0),
 
       // Get ALL task progress statuses in ONE query (instead of 3 separate queries!)
-      supabase
+      // Use admin client to bypass RLS for accurate counts
+      createAdminClient()
         .from("task_progress")
         .select("status")
         .then((res) => {
           const statuses = res.data || [];
           return {
-            completed: statuses.filter((t) => t.status === "completed").length,
+            completed: statuses.filter(
+              (t) => t.status === "completed" || t.status === "approved"
+            ).length,
             in_progress: statuses.filter((t) => t.status === "in_progress")
               .length,
             pending_review: statuses.filter(
@@ -84,22 +87,22 @@ export async function GET(request: NextRequest) {
           };
         }),
 
-      // Get completed meetings count
-      supabase
+      // Get completed meetings count (admin client to bypass RLS)
+      createAdminClient()
         .from("client_meetings")
         .select("*", { count: "exact", head: true })
         .eq("status", "completed")
         .then((res) => res.count || 0),
 
-      // Get active strikes count
-      supabase
+      // Get active strikes count (admin client to bypass RLS)
+      createAdminClient()
         .from("team_strikes")
         .select("*", { count: "exact", head: true })
         .eq("status", "active")
         .then((res) => res.count || 0),
 
-      // Get total reports count
-      supabase
+      // Get total reports count (admin client to bypass RLS)
+      createAdminClient()
         .from("weekly_reports")
         .select("*", { count: "exact", head: true })
         .then((res) => res.count || 0),

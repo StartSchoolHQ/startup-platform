@@ -286,7 +286,7 @@
 
 ---
 
-### `/dashboard/team-journey` (`src/app/dashboard/team-journey/page.tsx`, 372 lines)
+### `/dashboard/team-journey` (`src/app/dashboard/team-journey/page.tsx`, 372 lines) DONE
 
 **Loading:** Uses `TeamListSkeleton` — one of the better implementations.
 
@@ -311,7 +311,7 @@
 
 ---
 
-### `/dashboard/leaderboard` (`src/app/dashboard/leaderboard/page-client.tsx`, 859 lines)
+### `/dashboard/leaderboard` (`src/app/dashboard/leaderboard/page-client.tsx`, 859 lines) DONE
 
 **Loading:** Framer Motion fade-in skeletons. Server-side data fetch with 60s cache.
 
@@ -336,7 +336,7 @@
 
 ---
 
-### `/dashboard/transaction-history` (`src/app/dashboard/transaction-history/page.tsx`, 224 lines)
+### `/dashboard/transaction-history` (`src/app/dashboard/transaction-history/page.tsx`, 224 lines) DONE
 
 **Loading:** Heading + "Loading..." message + `TableSkeleton rows={10} columns={6}`. Better than most.
 

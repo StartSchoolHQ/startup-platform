@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TeamDetailSkeleton } from "@/components/ui/team-detail-skeleton";
 import {
   Tooltip,
@@ -66,7 +67,6 @@ import {
   CreditCard,
   ExternalLink,
   FileText,
-  Loader2,
   Plus,
   RotateCcw,
   Trophy,
@@ -838,7 +838,20 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
   }
 
   if (!team) {
-    return <div>Team not found</div>;
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-20">
+        <AlertTriangle className="text-muted-foreground h-10 w-10" />
+        <div className="text-center">
+          <h2 className="text-lg font-semibold">Team not found</h2>
+          <p className="text-muted-foreground mt-1 text-sm">
+            This team may have been removed or you don&apos;t have access.
+          </p>
+        </div>
+        <Button variant="outline" asChild>
+          <Link href="/dashboard/team-journey">Back to Products</Link>
+        </Button>
+      </div>
+    );
   }
 
   // Calculate real team stats
@@ -912,6 +925,18 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
       <div className="flex items-start justify-between">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 shrink-0 rounded-lg">
+              {team.logo_url ? (
+                <AvatarImage
+                  src={team.logo_url}
+                  alt={team.name}
+                  className="rounded-lg object-cover"
+                />
+              ) : null}
+              <AvatarFallback className="rounded-lg bg-[#ff78c8]/10 text-lg font-bold text-[#ff78c8]">
+                {team.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
             <h1 className="text-3xl font-bold">{team.name}</h1>
             <Badge
               variant={team.status === "active" ? "default" : "secondary"}
@@ -1415,11 +1440,24 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
           {/* Achievement Cards Grid */}
           {loadingState.achievements ? (
-            <div className="flex items-center justify-center gap-2 py-8">
-              <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
-              <span className="text-muted-foreground">
-                Loading achievements...
-              </span>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="space-y-3 rounded-lg border p-4">
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <div className="flex items-start gap-2">
+                    <Skeleton className="h-12 w-12 shrink-0 rounded-md" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-5 w-28" />
+                      <Skeleton className="h-4 w-full" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-2 w-full rounded-full" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <Skeleton className="h-14 rounded-lg" />
+                    <Skeleton className="h-14 rounded-lg" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : achievements.length === 0 ? (
             <div className="text-muted-foreground py-8 text-center">
@@ -1576,9 +1614,21 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
           {/* Tasks Table */}
           {loadingState.achievements ? (
-            <div className="flex items-center justify-center gap-2 py-8">
-              <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
-              <span className="text-muted-foreground">Loading tasks...</span>
+            <div className="space-y-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-4 border-b px-4 py-4"
+                >
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="ml-auto h-6 w-16 rounded-full" />
+                  <Skeleton className="h-5 w-12" />
+                  <Skeleton className="h-5 w-12" />
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                  <Skeleton className="h-8 w-20 rounded-md" />
+                </div>
+              ))}
             </div>
           ) : !teamStats.achievementsUnlocked ? (
             <div className="text-muted-foreground py-8 text-center">
@@ -1764,11 +1814,30 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
           {/* Weekly Reports Table */}
           {loadingState.weeklyReports ? (
-            <div className="flex items-center justify-center gap-2 py-8">
-              <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
-              <span className="text-muted-foreground">
-                Loading weekly reports...
-              </span>
+            <div className="space-y-1">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-4 border-b px-4 py-4"
+                >
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                  <div className="flex -space-x-2">
+                    {Array.from({ length: 3 }).map((_, j) => (
+                      <Skeleton
+                        key={j}
+                        className="border-background h-8 w-8 rounded-full border-2"
+                      />
+                    ))}
+                  </div>
+                  <Skeleton className="h-4 w-8" />
+                  <Skeleton className="h-4 w-8" />
+                  <Skeleton className="ml-auto h-8 w-16 rounded-md" />
+                </div>
+              ))}
             </div>
           ) : weeklyReports.length === 0 ? (
             <div className="text-muted-foreground py-8 text-center">
@@ -1818,8 +1887,21 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
           {/* Strikes Table */}
           {loadingState.strikes ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-gray-500">Loading strikes...</div>
+            <div className="space-y-1">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-4 border-b px-4 py-4"
+                >
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                  <Skeleton className="ml-auto h-6 w-28 rounded-full" />
+                  <Skeleton className="h-8 w-20 rounded-md" />
+                </div>
+              ))}
             </div>
           ) : strikes.length === 0 ? (
             <div className="text-muted-foreground py-8 text-center">

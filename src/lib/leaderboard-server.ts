@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 export interface TeamLeaderboardEntry {
   team_id: string;
   team_name: string;
+  team_logo_url: string | null;
   total_xp: number;
   total_points: number;
   tasks_completed: number;

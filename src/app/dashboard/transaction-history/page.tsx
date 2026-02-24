@@ -3,10 +3,22 @@
 import { useApp } from "@/contexts/app-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Star, Users, DollarSign, CheckCircle } from "lucide-react";
+import {
+  Trophy,
+  Star,
+  Users,
+  DollarSign,
+  CheckCircle,
+  AlertTriangle,
+  RefreshCw,
+  Rocket,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { getUserTransactions } from "@/lib/database";
+import { motion } from "framer-motion";
+import Link from "next/link";
 
 interface Transaction {
   id: string;
@@ -66,7 +78,12 @@ const formatTransactionDescription = (transaction: Transaction) => {
 export default function TransactionHistoryPage() {
   const { user } = useApp();
 
-  const { data: transactions = [], isPending } = useQuery({
+  const {
+    data: transactions = [],
+    isPending,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["transactions", user?.id],
     queryFn: () => getUserTransactions(user!.id, 50),
     enabled: !!user?.id,
@@ -82,6 +99,38 @@ export default function TransactionHistoryPage() {
           </p>
         </div>
         <TableSkeleton rows={10} columns={6} showHeader={false} />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Transaction History</h1>
+          <p className="text-muted-foreground">
+            Your complete XP and Credits transaction history
+          </p>
+        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center gap-4 py-12">
+            <AlertTriangle className="text-muted-foreground h-10 w-10" />
+            <div className="text-center">
+              <p className="font-medium">Failed to load transactions</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                This is usually temporary. Please try again.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => refetch()}
+              className="gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -132,22 +181,36 @@ export default function TransactionHistoryPage() {
         </CardHeader>
         <CardContent>
           {transactions.length === 0 ? (
-            <div className="py-8 text-center">
-              <p className="text-muted-foreground">No transactions yet</p>
-              <p className="text-muted-foreground mt-2 text-sm">
-                Start completing tasks or joining teams to see your transaction
-                history
-              </p>
+            <div className="flex flex-col items-center gap-4 py-12">
+              <Rocket className="text-muted-foreground h-10 w-10" />
+              <div className="text-center">
+                <p className="font-medium">No transactions yet</p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Complete tasks or join teams to start earning XP and Credits.
+                </p>
+              </div>
+              <Button variant="outline" asChild className="gap-2">
+                <Link href="/dashboard/my-journey">
+                  <CheckCircle className="h-4 w-4" />
+                  View My Tasks
+                </Link>
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
-              {transactions.map((transaction) => {
+              {transactions.map((transaction, index) => {
                 const Icon = getTransactionIcon(transaction.type);
                 const iconColor = getTransactionColor();
 
                 return (
-                  <div
+                  <motion.div
                     key={transaction.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.2,
+                      delay: index * 0.03,
+                    }}
                     className="flex items-center justify-between rounded-lg border p-4"
                   >
                     <div className="flex items-center gap-3">
@@ -211,7 +274,7 @@ export default function TransactionHistoryPage() {
                         {transaction.type.replace("_", " ")}
                       </Badge>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
