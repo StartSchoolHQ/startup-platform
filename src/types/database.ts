@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -56,6 +56,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      audit_log: {
+        Row: {
+          action: string;
+          changed_by_user_id: string | null;
+          changed_fields: string[] | null;
+          created_at: string;
+          id: string;
+          new_data: Json | null;
+          old_data: Json | null;
+          record_id: string;
+          table_name: string;
+        };
+        Insert: {
+          action: string;
+          changed_by_user_id?: string | null;
+          changed_fields?: string[] | null;
+          created_at?: string;
+          id?: string;
+          new_data?: Json | null;
+          old_data?: Json | null;
+          record_id: string;
+          table_name: string;
+        };
+        Update: {
+          action?: string;
+          changed_by_user_id?: string | null;
+          changed_fields?: string[] | null;
+          created_at?: string;
+          id?: string;
+          new_data?: Json | null;
+          old_data?: Json | null;
+          record_id?: string;
+          table_name?: string;
+        };
+        Relationships: [];
+      };
       client_meetings: {
         Row: {
           call_type: string | null;
@@ -64,8 +100,10 @@ export type Database = {
           client_type: string | null;
           completed_at: string | null;
           created_at: string | null;
+          deleted_at: string | null;
           how_it_went: string | null;
           id: string;
+          meeting_data: Json | null;
           meeting_date: string | null;
           new_things_learned: string | null;
           responsible_user_id: string;
@@ -80,8 +118,10 @@ export type Database = {
           client_type?: string | null;
           completed_at?: string | null;
           created_at?: string | null;
+          deleted_at?: string | null;
           how_it_went?: string | null;
           id?: string;
+          meeting_data?: Json | null;
           meeting_date?: string | null;
           new_things_learned?: string | null;
           responsible_user_id: string;
@@ -96,8 +136,10 @@ export type Database = {
           client_type?: string | null;
           completed_at?: string | null;
           created_at?: string | null;
+          deleted_at?: string | null;
           how_it_went?: string | null;
           id?: string;
+          meeting_data?: Json | null;
           meeting_date?: string | null;
           new_things_learned?: string | null;
           responsible_user_id?: string;
@@ -112,13 +154,6 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "client_meetings_team_id_fkey1";
-            columns: ["team_id"];
-            isOneToOne: false;
-            referencedRelation: "team_total_points";
-            referencedColumns: ["team_id"];
           },
           {
             foreignKeyName: "client_meetings_team_id_fkey1";
@@ -259,13 +294,6 @@ export type Database = {
             foreignKeyName: "revenue_streams_team_id_fkey";
             columns: ["team_id"];
             isOneToOne: false;
-            referencedRelation: "team_total_points";
-            referencedColumns: ["team_id"];
-          },
-          {
-            foreignKeyName: "revenue_streams_team_id_fkey";
-            columns: ["team_id"];
-            isOneToOne: false;
             referencedRelation: "teams";
             referencedColumns: ["id"];
           },
@@ -298,6 +326,54 @@ export type Database = {
           user_id?: string;
         };
         Relationships: [];
+      };
+      task_edit_suggestions: {
+        Row: {
+          created_at: string;
+          id: string;
+          status: string;
+          suggestion_text: string;
+          task_id: string;
+          task_title: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          status?: string;
+          suggestion_text: string;
+          task_id: string;
+          task_title: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          status?: string;
+          suggestion_text?: string;
+          task_id?: string;
+          task_title?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "task_edit_suggestions_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "tasks";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "task_edit_suggestions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       task_progress: {
         Row: {
@@ -401,13 +477,6 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "tasks";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "task_progress_team_id_fkey";
-            columns: ["team_id"];
-            isOneToOne: false;
-            referencedRelation: "team_total_points";
-            referencedColumns: ["team_id"];
           },
           {
             foreignKeyName: "task_progress_team_id_fkey";
@@ -584,13 +653,6 @@ export type Database = {
             foreignKeyName: "team_achievements_team_id_fkey";
             columns: ["team_id"];
             isOneToOne: false;
-            referencedRelation: "team_total_points";
-            referencedColumns: ["team_id"];
-          },
-          {
-            foreignKeyName: "team_achievements_team_id_fkey";
-            columns: ["team_id"];
-            isOneToOne: false;
             referencedRelation: "teams";
             referencedColumns: ["id"];
           },
@@ -646,11 +708,54 @@ export type Database = {
             foreignKeyName: "team_invitations_team_id_fkey1";
             columns: ["team_id"];
             isOneToOne: false;
-            referencedRelation: "team_total_points";
-            referencedColumns: ["team_id"];
+            referencedRelation: "teams";
+            referencedColumns: ["id"];
           },
+        ];
+      };
+      team_leaderboard_snapshots: {
+        Row: {
+          created_at: string | null;
+          id: string;
+          meetings_count: number;
+          member_count: number;
+          rank_position: number | null;
+          tasks_completed: number;
+          team_id: string;
+          total_points: number;
+          total_xp: number;
+          week_number: number;
+          week_year: number;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: string;
+          meetings_count?: number;
+          member_count?: number;
+          rank_position?: number | null;
+          tasks_completed?: number;
+          team_id: string;
+          total_points?: number;
+          total_xp?: number;
+          week_number: number;
+          week_year: number;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: string;
+          meetings_count?: number;
+          member_count?: number;
+          rank_position?: number | null;
+          tasks_completed?: number;
+          team_id?: string;
+          total_points?: number;
+          total_xp?: number;
+          week_number?: number;
+          week_year?: number;
+        };
+        Relationships: [
           {
-            foreignKeyName: "team_invitations_team_id_fkey1";
+            foreignKeyName: "team_leaderboard_snapshots_team_id_fkey";
             columns: ["team_id"];
             isOneToOne: false;
             referencedRelation: "teams";
@@ -684,13 +789,6 @@ export type Database = {
           user_id?: string;
         };
         Relationships: [
-          {
-            foreignKeyName: "team_members_team_id_fkey";
-            columns: ["team_id"];
-            isOneToOne: false;
-            referencedRelation: "team_total_points";
-            referencedColumns: ["team_id"];
-          },
           {
             foreignKeyName: "team_members_team_id_fkey";
             columns: ["team_id"];
@@ -781,13 +879,6 @@ export type Database = {
             foreignKeyName: "team_strikes_team_id_fkey1";
             columns: ["team_id"];
             isOneToOne: false;
-            referencedRelation: "team_total_points";
-            referencedColumns: ["team_id"];
-          },
-          {
-            foreignKeyName: "team_strikes_team_id_fkey1";
-            columns: ["team_id"];
-            isOneToOne: false;
             referencedRelation: "teams";
             referencedColumns: ["id"];
           },
@@ -809,6 +900,7 @@ export type Database = {
           formation_cost: number | null;
           founder_id: string | null;
           id: string;
+          logo_url: string | null;
           member_count: number | null;
           name: string;
           status: Database["public"]["Enums"]["status_state"] | null;
@@ -825,6 +917,7 @@ export type Database = {
           formation_cost?: number | null;
           founder_id?: string | null;
           id?: string;
+          logo_url?: string | null;
           member_count?: number | null;
           name: string;
           status?: Database["public"]["Enums"]["status_state"] | null;
@@ -841,6 +934,7 @@ export type Database = {
           formation_cost?: number | null;
           founder_id?: string | null;
           id?: string;
+          logo_url?: string | null;
           member_count?: number | null;
           name?: string;
           status?: Database["public"]["Enums"]["status_state"] | null;
@@ -938,13 +1032,6 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "achievements";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "transactions_team_id_fkey";
-            columns: ["team_id"];
-            isOneToOne: false;
-            referencedRelation: "team_total_points";
-            referencedColumns: ["team_id"];
           },
           {
             foreignKeyName: "transactions_team_id_fkey";
@@ -1071,6 +1158,7 @@ export type Database = {
           context: string | null;
           created_at: string | null;
           id: string;
+          status: string | null;
           submission_data: Json | null;
           submitted_at: string | null;
           team_id: string | null;
@@ -1085,6 +1173,7 @@ export type Database = {
           context?: string | null;
           created_at?: string | null;
           id?: string;
+          status?: string | null;
           submission_data?: Json | null;
           submitted_at?: string | null;
           team_id?: string | null;
@@ -1099,6 +1188,7 @@ export type Database = {
           context?: string | null;
           created_at?: string | null;
           id?: string;
+          status?: string | null;
           submission_data?: Json | null;
           submitted_at?: string | null;
           team_id?: string | null;
@@ -1110,13 +1200,6 @@ export type Database = {
           week_year?: number;
         };
         Relationships: [
-          {
-            foreignKeyName: "weekly_reports_team_id_fkey1";
-            columns: ["team_id"];
-            isOneToOne: false;
-            referencedRelation: "team_total_points";
-            referencedColumns: ["team_id"];
-          },
           {
             foreignKeyName: "weekly_reports_team_id_fkey1";
             columns: ["team_id"];
@@ -1135,29 +1218,729 @@ export type Database = {
       };
     };
     Views: {
-      team_total_points: {
-        Row: {
-          team_id: string | null;
-          team_name: string | null;
-          team_points: number | null;
-          total_individual_points: number | null;
-          total_points: number | null;
-        };
-        Relationships: [];
-      };
+      [_ in never]: never;
     };
     Functions: {
-      get_teams_with_stats: {
-        Args: Record<string, never>;
+      accept_external_task_for_review: {
+        Args: { p_progress_id: string };
+        Returns: Json;
+      };
+      add_client_meeting: {
+        Args: {
+          p_call_type: string;
+          p_client_name: string;
+          p_client_type: string;
+          p_how_it_went: string;
+          p_new_things_learned: string;
+          p_responsible_user_id: string;
+          p_team_id: string;
+        };
+        Returns: string;
+      };
+      add_peer_review_history_entry: {
+        Args: {
+          p_decision?: string;
+          p_event_type: string;
+          p_feedback?: string;
+          p_progress_id: string;
+          p_reviewer_id?: string;
+        };
+        Returns: boolean;
+      };
+      assign_individual_task: {
+        Args: { p_task_id: string; p_user_id: string };
+        Returns: Json;
+      };
+      assign_tasks_to_new_team: {
+        Args: { team_id_param: string };
+        Returns: undefined;
+      };
+      assign_team_task_to_progress: {
+        Args: {
+          p_assigned_by_user_id?: string;
+          p_assigned_to_user_id?: string;
+          p_task_id: string;
+          p_team_id: string;
+        };
+        Returns: Json;
+      };
+      assign_user_to_task_simple: {
+        Args: {
+          p_assigned_by_user_id?: string;
+          p_progress_id: string;
+          p_user_id: string;
+        };
         Returns: {
+          message: string;
+          success: boolean;
+        }[];
+      };
+      assign_user_to_template_task: {
+        Args: {
+          p_assigned_by_user_id?: string;
+          p_task_id: string;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
+      award_team_achievement: {
+        Args: { p_achievement_id: string; p_team_id: string };
+        Returns: Json;
+      };
+      calculate_user_week_metrics: {
+        Args: { p_user_id: string; p_week_number: number; p_week_year: number };
+        Returns: Json;
+      };
+      cancel_client_meeting: {
+        Args: { p_meeting_id: string };
+        Returns: undefined;
+      };
+      cancel_meeting: { Args: { p_meeting_id: string }; Returns: Json };
+      check_and_award_achievement: {
+        Args: { p_achievement_id: string; p_user_id: string };
+        Returns: Json;
+      };
+      check_missed_weekly_reports: {
+        Args: never;
+        Returns: {
+          missed_weeks: number;
+          team_id: string;
+        }[];
+      };
+      check_missed_weekly_reports_team_context: {
+        Args: never;
+        Returns: {
+          team_id: string;
+          team_name: string;
+          user_id: string;
+          user_name: string;
+          week_end: string;
+          week_number: number;
+          week_start: string;
+          week_year: number;
+        }[];
+      };
+      check_simple_rate_limit: {
+        Args: { p_action_type: string; p_limit?: number; p_user_id: string };
+        Returns: boolean;
+      };
+      complete_client_meeting: {
+        Args: { p_meeting_id: string };
+        Returns: Json;
+      };
+      complete_individual_task: {
+        Args: {
+          p_progress_id: string;
+          p_submission_data?: Json;
+          p_submission_notes?: string;
+        };
+        Returns: Json;
+      };
+      complete_meeting: { Args: { p_meeting_id: string }; Returns: Json };
+      complete_team_achievement: {
+        Args: { p_achievement_id: string; p_team_id: string };
+        Returns: Json;
+      };
+      create_individual_task_and_assign_to_users: {
+        Args: {
+          p_achievement_id?: string;
+          p_auto_assign_to_new_teams?: boolean;
+          p_base_points_reward?: number;
+          p_base_xp_reward?: number;
+          p_category?: Database["public"]["Enums"]["task_category_type"];
+          p_deliverables?: string[];
+          p_description?: string;
+          p_detailed_instructions?: string;
+          p_difficulty_level?: number;
+          p_estimated_hours?: number;
+          p_learning_objectives?: string[];
+          p_minimum_team_level?: number;
+          p_peer_review_criteria?: Json;
+          p_prerequisite_template_codes?: string[];
+          p_priority?: Database["public"]["Enums"]["task_priority_type"];
+          p_requires_review?: boolean;
+          p_resources?: Json;
+          p_review_instructions?: string;
+          p_sort_order?: number;
+          p_tags?: string[];
+          p_template_code: string;
+          p_tips_content?: Json;
+          p_title: string;
+        };
+        Returns: Json;
+      };
+      create_notification: {
+        Args: {
+          p_data?: Json;
+          p_message?: string;
+          p_title: string;
+          p_type: string;
+          p_user_id: string;
+        };
+        Returns: string;
+      };
+      create_progress_if_needed_v2: {
+        Args: {
+          p_context?: string;
+          p_task_id: string;
+          p_team_id?: string;
+          p_user_id?: string;
+        };
+        Returns: string;
+      };
+      create_task_and_assign_to_all_teams: {
+        Args: {
+          p_achievement_id?: string;
+          p_auto_assign_to_new_teams?: boolean;
+          p_base_points_reward?: number;
+          p_base_xp_reward?: number;
+          p_category?: Database["public"]["Enums"]["task_category_type"];
+          p_deliverables?: string[];
+          p_description?: string;
+          p_detailed_instructions?: string;
+          p_difficulty_level?: number;
+          p_estimated_hours?: number;
+          p_learning_objectives?: string[];
+          p_minimum_team_level?: number;
+          p_peer_review_criteria?: Json;
+          p_prerequisite_template_codes?: string[];
+          p_priority?: Database["public"]["Enums"]["task_priority_type"];
+          p_requires_review?: boolean;
+          p_resources?: Json;
+          p_review_instructions?: string;
+          p_sort_order?: number;
+          p_tags?: string[];
+          p_template_code: string;
+          p_tips_content?: Json;
+          p_title: string;
+        };
+        Returns: Json;
+      };
+      create_team_atomic: {
+        Args: {
+          p_description: string;
+          p_founder_id: string;
+          p_team_name: string;
+        };
+        Returns: Json;
+      };
+      decrement_team_strikes_count: {
+        Args: { team_id_param: string };
+        Returns: undefined;
+      };
+      deprecated_decrement_team_member_count: {
+        Args: { team_id: string };
+        Returns: undefined;
+      };
+      disband_all_team_members: {
+        Args: { team_id_param: string };
+        Returns: undefined;
+      };
+      distribute_team_rewards: {
+        Args: {
+          p_points_amount: number;
+          p_progress_id?: string;
+          p_reviewer_id?: string;
+          p_task_id?: string;
+          p_task_title?: string;
+          p_team_id: string;
+          p_xp_amount: number;
+        };
+        Returns: Json;
+      };
+      generate_weekly_leaderboard_snapshots: {
+        Args: { p_week_number?: number; p_week_year?: number };
+        Returns: Json;
+      };
+      generate_weekly_team_leaderboard_snapshots: {
+        Args: { p_week_number?: number; p_week_year?: number };
+        Returns: Json;
+      };
+      get_audit_logs: {
+        Args: {
+          p_action?: string;
+          p_from_date?: string;
+          p_limit?: number;
+          p_offset?: number;
+          p_table_name?: string;
+          p_to_date?: string;
+          p_user_id?: string;
+        };
+        Returns: {
+          action: string;
+          changed_by_email: string;
+          changed_by_name: string;
+          changed_by_user_id: string;
+          changed_fields: string[];
+          created_at: string;
+          id: string;
+          new_data: Json;
+          old_data: Json;
+          record_id: string;
+          table_name: string;
+        }[];
+      };
+      get_available_templates_for_team: {
+        Args: { p_team_id: string };
+        Returns: {
+          category: Database["public"]["Enums"]["task_category_type"];
+          credits_reward: number;
+          description: string;
+          difficulty_level: number;
+          estimated_hours: number;
+          is_assigned: boolean;
+          prerequisites_met: boolean;
+          priority: Database["public"]["Enums"]["task_priority_type"];
+          sort_order: number;
+          task_status: Database["public"]["Enums"]["task_status_type"];
+          template_code: string;
+          template_id: string;
+          title: string;
+          xp_reward: number;
+        }[];
+      };
+      get_available_users_for_invitation: {
+        Args: { p_search_term?: string; p_team_id: string };
+        Returns: {
+          avatar_url: string;
+          email: string;
+          graduation_level: number;
           id: string;
           name: string;
-          status: Database["public"]["Enums"]["status_state"];
+        }[];
+      };
+      get_enhanced_team_tasks: {
+        Args: { p_team_id: string };
+        Returns: {
+          assigned_at: string;
+          assigned_to_user_id: string;
+          assignee_avatar_url: string;
+          assignee_name: string;
+          category: string;
+          completed_at: string;
           created_at: string;
-          total_points: number;
-          member_count: number;
-          meetings_count: number;
+          credits_reward: number;
+          description: string;
+          difficulty_level: number;
+          estimated_hours: number;
+          is_available: boolean;
+          prerequisites_met: boolean;
+          priority: Database["public"]["Enums"]["task_priority_type"];
+          requires_review: boolean;
+          review_instructions: string;
+          sort_order: number;
+          started_at: string;
+          status: Database["public"]["Enums"]["task_status_type"];
+          task_id: string;
+          template_code: string;
+          template_id: string;
+          title: string;
+          updated_at: string;
+          xp_reward: number;
+        }[];
+      };
+      get_invitation_status: {
+        Args: never;
+        Returns: {
+          accepted_at: string;
+          email: string;
+          first_name: string;
+          invited_at: string;
+          invited_by: string;
+          is_expired: boolean;
+          last_name: string;
+          status: string;
+          user_id: string;
+        }[];
+      };
+      get_leaderboard_data: {
+        Args: {
+          p_limit?: number;
+          p_week_number?: number;
+          p_week_year?: number;
+        };
+        Returns: {
+          achievements_change: number;
+          achievements_count: number;
+          points_change: number;
+          rank_change: number;
+          rank_position: number;
+          tasks_change: number;
           tasks_completed: number;
+          team_name: string;
+          total_points: number;
+          total_xp: number;
+          user_avatar_url: string;
+          user_email: string;
+          user_id: string;
+          user_name: string;
+          xp_change: number;
+        }[];
+      };
+      get_recurring_task_status: {
+        Args: { team_id_param: string; user_id_param?: string };
+        Returns: {
+          achievement_id: string;
+          achievement_name: string;
+          cooldown_days: number;
+          has_active_instance: boolean;
+          is_recurring: boolean;
+          last_completion: string;
+          latest_progress_id: string;
+          next_available: string;
+          recurring_status: string;
+          task_id: string;
+          template_code: string;
+          title: string;
+        }[];
+      };
+      get_recurring_task_status_backup: {
+        Args: { p_task_id: string; p_team_id: string };
+        Returns: {
+          cooldown_hours: number;
+          is_available: boolean;
+          last_completed_at: string;
+          next_available_at: string;
+          task_id: string;
+        }[];
+      };
+      get_riga_week_boundaries: {
+        Args: { input_date?: string };
+        Returns: {
+          week_end: string;
+          week_number: number;
+          week_start: string;
+          week_year: number;
+        }[];
+      };
+      get_task_history: {
+        Args: { p_progress_id: string };
+        Returns: {
+          description: string;
+          event_timestamp: string;
+          event_type: string;
+          id: string;
+          metadata: Json;
+          user_email: string;
+          user_id: string;
+          user_name: string;
+        }[];
+      };
+      get_task_templates_for_admin: {
+        Args: {
+          p_category?: Database["public"]["Enums"]["task_category_type"];
+          p_limit?: number;
+          p_offset?: number;
+          p_search_term?: string;
+        };
+        Returns: {
+          auto_assign_to_new_teams: boolean;
+          base_points_reward: number;
+          base_xp_reward: number;
+          category: Database["public"]["Enums"]["task_category_type"];
+          created_at: string;
+          description: string;
+          difficulty_level: number;
+          id: string;
+          is_active: boolean;
+          priority: Database["public"]["Enums"]["task_priority_type"];
+          requires_review: boolean;
+          teams_assigned: number;
+          teams_completed: number;
+          teams_in_progress: number;
+          template_code: string;
+          title: string;
+          updated_at: string;
+        }[];
+      };
+      get_task_update_impact: { Args: { p_task_id: string }; Returns: Json };
+      get_tasks_available_for_review: {
+        Args: { p_team_id?: string };
+        Returns: {
+          assignee_name: string;
+          credits_reward: number;
+          description: string;
+          priority: Database["public"]["Enums"]["task_priority_type"];
+          submission_preview: Json;
+          submitted_at: string;
+          task_id: string;
+          team_id: string;
+          team_name: string;
+          title: string;
+          xp_reward: number;
+        }[];
+      };
+      get_tasks_by_achievement: {
+        Args: { p_achievement_id?: string; p_team_id?: string };
+        Returns: {
+          achievement_id: string;
+          achievement_name: string;
+          assigned_at: string;
+          assigned_to_user_id: string;
+          assignee_avatar_url: string;
+          assignee_name: string;
+          base_points_reward: number;
+          base_xp_reward: number;
+          category: string;
+          completed_at: string;
+          description: string;
+          difficulty_level: number;
+          is_available: boolean;
+          progress_id: string;
+          started_at: string;
+          status: string;
+          task_id: string;
+          title: string;
+        }[];
+      };
+      get_team_achievement_dashboard: {
+        Args: { p_team_id: string; p_user_id: string };
+        Returns: {
+          achievements: Json;
+          achievements_unlocked: boolean;
+          client_meetings: Json;
+          client_meetings_count: number;
+          tasks: Json;
+        }[];
+      };
+      get_team_client_meetings_secure: {
+        Args: { p_team_id: string; p_user_id: string };
+        Returns: {
+          call_type: string;
+          cancelled_at: string;
+          client_name: string;
+          client_type: string;
+          completed_at: string;
+          created_at: string;
+          how_it_went: string;
+          id: string;
+          is_client_name_masked: boolean;
+          meeting_data: Json;
+          new_things_learned: string;
+          responsible_user_id: string;
+          status: string;
+          user_avatar_url: string;
+          user_id: string;
+          user_name: string;
+        }[];
+      };
+      get_team_leaderboard_data: {
+        Args: {
+          p_limit?: number;
+          p_week_number?: number;
+          p_week_year?: number;
+        };
+        Returns: {
+          meetings_change: number;
+          meetings_count: number;
+          member_count: number;
+          points_change: number;
+          rank_change: number;
+          rank_position: number;
+          tasks_change: number;
+          tasks_completed: number;
+          team_id: string;
+          team_name: string;
+          total_points: number;
+          total_xp: number;
+          xp_change: number;
+        }[];
+      };
+      get_team_meetings: {
+        Args: { p_team_id: string };
+        Returns: {
+          call_type: string;
+          cancelled_at: string;
+          client_name: string;
+          client_type: string;
+          completed_at: string;
+          created_at: string;
+          how_it_went: string;
+          id: string;
+          meeting_date: string;
+          new_things_learned: string;
+          responsible_user_avatar: string;
+          responsible_user_id: string;
+          responsible_user_name: string;
+          status: string;
+        }[];
+      };
+      get_team_stats_combined: {
+        Args: { p_team_id: string };
+        Returns: {
+          points_earned: number;
+          points_invested: number;
+          xp_earned: number;
+        }[];
+      };
+      get_team_strikes: {
+        Args: { p_team_id: string };
+        Returns: {
+          created_at: string;
+          explanation: string;
+          id: string;
+          points_penalty: number;
+          reason: string;
+          status: string;
+          strike_date: string;
+          team_id: string;
+          user_id: string;
+          user_name: string;
+          xp_penalty: number;
+        }[];
+      };
+      get_team_tasks_enhanced: {
+        Args: { p_team_id: string };
+        Returns: {
+          assigned_at: string;
+          assigned_to_user_id: string;
+          assignee_name: string;
+          category: string;
+          description: string;
+          is_available: boolean;
+          prerequisites_met: boolean;
+          priority: Database["public"]["Enums"]["task_priority_type"];
+          requires_review: boolean;
+          sort_order: number;
+          status: Database["public"]["Enums"]["task_status_type"];
+          task_id: string;
+          template_code: string;
+          title: string;
+          xp_reward: number;
+        }[];
+      };
+      get_team_tasks_from_progress: {
+        Args: { p_team_id: string };
+        Returns: {
+          assigned_to_user_id: string;
+          assignee_name: string;
+          base_points_reward: number;
+          base_xp_reward: number;
+          category: Database["public"]["Enums"]["task_category_type"];
+          completed_at: string;
+          created_at: string;
+          description: string;
+          difficulty_level: number;
+          progress_id: string;
+          started_at: string;
+          status: Database["public"]["Enums"]["task_status_type"];
+          task_id: string;
+          title: string;
+        }[];
+      };
+      get_team_tasks_simple: {
+        Args: { p_team_id: string };
+        Returns: {
+          assigned_at: string;
+          assigned_to_user_id: string;
+          assignee_avatar_url: string;
+          assignee_name: string;
+          base_xp_reward: number;
+          category: Database["public"]["Enums"]["task_category_type"];
+          completed_at: string;
+          deliverables: string[];
+          description: string;
+          detailed_instructions: string;
+          difficulty_level: number;
+          is_available: boolean;
+          learning_objectives: string[];
+          peer_review_criteria: Json;
+          priority: Database["public"]["Enums"]["task_priority_type"];
+          progress_id: string;
+          resources: Json;
+          started_at: string;
+          status: Database["public"]["Enums"]["task_status_type"];
+          task_id: string;
+          tips_content: Json;
+          title: string;
+        }[];
+      };
+      get_team_tasks_visible: {
+        Args: { p_team_id: string; p_user_id?: string };
+        Returns: {
+          achievement_id: string;
+          achievement_name: string;
+          assigned_at: string;
+          assigned_to_user_id: string;
+          assignee_avatar_url: string;
+          assignee_name: string;
+          base_points_reward: number;
+          base_xp_reward: number;
+          category: string;
+          completed_at: string;
+          deliverables: string;
+          detailed_instructions: string;
+          difficulty_level: number;
+          estimated_hours: number;
+          is_available: boolean;
+          is_confidential: boolean;
+          learning_objectives: string;
+          peer_review_criteria: string;
+          priority: string;
+          progress_id: string;
+          progress_status: Database["public"]["Enums"]["task_status_type"];
+          resources: string;
+          reviewer_notes: string;
+          sort_order: number;
+          started_at: string;
+          task_description: string;
+          task_id: string;
+          task_title: string;
+          tips_content: string;
+        }[];
+      };
+      get_team_tasks_with_availability: {
+        Args: { p_team_id: string };
+        Returns: {
+          assigned_at: string;
+          assigned_to_user_id: string;
+          assignee_avatar_url: string;
+          assignee_name: string;
+          category: string;
+          completed_at: string;
+          created_at: string;
+          credits_reward: number;
+          description: string;
+          difficulty_level: number;
+          estimated_hours: number;
+          is_available: boolean;
+          prerequisites_met: boolean;
+          priority: Database["public"]["Enums"]["task_priority_type"];
+          requires_review: boolean;
+          review_instructions: string;
+          sort_order: number;
+          started_at: string;
+          status: Database["public"]["Enums"]["task_status_type"];
+          task_id: string;
+          template_code: string;
+          template_id: string;
+          title: string;
+          updated_at: string;
+          xp_reward: number;
+        }[];
+      };
+      get_team_weekly_status: {
+        Args: { p_team_id: string };
+        Returns: {
+          has_submitted: boolean;
+          submitted_at: string;
+          user_avatar_url: string;
+          user_email: string;
+          user_id: string;
+          user_name: string;
+        }[];
+      };
+      get_teams_with_stats: {
+        Args: never;
+        Returns: {
+          created_at: string;
+          id: string;
+          meetings_count: number;
+          member_count: number;
+          name: string;
+          status: Database["public"]["Enums"]["status_state"];
+          tasks_completed: number;
+          total_points: number;
         }[];
       };
       get_top_teams_with_xp: {
@@ -1168,6 +1951,316 @@ export type Database = {
           team_points: number;
           total_xp: number;
         }[];
+      };
+      get_user_achievement_progress: {
+        Args: { p_user_id: string };
+        Returns: {
+          achievement_description: string;
+          achievement_icon: string;
+          achievement_id: string;
+          achievement_name: string;
+          color_theme: string;
+          completed_tasks: number;
+          is_completed: boolean;
+          points_reward: number;
+          sort_order: number;
+          status: string;
+          total_tasks: number;
+          xp_reward: number;
+        }[];
+      };
+      get_user_individual_tasks: {
+        Args: { p_user_id: string };
+        Returns: {
+          base_points_reward: number;
+          base_xp_reward: number;
+          category: Database["public"]["Enums"]["task_category_type"];
+          completed_at: string;
+          created_at: string;
+          description: string;
+          difficulty_level: number;
+          progress_id: string;
+          started_at: string;
+          status: Database["public"]["Enums"]["task_status_type"];
+          submission_data: Json;
+          task_id: string;
+          title: string;
+        }[];
+      };
+      get_user_tasks_visible: {
+        Args: { p_user_id: string };
+        Returns: {
+          achievement_id: string;
+          achievement_name: string;
+          assigned_at: string;
+          assigned_to_user_id: string;
+          assignee_avatar_url: string;
+          assignee_name: string;
+          base_points_reward: number;
+          base_xp_reward: number;
+          category: Database["public"]["Enums"]["task_category_type"];
+          completed_at: string;
+          deliverables: string;
+          detailed_instructions: string;
+          difficulty_level: number;
+          estimated_hours: number;
+          is_available: boolean;
+          learning_objectives: string;
+          peer_review_criteria: string;
+          priority: Database["public"]["Enums"]["task_priority_type"];
+          progress_id: string;
+          progress_status: Database["public"]["Enums"]["task_status_type"];
+          resources: string;
+          reviewer_notes: string;
+          sort_order: number;
+          started_at: string;
+          task_description: string;
+          task_id: string;
+          task_title: string;
+          tips_content: string;
+        }[];
+      };
+      get_user_tasks_with_feedback: {
+        Args: { p_user_id: string };
+        Returns: {
+          assigned_at: string;
+          base_points_reward: number;
+          base_xp_reward: number;
+          completed_at: string;
+          description: string;
+          difficulty_level: number;
+          peer_review_feedback: string;
+          progress_id: string;
+          reviewer_avatar_url: string;
+          reviewer_name: string;
+          status: Database["public"]["Enums"]["task_status_type"];
+          team_name: string;
+          title: string;
+        }[];
+      };
+      has_user_submitted_this_week: {
+        Args: { p_team_id: string; p_user_id: string };
+        Returns: boolean;
+      };
+      increment_team_member_count: {
+        Args: { team_id: string };
+        Returns: undefined;
+      };
+      is_task_recurring: { Args: { task_id: string }; Returns: boolean };
+      mark_all_notifications_seen: {
+        Args: { user_id_param: string };
+        Returns: number;
+      };
+      mark_notification_read: {
+        Args: { p_notification_id: string; p_user_id: string };
+        Returns: boolean;
+      };
+      parse_review_instructions_to_criteria: {
+        Args: { review_text: string };
+        Returns: Json;
+      };
+      reassign_task: {
+        Args: {
+          p_new_user_id: string;
+          p_progress_id: string;
+          p_reassigned_by_user_id: string;
+        };
+        Returns: {
+          message: string;
+          success: boolean;
+        }[];
+      };
+      remove_team_member_v2: {
+        Args: { p_team_id: string; p_user_id: string };
+        Returns: undefined;
+      };
+      reset_available_recurring_tasks: {
+        Args: never;
+        Returns: {
+          reset_count: number;
+          task_id: string;
+          task_title: string;
+        }[];
+      };
+      reset_available_recurring_tasks_backup_v2: {
+        Args: never;
+        Returns: {
+          task_id: string;
+          task_title: string;
+        }[];
+      };
+      resubmit_task_for_review: { Args: { p_task_id: string }; Returns: Json };
+      retry_rejected_task: { Args: { p_task_id: string }; Returns: Json };
+      save_meeting_draft: {
+        Args: {
+          p_call_type?: string;
+          p_client_name: string;
+          p_client_type?: string;
+          p_how_it_went?: string;
+          p_meeting_data?: Json;
+          p_new_things_learned?: string;
+          p_responsible_user_id: string;
+          p_team_id: string;
+        };
+        Returns: Json;
+      };
+      save_weekly_report_draft: {
+        Args: {
+          p_submission_data: Json;
+          p_team_id: string;
+          p_user_id: string;
+          p_week_end_date: string;
+          p_week_number: number;
+          p_week_start_date: string;
+          p_week_year: number;
+        };
+        Returns: Json;
+      };
+      send_weekly_report_reminders: { Args: never; Returns: number };
+      start_individual_task: { Args: { p_progress_id: string }; Returns: Json };
+      start_recurring_task: {
+        Args: {
+          task_id_param: string;
+          team_id_param: string;
+          user_id_param: string;
+        };
+        Returns: {
+          message: string;
+          progress_id: string;
+        }[];
+      };
+      start_recurring_task_backup: {
+        Args: { p_task_id: string; p_team_id: string; p_user_id: string };
+        Returns: string;
+      };
+      start_task: { Args: { p_task_id: string }; Returns: Json };
+      submit_external_peer_review: {
+        Args: {
+          p_decision: string;
+          p_feedback?: string;
+          p_is_continuation?: boolean;
+          p_progress_id: string;
+        };
+        Returns: Json;
+      };
+      submit_external_peer_review_backup_v2: {
+        Args: {
+          p_decision: string;
+          p_feedback: string;
+          p_is_continuation?: boolean;
+          p_progress_id: string;
+        };
+        Returns: Json;
+      };
+      submit_external_peer_review_backup_v3: {
+        Args: {
+          p_decision: string;
+          p_feedback?: string;
+          p_is_continuation?: boolean;
+          p_progress_id: string;
+        };
+        Returns: Json;
+      };
+      submit_peer_review: {
+        Args: {
+          p_completeness_score?: number;
+          p_decision: string;
+          p_feedback?: string;
+          p_overall_score?: number;
+          p_quality_score?: number;
+          p_review_data?: Json;
+          p_task_id: string;
+        };
+        Returns: Json;
+      };
+      submit_peer_review_with_rate_limit: {
+        Args: {
+          p_decision: string;
+          p_feedback?: string;
+          p_reviewer_user_id: string;
+          p_task_progress_id: string;
+        };
+        Returns: Json;
+      };
+      submit_strike_explanation: {
+        Args: { p_explanation: string; p_strike_id: string };
+        Returns: boolean;
+      };
+      update_meeting_draft: {
+        Args: {
+          p_call_type?: string;
+          p_client_name?: string;
+          p_client_type?: string;
+          p_how_it_went?: string;
+          p_meeting_data?: Json;
+          p_meeting_id: string;
+          p_new_things_learned?: string;
+        };
+        Returns: Json;
+      };
+      update_task_status_deprecated: {
+        Args: {
+          p_progress_id: string;
+          p_status: Database["public"]["Enums"]["task_status_type"];
+          p_submission_data?: Json;
+          p_submission_notes?: string;
+        };
+        Returns: {
+          message: string;
+          success: boolean;
+        }[];
+      };
+      update_task_template: {
+        Args: {
+          p_base_points_reward?: number;
+          p_base_xp_reward?: number;
+          p_category?: Database["public"]["Enums"]["task_category_type"];
+          p_deliverables?: string[];
+          p_description?: string;
+          p_detailed_instructions?: string;
+          p_difficulty_level?: number;
+          p_estimated_hours?: number;
+          p_learning_objectives?: string[];
+          p_peer_review_criteria?: Json;
+          p_priority?: Database["public"]["Enums"]["task_priority_type"];
+          p_propagation_mode?: string;
+          p_requires_review?: boolean;
+          p_resources?: Json;
+          p_review_instructions?: string;
+          p_tags?: string[];
+          p_task_id: string;
+          p_tips_content?: Json;
+          p_title?: string;
+        };
+        Returns: Json;
+      };
+      update_team_member_role_v2: {
+        Args: {
+          p_new_role: Database["public"]["Enums"]["team_role_type"];
+          p_team_id: string;
+          p_user_id: string;
+        };
+        Returns: undefined;
+      };
+      update_team_strikes_count: {
+        Args: { team_id_param: string };
+        Returns: undefined;
+      };
+      update_user_profile: {
+        Args: { p_avatar_url?: string; p_name: string };
+        Returns: Json;
+      };
+      user_can_manage_task: {
+        Args: { p_action: string; p_progress_id: string; p_user_id: string };
+        Returns: {
+          can_manage: boolean;
+          is_assigned_user: boolean;
+          user_role: string;
+        }[];
+      };
+      user_can_see_confidential_tasks: {
+        Args: { p_team_id: string; p_user_id: string };
+        Returns: boolean;
       };
     };
     Enums: {
@@ -1411,7 +2504,3 @@ export const Constants = {
     },
   },
 } as const;
-
-export type WeeklyReport =
-  Database["public"]["Tables"]["weekly_reports"]["Row"];
-export type User = Database["public"]["Tables"]["users"]["Row"];

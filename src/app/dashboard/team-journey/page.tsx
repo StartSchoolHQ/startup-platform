@@ -13,8 +13,10 @@ import {
 import { Search, Plus, Package, PackageOpen } from "lucide-react";
 import { ProductCard } from "@/components/team-journey/product-card";
 import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
-import { TeamListSkeleton } from "@/components/ui/team-list-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { motion } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -31,6 +33,55 @@ import { Product } from "@/types/team-journey";
 type SortOption = "name" | "date" | "status";
 type SortOrder = "asc" | "desc";
 
+function CardGridSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <Card key={i}>
+          <CardHeader className="pb-4">
+            <div className="flex items-start gap-3">
+              <Skeleton className="h-12 w-12 shrink-0 rounded-lg" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {Array.from({ length: 3 }).map((_, j) => (
+              <div
+                key={j}
+                className="flex items-center gap-3 rounded-md border p-2"
+              >
+                <Skeleton className="h-8 w-8 rounded-md" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-12" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+            ))}
+            <div className="flex items-center justify-between pt-2">
+              <div className="flex -space-x-2">
+                {Array.from({ length: 3 }).map((_, k) => (
+                  <Skeleton
+                    key={k}
+                    className="border-background h-8 w-8 rounded-full border-2"
+                  />
+                ))}
+              </div>
+              <Skeleton className="h-8 w-24 rounded-md" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 export default function TeamJourneyPage() {
   const { user } = useAppContext();
   const queryClient = useQueryClient();
@@ -44,18 +95,25 @@ export default function TeamJourneyPage() {
 
   const validTabs = ["all-products", "my-products", "archive"];
   const tabFromUrl = searchParams.get("tab");
-  const activeTab = validTabs.includes(tabFromUrl ?? "") ? tabFromUrl! : "all-products";
+  const activeTab = validTabs.includes(tabFromUrl ?? "")
+    ? tabFromUrl!
+    : "all-products";
 
-  const setActiveTab = useCallback((tab: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (tab === "all-products") {
-      params.delete("tab");
-    } else {
-      params.set("tab", tab);
-    }
-    const query = params.toString();
-    router.replace(query ? `?${query}` : window.location.pathname, { scroll: false });
-  }, [searchParams, router]);
+  const setActiveTab = useCallback(
+    (tab: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === "all-products") {
+        params.delete("tab");
+      } else {
+        params.set("tab", tab);
+      }
+      const query = params.toString();
+      router.replace(query ? `?${query}` : window.location.pathname, {
+        scroll: false,
+      });
+    },
+    [searchParams, router]
+  );
 
   // React Query: All products
   const { data: allProducts = [], isPending: isLoadingAll } = useQuery({
@@ -96,7 +154,7 @@ export default function TeamJourneyPage() {
       enabled: !!user?.id,
     });
 
-  const loading = isLoadingAll || isLoadingMy || isLoadingArchived;
+  // Individual loading states used per-tab instead of a combined gate
 
   // Debounce search input to avoid excessive API calls
   useEffect(() => {
@@ -189,16 +247,16 @@ export default function TeamJourneyPage() {
     }
   };
 
-  if (loading) {
-    return <TeamListSkeleton />;
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         <h1 className="text-2xl font-bold">{getHeaderText()}</h1>
-      </div>
+      </motion.div>
 
       {/* Tabs and Controls */}
       <div className="space-y-4">
@@ -209,8 +267,8 @@ export default function TeamJourneyPage() {
           onValueChange={setActiveTab}
           className="w-full"
         >
-          <div className="flex items-center justify-between">
-            <TabsList className="grid w-[380px] grid-cols-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <TabsList className="grid w-full grid-cols-3 sm:w-fit">
               <TabsTrigger value="all-products">All Products</TabsTrigger>
               <TabsTrigger value="my-products">My Products</TabsTrigger>
               <TabsTrigger value="archive">Archive</TabsTrigger>
@@ -219,11 +277,11 @@ export default function TeamJourneyPage() {
             {/* Controls */}
             <div className="flex items-center gap-3">
               {/* Search */}
-              <div className="relative">
+              <div className="relative flex-1 sm:flex-initial">
                 <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
                 <Input
                   placeholder="Search..."
-                  className="w-64 pl-10"
+                  className="w-full pl-10 sm:w-64"
                   value={searchInput}
                   onChange={(e) => handleSearch(e.target.value)}
                 />
@@ -231,7 +289,7 @@ export default function TeamJourneyPage() {
 
               {/* Sort */}
               <Select value={sortBy} onValueChange={handleSort}>
-                <SelectTrigger className="w-[100px]">
+                <SelectTrigger className="w-24">
                   <SelectValue placeholder="Sort" />
                 </SelectTrigger>
                 <SelectContent>
@@ -247,7 +305,8 @@ export default function TeamJourneyPage() {
                 onClick={() => setShowCreateTeamDialog(true)}
               >
                 <Plus className="h-4 w-4" />
-                Add Product
+                <span className="hidden sm:inline">Add Product</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </div>
           </div>
@@ -257,7 +316,9 @@ export default function TeamJourneyPage() {
             value="all-products"
             className="mt-6 min-h-[600px] space-y-4"
           >
-            {filteredAllProducts.length === 0 ? (
+            {isLoadingAll ? (
+              <CardGridSkeleton />
+            ) : filteredAllProducts.length === 0 ? (
               <EmptyState
                 icon={Package}
                 title={searchQuery ? "No Products Found" : "No Products Yet"}
@@ -280,8 +341,15 @@ export default function TeamJourneyPage() {
               />
             ) : (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredAllProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {filteredAllProducts.map((product, index) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <ProductCard product={product} />
+                  </motion.div>
                 ))}
               </div>
             )}
@@ -291,7 +359,9 @@ export default function TeamJourneyPage() {
             value="my-products"
             className="mt-6 min-h-[600px] space-y-4"
           >
-            {filteredMyProducts.length === 0 ? (
+            {isLoadingMy ? (
+              <CardGridSkeleton />
+            ) : filteredMyProducts.length === 0 ? (
               <EmptyState
                 icon={Package}
                 title={searchQuery ? "No Products Found" : "No Products Yet"}
@@ -317,15 +387,24 @@ export default function TeamJourneyPage() {
               />
             ) : (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredMyProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {filteredMyProducts.map((product, index) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <ProductCard product={product} />
+                  </motion.div>
                 ))}
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="archive" className="mt-6 min-h-[600px] space-y-4">
-            {filteredArchivedProducts.length === 0 ? (
+            {isLoadingArchived ? (
+              <CardGridSkeleton />
+            ) : filteredArchivedProducts.length === 0 ? (
               <EmptyState
                 icon={PackageOpen}
                 title={
@@ -352,8 +431,15 @@ export default function TeamJourneyPage() {
               />
             ) : (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredArchivedProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {filteredArchivedProducts.map((product, index) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <ProductCard product={product} />
+                  </motion.div>
                 ))}
               </div>
             )}

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { waitForProfile, isProfileComplete } from "@/lib/profile-utils";
 
@@ -51,11 +52,19 @@ export default function InviteAcceptPage() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="text-center">
-        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
-        <p className="mt-4 text-gray-600">Processing invitation...</p>
-      </div>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0000dd]">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+        className="relative z-10 text-center"
+      >
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-[#ff78c8]/30 border-t-[#ff78c8]"></div>
+        <p className="mt-4 text-sm font-medium text-white/70">
+          Processing invitation...
+        </p>
+      </motion.div>
     </div>
   );
 }

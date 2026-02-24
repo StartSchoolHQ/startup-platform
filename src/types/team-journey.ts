@@ -9,6 +9,7 @@ export interface Product {
   name: string;
   description: string;
   website?: string;
+  logoUrl?: string;
   status: "Active" | "Inactive";
   customers: {
     count: number;

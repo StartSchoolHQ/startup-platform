@@ -1,42 +1,43 @@
 "use client";
 
-import posthog from "posthog-js";
-import { useState, useEffect, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
+import posthog from "posthog-js";
+import { useCallback, useEffect, useState } from "react";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { InlineAlert } from "@/components/ui/inline-alert";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DifficultyBadge } from "@/components/ui/difficulty-badge";
+import { InlineAlert } from "@/components/ui/inline-alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { invalidateNotifications } from "@/hooks/use-task-notifications";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 
-import {
-  Trophy,
-  CheckCircle2,
-  Users,
-  ExternalLink,
-  Clock,
-  History,
-  Medal,
-  Zap,
-  FileText,
-  User,
-  CreditCard,
-} from "lucide-react";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
+import { TaskRow } from "@/components/tasks/task-row";
+import { useApp } from "@/contexts/app-context";
 import {
   getAvailableTasksForReview,
+  getCompletedPeerReviews,
   getMySubmittedTasksForReview,
   getPeerReviewStatsFromTransactions,
-  getCompletedPeerReviews,
 } from "@/lib/database";
-import { useApp } from "@/contexts/app-context";
 import { createClient } from "@/lib/supabase/client";
-import { TaskRow } from "@/components/tasks/task-row";
+import {
+  CheckCircle2,
+  CreditCard,
+  ExternalLink,
+  FileText,
+  History,
+  Medal,
+  Trophy,
+  User,
+  Users,
+  Zap,
+} from "lucide-react";
 
 import { TaskDetailsModal } from "@/components/ui/task-details-modal";
 
@@ -122,6 +123,43 @@ interface CompletedReview {
   } | null;
 }
 
+function TableSkeleton({
+  columns,
+  rows = 3,
+}: {
+  columns: number;
+  rows?: number;
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="border-border border-b">
+            {Array.from({ length: columns }).map((_, i) => (
+              <th key={i} className="px-4 py-4">
+                <Skeleton className="h-4 w-20" />
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: rows }).map((_, rowIdx) => (
+            <tr key={rowIdx} className="border-border/50 border-b">
+              {Array.from({ length: columns }).map((_, colIdx) => (
+                <td key={colIdx} className="px-4 py-4">
+                  <Skeleton
+                    className={`h-4 ${colIdx === 0 ? "w-32" : "w-16"}`}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function PeerReviewPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -139,18 +177,25 @@ export default function PeerReviewPage() {
   // Tab state synced to URL
   const validTabs = ["available-tests", "my-tests", "my-tasks", "history"];
   const tabFromUrl = searchParams.get("tab");
-  const activeTab = validTabs.includes(tabFromUrl ?? "") ? tabFromUrl! : "available-tests";
+  const activeTab = validTabs.includes(tabFromUrl ?? "")
+    ? tabFromUrl!
+    : "available-tests";
 
-  const setActiveTab = useCallback((tab: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (tab === "available-tests") {
-      params.delete("tab");
-    } else {
-      params.set("tab", tab);
-    }
-    const query = params.toString();
-    router.replace(query ? `?${query}` : window.location.pathname, { scroll: false });
-  }, [searchParams, router]);
+  const setActiveTab = useCallback(
+    (tab: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === "available-tests") {
+        params.delete("tab");
+      } else {
+        params.set("tab", tab);
+      }
+      const query = params.toString();
+      router.replace(query ? `?${query}` : window.location.pathname, {
+        scroll: false,
+      });
+    },
+    [searchParams, router]
+  );
 
   // React Query: Available tasks for review
   const { data: availableTasks = [], isPending: loadingAvailable } = useQuery({
@@ -171,6 +216,7 @@ export default function PeerReviewPage() {
     queryKey: ["peerReview", "accepted", user?.id],
     queryFn: async () => {
       const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase as any)
         .from("task_progress")
         .select(
@@ -262,6 +308,7 @@ export default function PeerReviewPage() {
   const acceptTaskMutation = useMutation({
     mutationFn: async (taskId: string) => {
       const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any).rpc(
         "accept_external_task_for_review",
         { p_progress_id: taskId }
@@ -317,7 +364,7 @@ export default function PeerReviewPage() {
         description: 'Check the "My Tests" tab to begin testing.',
       });
     },
-    onError: (error, taskId, context) => {
+    onError: () => {
       // Revert optimistic update
       queryClient.invalidateQueries({ queryKey: ["peerReview"] });
       setAlertState({
@@ -366,6 +413,7 @@ export default function PeerReviewPage() {
       isContinuation: boolean;
     }) => {
       const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any).rpc(
         "submit_external_peer_review",
         {
@@ -436,7 +484,7 @@ export default function PeerReviewPage() {
       queryClient.invalidateQueries({ queryKey: ["peerReview"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard", "stats"] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       queryClient.invalidateQueries({ queryKey: ["peerReview"] });
 
       if (error.message?.includes("DUPLICATE PREVENTION")) {
@@ -493,11 +541,16 @@ export default function PeerReviewPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex items-center justify-between"
+      >
         <div>
           <h1 className="text-2xl font-bold">Peer Review & Acceptance</h1>
           <p className="text-muted-foreground">
-            Review other teams' work and track your progress
+            Review other teams&apos; work and track your progress
           </p>
         </div>
         <Button
@@ -509,7 +562,7 @@ export default function PeerReviewPage() {
           <ExternalLink className="h-4 w-4" />
           Read About Reviews
         </Button>
-      </div>
+      </motion.div>
 
       {/* Stats Cards Grid */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -571,40 +624,145 @@ export default function PeerReviewPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="available-tests" className="mt-6 space-y-6">
-          {alertState && (
-            <InlineAlert
-              variant={alertState.variant}
-              message={alertState.message}
-              description={alertState.description}
-              onDismiss={() => setAlertState(null)}
-            />
-          )}
+        <TabsContent value="available-tests" className="mt-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6"
+          >
+            <AnimatePresence>
+              {alertState && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <InlineAlert
+                    variant={alertState.variant}
+                    message={alertState.message}
+                    description={alertState.description}
+                    onDismiss={() => setAlertState(null)}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          {myAcceptedTasks.length > 0 && (
-            <div className="bg-primary/5 border-primary/20 rounded-lg border p-4">
-              <p className="text-primary text-sm">
-                <strong>Note:</strong> You currently have{" "}
-                {myAcceptedTasks.length} task(s) for review. Complete your
-                current review before accepting new tasks.
-              </p>
-            </div>
-          )}
+            {myAcceptedTasks.length > 0 && (
+              <div className="bg-primary/5 border-primary/20 rounded-lg border p-4">
+                <p className="text-primary text-sm">
+                  <strong>Note:</strong> You currently have{" "}
+                  {myAcceptedTasks.length} task(s) for review. Complete your
+                  current review before accepting new tasks.
+                </p>
+              </div>
+            )}
 
-          {loading ? (
-            <div className="py-8 text-center">
-              <Clock className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
-              <p className="text-muted-foreground">
-                Loading available tasks...
-              </p>
-            </div>
-          ) : (
+            {loading ? (
+              <TableSkeleton columns={7} rows={3} />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-border border-b">
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Task to Test
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Team
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Difficulty
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Reviewer XP (10%)
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Reviewer Points (10%)
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Submitted
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-right font-medium">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {availableTasks.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="text-muted-foreground py-8 text-center"
+                        >
+                          No submitted tasks for review
+                        </td>
+                      </tr>
+                    ) : (
+                      (availableTasks as AvailableTask[])
+                        .filter((task) => task.tasks && task.teams) // Filter out tasks with null relations
+                        .map((task) => (
+                          <TaskRow
+                            key={task.id}
+                            task={task}
+                            variant="available"
+                            onAction={() => acceptTaskForReview(task.id)}
+                            actionLoading={acceptingTaskId === task.id}
+                            reviewerReward={true}
+                            actionButtonText={
+                              acceptingTaskId === task.id
+                                ? "Accepting..."
+                                : myAcceptedTasks.length > 0
+                                  ? "Max 1 Task"
+                                  : "Accept Review"
+                            }
+                            actionButtonDisabled={
+                              acceptingTaskId === task.id ||
+                              myAcceptedTasks.length > 0
+                            }
+                            actionButtonVariant="default"
+                          />
+                        ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="my-tests" className="mt-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6"
+          >
+            <AnimatePresence>
+              {alertState && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <InlineAlert
+                    variant={alertState.variant}
+                    message={alertState.message}
+                    description={alertState.description}
+                    onDismiss={() => setAlertState(null)}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-border border-b">
                     <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Task to Test
+                      Task to Review
                     </th>
                     <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Team
@@ -627,416 +785,357 @@ export default function PeerReviewPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {availableTasks.length === 0 ? (
+                  {myAcceptedTasks.length === 0 ? (
                     <tr>
                       <td
                         colSpan={7}
                         className="text-muted-foreground py-8 text-center"
                       >
-                        No submitted tasks for review
+                        No tasks accepted for review yet
                       </td>
                     </tr>
                   ) : (
-                    (availableTasks as AvailableTask[])
-                      .filter((task) => task.tasks && task.teams) // Filter out tasks with null relations
-                      .map((task) => (
-                        <TaskRow
-                          key={task.id}
-                          task={task}
-                          variant="available"
-                          onAction={() => acceptTaskForReview(task.id)}
-                          actionLoading={acceptingTaskId === task.id}
-                          reviewerReward={true}
-                          actionButtonText={
-                            acceptingTaskId === task.id
-                              ? "Accepting..."
-                              : myAcceptedTasks.length > 0
-                                ? "Max 1 Task"
-                                : "Accept Review"
-                          }
-                          actionButtonDisabled={
-                            acceptingTaskId === task.id ||
-                            myAcceptedTasks.length > 0
-                          }
-                          actionButtonVariant="default"
-                        />
-                      ))
+                    (myAcceptedTasks as AvailableTask[]).map((task) => (
+                      <TaskRow
+                        key={task.id}
+                        task={task}
+                        variant="review"
+                        reviewerReward={true}
+                        onAction={() => openReviewModal(task)}
+                        actionButtonText="Review Submission"
+                      />
+                    ))
                   )}
                 </tbody>
               </table>
             </div>
-          )}
+          </motion.div>
         </TabsContent>
 
-        <TabsContent value="my-tests" className="mt-6 space-y-6">
-          {alertState && (
-            <InlineAlert
-              variant={alertState.variant}
-              message={alertState.message}
-              description={alertState.description}
-              onDismiss={() => setAlertState(null)}
-            />
-          )}
+        <TabsContent value="my-tasks" className="mt-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6"
+          >
+            <AnimatePresence>
+              {alertState && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <InlineAlert
+                    variant={alertState.variant}
+                    message={alertState.message}
+                    description={alertState.description}
+                    onDismiss={() => setAlertState(null)}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-border border-b">
-                  <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                    Task to Review
-                  </th>
-                  <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                    Team
-                  </th>
-                  <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                    Difficulty
-                  </th>
-                  <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                    Reviewer XP (10%)
-                  </th>
-                  <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                    Reviewer Points (10%)
-                  </th>
-                  <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                    Submitted
-                  </th>
-                  <th className="text-muted-foreground px-4 py-4 text-right font-medium">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {myAcceptedTasks.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="text-muted-foreground py-8 text-center"
-                    >
-                      No tasks accepted for review yet
-                    </td>
-                  </tr>
-                ) : (
-                  (myAcceptedTasks as AvailableTask[]).map((task) => (
-                    <TaskRow
-                      key={task.id}
-                      task={task}
-                      variant="review"
-                      reviewerReward={true}
-                      onAction={() => openReviewModal(task)}
-                      actionButtonText="Review Submission"
-                    />
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="my-tasks" className="mt-6 space-y-6">
-          {alertState && (
-            <InlineAlert
-              variant={alertState.variant}
-              message={alertState.message}
-              description={alertState.description}
-              onDismiss={() => setAlertState(null)}
-            />
-          )}
-
-          {loading ? (
-            <div className="py-8 text-center">
-              <Clock className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
-              <p className="text-muted-foreground">Loading my tasks...</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-border border-b">
-                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Task
-                    </th>
-                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Team
-                    </th>
-                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Difficulty
-                    </th>
-                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Status
-                    </th>
-                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Submitted
-                    </th>
-                    <th className="text-muted-foreground px-4 py-4 text-right font-medium">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {myTasks.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="text-muted-foreground py-8 text-center"
-                      >
-                        You haven&apos;t submitted any tasks for review
-                      </td>
+            {loading ? (
+              <TableSkeleton columns={6} rows={3} />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-border border-b">
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Task
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Team
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Difficulty
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Status
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Submitted
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-right font-medium">
+                        Action
+                      </th>
                     </tr>
-                  ) : (
-                    (myTasks as AvailableTask[])
-                      .filter((task) => task.tasks && task.teams) // Filter out tasks with null relations
-                      .map((task) => (
-                        <TaskRow
-                          key={task.id}
-                          task={task}
-                          variant="submitted"
-                          onAction={() => {
-                            router.push(
-                              `/dashboard/team-journey/task/${task.id}`
-                            );
-                          }}
-                          actionLoading={false}
-                          actionButtonText="View Feedback"
-                          actionButtonDisabled={
-                            !(
-                              task.status === "approved" ||
-                              task.status === "rejected" ||
-                              task.status === "revision_required"
-                            )
-                          }
-                          actionButtonVariant="outline"
-                          showStatus={true}
-                        />
-                      ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="history" className="mt-6 space-y-6">
-          {loading ? (
-            <div className="py-8 text-center">
-              <Clock className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
-              <p className="text-muted-foreground">Loading review history...</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-border border-b">
-                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Task Reviewed
-                    </th>
-                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Team
-                    </th>
-                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Assignee
-                    </th>
-                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Difficulty
-                    </th>
-                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      XP Earned
-                    </th>
-                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Points Earned
-                    </th>
-                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Status
-                    </th>
-                    <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Reviewed
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {completedReviews.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={8}
-                        className="text-muted-foreground py-8 text-center"
-                      >
-                        You haven&apos;t completed any peer reviews yet
-                      </td>
-                    </tr>
-                  ) : (
-                    completedReviews
-                      .filter((review) => review.tasks && review.teams) // Filter out reviews with null relations
-                      .map((review) => (
-                        <tr
-                          key={review.id}
-                          className="border-border/50 border-b"
+                  </thead>
+                  <tbody>
+                    {myTasks.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="text-muted-foreground py-8 text-center"
                         >
-                          {/* Task Name */}
-                          <td className="px-4 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
-                                <Medal className="h-4 w-4 text-black dark:text-white" />
-                              </div>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <div className="text-sm font-medium">
+                          You haven&apos;t submitted any tasks for review
+                        </td>
+                      </tr>
+                    ) : (
+                      (myTasks as AvailableTask[])
+                        .filter((task) => task.tasks && task.teams) // Filter out tasks with null relations
+                        .map((task) => (
+                          <TaskRow
+                            key={task.id}
+                            task={task}
+                            variant="submitted"
+                            onAction={() => {
+                              router.push(
+                                `/dashboard/team-journey/task/${task.id}`
+                              );
+                            }}
+                            actionLoading={false}
+                            actionButtonText="View Feedback"
+                            actionButtonDisabled={
+                              !(
+                                task.status === "approved" ||
+                                task.status === "rejected" ||
+                                task.status === "revision_required"
+                              )
+                            }
+                            actionButtonVariant="outline"
+                            showStatus={true}
+                          />
+                        ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6"
+          >
+            {loading ? (
+              <TableSkeleton columns={8} rows={3} />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-border border-b">
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Task Reviewed
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Team
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Assignee
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Difficulty
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        XP Earned
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Points Earned
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Status
+                      </th>
+                      <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                        Reviewed
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {completedReviews.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={8}
+                          className="text-muted-foreground py-8 text-center"
+                        >
+                          You haven&apos;t completed any peer reviews yet
+                        </td>
+                      </tr>
+                    ) : (
+                      completedReviews
+                        .filter((review) => review.tasks && review.teams) // Filter out reviews with null relations
+                        .map((review) => (
+                          <tr
+                            key={review.id}
+                            className="border-border/50 border-b"
+                          >
+                            {/* Task Name */}
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
+                                  <Medal className="h-4 w-4 text-black dark:text-white" />
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="text-sm font-medium">
+                                      {review.tasks &&
+                                      typeof review.tasks === "object" &&
+                                      "title" in review.tasks
+                                        ? String(review.tasks.title)
+                                        : "Unknown Task"}
+                                    </div>
+                                    {review.total_reviews &&
+                                      review.total_reviews > 1 && (
+                                        <Badge
+                                          variant="secondary"
+                                          className="text-xs"
+                                        >
+                                          Review{" "}
+                                          {(review.review_index || 0) + 1}/
+                                          {review.total_reviews}
+                                        </Badge>
+                                      )}
+                                  </div>
+                                  <div className="text-muted-foreground max-w-xs truncate text-xs">
                                     {review.tasks &&
                                     typeof review.tasks === "object" &&
-                                    "title" in review.tasks
-                                      ? String(review.tasks.title)
-                                      : "Unknown Task"}
+                                    "description" in review.tasks
+                                      ? String(review.tasks.description)
+                                      : ""}
                                   </div>
-                                  {review.total_reviews &&
-                                    review.total_reviews > 1 && (
-                                      <Badge
-                                        variant="secondary"
-                                        className="text-xs"
-                                      >
-                                        Review {(review.review_index || 0) + 1}/
-                                        {review.total_reviews}
-                                      </Badge>
-                                    )}
-                                </div>
-                                <div className="text-muted-foreground max-w-xs truncate text-xs">
-                                  {review.tasks &&
-                                  typeof review.tasks === "object" &&
-                                  "description" in review.tasks
-                                    ? String(review.tasks.description)
-                                    : ""}
                                 </div>
                               </div>
-                            </div>
-                          </td>
+                            </td>
 
-                          {/* Team */}
-                          <td className="px-4 py-4">
-                            <div className="flex items-center gap-2">
-                              <div className="h-2 w-2 rounded-full bg-black dark:bg-white"></div>
-                              <span className="text-sm font-medium">
-                                {review.teams &&
-                                typeof review.teams === "object" &&
-                                "name" in review.teams
-                                  ? String(review.teams.name)
-                                  : "Unknown Team"}
-                              </span>
-                            </div>
-                          </td>
+                            {/* Team */}
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-2">
+                                <div className="h-2 w-2 rounded-full bg-black dark:bg-white"></div>
+                                <span className="text-sm font-medium">
+                                  {review.teams &&
+                                  typeof review.teams === "object" &&
+                                  "name" in review.teams
+                                    ? String(review.teams.name)
+                                    : "Unknown Team"}
+                                </span>
+                              </div>
+                            </td>
 
-                          {/* Assignee */}
-                          <td className="px-4 py-4">
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage
-                                  src={
-                                    review.assigned_user?.avatar_url ||
-                                    "/avatars/default.jpg"
-                                  }
-                                  alt={review.assigned_user?.name || "User"}
-                                />
-                                <AvatarFallback className="text-primary-foreground bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold">
-                                  {review.assigned_user?.name
-                                    ?.charAt(0)
-                                    .toUpperCase() || "U"}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm font-medium">
-                                {review.assigned_user?.name || "Unknown User"}
-                              </span>
-                            </div>
-                          </td>
+                            {/* Assignee */}
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarImage
+                                    src={
+                                      review.assigned_user?.avatar_url ||
+                                      "/avatars/default.jpg"
+                                    }
+                                    alt={review.assigned_user?.name || "User"}
+                                  />
+                                  <AvatarFallback className="text-primary-foreground bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold">
+                                    {review.assigned_user?.name
+                                      ?.charAt(0)
+                                      .toUpperCase() || "U"}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm font-medium">
+                                  {review.assigned_user?.name || "Unknown User"}
+                                </span>
+                              </div>
+                            </td>
 
-                          {/* Difficulty */}
-                          <td className="px-4 py-4">
-                            <DifficultyBadge
-                              level={
-                                review.tasks &&
-                                typeof review.tasks === "object" &&
-                                "difficulty_level" in review.tasks
-                                  ? Number(review.tasks.difficulty_level) || 1
-                                  : 1
-                              }
-                            />
-                          </td>
-
-                          {/* XP Earned */}
-                          <td className="px-4 py-4">
-                            <div className="flex items-center gap-1">
-                              <Zap className="h-4 w-4 text-black dark:text-white" />
-                              <span className="text-sm font-medium">
-                                {Math.max(
-                                  1,
-                                  Math.round(
-                                    (review.tasks &&
-                                    typeof review.tasks === "object" &&
-                                    "base_xp_reward" in review.tasks
-                                      ? Number(review.tasks.base_xp_reward) || 0
-                                      : 0) * 0.1
-                                  )
-                                )}
-                              </span>
-                            </div>
-                          </td>
-
-                          {/* Points Earned */}
-                          <td className="px-4 py-4">
-                            <div className="flex items-center gap-1">
-                              <Medal className="h-4 w-4 text-black dark:text-white" />
-                              <span className="text-sm font-medium">
-                                {Math.max(
-                                  1,
-                                  Math.round(
-                                    (review.tasks &&
-                                    typeof review.tasks === "object" &&
-                                    "base_points_reward" in review.tasks
-                                      ? Number(
-                                          review.tasks.base_points_reward
-                                        ) || 0
-                                      : 0) * 0.1
-                                  )
-                                )}
-                              </span>
-                            </div>
-                          </td>
-
-                          {/* Status */}
-                          <td className="px-4 py-4">
-                            <Badge
-                              variant={
-                                review.status === "approved"
-                                  ? "default"
-                                  : "destructive"
-                              }
-                              className={
-                                review.status === "approved"
-                                  ? "bg-green-100 text-green-800"
-                                  : ""
-                              }
-                            >
-                              {review.status === "approved"
-                                ? "Approved"
-                                : "Rejected"}
-                            </Badge>
-                          </td>
-
-                          {/* Reviewed Date */}
-                          <td className="px-4 py-4">
-                            <div className="text-muted-foreground text-sm">
-                              {new Date(review.updated_at).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
+                            {/* Difficulty */}
+                            <td className="px-4 py-4">
+                              <DifficultyBadge
+                                level={
+                                  review.tasks &&
+                                  typeof review.tasks === "object" &&
+                                  "difficulty_level" in review.tasks
+                                    ? Number(review.tasks.difficulty_level) || 1
+                                    : 1
                                 }
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
+                              />
+                            </td>
+
+                            {/* XP Earned */}
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-1">
+                                <Zap className="h-4 w-4 text-black dark:text-white" />
+                                <span className="text-sm font-medium">
+                                  {Math.max(
+                                    1,
+                                    Math.round(
+                                      (review.tasks &&
+                                      typeof review.tasks === "object" &&
+                                      "base_xp_reward" in review.tasks
+                                        ? Number(review.tasks.base_xp_reward) ||
+                                          0
+                                        : 0) * 0.1
+                                    )
+                                  )}
+                                </span>
+                              </div>
+                            </td>
+
+                            {/* Points Earned */}
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-1">
+                                <Medal className="h-4 w-4 text-black dark:text-white" />
+                                <span className="text-sm font-medium">
+                                  {Math.max(
+                                    1,
+                                    Math.round(
+                                      (review.tasks &&
+                                      typeof review.tasks === "object" &&
+                                      "base_points_reward" in review.tasks
+                                        ? Number(
+                                            review.tasks.base_points_reward
+                                          ) || 0
+                                        : 0) * 0.1
+                                    )
+                                  )}
+                                </span>
+                              </div>
+                            </td>
+
+                            {/* Status */}
+                            <td className="px-4 py-4">
+                              <Badge
+                                variant={
+                                  review.status === "approved"
+                                    ? "default"
+                                    : "destructive"
+                                }
+                                className={
+                                  review.status === "approved"
+                                    ? "bg-green-100 text-green-800"
+                                    : ""
+                                }
+                              >
+                                {review.status === "approved"
+                                  ? "Approved"
+                                  : "Rejected"}
+                              </Badge>
+                            </td>
+
+                            {/* Reviewed Date */}
+                            <td className="px-4 py-4">
+                              <div className="text-muted-foreground text-sm">
+                                {new Date(review.updated_at).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  }
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </motion.div>
         </TabsContent>
       </Tabs>
 

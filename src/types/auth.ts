@@ -1,11 +1,13 @@
 import { User as SupabaseUser } from "@supabase/supabase-js";
-import { User } from "./database";
+import type { Database } from "./database";
+
+type DbUser = Database["public"]["Tables"]["users"]["Row"];
 
 // Extended user type that combines Supabase auth user with our custom user data
 export type AuthUser = SupabaseUser;
 
 // Our application user profile from the database
-export interface UserProfile extends User {
+export interface UserProfile extends DbUser {
   // Additional computed fields we might need
   displayName: string;
   initials: string;

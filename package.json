@@ -13,6 +13,7 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "typecheck": "tsc --noEmit",
+    "analyze": "next experimental-analyze",
     "prepare": "husky"
   },
   "dependencies": {
@@ -59,7 +60,6 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@next/bundle-analyzer": "^16.1.6",
     "@tailwindcss/postcss": "^4",
     "@testing-library/react": "^16.3.1",
     "@types/d3-dsv": "^3.0.7",

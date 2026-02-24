@@ -1,12 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import posthog from "posthog-js";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -14,7 +8,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { motion } from "framer-motion";
+import { AlertCircle, Loader2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import posthog from "posthog-js";
+import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 
 export default function LoginPage() {
@@ -22,16 +22,20 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [resetCooldown, setResetCooldown] = useState(0);
   const router = useRouter();
 
-  // Auto-dismiss error after 5 seconds
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(timer);
+  const validateEmail = (value: string) => {
+    if (!value) {
+      setEmailError(null);
+      return;
     }
-  }, [error]);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    setEmailError(
+      emailRegex.test(value) ? null : "Please enter a valid email address"
+    );
+  };
 
   useEffect(() => {
     if (resetCooldown > 0) {
@@ -101,7 +105,7 @@ export default function LoginPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
         className="relative z-10 w-full max-w-md"
       >
         <Card className="border-zinc-800/50 bg-zinc-900/80 shadow-2xl backdrop-blur-xl">
@@ -109,7 +113,7 @@ export default function LoginPage() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
             >
               <CardTitle className="text-2xl font-bold text-[#ff78c8]">
                 Welcome Back
@@ -144,13 +148,20 @@ export default function LoginPage() {
                     <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
                   </motion.div>
                   <span className="flex-1">{error}</span>
+                  <button
+                    type="button"
+                    onClick={() => setError(null)}
+                    className="mt-0.5 flex-shrink-0 text-red-400 transition-colors hover:text-red-300"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </motion.div>
               )}
 
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
+                transition={{ duration: 0.4, delay: 0.15 }}
                 className="space-y-2"
               >
                 <Label
@@ -169,18 +180,32 @@ export default function LoginPage() {
                     type="email"
                     placeholder="Enter your email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailError) validateEmail(e.target.value);
+                    }}
+                    onBlur={(e) => validateEmail(e.target.value)}
                     disabled={loading}
                     required
-                    className="border-zinc-600 bg-zinc-800 text-zinc-100 transition-all duration-200 placeholder:text-zinc-400 focus:border-[#ff78c8] focus:bg-zinc-700/50 focus:ring-[#ff78c8]/30"
+                    className={`border-zinc-600 bg-zinc-800 text-zinc-100 transition-all duration-200 placeholder:text-zinc-400 focus:border-[#ff78c8] focus:bg-zinc-700/50 focus:ring-[#ff78c8]/30 ${emailError ? "border-red-500/60" : ""}`}
                   />
                 </motion.div>
+                {emailError && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-xs text-red-400"
+                  >
+                    {emailError}
+                  </motion.p>
+                )}
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
                 className="space-y-2"
               >
                 <Label
@@ -210,7 +235,7 @@ export default function LoginPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
+                transition={{ duration: 0.4, delay: 0.25 }}
               >
                 <motion.div
                   animate={loading ? { scale: [1, 1.02, 1] } : { scale: 1 }}
@@ -244,7 +269,7 @@ export default function LoginPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
+                transition={{ duration: 0.4, delay: 0.3 }}
                 className="space-y-2 text-center"
               >
                 <button
@@ -285,7 +310,7 @@ export default function LoginPage() {
                     }
                   }}
                   disabled={loading || resetCooldown > 0}
-                  className="text-sm text-zinc-300 transition-colors duration-200 hover:text-[#ff78c8] disabled:opacity-50"
+                  className="text-sm text-zinc-300 underline-offset-4 transition-colors duration-200 hover:text-[#ff78c8] hover:underline disabled:opacity-50"
                 >
                   {resetCooldown > 0
                     ? `Wait ${resetCooldown}s`

@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Users, DollarSign, Trophy, ExternalLink } from "lucide-react";
 import { AvatarStack } from "@/components/team-journey/avatar-stack";
 import { Product } from "@/types/team-journey";
@@ -25,9 +26,33 @@ export function ProductCard({ product }: ProductCardProps) {
       }`}
     >
       <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
-          <div className="mr-3 flex-1 space-y-1">
-            <h3 className="text-lg font-semibold">{product.name}</h3>
+        <div className="flex items-start gap-3">
+          <Avatar className="h-12 w-12 shrink-0 rounded-lg">
+            {product.logoUrl ? (
+              <AvatarImage
+                src={product.logoUrl}
+                alt={product.name}
+                className="rounded-lg object-cover"
+              />
+            ) : null}
+            <AvatarFallback className="rounded-lg bg-[#ff78c8]/10 text-lg font-bold text-[#ff78c8]">
+              {product.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="mr-3 min-w-0 flex-1 space-y-1">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="truncate text-lg font-semibold">{product.name}</h3>
+              <Badge
+                variant={product.status === "Active" ? "default" : "secondary"}
+                className={
+                  product.status === "Active"
+                    ? "shrink-0 border-[#ff78c8]/20 bg-[#ff78c8]/10 text-[#ff78c8] hover:bg-[#ff78c8]/20"
+                    : "bg-muted text-muted-foreground shrink-0"
+                }
+              >
+                {product.status}
+              </Badge>
+            </div>
             <div className="h-10 overflow-hidden">
               <p
                 className="text-muted-foreground text-sm leading-5"
@@ -43,16 +68,6 @@ export function ProductCard({ product }: ProductCardProps) {
               </p>
             </div>
           </div>
-          <Badge
-            variant={product.status === "Active" ? "default" : "secondary"}
-            className={
-              product.status === "Active"
-                ? "border-[#ff78c8]/20 bg-[#ff78c8]/10 text-[#ff78c8] hover:bg-[#ff78c8]/20"
-                : "bg-muted text-muted-foreground"
-            }
-          >
-            {product.status}
-          </Badge>
         </div>
       </CardHeader>
 

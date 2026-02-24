@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { HeroLanding } from "@/components/hero-landing";
 import { createClient } from "@/lib/supabase/client";
 
@@ -115,20 +116,36 @@ export default function Home() {
     handleInviteAuth();
   }, [router]);
 
-  if (isProcessingInvite) {
-    return (
-      <main className="bg-background flex min-h-screen w-full items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-600">Processing invitation...</p>
-        </div>
-      </main>
-    );
-  }
-
   return (
-    <main className="bg-background min-h-screen w-full">
-      <HeroLanding />
-    </main>
+    <AnimatePresence mode="wait">
+      {isProcessingInvite ? (
+        <motion.main
+          key="processing"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#0000dd]"
+        >
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
+          <div className="relative z-10 text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-[#ff78c8]/30 border-t-[#ff78c8]"></div>
+            <p className="mt-4 text-sm font-medium text-white/70">
+              Processing invitation...
+            </p>
+          </div>
+        </motion.main>
+      ) : (
+        <motion.main
+          key="hero"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+          className="min-h-screen w-full"
+        >
+          <HeroLanding />
+        </motion.main>
+      )}
+    </AnimatePresence>
   );
 }

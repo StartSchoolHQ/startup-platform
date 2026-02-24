@@ -66,6 +66,7 @@ export interface DatabaseTeam {
   name: string;
   description: string | null;
   website?: string | null;
+  logo_url?: string | null;
   status: "active" | "archived";
   created_at: string;
   member_count: number | null;

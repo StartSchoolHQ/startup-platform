@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PasswordInput } from "@/components/ui/password-input";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, X } from "lucide-react";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -22,14 +22,6 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(true);
   const router = useRouter();
-
-  // Auto-dismiss error after 5 seconds
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
 
   // Validate that user came from reset link
   useEffect(() => {
@@ -131,7 +123,7 @@ export default function ResetPasswordPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
         className="relative z-10 w-full max-w-md"
       >
         <Card className="border-zinc-800/50 bg-zinc-900/80 shadow-2xl backdrop-blur-xl">
@@ -139,7 +131,7 @@ export default function ResetPasswordPage() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
             >
               <CardTitle className="mb-2 text-3xl font-bold text-white">
                 Reset Password
@@ -154,12 +146,26 @@ export default function ResetPasswordPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="flex items-start gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-3"
+                  initial={{ opacity: 0, x: 0 }}
+                  animate={{
+                    opacity: 1,
+                    x: [0, -10, 10, -10, 10, 0],
+                  }}
+                  transition={{
+                    x: { duration: 0.4, times: [0, 0.2, 0.4, 0.6, 0.8, 1] },
+                    opacity: { duration: 0.2 },
+                  }}
+                  className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/20 px-4 py-3 text-sm text-red-400"
                 >
-                  <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-400" />
-                  <p className="text-sm text-red-400">{error}</p>
+                  <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                  <span className="flex-1">{error}</span>
+                  <button
+                    type="button"
+                    onClick={() => setError(null)}
+                    className="mt-0.5 flex-shrink-0 text-red-400 transition-colors hover:text-red-300"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </motion.div>
               )}
 
@@ -175,7 +181,7 @@ export default function ResetPasswordPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-[#ff78c8] to-[#b24ef7] text-white shadow-lg shadow-purple-500/20 hover:from-[#ff8cd3] hover:to-[#c165f8]"
+                className="group relative w-full overflow-hidden rounded-lg bg-[#ff78c8] py-6 text-base font-semibold text-white transition-all duration-300 hover:scale-[1.02] hover:bg-[#ff60b8] hover:shadow-xl hover:shadow-[#ff78c8]/25 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                 disabled={loading}
               >
                 {loading ? (

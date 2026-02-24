@@ -18,7 +18,8 @@ import {
   disbandTeam,
   getAvailableUsersForInvitation,
   sendTeamInvitationById,
-  updateTeamDetails,
+  updateTeamDetailsV2,
+  uploadTeamLogo,
 } from "@/lib/database";
 import {
   invalidateInvitationCount,
@@ -33,6 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import { LogoUploadField } from "@/components/ui/logo-upload-field";
 import {
   Users,
   UserPlus,
@@ -74,6 +76,7 @@ interface TeamManagementModalProps {
     name: string;
     description?: string | null;
     website?: string | null;
+    logo_url?: string | null;
     members: TeamMember[];
   };
   userRole: string;
@@ -107,6 +110,7 @@ export function TeamManagementModal({
     description: team.description || "",
     website: team.website || "",
   });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [editError, setEditError] = useState("");
 
@@ -326,13 +330,24 @@ export function TeamManagementModal({
       //   description: editFormData.description.trim() || null,
       // };
 
-      await updateTeamDetails(team.id, founderId, {
+      // Upload logo if a new file was selected
+      let logoUrl: string | null | undefined = undefined;
+      if (logoFile) {
+        logoUrl = await uploadTeamLogo(team.id, logoFile);
+      }
+
+      await updateTeamDetailsV2(team.id, founderId, {
         name: editFormData.name.trim(),
         description: editFormData.description.trim() || undefined,
         website: editFormData.website.trim() || undefined,
+        ...(logoUrl !== undefined ? { logo_url: logoUrl } : {}),
       });
 
-      toast.success(`Team "${editFormData.name.trim()}" updated successfully!`);
+      toast.success(
+        logoFile
+          ? `Team "${editFormData.name.trim()}" updated with new logo!`
+          : `Team "${editFormData.name.trim()}" updated successfully!`
+      );
 
       // Refresh team data to ensure consistency
       await onRefresh?.();
@@ -707,6 +722,13 @@ export function TeamManagementModal({
                 )}
 
                 <form onSubmit={handleTeamDetailsSubmit} className="space-y-4">
+                  <LogoUploadField
+                    currentLogoUrl={team.logo_url}
+                    teamName={editFormData.name}
+                    onFileSelect={setLogoFile}
+                    disabled={isUpdating}
+                  />
+
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="teamName">Team Name</Label>
@@ -807,7 +829,8 @@ export function TeamManagementModal({
                         editFormData.description.length > 500 ||
                         (editFormData.website &&
                           editFormData.website.length > 255) ||
-                        (editFormData.name === team.name &&
+                        (!logoFile &&
+                          editFormData.name === team.name &&
                           editFormData.description ===
                             (team.description || "") &&
                           editFormData.website === (team.website || ""))

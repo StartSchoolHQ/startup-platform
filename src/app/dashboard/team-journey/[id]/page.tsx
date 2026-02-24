@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -136,6 +137,7 @@ interface TeamDetails {
   name: string;
   description: string | null;
   website?: string | null;
+  logo_url?: string | null;
   status: "active" | "archived";
   created_at: string | null;
   member_count: number | null;
@@ -163,20 +165,32 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
   const searchParams = useSearchParams();
 
   // Tab state synced to URL
-  const validDetailTabs = ["achievements", "weekly-reports", "client-meetings", "strikes"];
+  const validDetailTabs = [
+    "achievements",
+    "weekly-reports",
+    "client-meetings",
+    "strikes",
+  ];
   const detailTabFromUrl = searchParams.get("tab");
-  const activeDetailTab = validDetailTabs.includes(detailTabFromUrl ?? "") ? detailTabFromUrl! : "achievements";
+  const activeDetailTab = validDetailTabs.includes(detailTabFromUrl ?? "")
+    ? detailTabFromUrl!
+    : "achievements";
 
-  const setActiveDetailTab = useCallback((tab: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (tab === "achievements") {
-      params.delete("tab");
-    } else {
-      params.set("tab", tab);
-    }
-    const query = params.toString();
-    router.replace(query ? `?${query}` : window.location.pathname, { scroll: false });
-  }, [searchParams, router]);
+  const setActiveDetailTab = useCallback(
+    (tab: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === "achievements") {
+        params.delete("tab");
+      } else {
+        params.set("tab", tab);
+      }
+      const query = params.toString();
+      router.replace(query ? `?${query}` : window.location.pathname, {
+        scroll: false,
+      });
+    },
+    [searchParams, router]
+  );
 
   // Extract team ID from params (needed for queries)
   const [teamId, setTeamId] = useState<string | null>(null);
@@ -509,7 +523,13 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
   // Mutation: Assign task
   const assignTaskMutation = useMutation({
-    mutationFn: async ({ taskId, userId }: { taskId: string; userId: string }) => {
+    mutationFn: async ({
+      taskId,
+      userId,
+    }: {
+      taskId: string;
+      userId: string;
+    }) => {
       await assignTaskToMember(taskId, userId, team?.id || "");
 
       // Notify the assigned user via secure API route
@@ -1321,7 +1341,11 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         </Card>
       </div>
       {/* Tab Section */}
-      <Tabs value={activeDetailTab} onValueChange={setActiveDetailTab} className="w-full">
+      <Tabs
+        value={activeDetailTab}
+        onValueChange={setActiveDetailTab}
+        className="w-full"
+      >
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="achievements" className="flex items-center gap-2">
             <Trophy className="h-4 w-4" />
@@ -1517,7 +1541,11 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                   value={statusFilter}
                   onValueChange={(value) =>
                     setStatusFilter(
-                      value as "all" | "not_started" | "in_progress" | "completed"
+                      value as
+                        | "all"
+                        | "not_started"
+                        | "in_progress"
+                        | "completed"
                     )
                   }
                 >
@@ -1533,7 +1561,9 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                 </Select>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground text-sm">Assigned to:</span>
+                <span className="text-muted-foreground text-sm">
+                  Assigned to:
+                </span>
                 <Select
                   value={teammateFilter}
                   onValueChange={setTeammateFilter}
@@ -1827,6 +1857,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             name: team.name,
             description: team.description,
             website: team.website,
+            logo_url: team.logo_url,
             members: team.members.map((m) => ({
               user_id: m.user_id,
               team_role: m.team_role || "member",

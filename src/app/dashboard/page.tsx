@@ -14,6 +14,8 @@ import {
   CreditCard,
   Building2,
   User,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { IndividualWeeklyReportModal } from "@/components/weekly-reports/individual-weekly-report-modal";
 import { hasUserSubmittedThisWeekIndividual } from "@/lib/weekly-reports";
@@ -26,6 +28,7 @@ import {
 import { BorderedContainer } from "@/components/dashboard/bordered-container";
 import { IconContainer } from "@/components/dashboard/icon-container";
 import { StatsGridSkeleton } from "@/components/ui/stats-grid-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   getStatsCards,
   getTeamProgressData,
@@ -48,14 +51,22 @@ export default function OverviewPage() {
     useState(false);
 
   // React Query: Stats cards
-  const { data: statsCards = [], isPending: isLoadingStats } = useQuery({
+  const {
+    data: statsCards = [],
+    isPending: isLoadingStats,
+    isError: isStatsError,
+  } = useQuery({
     queryKey: ["dashboard", "stats", user?.id],
     queryFn: () => getStatsCards(user!.id),
     enabled: !!user?.id,
   });
 
   // React Query: Team progress
-  const { data: teamProgressData, isPending: isLoadingTeam } = useQuery({
+  const {
+    data: teamProgressData,
+    isPending: isLoadingTeam,
+    isError: isTeamError,
+  } = useQuery({
     queryKey: ["dashboard", "teamProgress", user?.id],
     queryFn: () => getTeamProgressData(user!.id),
     enabled: !!user?.id,
@@ -83,6 +94,7 @@ export default function OverviewPage() {
 
   const loading =
     isLoadingStats || isLoadingTeam || isLoadingPersonal || isLoadingSubmission;
+  const hasError = isStatsError || isTeamError;
 
   if (loading) {
     return (
@@ -93,9 +105,54 @@ export default function OverviewPage() {
         </div>
         <StatsGridSkeleton />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="bg-accent h-64 animate-pulse rounded-lg" />
-          <div className="bg-accent h-64 animate-pulse rounded-lg" />
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-10 w-10 rounded-lg" />
+                <Skeleton className="h-5 w-40" />
+              </div>
+              <Skeleton className="h-8 w-24 rounded-md" />
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 rounded-lg" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Hi {firstName} 👋</h1>
+          <p className="text-muted-foreground">
+            Here you can see progress for you and your team
+          </p>
+        </div>
+        <Card className="border-red-500/20">
+          <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+            <AlertCircle className="text-muted-foreground mb-3 h-10 w-10" />
+            <p className="text-muted-foreground mb-4 text-sm">
+              Failed to load dashboard data. Please try again.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                queryClient.invalidateQueries({ queryKey: ["dashboard"] })
+              }
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -199,9 +256,20 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
         <div className="flex-1 space-y-6">
           {!data.hasTeams ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-muted-foreground">
-                You are not a part of any team yet
+              <Users className="text-muted-foreground mb-3 h-10 w-10" />
+              <p className="text-muted-foreground mb-1 font-medium">
+                No team yet
               </p>
+              <p className="text-muted-foreground mb-4 text-sm">
+                Join a team to start collaborating
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push("/dashboard/team-journey")}
+              >
+                Browse Teams
+              </Button>
             </div>
           ) : (
             <>

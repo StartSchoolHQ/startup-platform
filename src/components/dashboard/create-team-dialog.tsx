@@ -13,9 +13,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
-import { createTeam } from "@/lib/database";
+import {
+  createTeam,
+  updateTeamDetailsV2,
+  uploadTeamLogo,
+} from "@/lib/database";
 import { useAppContext } from "@/contexts/app-context";
 import { Loader2, CreditCard } from "lucide-react";
+import { LogoUploadField } from "@/components/ui/logo-upload-field";
+import { toast } from "sonner";
 import posthog from "posthog-js";
 
 interface CreateTeamDialogProps {
@@ -32,6 +38,7 @@ export function CreateTeamDialog({
   const [teamName, setTeamName] = useState("");
   const [description, setDescription] = useState("");
   const [website, setWebsite] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -86,7 +93,20 @@ export function CreateTeamDialog({
     setIsLoading(true);
 
     try {
-      await createTeam(user.id, teamName, description);
+      const result = await createTeam(user.id, teamName, description);
+
+      // After team is created, upload logo + set website if provided
+      const teamId = result?.id;
+      if (teamId && (logoFile || website.trim())) {
+        let logoUrl: string | undefined;
+        if (logoFile) {
+          logoUrl = await uploadTeamLogo(teamId, logoFile);
+        }
+        await updateTeamDetailsV2(teamId, user.id, {
+          ...(logoUrl ? { logo_url: logoUrl } : {}),
+          ...(website.trim() ? { website: website.trim() } : {}),
+        });
+      }
 
       // Track team creation
       posthog.capture("team_created", {
@@ -94,12 +114,20 @@ export function CreateTeamDialog({
         description_length: description.length,
         cost: TEAM_CREATION_COST,
         user_points_before: user.total_points,
+        has_logo: !!logoFile,
       });
+
+      toast.success(
+        logoFile
+          ? `Product team "${teamName}" created with logo!`
+          : `Product team "${teamName}" created successfully!`
+      );
 
       // Reset form
       setTeamName("");
       setDescription("");
       setWebsite("");
+      setLogoFile(null);
 
       // Close dialog
       onOpenChange(false);
@@ -185,6 +213,12 @@ export function CreateTeamDialog({
               className="border-[#ff78c8] ring-[#ff78c8]/20 focus:border-[#ff78c8] focus:ring-[#ff78c8]"
             />
           </div>
+
+          <LogoUploadField
+            teamName={teamName}
+            onFileSelect={setLogoFile}
+            disabled={isLoading}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="website">Website (optional)</Label>

@@ -6,14 +6,22 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+const HERO_PARTICLES = Array.from({ length: 20 }, () => ({
+  left: `${Math.random() * 100}%`,
+  top: `${Math.random() * 100}%`,
+  duration: Math.random() * 3 + 2,
+  delay: Math.random() * 2,
+}));
+
 export function HeroLanding() {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsClient(true);
   }, []);
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0000ff]">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0000dd]">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
 
       <div className="absolute inset-0 overflow-hidden">
@@ -47,7 +55,7 @@ export function HeroLanding() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
           className="mb-6"
         >
           <span className="mb-8 inline-block rounded-full border border-black bg-zinc-700/80 px-4 py-2 text-sm font-medium text-white">
@@ -58,7 +66,7 @@ export function HeroLanding() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
           className="mb-4 flex justify-center"
         >
           <div className="relative h-[200px] w-[600px] max-w-full">
@@ -76,7 +84,7 @@ export function HeroLanding() {
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+          transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
           className="mx-auto mb-8 max-w-4xl text-2xl leading-tight font-bold text-pretty text-white md:text-3xl lg:text-4xl"
         >
           Startup Module Platform
@@ -85,7 +93,7 @@ export function HeroLanding() {
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+          transition={{ duration: 0.5, delay: 0.25, ease: "easeOut" }}
           className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-pretty text-white md:text-xl"
         >
           Transform your ideas into reality with our cutting-edge platform. Join
@@ -95,7 +103,7 @@ export function HeroLanding() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+          transition={{ duration: 0.5, delay: 0.35, ease: "easeOut" }}
           className="flex flex-col items-center justify-center gap-4 sm:flex-row"
         >
           <Button
@@ -104,7 +112,7 @@ export function HeroLanding() {
             asChild
           >
             <Link href="/login">
-              <span className="relative z-10 text-black">
+              <span className="relative z-10 text-white">
                 Login and Create Your Own Startup!
               </span>
               <motion.div
@@ -120,7 +128,7 @@ export function HeroLanding() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 1.2 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
           className="mt-16 space-y-3"
         >
           <p className="text-sm font-bold text-white">Created by</p>
@@ -132,7 +140,7 @@ export function HeroLanding() {
               className="group flex cursor-pointer items-center gap-2 text-gray-300 transition-colors duration-300 hover:text-[#ff78c8]"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 1.4 }}
+              transition={{ duration: 0.4, delay: 0.55 }}
               whileHover={{ opacity: 0.8 }}
             >
               <svg
@@ -153,7 +161,7 @@ export function HeroLanding() {
               className="hidden h-1 w-1 rounded-full bg-gray-600 sm:block"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ duration: 0.4, delay: 1.6 }}
+              transition={{ duration: 0.3, delay: 0.6 }}
             />
 
             <motion.a
@@ -163,7 +171,7 @@ export function HeroLanding() {
               className="group flex cursor-pointer items-center gap-2 text-gray-300 transition-colors duration-300 hover:text-[#ff78c8]"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 1.5 }}
+              transition={{ duration: 0.4, delay: 0.6 }}
               whileHover={{ opacity: 0.8 }}
             >
               <svg
@@ -185,22 +193,19 @@ export function HeroLanding() {
 
       {isClient && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {[...Array(20)].map((_, i) => (
+          {HERO_PARTICLES.map((p, i) => (
             <motion.div
               key={i}
               className="absolute h-1 w-1 rounded-full bg-[#ff78c8]/30"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
+              style={{ left: p.left, top: p.top }}
               animate={{
                 y: [0, -100, 0],
                 opacity: [0, 1, 0],
               }}
               transition={{
-                duration: Math.random() * 3 + 2,
+                duration: p.duration,
                 repeat: Number.POSITIVE_INFINITY,
-                delay: Math.random() * 2,
+                delay: p.delay,
                 ease: "easeInOut",
               }}
             />

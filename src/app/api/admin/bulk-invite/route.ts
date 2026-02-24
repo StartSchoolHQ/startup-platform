@@ -1,10 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+import { BulkInviteSchema } from "@/lib/validation-schemas";
 import { NextRequest, NextResponse } from "next/server";
-import {
-  BulkInviteSchema,
-  type InvitationData,
-} from "@/lib/validation-schemas";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_REGEX = /^[\p{L}\s'-]{2,50}$/u;

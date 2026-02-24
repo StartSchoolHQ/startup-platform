@@ -2,6 +2,9 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
 function InviteAcceptContent() {
@@ -98,59 +101,52 @@ function InviteAcceptContent() {
     handleInviteAuth();
   }, [router, searchParams]);
 
-  if (status === "processing") {
-    return (
-      <div className="bg-background flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-[#ff78c8]"></div>
-          <p className="mt-4 text-gray-600">Processing your invitation...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (status === "redirecting") {
-    return (
-      <div className="bg-background flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-green-600"></div>
-          <p className="mt-4 text-gray-600">Redirecting you...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-background flex min-h-screen items-center justify-center">
-      <div className="mx-auto max-w-md p-8 text-center">
-        <div className="mb-6">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-            <svg
-              className="h-8 w-8 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M6 18L18 6M6 6l12 12"
-              ></path>
-            </svg>
-          </div>
-          <h1 className="mb-2 text-2xl font-bold text-gray-900">
-            Invitation Error
-          </h1>
-          <p className="mb-6 text-gray-600">{errorMessage}</p>
-          <button
-            onClick={() => router.push("/login")}
-            className="rounded-md bg-[#ff78c8] px-6 py-2 text-white transition-colors hover:bg-[#ff78c8]/90"
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0000dd]">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <AnimatePresence mode="wait">
+        {status === "error" ? (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="relative z-10 mx-auto w-full max-w-sm px-4 text-center"
           >
-            Go to Login
-          </button>
-        </div>
-      </div>
+            <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/80 p-8 shadow-2xl backdrop-blur-xl">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/20">
+                <AlertCircle className="h-6 w-6 text-red-400" />
+              </div>
+              <h1 className="mb-2 text-xl font-bold text-white">
+                Invitation Error
+              </h1>
+              <p className="mb-6 text-sm text-zinc-400">{errorMessage}</p>
+              <Button
+                onClick={() => router.push("/login")}
+                className="w-full bg-[#ff78c8] text-white transition-all duration-300 hover:bg-[#ff60b8] hover:shadow-lg hover:shadow-[#ff78c8]/25"
+              >
+                Go to Login
+              </Button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key={status}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="relative z-10 text-center"
+          >
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-[#ff78c8]/30 border-t-[#ff78c8]"></div>
+            <p className="mt-4 text-sm font-medium text-white/70">
+              {status === "redirecting"
+                ? "Redirecting you..."
+                : "Processing your invitation..."}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -159,10 +155,13 @@ export default function InviteAcceptPage() {
   return (
     <Suspense
       fallback={
-        <div className="bg-background flex min-h-screen items-center justify-center">
-          <div className="text-center">
-            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-[#ff78c8]"></div>
-            <p className="mt-4 text-gray-600">Loading invitation...</p>
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0000dd]">
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
+          <div className="relative z-10 text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-[#ff78c8]/30 border-t-[#ff78c8]"></div>
+            <p className="mt-4 text-sm font-medium text-white/70">
+              Loading invitation...
+            </p>
           </div>
         </div>
       }

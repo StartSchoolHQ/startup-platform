@@ -296,6 +296,8 @@ export async function getAllTeamsForJourney(
       id,
       name,
       description,
+      website,
+      logo_url,
       status,
       created_at,
       member_count,
@@ -376,6 +378,8 @@ export async function getUserTeamsForJourney(
       id,
       name,
       description,
+      website,
+      logo_url,
       status,
       created_at,
       member_count,
@@ -456,6 +460,8 @@ export async function getArchivedTeamsForJourney(
       id,
       name,
       description,
+      website,
+      logo_url,
       status,
       created_at,
       member_count,
@@ -586,7 +592,7 @@ export async function resolveStrike(strikeId: string, adminUserId: string) {
 
   // Decrement team's strikes_count
   if (data?.team_id) {
-    // @ts-ignore - Custom RPC function not in generated types
+    // @ts-expect-error - Custom RPC function not in generated types
     await supabase.rpc("decrement_team_strikes_count", {
       team_id_param: data.team_id,
     });

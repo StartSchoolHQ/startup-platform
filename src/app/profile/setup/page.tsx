@@ -2,14 +2,25 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { createClient } from "../../../lib/supabase/client";
 import {
   Avatar,
   AvatarImage,
   AvatarFallback,
 } from "../../../components/ui/avatar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
 import { PasswordInput } from "../../../components/ui/password-input";
+import { AlertCircle, Loader2, X } from "lucide-react";
 import posthog from "posthog-js";
 
 export default function ProfileSetupPage() {
@@ -212,112 +223,178 @@ export default function ProfileSetupPage() {
   // Show loading while validating access
   if (isValidating) {
     return (
-      <div className="bg-background flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-600">Validating access...</p>
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0000dd] p-4">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
+        <div className="relative z-10 text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-[#ff78c8]/30 border-t-[#ff78c8]"></div>
+          <p className="mt-4 text-sm font-medium text-white/70">
+            Validating access...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-background flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h2 className="text-foreground mt-6 text-center text-3xl font-extrabold">
-            Complete Your Profile
-          </h2>
-          <p className="text-muted-foreground mt-2 text-center text-sm">
-            Please provide your details to get started
-          </p>
-        </div>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0000dd] p-4">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-destructive/10 border-destructive/20 text-destructive relative rounded border px-4 py-3">
-              {error}
-            </div>
-          )}
-
-          {/* Avatar Upload */}
-          <div className="space-y-2">
-            <label className="text-foreground block text-sm font-medium">
-              Profile Picture *
-            </label>
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-20 w-20">
-                {avatarPreview ? (
-                  <AvatarImage
-                    src={avatarPreview}
-                    alt="Profile preview"
-                    className="object-cover"
-                  />
-                ) : (
-                  <AvatarFallback className="bg-muted text-muted-foreground text-xs">
-                    No image
-                  </AvatarFallback>
-                )}
-              </Avatar>
-              <div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarChange}
-                  className="text-muted-foreground file:bg-primary/10 file:text-primary hover:file:bg-primary/20 block w-full text-sm file:mr-4 file:rounded-full file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold"
-                  disabled={loading}
-                  required
-                />
-                <p className="text-muted-foreground mt-1 text-xs">
-                  JPG, PNG or GIF (max 5MB)
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Full Name */}
-          <div>
-            <label
-              htmlFor="name"
-              className="text-foreground block text-sm font-medium"
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="relative z-10 w-full max-w-md"
+      >
+        <Card className="border-zinc-800/50 bg-zinc-900/80 shadow-2xl backdrop-blur-xl">
+          <CardHeader className="pb-6 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
             >
-              Full Name *
-            </label>
-            <input
-              id="name"
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your full name"
-              disabled={loading || isNamePrefilled}
-              className={`border-input placeholder:text-muted-foreground bg-background text-foreground focus:ring-ring focus:border-ring mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:ring-2 focus:outline-none ${
-                isNamePrefilled ? "bg-muted cursor-not-allowed" : ""
-              }`}
-            />
-            {isNamePrefilled && (
-              <p className="text-muted-foreground mt-1 text-xs">
-                ✓ Name pre-filled from invitation
-              </p>
-            )}
-          </div>
+              <CardTitle className="text-2xl font-bold text-[#ff78c8]">
+                Complete Your Profile
+              </CardTitle>
+              <CardDescription className="mt-2 text-zinc-400">
+                Please provide your details to get started
+              </CardDescription>
+            </motion.div>
+          </CardHeader>
 
-          {/* Password */}
-          <PasswordInput
-            password={password}
-            confirmPassword={confirmPassword}
-            onPasswordChange={setPassword}
-            onConfirmPasswordChange={setConfirmPassword}
-            disabled={loading}
-          />
+          <CardContent>
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, x: 0 }}
+                  animate={{
+                    opacity: 1,
+                    x: [0, -10, 10, -10, 10, 0],
+                  }}
+                  transition={{
+                    x: { duration: 0.4, times: [0, 0.2, 0.4, 0.6, 0.8, 1] },
+                    opacity: { duration: 0.2 },
+                  }}
+                  className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/20 px-4 py-3 text-sm text-red-400"
+                >
+                  <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                  <span className="flex-1">{error}</span>
+                  <button
+                    type="button"
+                    onClick={() => setError(null)}
+                    className="mt-0.5 flex-shrink-0 text-red-400 transition-colors hover:text-red-300"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </motion.div>
+              )}
 
-          <div>
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "Setting up your profile..." : "Complete Setup"}
-            </Button>
-          </div>
-        </form>
-      </div>
+              {/* Avatar Upload */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.15 }}
+                className="space-y-2"
+              >
+                <Label className="text-sm font-medium text-zinc-100">
+                  Profile Picture *
+                </Label>
+                <div className="flex items-center space-x-4">
+                  <Avatar className="h-20 w-20 border-2 border-zinc-700">
+                    {avatarPreview ? (
+                      <AvatarImage
+                        src={avatarPreview}
+                        alt="Profile preview"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <AvatarFallback className="bg-zinc-800 text-xs text-zinc-500">
+                        No image
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="block w-full text-sm text-zinc-400 file:mr-4 file:rounded-full file:border-0 file:bg-[#ff78c8]/10 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[#ff78c8] hover:file:bg-[#ff78c8]/20"
+                      disabled={loading}
+                      required
+                    />
+                    <p className="mt-1 text-xs text-zinc-500">
+                      JPG, PNG or GIF (max 5MB)
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Full Name */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+                className="space-y-2"
+              >
+                <Label
+                  htmlFor="name"
+                  className="text-sm font-medium text-zinc-100"
+                >
+                  Full Name *
+                </Label>
+                <Input
+                  id="name"
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  disabled={loading || isNamePrefilled}
+                  className={`border-zinc-600 bg-zinc-800 text-zinc-100 transition-all duration-200 placeholder:text-zinc-400 focus:border-[#ff78c8] focus:bg-zinc-700/50 focus:ring-[#ff78c8]/30 ${
+                    isNamePrefilled ? "cursor-not-allowed opacity-60" : ""
+                  }`}
+                />
+                {isNamePrefilled && (
+                  <p className="text-xs text-zinc-500">
+                    Name pre-filled from invitation
+                  </p>
+                )}
+              </motion.div>
+
+              {/* Password */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.25 }}
+              >
+                <PasswordInput
+                  password={password}
+                  confirmPassword={confirmPassword}
+                  onPasswordChange={setPassword}
+                  onConfirmPasswordChange={setConfirmPassword}
+                  disabled={loading}
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.3 }}
+              >
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="group relative w-full overflow-hidden rounded-lg bg-[#ff78c8] py-6 text-base font-semibold text-white transition-all duration-300 hover:scale-[1.02] hover:bg-[#ff60b8] hover:shadow-xl hover:shadow-[#ff78c8]/25 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                >
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    {loading && <Loader2 className="h-5 w-5 animate-spin" />}
+                    {loading ? "Setting up your profile..." : "Complete Setup"}
+                  </span>
+                </Button>
+              </motion.div>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }

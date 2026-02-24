@@ -156,6 +156,8 @@ export {
   removeTeamMember,
   updateTeamMemberRole,
   updateTeamDetails,
+  updateTeamDetailsV2,
+  uploadTeamLogo,
   disbandTeam,
   archiveTeamAndDisbandMembers,
   getUsersWithMultipleActiveTeams,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Miscellaneous Utility Functions
  *
@@ -127,7 +128,7 @@ export async function removeTeamMember(
 ): Promise<void> {
   const supabase = createClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { error } = await (supabase.rpc as any)("remove_team_member_v2", {
     p_team_id: teamId,
     p_user_id: userId,
@@ -155,7 +156,7 @@ export async function updateTeamMemberRole(
 ): Promise<void> {
   const supabase = createClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { error } = await (supabase.rpc as any)("update_team_member_role_v2", {
     p_team_id: teamId,
     p_user_id: userId,
@@ -252,6 +253,118 @@ export async function updateTeamDetails(
   if (error) {
     throw error;
   }
+}
+
+/**
+ * Upload a team logo to Supabase storage
+ * Returns the public URL of the uploaded logo
+ */
+export async function uploadTeamLogo(
+  teamId: string,
+  file: File
+): Promise<string> {
+  const supabase = createClient();
+  const fileExtension = file.name.split(".").pop() || "png";
+  const filePath = `${teamId}/logo-${Date.now()}.${fileExtension}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("team-logos")
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: true,
+    });
+
+  if (uploadError) {
+    throw new Error(`Failed to upload logo: ${uploadError.message}`);
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("team-logos").getPublicUrl(filePath);
+
+  return publicUrl;
+}
+
+/**
+ * Update team details V2 — adds logo_url support
+ * Leaves original updateTeamDetails untouched for rollback safety
+ */
+export async function updateTeamDetailsV2(
+  teamId: string,
+  founderId: string,
+  updates: {
+    name?: string;
+    description?: string;
+    website?: string;
+    logo_url?: string | null;
+  }
+): Promise<void> {
+  const supabase = createClient();
+
+  // Verify the user is the founder
+  const { data: teamCheck, error: checkError } = await supabase
+    .from("teams")
+    .select("founder_id, name")
+    .eq("id", teamId)
+    .eq("founder_id", founderId)
+    .single();
+
+  if (checkError || !teamCheck) {
+    throw new Error(
+      "You are not authorized to edit this team or the team does not exist."
+    );
+  }
+
+  // Validate input data
+  if (updates.name !== undefined) {
+    const trimmedName = updates.name.trim();
+    if (!trimmedName) throw new Error("Team name cannot be empty.");
+    if (trimmedName.length < 2)
+      throw new Error("Team name must be at least 2 characters long.");
+    if (trimmedName.length > 100)
+      throw new Error("Team name must be less than 100 characters.");
+  }
+
+  if (
+    updates.description !== undefined &&
+    updates.description &&
+    updates.description.length > 500
+  ) {
+    throw new Error("Team description must be less than 500 characters.");
+  }
+
+  if (updates.website !== undefined && updates.website) {
+    const trimmedWebsite = updates.website.trim();
+    if (trimmedWebsite.length > 255)
+      throw new Error("Website URL must be less than 255 characters.");
+    try {
+      new URL(
+        trimmedWebsite.startsWith("http")
+          ? trimmedWebsite
+          : `https://${trimmedWebsite}`
+      );
+    } catch {
+      throw new Error(
+        "Please enter a valid website URL (e.g., example.com or https://example.com)."
+      );
+    }
+  }
+
+  const updateData: Record<string, unknown> = {};
+  if (updates.name !== undefined) updateData.name = updates.name.trim();
+  if (updates.description !== undefined)
+    updateData.description = updates.description;
+  if (updates.website !== undefined)
+    updateData.website = updates.website?.trim() || null;
+  if (updates.logo_url !== undefined) updateData.logo_url = updates.logo_url;
+
+  const { error } = await supabase
+    .from("teams")
+    .update(updateData)
+    .eq("id", teamId)
+    .eq("founder_id", founderId);
+
+  if (error) throw error;
 }
 
 /**
@@ -486,7 +599,8 @@ export function transformTeamToProduct(
       amount: totalTeamXP,
       label: "Team Experience",
     },
-    avatar: "/avatars/suppdocs.jpg",
+    avatar: team.logo_url || "/avatars/suppdocs.jpg",
+    logoUrl: team.logo_url || undefined,
     teamMembers,
     isCurrentUserMember,
   };

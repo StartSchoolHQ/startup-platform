@@ -1,8 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,8 +8,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 import { AlertCircle, Mail } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+
+const PARTICLES = Array.from({ length: 15 }, () => ({
+  left: `${Math.random() * 100}%`,
+  top: `${Math.random() * 100}%`,
+  duration: Math.random() * 3 + 2,
+  delay: Math.random() * 2,
+}));
 
 function InviteExpiredContent() {
   const searchParams = useSearchParams();
@@ -19,13 +26,14 @@ function InviteExpiredContent() {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsClient(true);
     const error = searchParams.get("error");
     setErrorMessage(error || "");
   }, [searchParams]);
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0000ff] p-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0000dd] p-4">
       {/* Grid background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
 
@@ -60,22 +68,19 @@ function InviteExpiredContent() {
       {/* Floating particles */}
       {isClient && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {[...Array(15)].map((_, i) => (
+          {PARTICLES.map((p, i) => (
             <motion.div
               key={i}
               className="absolute h-1 w-1 rounded-full bg-[#ff78c8]/30"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
+              style={{ left: p.left, top: p.top }}
               animate={{
                 y: [0, -100, 0],
                 opacity: [0, 1, 0],
               }}
               transition={{
-                duration: Math.random() * 3 + 2,
+                duration: p.duration,
                 repeat: Number.POSITIVE_INFINITY,
-                delay: Math.random() * 2,
+                delay: p.delay,
                 ease: "easeInOut",
               }}
             />
@@ -150,9 +155,9 @@ function InviteExpiredContent() {
                     What to do next:
                   </p>
                   <p className="mb-2 text-zinc-300">
-                    You can complete your setup using the "Forgot password?"
-                    button on the login page. This will send you a new link to
-                    set your password and finish profile setup.
+                    You can complete your setup using the &quot;Forgot
+                    password?&quot; button on the login page. This will send you
+                    a new link to set your password and finish profile setup.
                   </p>
                   <p className="text-zinc-300">
                     Alternatively, contact an administrator to resend your
@@ -198,7 +203,7 @@ export default function InviteExpiredPage() {
   return (
     <Suspense
       fallback={
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0000ff] p-4">
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0000dd] p-4">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
           <Card className="relative z-10 w-full max-w-md border-zinc-800/50 bg-zinc-900/80 shadow-2xl backdrop-blur-xl">
             <CardHeader className="text-center">

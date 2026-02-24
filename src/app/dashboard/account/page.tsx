@@ -12,11 +12,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
 import type { PostgrestError } from "@supabase/supabase-js";
-import { ArrowLeft, Camera, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  Camera,
+  Save,
+  AlertCircle,
+  RefreshCw,
+  Loader2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -156,15 +164,16 @@ export default function AccountPage() {
 
       // Update user profile via secure RPC function
       type UpdateProfileResponse = { success: boolean; error?: string };
-      const { data: rpcData, error: updateError } =
-        // @ts-expect-error - RPC function not in auto-generated types
-        (await supabase.rpc("update_user_profile", {
+      const { data: rpcData, error: updateError } = (await supabase.rpc(
+        "update_user_profile",
+        {
           p_name: name.trim(),
-          p_avatar_url: avatarUrl,
-        })) as {
-          data: UpdateProfileResponse | null;
-          error: PostgrestError | null;
-        };
+          p_avatar_url: avatarUrl ?? undefined,
+        }
+      )) as {
+        data: UpdateProfileResponse | null;
+        error: PostgrestError | null;
+      };
 
       if (updateError || !rpcData?.success) {
         toast.error(
@@ -237,29 +246,90 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8">
-        <div className="flex items-center justify-center">
-          <div className="text-lg">Loading...</div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <Skeleton className="mb-4 h-9 w-20" />
+          <Skeleton className="h-9 w-56" />
+          <Skeleton className="mt-2 h-4 w-80" />
         </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-44" />
+            <Skeleton className="h-4 w-72" />
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-20 w-20 rounded-full" />
+              <div>
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="mt-1 h-3 w-40" />
+              </div>
+            </div>
+            <Skeleton className="h-px w-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+            <div className="flex justify-end">
+              <Skeleton className="h-10 w-32 rounded-md" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-4 w-64" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-10 w-full rounded-md" />
+            <Skeleton className="h-10 w-full rounded-md" />
+            <div className="flex justify-end">
+              <Skeleton className="h-10 w-36 rounded-md" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="container mx-auto py-8">
-        <div className="flex items-center justify-center">
-          <div className="text-lg text-red-600">
-            Failed to load user profile
-          </div>
-        </div>
+      <div className="container mx-auto px-4 py-8">
+        <Card className="border-red-500/20">
+          <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+            <AlertCircle className="text-muted-foreground mb-3 h-10 w-10" />
+            <p className="text-muted-foreground mb-4 text-sm">
+              Failed to load user profile. Please try again.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setLoading(true);
+                loadUserProfile();
+              }}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="mb-8"
+      >
         <Button variant="ghost" onClick={() => router.back()} className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4 text-black dark:text-white" />
           Back
@@ -268,7 +338,7 @@ export default function AccountPage() {
         <p className="text-muted-foreground mt-2">
           Manage your account settings and preferences
         </p>
-      </div>
+      </motion.div>
 
       {validationError && (
         <div className="mb-6 rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700">
@@ -276,143 +346,147 @@ export default function AccountPage() {
         </div>
       )}
 
-      <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="password">Password</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="profile">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>
-                Update your profile picture and personal information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleProfileUpdate} className="space-y-6">
-                {/* Avatar Section */}
-                <div className="space-y-4">
-                  <label className="block text-sm font-medium">
-                    Profile Picture
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="h-20 w-20">
-                      <AvatarImage
-                        src={avatarPreview || undefined}
-                        alt={user.name || "User"}
-                        className="object-cover"
-                      />
-                      <AvatarFallback className="text-lg">
-                        {getInitials(user.name || "User")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <label htmlFor="avatar-upload" className="cursor-pointer">
-                        <div className="flex items-center space-x-2 text-sm text-blue-600 hover:text-blue-800">
-                          <Camera className="h-4 w-4 text-black dark:text-white" />
-                          <span>Change photo</span>
-                        </div>
-                      </label>
-                      <input
-                        id="avatar-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarChange}
-                        className="hidden"
-                        disabled={saving}
-                      />
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        JPG, PNG or GIF (max 5MB)
-                      </p>
-                    </div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+        className="space-y-6"
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Information</CardTitle>
+            <CardDescription>
+              Update your profile picture and personal information
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleProfileUpdate} className="space-y-6">
+              {/* Avatar Section */}
+              <div className="space-y-4">
+                <label className="block text-sm font-medium">
+                  Profile Picture
+                </label>
+                <div className="flex items-center space-x-4">
+                  <Avatar className="h-20 w-20">
+                    <AvatarImage
+                      src={avatarPreview || undefined}
+                      alt={user.name || "User"}
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="text-lg">
+                      {getInitials(user.name || "User")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <label htmlFor="avatar-upload" className="cursor-pointer">
+                      <div className="flex items-center space-x-2 text-sm text-[#ff78c8] hover:text-[#ff60b8]">
+                        <Camera className="h-4 w-4 text-black dark:text-white" />
+                        <span>Change photo</span>
+                      </div>
+                    </label>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                      disabled={saving}
+                    />
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      JPG, PNG or GIF (max 5MB)
+                    </p>
                   </div>
                 </div>
+              </div>
 
-                <Separator />
+              <Separator />
 
-                {/* Name Section */}
-                <div className="space-y-2">
-                  <label htmlFor="name" className="block text-sm font-medium">
-                    Full Name
-                  </label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your full name"
-                    disabled={saving}
-                    required
-                  />
-                </div>
-
-                {/* Email Section (Read-only) */}
-                <div className="space-y-2">
-                  <label htmlFor="email" className="block text-sm font-medium">
-                    Email Address
-                  </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={user.email}
-                    disabled
-                    className="bg-muted"
-                  />
-                  <p className="text-muted-foreground text-xs">
-                    Email cannot be changed from this page
-                  </p>
-                </div>
-
-                <div className="flex justify-end">
-                  <Button
-                    type="submit"
-                    disabled={saving}
-                    className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
-                  >
-                    <Save className="mr-2 h-4 w-4 text-white" />
-                    {saving ? "Saving..." : "Save Changes"}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="password">
-          <Card>
-            <CardHeader>
-              <CardTitle>Change Password</CardTitle>
-              <CardDescription>
-                Update your password to keep your account secure
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handlePasswordUpdate} className="space-y-4">
-                <PasswordInput
-                  password={newPassword}
-                  confirmPassword={confirmPassword}
-                  onPasswordChange={setNewPassword}
-                  onConfirmPasswordChange={setConfirmPassword}
+              {/* Name Section */}
+              <div className="space-y-2">
+                <label htmlFor="name" className="block text-sm font-medium">
+                  Full Name
+                </label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
                   disabled={saving}
+                  required
                 />
+              </div>
 
-                <div className="flex justify-end">
-                  <Button
-                    type="submit"
-                    disabled={saving}
-                    className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
-                  >
+              {/* Email Section (Read-only) */}
+              <div className="space-y-2">
+                <label htmlFor="email" className="block text-sm font-medium">
+                  Email Address
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={user.email}
+                  disabled
+                  className="bg-muted"
+                />
+                <p className="text-muted-foreground text-xs">
+                  Email cannot be changed from this page
+                </p>
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={saving}
+                  className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
+                >
+                  {saving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />
+                  ) : (
                     <Save className="mr-2 h-4 w-4 text-white" />
-                    {saving ? "Updating..." : "Update Password"}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                  )}
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Change Password</CardTitle>
+            <CardDescription>
+              Update your password to keep your account secure
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handlePasswordUpdate} className="space-y-4">
+              <PasswordInput
+                password={newPassword}
+                confirmPassword={confirmPassword}
+                onPasswordChange={setNewPassword}
+                onConfirmPasswordChange={setConfirmPassword}
+                disabled={saving}
+              />
+
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={saving}
+                  className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
+                >
+                  {saving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <Save className="mr-2 h-4 w-4 text-white" />
+                  )}
+                  {saving ? "Updating..." : "Update Password"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }
