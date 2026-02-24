@@ -10,7 +10,6 @@
  */
 
 import { createClient } from "../supabase/client";
-import type { TeamRelation } from "./core";
 
 /**
  * OPTIMIZED: Get team details with members in single query using JOIN
@@ -592,7 +591,6 @@ export async function resolveStrike(strikeId: string, adminUserId: string) {
 
   // Decrement team's strikes_count
   if (data?.team_id) {
-    // @ts-expect-error - Custom RPC function not in generated types
     await supabase.rpc("decrement_team_strikes_count", {
       team_id_param: data.team_id,
     });

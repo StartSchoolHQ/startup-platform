@@ -1,9 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const HERO_PARTICLES = Array.from({ length: 20 }, () => ({

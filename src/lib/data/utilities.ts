@@ -10,9 +10,9 @@
  * - Helper utilities
  */
 
+import type { Product } from "@/types/team-journey";
 import { createClient } from "../supabase/client";
 import type { DatabaseTeam } from "./core";
-import type { Product } from "@/types/team-journey";
 
 /**
  * Subscribe to user updates (real-time)
@@ -128,7 +128,6 @@ export async function removeTeamMember(
 ): Promise<void> {
   const supabase = createClient();
 
-   
   const { error } = await (supabase.rpc as any)("remove_team_member_v2", {
     p_team_id: teamId,
     p_user_id: userId,
@@ -156,7 +155,6 @@ export async function updateTeamMemberRole(
 ): Promise<void> {
   const supabase = createClient();
 
-   
   const { error } = await (supabase.rpc as any)("update_team_member_role_v2", {
     p_team_id: teamId,
     p_user_id: userId,

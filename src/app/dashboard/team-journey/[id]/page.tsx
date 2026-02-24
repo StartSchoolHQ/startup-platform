@@ -1,27 +1,17 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  mapRecurringStatusToUI,
-  mapUIStatusToBadge,
-  getTaskAction,
-  validateStatusConsistency,
-  type RecurringTaskStatus,
-  type UITaskStatus,
-} from "@/lib/status-mapper";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { StatsCardComponent } from "@/components/dashboard/stats-card";
+import { AchievementCard } from "@/components/my-journey/achievement-card";
+import { AddClientMeetingModal } from "@/components/team-journey/add-client-meeting-modal";
+import { ClientMeetingsTable } from "@/components/team-journey/client-meetings-table";
+import { ExplainStrikeModal } from "@/components/team-journey/explain-strike-modal";
+import { StrikesTable } from "@/components/team-journey/strikes-table";
+import { TasksTable } from "@/components/team-journey/tasks-table";
+import { TeamManagementModal } from "@/components/team-journey/team-management-modal";
+import { WeeklyReportsTable } from "@/components/team-journey/weekly-reports-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -29,64 +19,64 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TeamDetailSkeleton } from "@/components/ui/team-detail-skeleton";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { StatsCardComponent } from "@/components/dashboard/stats-card";
-import { AchievementCard } from "@/components/my-journey/achievement-card";
-import { TasksTable } from "@/components/team-journey/tasks-table";
-import { WeeklyReportsTable } from "@/components/team-journey/weekly-reports-table";
-import { ClientMeetingsTable } from "@/components/team-journey/client-meetings-table";
-import { StrikesTable } from "@/components/team-journey/strikes-table";
-import { ExplainStrikeModal } from "@/components/team-journey/explain-strike-modal";
-import { TeamManagementModal } from "@/components/team-journey/team-management-modal";
 import { WeeklyReportModal } from "@/components/weekly-reports/weekly-report-modal";
-import { AddClientMeetingModal } from "@/components/team-journey/add-client-meeting-modal";
-import { TeamDetailSkeleton } from "@/components/ui/team-detail-skeleton";
+import { useAppContext } from "@/contexts/app-context";
 import {
+  getTeamAchievementDashboard,
+  getTeamDetails,
+  getTeamStatsCombined,
+  getTeamStrikes,
+  getTeamTasksVisible,
+  getTeamWeeklyReports,
+  getUserTeamRole,
+  isUserTeamMember,
+} from "@/lib/database";
+import { assignTaskToMember, startTask, startTaskLazy } from "@/lib/tasks";
+import { hasUserSubmittedThisWeek } from "@/lib/weekly-reports";
+import { StatsCard } from "@/types/dashboard";
+import { TaskTableItem } from "@/types/team-journey";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertTriangle,
+  Calendar,
+  CheckCircle,
+  ChevronDown,
+  CreditCard,
   ExternalLink,
   FileText,
-  Users,
-  Trophy,
-  Zap,
-  Calendar,
-  AlertTriangle,
-  CreditCard,
-  UserCheck,
+  Loader2,
   Plus,
   RotateCcw,
-  CheckCircle,
-  XCircle,
-  ChevronDown,
-  Loader2,
+  Trophy,
+  UserCheck,
+  Users,
+  Zap,
 } from "lucide-react";
-import {
-  getTeamDetails,
-  isUserTeamMember,
-  getUserTeamRole,
-  getTeamStrikes,
-  getTeamWeeklyReports,
-  getTeamStatsCombined,
-  getTeamAchievementDashboard,
-  getTeamTasksVisible,
-} from "@/lib/database";
-import { StatsCard } from "@/types/dashboard";
-import { useEffect, useState, use, useMemo, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useAppContext } from "@/contexts/app-context";
-import { hasUserSubmittedThisWeek } from "@/lib/weekly-reports";
-import { assignTaskToMember, startTask, startTaskLazy } from "@/lib/tasks";
-import { Achievement, TaskWithAchievement } from "@/types/dashboard";
-import { TaskTableItem } from "@/types/team-journey";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { use, useCallback, useEffect, useMemo, useState } from "react";
 
 interface ProductDetailPageProps {
   params: Promise<{
