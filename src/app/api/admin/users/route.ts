@@ -89,6 +89,7 @@ export async function GET(request: NextRequest) {
         status: authUser.email_confirmed_at ? "active" : "pending",
         primary_role: profile?.primary_role || "user",
         created_at: authUser.created_at,
+        last_sign_in_at: authUser.last_sign_in_at || null,
         total_xp: profile?.total_xp || 0,
         total_points: profile?.total_points || 500,
       };

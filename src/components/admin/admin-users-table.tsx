@@ -30,6 +30,7 @@ interface User {
   status: string;
   primary_role: string;
   created_at: string;
+  last_sign_in_at: string | null;
   total_xp: number;
   total_points: number;
 }
@@ -114,13 +115,14 @@ export function AdminUsersTable() {
               <TableHead>XP</TableHead>
               <TableHead>Points</TableHead>
               <TableHead>Joined</TableHead>
+              <TableHead>Last Login</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={`skel-${i}`}>
-                  {Array.from({ length: 7 }).map((_, j) => (
+                  {Array.from({ length: 8 }).map((_, j) => (
                     <TableCell key={j}>
                       <Skeleton className="h-4 w-full" />
                     </TableCell>
@@ -129,7 +131,7 @@ export function AdminUsersTable() {
               ))
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">
+                <TableCell colSpan={8} className="text-center">
                   No users found
                 </TableCell>
               </TableRow>
@@ -171,6 +173,11 @@ export function AdminUsersTable() {
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">
                     {new Date(user.created_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {user.last_sign_in_at
+                      ? new Date(user.last_sign_in_at).toLocaleDateString()
+                      : "Never"}
                   </TableCell>
                 </TableRow>
               ))

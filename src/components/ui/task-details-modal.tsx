@@ -151,7 +151,6 @@ export function TaskDetailsModal({
 
   // Reset form state when modal opens/closes or task changes
   useEffect(() => {
-     
     if (!isOpen) {
       // Modal closed - reset everything
       setFormData({});
@@ -915,12 +914,13 @@ export function TaskDetailsModal({
                 {(submission.external_urls || []).map(
                   (urlItem: unknown, index: number) => {
                     // Handle both string URLs and URL objects
+                    const urlObj = urlItem as { url?: string; title?: string };
                     const url =
-                      typeof urlItem === "string" ? urlItem : urlItem?.url;
+                      typeof urlItem === "string" ? urlItem : urlObj?.url;
                     const title =
                       typeof urlItem === "string"
                         ? urlItem
-                        : urlItem?.title || "External Link";
+                        : urlObj?.title || "External Link";
 
                     return (
                       <div
