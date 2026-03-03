@@ -1,14 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import ReactMarkdown from "react-markdown";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -17,9 +11,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { StatusBadge, TaskStatus } from "@/components/ui/status-badge";
+import { Textarea } from "@/components/ui/textarea";
 import { formatDate } from "@/lib/date-utils";
-import { X, Upload, Link, FileText, CheckCircle, XCircle } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { CheckCircle, FileText, Link, Upload, X, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 // Common interfaces
 interface ExternalUrl {
@@ -151,6 +151,7 @@ export function TaskDetailsModal({
 
   // Reset form state when modal opens/closes or task changes
   useEffect(() => {
+     
     if (!isOpen) {
       // Modal closed - reset everything
       setFormData({});
@@ -201,6 +202,7 @@ export function TaskDetailsModal({
       setUrlError(null);
       setValidationErrors([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, mode, taskData?.id]);
 
   // Default form schema for submission mode
@@ -489,7 +491,10 @@ export function TaskDetailsModal({
                   multiple
                   onChange={(e) => {
                     if (e.target.files) {
-                      setUploadedFiles(Array.from(e.target.files));
+                      setUploadedFiles((prev) => [
+                        ...prev,
+                        ...Array.from(e.target.files!),
+                      ]);
                     }
                   }}
                   className="hidden"
@@ -908,7 +913,7 @@ export function TaskDetailsModal({
               <span className="text-sm font-medium">External URLs:</span>
               <div className="mt-2 space-y-2">
                 {(submission.external_urls || []).map(
-                  (urlItem: any, index: number) => {
+                  (urlItem: unknown, index: number) => {
                     // Handle both string URLs and URL objects
                     const url =
                       typeof urlItem === "string" ? urlItem : urlItem?.url;

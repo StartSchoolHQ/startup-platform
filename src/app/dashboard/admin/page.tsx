@@ -1,24 +1,25 @@
 "use client";
 
-import { useApp } from "@/contexts/app-context";
-import { redirect, useRouter } from "next/navigation";
-import {
-  Users,
-  ListChecks,
-  UsersRound,
-  FileText,
-  FileSearch,
-  ArrowRight,
-} from "lucide-react";
-import { motion } from "framer-motion";
+import { AdminOverview } from "@/components/admin/admin-overview";
+import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AdminSkeleton } from "@/components/ui/admin-skeleton";
-import { AdminOverview } from "@/components/admin/admin-overview";
+import { useApp } from "@/contexts/app-context";
+import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  FileSearch,
+  FileText,
+  ListChecks,
+  TrendingUp,
+  Users,
+  UsersRound,
+} from "lucide-react";
+import { redirect, useRouter } from "next/navigation";
 
 export default function AdminPage() {
   const { user, loading } = useApp();
@@ -62,6 +63,13 @@ export default function AdminPage() {
       icon: FileSearch,
       href: "/dashboard/admin/peer-reviews",
       color: "text-pink-600",
+    },
+    {
+      title: "Student Progress",
+      description: "Track team health and who needs help",
+      icon: TrendingUp,
+      href: "/dashboard/admin/progress",
+      color: "text-teal-600",
     },
     {
       title: "Audit Logs",

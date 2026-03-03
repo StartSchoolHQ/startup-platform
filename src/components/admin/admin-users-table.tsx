@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
+import { UserDetailModal } from "@/components/admin/user-detail-modal";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -12,15 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface User {
   id: string;
@@ -38,6 +39,10 @@ export function AdminUsersTable() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+  const [selectedUser, setSelectedUser] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 50;
@@ -130,7 +135,16 @@ export function AdminUsersTable() {
               </TableRow>
             ) : (
               users.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow
+                  key={user.id}
+                  className="hover:bg-muted/50 cursor-pointer"
+                  onClick={() =>
+                    setSelectedUser({
+                      id: user.id,
+                      name: user.name || user.email,
+                    })
+                  }
+                >
                   <TableCell className="font-medium">
                     {user.name || "—"}
                   </TableCell>
@@ -190,6 +204,14 @@ export function AdminUsersTable() {
           </Button>
         </div>
       </div>
+
+      {/* User Detail Modal */}
+      <UserDetailModal
+        userId={selectedUser?.id || null}
+        userName={selectedUser?.name || ""}
+        open={!!selectedUser}
+        onOpenChange={(open) => !open && setSelectedUser(null)}
+      />
     </div>
   );
 }

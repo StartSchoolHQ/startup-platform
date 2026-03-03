@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -17,16 +17,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, RefreshCw, ChevronDown, Filter } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import {
   formatAuditLogV2,
   formatRewardActivity,
   type AuditLogV2,
   type RewardActivity,
 } from "@/lib/audit-log-formatter-v2";
+import { createClient } from "@/lib/supabase/client";
+import { Calendar, ChevronDown, Filter, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface UserOption {
   id: string;

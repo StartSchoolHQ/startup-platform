@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
 "use client";
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -19,16 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import {
-  Calendar,
-  User,
-  Database,
-  Filter,
-  RefreshCw,
-  ChevronDown,
-} from "lucide-react";
 import { formatAuditLog, getEntityName } from "@/lib/audit-log-formatter";
+import { createClient } from "@/lib/supabase/client";
+import { Calendar, ChevronDown, Filter, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface AuditLog {
   id: string;
