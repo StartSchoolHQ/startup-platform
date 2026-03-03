@@ -1,27 +1,28 @@
 "use client";
 
-import posthog from "posthog-js";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Send, Inbox } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppContext } from "@/contexts/app-context";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  invalidateInvitationCount,
+  invalidateInvitationLists,
+} from "@/hooks/use-invitation-count";
 import {
   getPendingInvitations,
   getSentInvitations,
   respondToInvitation,
 } from "@/lib/database";
-import {
-  invalidateInvitationCount,
-  invalidateInvitationLists,
-} from "@/hooks/use-invitation-count";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { Inbox, Send } from "lucide-react";
+import posthog from "posthog-js";
 import { toast } from "sonner";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface Invitation {
   id: string;
   team_id: string;
@@ -97,8 +98,12 @@ export default function InvitationsPage() {
       invalidateInvitationCount(queryClient, user?.id);
       invalidateInvitationLists(queryClient);
     },
-    onError: () => {
-      toast.error("Failed to respond to invitation");
+    onError: (error) => {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to respond to invitation";
+      toast.error(errorMessage);
     },
   });
 
