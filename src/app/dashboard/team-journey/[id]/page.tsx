@@ -55,7 +55,10 @@ import {
   isUserTeamMember,
 } from "@/lib/database";
 import { assignTaskToMember, startTask, startTaskLazy } from "@/lib/tasks";
-import { hasUserSubmittedThisWeek } from "@/lib/weekly-reports";
+import {
+  hasUserSubmittedThisWeek,
+  getCurrentWeekBoundaries,
+} from "@/lib/weekly-reports";
 import { StatsCard } from "@/types/dashboard";
 import { TaskTableItem } from "@/types/team-journey";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -88,10 +91,9 @@ interface Strike {
   id: string;
   title: string;
   datetime: string;
-  status: "explained" | "waiting-explanation";
-  xpPenalty: number;
-  pointsPenalty: number;
-  action: "done" | "explain";
+  status: "explained" | "waiting-explanation" | "rejected" | "resolved";
+  action: "done" | "explain" | "rejected";
+  rejectionReason?: string;
 }
 
 interface WeeklyReportSubmission {
@@ -243,6 +245,13 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
     enabled: !!teamId && !!user?.id && isTeamMember,
   });
 
+  // React Query: Week boundaries for deadline display
+  const { data: weekBoundaries } = useQuery({
+    queryKey: ["weekBoundaries"],
+    queryFn: () => getCurrentWeekBoundaries(),
+    staleTime: 10 * 60 * 1000,
+  });
+
   // React Query: Member submission statuses
   const { data: memberSubmissionStatus = {} } = useQuery({
     queryKey: [
@@ -387,9 +396,22 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
               ).toLocaleDateString()
             : "N/A",
         description: strike.description,
-        status: strike.explanation ? "explained" : "waiting-explanation",
-        action: strike.explanation ? "done" : "explain",
+        status:
+          strike.status === "rejected"
+            ? "rejected"
+            : strike.status === "resolved"
+              ? "resolved"
+              : strike.explanation
+                ? "explained"
+                : "waiting-explanation",
+        action:
+          strike.status === "rejected"
+            ? "rejected"
+            : strike.explanation
+              ? "done"
+              : "explain",
         userName: strike.user_name || strike.users?.name || undefined,
+        rejectionReason: strike.rejection_reason || undefined,
       }));
     },
     enabled: !!teamId,
@@ -1329,7 +1351,27 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                     <div>
                       <div className="text-sm font-semibold">Weekly Report</div>
                       <div className="text-muted-foreground text-xs">
-                        Every member needs to fill out the weekly report
+                        Deadline: Monday 10:00 (Riga)
+                        {weekBoundaries && (
+                          <span>
+                            {" "}
+                            &middot; Week {weekBoundaries.week_number} (
+                            {new Date(
+                              weekBoundaries.week_start
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            })}
+                            {" – "}
+                            {new Date(
+                              weekBoundaries.week_end
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            })}
+                            )
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

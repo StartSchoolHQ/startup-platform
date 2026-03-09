@@ -1,15 +1,16 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { AlertTriangle, CheckCircle, Clock, XCircle } from "lucide-react";
 
 interface Strike {
   id: string;
   title: string;
   datetime: string;
-  status: "explained" | "waiting-explanation";
-  action: "done" | "explain";
+  status: "explained" | "waiting-explanation" | "rejected" | "resolved";
+  action: "done" | "explain" | "rejected";
   userName?: string;
   description?: string;
+  rejectionReason?: string;
 }
 
 interface StrikesTableProps {
@@ -30,13 +31,22 @@ export function StrikesTable({
           text: "Explained",
           class: "bg-primary/10 text-primary",
         };
+      case "resolved":
+        return {
+          text: "Resolved",
+          class: "bg-primary/10 text-primary",
+        };
+      case "rejected":
+        return {
+          text: "Rejected",
+          class: "bg-red-500/10 text-red-700 dark:text-red-400",
+        };
       case "waiting-explanation":
         return {
           text: "Waiting on Explanation",
           class: "bg-destructive/10 text-destructive",
         };
       default:
-        // Defensive fallback for undefined/unknown status
         return {
           text: "Unknown",
           class: "bg-muted/50 text-muted-foreground",
@@ -51,6 +61,14 @@ export function StrikesTable({
           text: "Done",
           class: "bg-primary text-primary-foreground hover:bg-primary/90",
           icon: <CheckCircle className="mr-1 h-3 w-3" />,
+          disabled: true,
+        };
+      case "rejected":
+        return {
+          text: "Rejected",
+          class: "bg-red-500/10 text-red-700 border border-red-500/30",
+          icon: <XCircle className="mr-1 h-3 w-3" />,
+          disabled: true,
         };
       case "explain":
         return {
@@ -58,13 +76,14 @@ export function StrikesTable({
           class:
             "bg-background border border-input text-foreground hover:bg-muted/20",
           icon: <Clock className="mr-1 h-3 w-3" />,
+          disabled: false,
         };
       default:
-        // Defensive fallback for undefined/unknown actions
         return {
           text: "Pending",
           class: "bg-muted text-muted-foreground hover:bg-muted/80",
           icon: <Clock className="mr-1 h-3 w-3" />,
+          disabled: false,
         };
     }
   };
@@ -115,6 +134,11 @@ export function StrikesTable({
                         <div className="text-muted-foreground text-xs">
                           {strike.datetime}
                         </div>
+                        {strike.rejectionReason && (
+                          <div className="mt-1 text-xs text-red-600 dark:text-red-400">
+                            Reason: {strike.rejectionReason}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -133,7 +157,7 @@ export function StrikesTable({
                             strike.action === "explain" &&
                             onExplainClick?.(strike)
                           }
-                          disabled={strike.action === "done"}
+                          disabled={actionConfig.disabled}
                         >
                           {actionConfig.icon}
                           {actionConfig.text}

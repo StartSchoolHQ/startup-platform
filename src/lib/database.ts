@@ -61,7 +61,7 @@ export {
   getArchivedTeamsForJourney,
   getTeamStrikes,
   getAdminStrikes,
-  resolveStrike,
+  rejectStrike,
   getTeamWeeklyReports,
   getTeamClientMeetings,
 } from "./data/teams";

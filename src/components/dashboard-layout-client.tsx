@@ -15,6 +15,7 @@ import {
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WeeklyReportBanner } from "@/components/dashboard/weekly-report-banner";
 
 function PageLoader() {
   return (
@@ -63,7 +64,12 @@ export function DashboardLayoutClient({
         {loading ? (
           <PageLoader />
         ) : (
-          <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
+          <>
+            <WeeklyReportBanner />
+            <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+              {children}
+            </div>
+          </>
         )}
       </SidebarInset>
     </SidebarProvider>

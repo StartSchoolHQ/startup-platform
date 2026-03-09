@@ -544,7 +544,9 @@ export async function getTeamStrikes(teamId: string) {
 /**
  * Admin: Get all strikes with optional filtering
  */
-export async function getAdminStrikes(filter?: "pending" | "resolved" | "all") {
+export async function getAdminStrikes(
+  filter?: "pending" | "active" | "resolved" | "rejected" | "all"
+) {
   const supabase = createClient();
 
   let query = supabase
@@ -559,9 +561,18 @@ export async function getAdminStrikes(filter?: "pending" | "resolved" | "all") {
     .order("created_at", { ascending: false });
 
   if (filter === "pending") {
-    query = query.not("explanation", "is", null).is("resolved_at", null);
+    // Has explanation, awaiting admin review
+    query = query
+      .not("explanation", "is", null)
+      .is("resolved_at", null)
+      .neq("status", "rejected");
+  } else if (filter === "active") {
+    // No explanation yet
+    query = query.is("explanation", null).eq("status", "active");
   } else if (filter === "resolved") {
     query = query.not("resolved_at", "is", null);
+  } else if (filter === "rejected") {
+    query = query.eq("status", "rejected");
   }
 
   const { data, error } = await query;
@@ -596,6 +607,34 @@ export async function resolveStrike(strikeId: string, adminUserId: string) {
     });
   }
 
+  return data;
+}
+
+/**
+ * Admin: Reject a strike with a reason
+ */
+export async function rejectStrike(
+  strikeId: string,
+  adminUserId: string,
+  rejectionReason: string
+) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("team_strikes")
+    .update({
+      status: "rejected",
+      rejection_reason: rejectionReason,
+      rejected_by_user_id: adminUserId,
+      rejected_at: new Date().toISOString(),
+    })
+    .eq("id", strikeId)
+    .select("user_id, team_id")
+    .single();
+
+  if (error) throw error;
+
+  // Do NOT decrement strikes_count — rejected means the strike stands
   return data;
 }
 

@@ -47,15 +47,17 @@ export function ExplainStrikeModal({
 
       const supabase = createClient();
 
+      // Only allow explanation on active strikes (not resolved/rejected)
       const { error } = await supabase
         .from("team_strikes")
         .update({
           explanation: explanation.trim(),
           explained_by_user_id: user.id,
           explained_at: new Date().toISOString(),
-          status: "explained", // Move to explained status for admin review
+          status: "explained",
         })
-        .eq("id", strike.id);
+        .eq("id", strike.id)
+        .in("status", ["active", "explained"]);
 
       if (error) throw error;
     },

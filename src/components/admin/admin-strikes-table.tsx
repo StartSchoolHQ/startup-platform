@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getAdminStrikes, resolveStrike } from "@/lib/database";
+import { getAdminStrikes, rejectStrike } from "@/lib/database";
 import { useAppContext } from "@/contexts/app-context";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -30,6 +30,8 @@ interface AdminStrike {
   explained_at: string | null;
   resolved_by_user_id: string | null;
   resolved_at: string | null;
+  rejection_reason?: string | null;
+  rejected_at?: string | null;
   created_at: string | null;
   teams: { id: string; name: string } | null;
   strike_user: { id: string; name: string | null; email: string } | null;
@@ -38,9 +40,9 @@ interface AdminStrike {
 export function AdminStrikesTable() {
   const { user } = useAppContext();
   const queryClient = useQueryClient();
-  const [filter, setFilter] = useState<"pending" | "resolved" | "all">(
-    "pending"
-  );
+  const [filter, setFilter] = useState<
+    "pending" | "active" | "resolved" | "rejected" | "all"
+  >("pending");
   const [selectedStrike, setSelectedStrike] = useState<AdminStrike | null>(
     null
   );
@@ -52,8 +54,16 @@ export function AdminStrikesTable() {
 
   const resolveMutation = useMutation({
     mutationFn: async (strikeId: string) => {
-      if (!user?.id) throw new Error("User not found");
-      return await resolveStrike(strikeId, user.id);
+      const res = await fetch("/api/admin/resolve-strike", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ strikeId }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to resolve strike");
+      }
+      return res.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "strikes"] });
@@ -62,12 +72,42 @@ export function AdminStrikesTable() {
           queryKey: ["teamJourney", "strikes", data.team_id],
         });
       }
-      toast.success("Strike resolved successfully");
+      const msg = data.refundTriggered
+        ? "Strike resolved — penalty refunded to all team members!"
+        : "Strike resolved successfully";
+      toast.success(msg);
       setSelectedStrike(null);
     },
     onError: (error: Error) => {
       console.error("Error resolving strike:", error);
-      toast.error("Failed to resolve strike");
+      toast.error(error.message || "Failed to resolve strike");
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async ({
+      strikeId,
+      reason,
+    }: {
+      strikeId: string;
+      reason: string;
+    }) => {
+      if (!user?.id) throw new Error("User not found");
+      return await rejectStrike(strikeId, user.id, reason);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "strikes"] });
+      if (data.team_id) {
+        queryClient.invalidateQueries({
+          queryKey: ["teamJourney", "strikes", data.team_id],
+        });
+      }
+      toast.success("Strike explanation rejected");
+      setSelectedStrike(null);
+    },
+    onError: (error: Error) => {
+      console.error("Error rejecting strike:", error);
+      toast.error("Failed to reject strike");
     },
   });
 
@@ -82,6 +122,38 @@ export function AdminStrikesTable() {
       other: { text: "Other", variant: "secondary" },
     };
     return types[type] || types.other;
+  };
+
+  const getStatusBadge = (strike: AdminStrike) => {
+    if (strike.resolved_at) {
+      return (
+        <Badge variant="secondary" className="bg-primary/10 text-primary">
+          Resolved
+        </Badge>
+      );
+    }
+    if (strike.status === "rejected") {
+      return (
+        <Badge
+          variant="secondary"
+          className="bg-red-500/10 text-red-700 dark:text-red-400"
+        >
+          Rejected
+        </Badge>
+      );
+    }
+    if (strike.explanation) {
+      return (
+        <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700">
+          Awaiting Review
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="secondary" className="bg-destructive/10 text-destructive">
+        No Explanation
+      </Badge>
+    );
   };
 
   if (isLoading) {
@@ -108,7 +180,9 @@ export function AdminStrikesTable() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="pending">Pending Review</SelectItem>
+              <SelectItem value="active">No Explanation</SelectItem>
               <SelectItem value="resolved">Resolved</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
               <SelectItem value="all">All Strikes</SelectItem>
             </SelectContent>
           </Select>
@@ -149,8 +223,6 @@ export function AdminStrikesTable() {
               <tbody>
                 {strikes.map((strike, index) => {
                   const typeConfig = getStrikeTypeBadge(strike.strike_type);
-                  const hasExplanation = !!strike.explanation;
-                  const isResolved = !!strike.resolved_at;
 
                   return (
                     <tr
@@ -192,30 +264,7 @@ export function AdminStrikesTable() {
                             : "N/A"}
                         </div>
                       </td>
-                      <td className="px-4 py-3">
-                        {isResolved ? (
-                          <Badge
-                            variant="secondary"
-                            className="bg-primary/10 text-primary"
-                          >
-                            Resolved
-                          </Badge>
-                        ) : hasExplanation ? (
-                          <Badge
-                            variant="secondary"
-                            className="bg-yellow-500/10 text-yellow-700"
-                          >
-                            Awaiting Review
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="secondary"
-                            className="bg-destructive/10 text-destructive"
-                          >
-                            No Explanation
-                          </Badge>
-                        )}
-                      </td>
+                      <td className="px-4 py-3">{getStatusBadge(strike)}</td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end">
                           <Button
@@ -242,7 +291,14 @@ export function AdminStrikesTable() {
           onOpenChange={(open: boolean) => !open && setSelectedStrike(null)}
           strike={selectedStrike}
           onResolve={() => resolveMutation.mutate(selectedStrike.id)}
+          onReject={(reason: string) =>
+            rejectMutation.mutate({
+              strikeId: selectedStrike.id,
+              reason,
+            })
+          }
           isResolving={resolveMutation.isPending}
+          isRejecting={rejectMutation.isPending}
         />
       )}
     </>

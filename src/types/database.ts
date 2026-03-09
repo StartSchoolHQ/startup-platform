@@ -814,6 +814,9 @@ export type Database = {
           explanation: string | null;
           id: string;
           points_penalty: number | null;
+          rejected_at: string | null;
+          rejected_by_user_id: string | null;
+          rejection_reason: string | null;
           resolved_at: string | null;
           resolved_by_user_id: string | null;
           status: string | null;
@@ -822,6 +825,8 @@ export type Database = {
           title: string;
           updated_at: string | null;
           user_id: string | null;
+          week_number: number | null;
+          week_year: number | null;
           xp_penalty: number | null;
         };
         Insert: {
@@ -832,6 +837,9 @@ export type Database = {
           explanation?: string | null;
           id?: string;
           points_penalty?: number | null;
+          rejected_at?: string | null;
+          rejected_by_user_id?: string | null;
+          rejection_reason?: string | null;
           resolved_at?: string | null;
           resolved_by_user_id?: string | null;
           status?: string | null;
@@ -840,6 +848,8 @@ export type Database = {
           title: string;
           updated_at?: string | null;
           user_id?: string | null;
+          week_number?: number | null;
+          week_year?: number | null;
           xp_penalty?: number | null;
         };
         Update: {
@@ -850,6 +860,9 @@ export type Database = {
           explanation?: string | null;
           id?: string;
           points_penalty?: number | null;
+          rejected_at?: string | null;
+          rejected_by_user_id?: string | null;
+          rejection_reason?: string | null;
           resolved_at?: string | null;
           resolved_by_user_id?: string | null;
           status?: string | null;
@@ -858,12 +871,21 @@ export type Database = {
           title?: string;
           updated_at?: string | null;
           user_id?: string | null;
+          week_number?: number | null;
+          week_year?: number | null;
           xp_penalty?: number | null;
         };
         Relationships: [
           {
             foreignKeyName: "team_strikes_explained_by_user_id_fkey1";
             columns: ["explained_by_user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "team_strikes_rejected_by_user_id_fkey";
+            columns: ["rejected_by_user_id"];
             isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["id"];
@@ -1225,18 +1247,6 @@ export type Database = {
         Args: { p_progress_id: string };
         Returns: Json;
       };
-      add_client_meeting: {
-        Args: {
-          p_call_type: string;
-          p_client_name: string;
-          p_client_type: string;
-          p_how_it_went: string;
-          p_new_things_learned: string;
-          p_responsible_user_id: string;
-          p_team_id: string;
-        };
-        Returns: string;
-      };
       add_peer_review_history_entry: {
         Args: {
           p_decision?: string;
@@ -1324,10 +1334,6 @@ export type Database = {
         Args: { p_action_type: string; p_limit?: number; p_user_id: string };
         Returns: boolean;
       };
-      complete_client_meeting: {
-        Args: { p_meeting_id: string };
-        Returns: Json;
-      };
       complete_individual_task: {
         Args: {
           p_progress_id: string;
@@ -1337,10 +1343,6 @@ export type Database = {
         Returns: Json;
       };
       complete_meeting: { Args: { p_meeting_id: string }; Returns: Json };
-      complete_team_achievement: {
-        Args: { p_achievement_id: string; p_team_id: string };
-        Returns: Json;
-      };
       create_individual_task_and_assign_to_users: {
         Args: {
           p_achievement_id?: string;
@@ -1387,34 +1389,6 @@ export type Database = {
           p_user_id?: string;
         };
         Returns: string;
-      };
-      create_task_and_assign_to_all_teams: {
-        Args: {
-          p_achievement_id?: string;
-          p_auto_assign_to_new_teams?: boolean;
-          p_base_points_reward?: number;
-          p_base_xp_reward?: number;
-          p_category?: Database["public"]["Enums"]["task_category_type"];
-          p_deliverables?: string[];
-          p_description?: string;
-          p_detailed_instructions?: string;
-          p_difficulty_level?: number;
-          p_estimated_hours?: number;
-          p_learning_objectives?: string[];
-          p_minimum_team_level?: number;
-          p_peer_review_criteria?: Json;
-          p_prerequisite_template_codes?: string[];
-          p_priority?: Database["public"]["Enums"]["task_priority_type"];
-          p_requires_review?: boolean;
-          p_resources?: Json;
-          p_review_instructions?: string;
-          p_sort_order?: number;
-          p_tags?: string[];
-          p_template_code: string;
-          p_tips_content?: Json;
-          p_title: string;
-        };
-        Returns: Json;
       };
       create_team_atomic: {
         Args: {
@@ -1468,6 +1442,34 @@ export type Database = {
         };
         Returns: {
           action: string;
+          changed_by_email: string;
+          changed_by_name: string;
+          changed_by_user_id: string;
+          changed_fields: string[];
+          created_at: string;
+          id: string;
+          new_data: Json;
+          old_data: Json;
+          record_id: string;
+          table_name: string;
+        }[];
+      };
+      get_audit_logs_v2: {
+        Args: {
+          p_action?: string;
+          p_category?: string;
+          p_from_date?: string;
+          p_limit?: number;
+          p_offset?: number;
+          p_table_name?: string;
+          p_to_date?: string;
+          p_user_id?: string;
+        };
+        Returns: {
+          action: string;
+          affected_team_name: string;
+          affected_user_name: string;
+          category: string;
           changed_by_email: string;
           changed_by_name: string;
           changed_by_user_id: string;
@@ -1604,6 +1606,29 @@ export type Database = {
           task_id: string;
         }[];
       };
+      get_rewards_activity: {
+        Args: {
+          p_from_date?: string;
+          p_limit?: number;
+          p_offset?: number;
+          p_to_date?: string;
+          p_user_id?: string;
+        };
+        Returns: {
+          activity_type: string;
+          created_at: string;
+          description: string;
+          id: string;
+          points_change: number;
+          task_name: string;
+          team_name: string;
+          type: string;
+          user_email: string;
+          user_id: string;
+          user_name: string;
+          xp_change: number;
+        }[];
+      };
       get_riga_week_boundaries: {
         Args: { input_date?: string };
         Returns: {
@@ -1611,6 +1636,25 @@ export type Database = {
           week_number: number;
           week_start: string;
           week_year: number;
+        }[];
+      };
+      get_student_progress_overview: {
+        Args: never;
+        Returns: {
+          days_since_last_activity: number;
+          health_status: string;
+          last_report_at: string;
+          last_task_completed_at: string;
+          member_count: number;
+          tasks_approved: number;
+          tasks_in_progress: number;
+          tasks_not_started: number;
+          tasks_pending_review: number;
+          team_id: string;
+          team_name: string;
+          team_status: string;
+          total_team_xp: number;
+          weekly_reports_count: number;
         }[];
       };
       get_task_history: {
@@ -1740,6 +1784,7 @@ export type Database = {
           tasks_change: number;
           tasks_completed: number;
           team_id: string;
+          team_logo_url: string;
           team_name: string;
           total_points: number;
           total_xp: number;
@@ -1765,6 +1810,7 @@ export type Database = {
           status: string;
         }[];
       };
+      get_team_progress_details: { Args: { p_team_id: string }; Returns: Json };
       get_team_stats_combined: {
         Args: { p_team_id: string };
         Returns: {
@@ -1777,10 +1823,12 @@ export type Database = {
         Args: { p_team_id: string };
         Returns: {
           created_at: string;
+          description: string;
           explanation: string;
           id: string;
           points_penalty: number;
           reason: string;
+          rejection_reason: string;
           status: string;
           strike_date: string;
           team_id: string;
@@ -1987,6 +2035,7 @@ export type Database = {
           title: string;
         }[];
       };
+      get_user_progress_details: { Args: { p_user_id: string }; Returns: Json };
       get_user_tasks_visible: {
         Args: { p_user_id: string };
         Returns: {
@@ -2038,6 +2087,14 @@ export type Database = {
           title: string;
         }[];
       };
+      get_users_for_filter: {
+        Args: never;
+        Returns: {
+          email: string;
+          id: string;
+          name: string;
+        }[];
+      };
       has_user_submitted_this_week: {
         Args: { p_team_id: string; p_user_id: string };
         Returns: boolean;
@@ -2045,6 +2102,10 @@ export type Database = {
       increment_team_member_count: {
         Args: { team_id: string };
         Returns: undefined;
+      };
+      increment_user_points: {
+        Args: { p_amount: number; p_user_id: string };
+        Returns: number;
       };
       is_task_recurring: { Args: { task_id: string }; Returns: boolean };
       mark_all_notifications_seen: {
@@ -2117,6 +2178,7 @@ export type Database = {
         Returns: Json;
       };
       send_weekly_report_reminders: { Args: never; Returns: number };
+      send_weekly_report_reminders_sunday: { Args: never; Returns: number };
       start_individual_task: { Args: { p_progress_id: string }; Returns: Json };
       start_recurring_task: {
         Args: {
@@ -2314,7 +2376,9 @@ export type Database = {
         | "validation"
         | "team_cost"
         | "achievement"
-        | "meeting";
+        | "meeting"
+        | "weekly_report_penalty"
+        | "weekly_report_refund";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -2500,6 +2564,8 @@ export const Constants = {
         "team_cost",
         "achievement",
         "meeting",
+        "weekly_report_penalty",
+        "weekly_report_refund",
       ],
     },
   },

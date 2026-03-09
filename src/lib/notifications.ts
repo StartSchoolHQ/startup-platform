@@ -86,6 +86,10 @@ function getNotificationIcon(type: string): string {
     case "weekly_report_reminder_2day":
     case "weekly_report_reminder_1day":
       return "calendar-clock";
+    case "weekly_report_penalty":
+      return "alert-triangle";
+    case "weekly_report_refund":
+      return "check-circle";
     case "invitation":
       return "users";
     default:
@@ -122,9 +126,7 @@ export async function markPersistentNotificationRead(
       .eq("id", notificationId);
 
     if (error) {
-      throw new Error(
-        "Failed to mark notification as read: " + error.message
-      );
+      throw new Error("Failed to mark notification as read: " + error.message);
     }
   } catch (error) {
     if (error instanceof Error) throw error;
