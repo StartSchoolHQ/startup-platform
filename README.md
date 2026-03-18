@@ -1,152 +1,120 @@
 # StartSchool Platform
 
-A modern startup accelerator platform built with Next.js 16, React 19, and Supabase. Designed to help early-stage startups track progress, manage teams, and stay accountable through gamified task management.
+A startup accelerator platform built with Next.js 16, React 19, and Supabase. Helps early-stage startups track progress, manage teams, and stay accountable through gamified task management and structured weekly reporting.
 
-## ✨ Features
+## Features
 
-- **📋 Task Management** - Individual and team task tracking with approval workflows
-- **👥 Team Journey** - Collaborative team management with role-based permissions
-- **🏆 Gamification** - Points, achievements, and leaderboards to drive engagement
-- **📊 Weekly Reports** - Track progress with structured reporting
-- **👀 Peer Review** - Cross-team accountability and feedback system
-- **🔔 Notifications** - Real-time updates on task status and team activity
-- **👑 Admin Dashboard** - Comprehensive admin tools for program management
+- **Task Management** — Individual and team tasks with submission/approval workflows
+- **Team Journey** — Collaborative team management with role-based permissions and progress tracking
+- **Weekly Reports** — Structured weekly accountability with deadlines, penalties, and admin review
+- **Gamification** — Points, XP, achievements, and leaderboards to drive engagement
+- **Peer Review** — Cross-team accountability and feedback system
+- **Notifications** — Real-time updates on task status, team activity, and deadlines
+- **Admin Dashboard** — User management, team oversight, task creation, audit logs, and student progress tracking
+- **Support System** — In-app support tickets with Discord webhook integration
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- **Framework:** [Next.js 16](https://nextjs.org/) (App Router)
-- **UI:** [React 19](https://react.dev/) + [Tailwind CSS 4](https://tailwindcss.com/) + [ShadCN/UI](https://ui.shadcn.com/)
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router) + [React 19](https://react.dev/) + [TypeScript 5](https://www.typescriptlang.org/)
+- **Styling:** [Tailwind CSS 4](https://tailwindcss.com/) + [ShadCN/UI](https://ui.shadcn.com/)
 - **Database:** [Supabase](https://supabase.com/) (PostgreSQL + Auth + Realtime)
-- **State Management:** [TanStack Query](https://tanstack.com/query)
-- **Error Tracking:** [Sentry](https://sentry.io/)
+- **State:** [TanStack Query](https://tanstack.com/query) + React Context
+- **Analytics:** [PostHog](https://posthog.com/) + [Sentry](https://sentry.io/)
 - **Deployment:** [Vercel](https://vercel.com/)
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 18.17 or later
-- npm or pnpm
-- A Supabase project
+- Node.js 18.17+
+- npm
+- A [Supabase](https://supabase.com/) project
 
 ### Installation
 
-1. **Clone the repository**
+```bash
+git clone https://github.com/your-username/startup-platform.git
+cd startup-platform
+npm install
+```
 
-   ```bash
-   git clone https://github.com/your-username/startup-platform.git
-   cd startup-platform
-   ```
+### Environment Setup
 
-2. **Install dependencies**
+```bash
+cp .env.example .env.local
+```
 
-   ```bash
-   npm install
-   ```
+Fill in your credentials in `.env.local`. See [`.env.example`](.env.example) for all available variables and descriptions.
 
-3. **Set up environment variables**
+### Run Development Server
 
-   ```bash
-   cp .env.example .env.local
-   ```
+```bash
+npm run dev
+```
 
-   Fill in your Supabase credentials and other required variables in `.env.local`:
-   - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anonymous key
-   - `SUPABASE_SERVICE_ROLE_KEY` - Your Supabase service role key (server-side only)
-   - `NEXT_PUBLIC_SENTRY_DSN` - Your Sentry DSN (optional, for error tracking)
-   - `DISCORD_WEBHOOK_URL` - Discord webhook for support tickets (optional)
+Open [http://localhost:3000](http://localhost:3000).
 
-4. **Set up the database**
-
-   Run the migrations in your Supabase project. The database schema includes:
-   - User profiles and authentication
-   - Teams and team memberships
-   - Tasks, submissions, and approvals
-   - Points, achievements, and leaderboards
-   - Weekly reports and meetings
-
-5. **Start the development server**
-
-   ```bash
-   npm run dev
-   ```
-
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router pages
-│   ├── api/               # API routes
-│   ├── auth/              # Authentication pages
-│   ├── dashboard/         # Main dashboard pages
-│   └── ...
-├── components/            # React components
-│   ├── admin/            # Admin-specific components
-│   ├── dashboard/        # Dashboard components
-│   ├── ui/               # ShadCN UI components
-│   └── ...
+├── app/                    # Next.js App Router
+│   ├── api/               # REST API routes (admin ops under api/admin/)
+│   ├── auth/              # Auth callback & password reset
+│   └── dashboard/         # Protected pages
+│       ├── admin/         # Admin panel (users, teams, tasks, audit-logs, progress)
+│       ├── leaderboard/   # Points & XP leaderboard
+│       ├── my-journey/    # Personal task dashboard
+│       ├── peer-review/   # Cross-team reviews
+│       ├── support/       # Support tickets
+│       ├── team-journey/  # Team management & progress
+│       └── transaction-history/  # Points & XP transaction log
+├── components/            # React components (feature-based + ui/)
+├── contexts/              # React contexts (AppContext)
 ├── hooks/                 # Custom React hooks
-├── lib/                   # Utility functions and configurations
-│   └── supabase/         # Supabase client setup
-├── types/                 # TypeScript type definitions
-└── contexts/              # React contexts
+├── lib/                   # Utilities, Supabase clients, validation
+│   └── supabase/         # Browser, server, and admin clients
+└── types/                 # TypeScript type definitions
 ```
 
-## 🧪 Testing
+## Scripts
 
 ```bash
-# Run all tests
-npm run test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run specific test suite
-npm run test:rewards
+npm run dev          # Dev server (Turbopack)
+npm run build        # Production build
+npm run lint         # ESLint
+npm run test         # Run all tests (Vitest)
+npm run test:watch   # Tests in watch mode
 ```
 
-## 🔧 Development
+## Branch Workflow
 
-### Branch Workflow
+| Branch | Purpose | Deployment |
+|--------|---------|------------|
+| `master` | Production | Main domain |
+| `develop` | Testing | Vercel preview |
+| `feature/*` | Feature work | Created from `develop` |
 
-- `master` - Production branch (deployed to main domain)
-- `develop` - Testing branch (deployed to preview URL)
-- `feature/*` - Feature branches (created from `develop`)
+Always test on `develop` before merging to `master`.
 
-**Always test on `develop` before merging to `master`!**
+## Documentation
 
-### Code Style
+Detailed system documentation lives in [`docs/documentation/`](docs/documentation/):
 
-- We use ESLint for linting
-- Follow the existing patterns in the codebase
-- Keep components modular (aim for <200 lines per file)
-- Use ShadCN components where possible
+- [Authorization & Auth Flow](docs/documentation/authorization.md)
+- [Task System](docs/documentation/task-system.md)
+- [Team Journey](docs/documentation/team-journey.md)
+- [Leaderboard & Gamification](docs/documentation/leaderboard.md)
+- [Achievements](docs/documentation/achievements.md)
+- [Transactions & Points](docs/documentation/transactions.md)
+- [Notifications](docs/documentation/notifications.md)
+- [Peer Review](docs/documentation/peer-review.md)
+- [Invitations](docs/documentation/invitations.md)
+- [Support](docs/documentation/support.md)
+- [Account & Profile](docs/documentation/account-profile.md)
+- [Dashboard](docs/documentation/dashboard.md)
+- [Error Handling Guidelines](docs/errors/guidelines.md)
 
-## 📖 Documentation
+## License
 
-Additional documentation can be found in the `docs/` folder:
-
-- Development guidelines
-- Error handling patterns
-- Admin modularization
-
-## 🤝 Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## 🔒 Security
-
-For security vulnerabilities, please see [SECURITY.md](SECURITY.md).
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [ShadCN/UI](https://ui.shadcn.com/) for the beautiful component library
-- [Supabase](https://supabase.com/) for the backend infrastructure
-- [Vercel](https://vercel.com/) for hosting and deployment
+This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
