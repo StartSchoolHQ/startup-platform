@@ -136,17 +136,6 @@ export {
 } from "./data/notifications";
 
 // ============================================================================
-// LEADERBOARD FUNCTIONS
-// ============================================================================
-export {
-  getLeaderboardData,
-  generateWeeklyLeaderboardSnapshots,
-  getCurrentWeekInfo,
-  getAvailableLeaderboardWeeks,
-  type LeaderboardEntry,
-} from "./data/leaderboard";
-
-// ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 export {

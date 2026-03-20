@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getISOWeekBoundaries } from "@/lib/week-utils";
 
 // Type definition for team leaderboard entry returned by database function
 export interface TeamLeaderboardEntry {
@@ -16,6 +17,7 @@ export interface TeamLeaderboardEntry {
   tasks_change: number;
   meetings_change: number;
   rank_change: number;
+  is_new_entry?: boolean;
 }
 
 // Type definition for leaderboard entry returned by database function
@@ -35,6 +37,7 @@ export interface LeaderboardEntry {
   achievements_change: number;
   tasks_change: number;
   rank_change: number;
+  is_new_entry?: boolean;
 }
 
 /**
@@ -67,6 +70,88 @@ export async function getServerSideLeaderboardData(
     return data || [];
   } catch (error) {
     console.error("Error in getServerSideLeaderboardData:", error);
+    throw error;
+  }
+}
+
+/**
+ * Server-side function to get LIVE individual leaderboard data (current week, real-time)
+ */
+export async function getServerSideLiveLeaderboardData(
+  limit: number = 50
+): Promise<LeaderboardEntry[]> {
+  const supabase = await createClient();
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc(
+      "get_live_leaderboard_data",
+      { p_limit: limit }
+    );
+
+    if (error) {
+      console.error("Error fetching live leaderboard data:", error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in getServerSideLiveLeaderboardData:", error);
+    throw error;
+  }
+}
+
+/**
+ * Server-side function to get LIVE weekly individual leaderboard data
+ * (current week, ranked by weekly XP instead of cumulative)
+ */
+export async function getServerSideLiveWeeklyLeaderboardData(
+  limit: number = 50
+): Promise<LeaderboardEntry[]> {
+  const supabase = await createClient();
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc(
+      "get_live_weekly_leaderboard_data",
+      { p_limit: limit }
+    );
+
+    if (error) {
+      console.error("Error fetching live weekly leaderboard data:", error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in getServerSideLiveWeeklyLeaderboardData:", error);
+    throw error;
+  }
+}
+
+/**
+ * Server-side function to get LIVE team leaderboard data (current week, real-time)
+ */
+export async function getServerSideLiveTeamLeaderboardData(
+  limit: number = 50
+): Promise<TeamLeaderboardEntry[]> {
+  const supabase = await createClient();
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc(
+      "get_live_team_leaderboard_data",
+      { p_limit: limit }
+    );
+
+    if (error) {
+      console.error("Error fetching live team leaderboard data:", error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in getServerSideLiveTeamLeaderboardData:", error);
     throw error;
   }
 }
@@ -163,13 +248,10 @@ export async function getServerSideAvailableWeeks(): Promise<
     // Convert to array and calculate week boundaries
     const weeks = Array.from(weekMap.values());
     const weekBoundaries = weeks.map((week) => {
-      // Simple week boundary calculation (can be enhanced later with proper Riga timezone logic)
-      const startOfYear = new Date(week.week_year, 0, 1);
-      const daysOffset = (week.week_number - 1) * 7;
-      const weekStart = new Date(
-        startOfYear.getTime() + daysOffset * 24 * 60 * 60 * 1000
+      const { weekStart, weekEnd } = getISOWeekBoundaries(
+        week.week_year,
+        week.week_number
       );
-      const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
 
       return {
         ...week,
@@ -432,12 +514,10 @@ export async function getServerSideTeamAvailableWeeks(): Promise<
     });
 
     return Array.from(weekMap.values()).map((week) => {
-      const startOfYear = new Date(week.week_year, 0, 1);
-      const daysOffset = (week.week_number - 1) * 7;
-      const weekStart = new Date(
-        startOfYear.getTime() + daysOffset * 24 * 60 * 60 * 1000
+      const { weekStart, weekEnd } = getISOWeekBoundaries(
+        week.week_year,
+        week.week_number
       );
-      const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
 
       return {
         ...week,

@@ -1,7 +1,7 @@
 import {
-  getServerSideLeaderboardData,
+  getServerSideLiveLeaderboardData,
   getServerSideAvailableWeeks,
-  getServerSideTeamLeaderboardData,
+  getServerSideLiveTeamLeaderboardData,
   getServerSideTeamAvailableWeeks,
   getServerSideUserTeamIds,
 } from "@/lib/leaderboard-server";
@@ -25,9 +25,9 @@ export default async function LeaderboardPage() {
     teamAvailableWeeks,
     userTeamIds,
   ] = await Promise.all([
-    getServerSideLeaderboardData(),
+    getServerSideLiveLeaderboardData(),
     getServerSideAvailableWeeks(),
-    getServerSideTeamLeaderboardData(),
+    getServerSideLiveTeamLeaderboardData(),
     getServerSideTeamAvailableWeeks(),
     user?.id ? getServerSideUserTeamIds(user.id) : Promise.resolve([]),
   ]);

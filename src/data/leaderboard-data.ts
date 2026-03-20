@@ -4,6 +4,7 @@ export const leaderboardData: LeaderboardEntry[] = [
   {
     rank: 1,
     user: {
+      userId: "mock-user-1",
       name: "John Doe",
       avatar: "/avatars/john-doe.jpg",
       teams: "1 Teams",
@@ -33,11 +34,14 @@ export const leaderboardData: LeaderboardEntry[] = [
       direction: "up",
       amount: 1,
     },
+    weeklyReports: 0,
+    peerReviews: 0,
     rankIcon: "crown",
   },
   {
     rank: 2,
     user: {
+      userId: "mock-user-2",
       name: "John Doe",
       avatar: "/avatars/john-doe.jpg",
       teams: "4 Teams",
@@ -67,11 +71,14 @@ export const leaderboardData: LeaderboardEntry[] = [
       direction: "down",
       amount: 1,
     },
+    weeklyReports: 0,
+    peerReviews: 0,
     rankIcon: "trophy",
   },
   {
     rank: 3,
     user: {
+      userId: "mock-user-3",
       name: "John Doe",
       avatar: "/avatars/john-doe.jpg",
       teams: "2 Teams",
@@ -101,11 +108,14 @@ export const leaderboardData: LeaderboardEntry[] = [
       direction: "none",
       amount: 0,
     },
+    weeklyReports: 0,
+    peerReviews: 0,
     rankIcon: "medal",
   },
   {
     rank: 4,
     user: {
+      userId: "mock-user-4",
       name: "You",
       avatar: "/avatars/you.jpg",
       teams: "No Teams",
@@ -135,11 +145,14 @@ export const leaderboardData: LeaderboardEntry[] = [
       direction: "up",
       amount: 1,
     },
+    weeklyReports: 0,
+    peerReviews: 0,
     rankIcon: "flame",
   },
   {
     rank: 5,
     user: {
+      userId: "mock-user-5",
       name: "John Doe",
       avatar: "/avatars/john-doe.jpg",
       teams: "No Teams",
@@ -169,6 +182,8 @@ export const leaderboardData: LeaderboardEntry[] = [
       direction: "down",
       amount: 1,
     },
+    weeklyReports: 0,
+    peerReviews: 0,
     rankIcon: "none",
   },
 ];

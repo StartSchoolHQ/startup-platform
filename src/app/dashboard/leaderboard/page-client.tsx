@@ -1,11 +1,10 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -16,12 +15,26 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, TrendingUp } from "lucide-react";
+import {
+  Eye,
+  Flame,
+  Gem,
+  Handshake,
+  ListChecks,
+  Minus,
+  TrendingDown,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RankIcon } from "@/components/leaderboard/rank-icon";
 import { ChangeIndicator } from "@/components/leaderboard/change-indicator";
 import { StreakBadge } from "@/components/leaderboard/streak-badge";
 import { LeaderboardSkeleton } from "@/components/leaderboard/leaderboard-skeleton";
+import {
+  LeaderboardMobileRow,
+  TeamLeaderboardMobileRow,
+} from "@/components/leaderboard/leaderboard-mobile-rows";
 import { LeaderboardEntry, TeamLeaderboardEntry } from "@/types/leaderboard";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -29,6 +42,7 @@ import {
   type TeamLeaderboardEntry as DBTeamLeaderboardEntry,
 } from "@/lib/leaderboard-server";
 import { useCountUp } from "@/hooks/use-count-up";
+import { getISOWeekBoundaries } from "@/lib/week-utils";
 
 // Helper function to convert database entry to UI format
 function convertToLeaderboardEntry(
@@ -44,9 +58,16 @@ function convertToLeaderboardEntry(
   else if (dbEntry.rank_position === 2) rankIcon = "trophy";
   else if (dbEntry.rank_position === 3) rankIcon = "medal";
 
+  const isNewEntry = !!(dbEntry as any).is_new_entry;
+
   let changeDirection: "up" | "down" | "none" = "none";
-  if (dbEntry.rank_change > 0) changeDirection = "up";
-  else if (dbEntry.rank_change < 0) changeDirection = "down";
+  if (isNewEntry) {
+    changeDirection = "none";
+  } else if (dbEntry.rank_change > 0) {
+    changeDirection = "up";
+  } else if (dbEntry.rank_change < 0) {
+    changeDirection = "down";
+  }
 
   const teamText = dbEntry.team_name || "No Team";
 
@@ -58,6 +79,7 @@ function convertToLeaderboardEntry(
   return {
     rank: dbEntry.rank_position,
     user: {
+      userId: dbEntry.user_id,
       name: dbEntry.user_name || "Unknown User",
       avatar: dbEntry.user_avatar_url || "/avatars/john-doe.jpg",
       teams: teamText,
@@ -70,10 +92,13 @@ function convertToLeaderboardEntry(
       change: dbEntry.achievements_change,
     },
     tasks: { current: dbEntry.tasks_completed, change: dbEntry.tasks_change },
+    weeklyReports: (dbEntry as any).weekly_reports_count ?? 0,
+    peerReviews: (dbEntry as any).peer_reviews_count ?? 0,
     streak: userStreak,
     change: {
       direction: changeDirection,
       amount: Math.abs(dbEntry.rank_change),
+      isNew: isNewEntry,
     },
     rankIcon,
   };
@@ -89,17 +114,26 @@ function convertToTeamLeaderboardEntry(
   else if (dbEntry.rank_position === 2) rankIcon = "trophy";
   else if (dbEntry.rank_position === 3) rankIcon = "medal";
 
+  const isNewEntry = !!(dbEntry as any).is_new_entry;
+
   let changeDirection: "up" | "down" | "none" = "none";
-  if (dbEntry.rank_change > 0) changeDirection = "up";
-  else if (dbEntry.rank_change < 0) changeDirection = "down";
+  if (isNewEntry) {
+    changeDirection = "none";
+  } else if (dbEntry.rank_change > 0) {
+    changeDirection = "up";
+  } else if (dbEntry.rank_change < 0) {
+    changeDirection = "down";
+  }
 
   return {
     rank: dbEntry.rank_position,
     team: {
+      teamId: dbEntry.team_id,
       name: dbEntry.team_name || "Unknown Team",
       logoUrl: dbEntry.team_logo_url || undefined,
       memberCount: dbEntry.member_count,
       isCurrentUserTeam: userTeamIds?.includes(dbEntry.team_id),
+      xpPerMember: (dbEntry as any).xp_per_member ?? undefined,
     },
     xp: { current: dbEntry.total_xp, change: dbEntry.xp_change },
     points: { current: dbEntry.total_points, change: dbEntry.points_change },
@@ -111,9 +145,50 @@ function convertToTeamLeaderboardEntry(
     change: {
       direction: changeDirection,
       amount: Math.abs(dbEntry.rank_change),
+      isNew: isNewEntry,
     },
     rankIcon,
   };
+}
+
+const changeColorMap = {
+  green: "text-green-500",
+  blue: "text-blue-500",
+  yellow: "text-yellow-500",
+  purple: "text-purple-500",
+} as const;
+
+function ChangeValue({
+  value,
+  color,
+}: {
+  value: number;
+  color: "green" | "blue" | "yellow" | "purple";
+}) {
+  if (value === 0) {
+    return (
+      <div className="text-muted-foreground flex items-center gap-1 text-xs">
+        <Minus className="h-3 w-3" />
+        <span>0</span>
+      </div>
+    );
+  }
+  if (value > 0) {
+    return (
+      <div
+        className={`flex items-center gap-1 text-xs ${changeColorMap[color]}`}
+      >
+        <TrendingUp className="h-3 w-3" />
+        <span>+{value}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-1 text-xs text-red-500">
+      <TrendingDown className="h-3 w-3" />
+      <span>{value}</span>
+    </div>
+  );
 }
 
 function LeaderboardRow({
@@ -124,8 +199,6 @@ function LeaderboardRow({
   index: number;
 }) {
   const animatedXP = useCountUp(entry.xp.current, 800);
-  const animatedPoints = useCountUp(entry.points.current, 800);
-  const animatedAchievements = useCountUp(entry.achievements.current, 800);
   const animatedTasks = useCountUp(entry.tasks.current, 800);
 
   const isTop3 = entry.rank <= 3;
@@ -133,10 +206,11 @@ function LeaderboardRow({
 
   const getRowClassName = () => {
     let baseClass =
-      "grid min-w-[800px] gap-4 p-4 border-b border-border items-center hover:bg-muted/30 hover:shadow-md transition-all duration-200";
+      "grid min-w-[700px] gap-4 p-4 border-b border-border items-center hover:bg-muted/30 hover:shadow-md transition-all duration-200";
 
     if (entry.user.isCurrentUser) {
-      baseClass += " bg-blue-50 animate-[pulse-subtle_3s_ease-in-out_infinite]";
+      baseClass +=
+        " bg-blue-50 dark:bg-blue-950/50 animate-[pulse-subtle_3s_ease-in-out_infinite]";
     } else if (isFirst) {
       baseClass +=
         " bg-gradient-to-r from-yellow-50/50 to-transparent dark:from-yellow-950/20";
@@ -151,7 +225,7 @@ function LeaderboardRow({
   return (
     <motion.div
       layout
-      layoutId={`leaderboard-entry-${entry.user.name}-${entry.rank}`}
+      layoutId={`leaderboard-entry-${entry.user.userId}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -162,17 +236,13 @@ function LeaderboardRow({
       }}
       className={getRowClassName()}
       style={{
-        gridTemplateColumns: "80px 200px 1fr 1fr 1fr 1fr 1fr 100px",
+        gridTemplateColumns: "80px 200px 1fr 1fr 1fr 1fr 100px",
         boxShadow: isTop3 ? "0 0 20px -10px rgba(0,0,0,0.1)" : "none",
       }}
     >
       {/* Rank */}
       <div className="flex items-center gap-2">
-        <RankIcon
-          type={entry.rankIcon || "none"}
-          rank={entry.rank}
-          changeDirection={entry.change.direction}
-        />
+        <RankIcon type={entry.rankIcon || "none"} rank={entry.rank} />
       </div>
 
       {/* User */}
@@ -192,7 +262,7 @@ function LeaderboardRow({
             {entry.user.isCurrentUser && (
               <Badge
                 variant="secondary"
-                className="bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700"
+                className="bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700 dark:bg-blue-900 dark:text-blue-300"
               >
                 You
               </Badge>
@@ -207,52 +277,27 @@ function LeaderboardRow({
       {/* XP */}
       <div>
         <div className="flex items-center gap-1">
-          <span className="text-xs text-green-600">⚡</span>
+          <Zap className="h-3.5 w-3.5 text-green-600" />
           <span className="text-sm font-semibold">
             {animatedXP.toLocaleString()}
           </span>
         </div>
-        <div className="flex items-center gap-1 text-xs text-green-500">
-          <TrendingUp className="h-3 w-3" />
-          <span>+{entry.xp.change}</span>
-        </div>
-      </div>
-
-      {/* Points */}
-      <div>
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-blue-600">💎</span>
-          <span className="text-sm font-semibold">
-            {animatedPoints.toLocaleString()}
-          </span>
-        </div>
-        <div className="flex items-center gap-1 text-xs text-blue-500">
-          <TrendingUp className="h-3 w-3" />
-          <span>+{entry.points.change}</span>
-        </div>
-      </div>
-
-      {/* Achievements */}
-      <div>
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-yellow-600">🏆</span>
-          <span className="text-sm font-semibold">{animatedAchievements}</span>
-        </div>
-        <div className="flex items-center gap-1 text-xs text-yellow-500">
-          <TrendingUp className="h-3 w-3" />
-          <span>+{entry.achievements.change}</span>
-        </div>
+        <ChangeValue value={entry.xp.change} color="green" />
       </div>
 
       {/* Tasks */}
       <div>
         <div className="flex items-center gap-1">
-          <span className="text-xs text-green-600">📋</span>
+          <ListChecks className="h-3.5 w-3.5 text-emerald-600" />
           <span className="text-sm font-semibold">{animatedTasks}</span>
         </div>
-        <div className="flex items-center gap-1 text-xs text-green-500">
-          <TrendingUp className="h-3 w-3" />
-          <span>+{entry.tasks.change}</span>
+      </div>
+
+      {/* Peer Reviews */}
+      <div>
+        <div className="flex items-center gap-1">
+          <Eye className="h-3.5 w-3.5 text-purple-600" />
+          <span className="text-sm font-semibold">{entry.peerReviews}</span>
         </div>
       </div>
 
@@ -263,10 +308,19 @@ function LeaderboardRow({
 
       {/* Change */}
       <div className="flex justify-center">
-        <ChangeIndicator
-          direction={entry.change.direction}
-          amount={entry.change.amount}
-        />
+        {entry.change.isNew ? (
+          <Badge
+            variant="secondary"
+            className="bg-green-100 text-xs text-green-700 dark:bg-green-900 dark:text-green-300"
+          >
+            NEW
+          </Badge>
+        ) : (
+          <ChangeIndicator
+            direction={entry.change.direction}
+            amount={entry.change.amount}
+          />
+        )}
       </div>
     </motion.div>
   );
@@ -292,7 +346,8 @@ function TeamLeaderboardRow({
       "grid min-w-[700px] gap-4 p-4 border-b border-border items-center hover:bg-muted/30 hover:shadow-md transition-all duration-200";
 
     if (entry.team.isCurrentUserTeam) {
-      baseClass += " bg-blue-50 animate-[pulse-subtle_3s_ease-in-out_infinite]";
+      baseClass +=
+        " bg-blue-50 dark:bg-blue-950/50 animate-[pulse-subtle_3s_ease-in-out_infinite]";
     } else if (isFirst) {
       baseClass +=
         " bg-gradient-to-r from-yellow-50/50 to-transparent dark:from-yellow-950/20";
@@ -307,7 +362,7 @@ function TeamLeaderboardRow({
   return (
     <motion.div
       layout
-      layoutId={`team-leaderboard-entry-${entry.team.name}-${entry.rank}`}
+      layoutId={`team-leaderboard-entry-${entry.team.teamId}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -324,11 +379,7 @@ function TeamLeaderboardRow({
     >
       {/* Rank */}
       <div className="flex items-center gap-2">
-        <RankIcon
-          type={entry.rankIcon || "none"}
-          rank={entry.rank}
-          changeDirection={entry.change.direction}
-        />
+        <RankIcon type={entry.rankIcon || "none"} rank={entry.rank} />
       </div>
 
       {/* Team */}
@@ -353,7 +404,7 @@ function TeamLeaderboardRow({
             {entry.team.isCurrentUserTeam && (
               <Badge
                 variant="secondary"
-                className="bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700"
+                className="bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700 dark:bg-blue-900 dark:text-blue-300"
               >
                 Your Team
               </Badge>
@@ -362,6 +413,8 @@ function TeamLeaderboardRow({
           <span className="text-muted-foreground text-xs">
             {entry.team.memberCount}{" "}
             {entry.team.memberCount === 1 ? "member" : "members"}
+            {entry.team.xpPerMember != null &&
+              ` · ~${Math.round(entry.team.xpPerMember).toLocaleString()} XP/member`}
           </span>
         </div>
       </div>
@@ -369,61 +422,58 @@ function TeamLeaderboardRow({
       {/* XP */}
       <div>
         <div className="flex items-center gap-1">
-          <span className="text-xs text-green-600">⚡</span>
+          <Zap className="h-3.5 w-3.5 text-green-600" />
           <span className="text-sm font-semibold">
             {animatedXP.toLocaleString()}
           </span>
         </div>
-        <div className="flex items-center gap-1 text-xs text-green-500">
-          <TrendingUp className="h-3 w-3" />
-          <span>+{entry.xp.change}</span>
-        </div>
+        <ChangeValue value={entry.xp.change} color="green" />
       </div>
 
       {/* Points */}
       <div>
         <div className="flex items-center gap-1">
-          <span className="text-xs text-blue-600">💎</span>
+          <Gem className="h-3.5 w-3.5 text-blue-600" />
           <span className="text-sm font-semibold">
             {animatedPoints.toLocaleString()}
           </span>
         </div>
-        <div className="flex items-center gap-1 text-xs text-blue-500">
-          <TrendingUp className="h-3 w-3" />
-          <span>+{entry.points.change}</span>
-        </div>
+        <ChangeValue value={entry.points.change} color="blue" />
       </div>
 
       {/* Tasks */}
       <div>
         <div className="flex items-center gap-1">
-          <span className="text-xs text-green-600">📋</span>
+          <ListChecks className="h-3.5 w-3.5 text-emerald-600" />
           <span className="text-sm font-semibold">{animatedTasks}</span>
         </div>
-        <div className="flex items-center gap-1 text-xs text-green-500">
-          <TrendingUp className="h-3 w-3" />
-          <span>+{entry.tasks.change}</span>
-        </div>
+        <ChangeValue value={entry.tasks.change} color="green" />
       </div>
 
       {/* Meetings */}
       <div>
         <div className="flex items-center gap-1">
-          <span className="text-xs text-purple-600">🤝</span>
+          <Handshake className="h-3.5 w-3.5 text-purple-600" />
           <span className="text-sm font-semibold">{animatedMeetings}</span>
         </div>
-        <div className="flex items-center gap-1 text-xs text-purple-500">
-          <TrendingUp className="h-3 w-3" />
-          <span>+{entry.meetings.change}</span>
-        </div>
+        <ChangeValue value={entry.meetings.change} color="purple" />
       </div>
 
       {/* Change */}
       <div className="flex justify-center">
-        <ChangeIndicator
-          direction={entry.change.direction}
-          amount={entry.change.amount}
-        />
+        {entry.change.isNew ? (
+          <Badge
+            variant="secondary"
+            className="bg-green-100 text-xs text-green-700 dark:bg-green-900 dark:text-green-300"
+          >
+            NEW
+          </Badge>
+        ) : (
+          <ChangeIndicator
+            direction={entry.change.direction}
+            amount={entry.change.amount}
+          />
+        )}
       </div>
     </motion.div>
   );
@@ -461,6 +511,11 @@ export default function LeaderboardPageClient({
   const [selectedWeek, setSelectedWeek] = useState<string>("current");
   const supabase = createClient();
 
+  // Reset week selector when switching tabs to avoid mismatched weeks
+  useEffect(() => {
+    setSelectedWeek("current");
+  }, [activeTab]);
+
   // React Query: Fetch available weeks (individual)
   const { data: availableWeeks = initialAvailableWeeks } = useQuery({
     queryKey: ["leaderboard", "availableWeeks"],
@@ -493,12 +548,10 @@ export default function LeaderboardPageClient({
       );
 
       return Array.from(weekMap.values()).map((week) => {
-        const startOfYear = new Date(week.week_year, 0, 1);
-        const daysOffset = (week.week_number - 1) * 7;
-        const weekStart = new Date(
-          startOfYear.getTime() + daysOffset * 24 * 60 * 60 * 1000
+        const { weekStart, weekEnd } = getISOWeekBoundaries(
+          week.week_year,
+          week.week_number
         );
-        const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
 
         return {
           ...week,
@@ -508,6 +561,7 @@ export default function LeaderboardPageClient({
       });
     },
     initialData: initialAvailableWeeks,
+    staleTime: 60_000,
   });
 
   // React Query: Fetch available weeks (teams)
@@ -542,12 +596,10 @@ export default function LeaderboardPageClient({
       );
 
       return Array.from(weekMap.values()).map((week) => {
-        const startOfYear = new Date(week.week_year, 0, 1);
-        const daysOffset = (week.week_number - 1) * 7;
-        const weekStart = new Date(
-          startOfYear.getTime() + daysOffset * 24 * 60 * 60 * 1000
+        const { weekStart, weekEnd } = getISOWeekBoundaries(
+          week.week_year,
+          week.week_number
         );
-        const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
 
         return {
           ...week,
@@ -557,34 +609,38 @@ export default function LeaderboardPageClient({
       });
     },
     initialData: initialTeamAvailableWeeks,
+    staleTime: 60_000,
   });
 
   // React Query: Fetch individual leaderboard data
   const { data: rawDbData = initialData, isPending: loading } = useQuery({
     queryKey: ["leaderboard", "data", selectedWeek],
     queryFn: async () => {
-      let weekNumber: number | undefined;
-      let weekYear: number | undefined;
-
-      if (selectedWeek !== "current") {
+      if (selectedWeek === "current") {
+        // Use live RPC for current week (real-time, no snapshots)
+        const { data, error } = await (supabase as any).rpc(
+          "get_live_leaderboard_data",
+          { p_limit: 50 }
+        );
+        if (error) throw error;
+        return data || [];
+      } else {
+        // Use snapshot RPC for historical weeks (always alltime)
         const [year, week] = selectedWeek.split("-").map(Number);
-        weekYear = year;
-        weekNumber = week;
+        const { data, error } = await (supabase as any).rpc(
+          "get_leaderboard_data",
+          {
+            p_limit: 50,
+            p_week_number: week,
+            p_week_year: year,
+          }
+        );
+        if (error) throw error;
+        return data || [];
       }
-
-      const { data, error } = await (supabase as any).rpc(
-        "get_leaderboard_data",
-        {
-          p_limit: 50,
-          p_week_number: weekNumber || null,
-          p_week_year: weekYear || null,
-        }
-      );
-
-      if (error) throw error;
-      return data || [];
     },
     initialData: selectedWeek === "current" ? initialData : undefined,
+    staleTime: 60_000,
   });
 
   // React Query: Fetch team leaderboard data
@@ -592,42 +648,45 @@ export default function LeaderboardPageClient({
     useQuery({
       queryKey: ["leaderboard", "teams", selectedWeek],
       queryFn: async () => {
-        let weekNumber: number | undefined;
-        let weekYear: number | undefined;
-
-        if (selectedWeek !== "current") {
+        if (selectedWeek === "current") {
+          // Use live RPC for current week (real-time, no snapshots)
+          const { data, error } = await (supabase as any).rpc(
+            "get_live_team_leaderboard_data",
+            { p_limit: 50 }
+          );
+          if (error) throw error;
+          return data || [];
+        } else {
+          // Use snapshot RPC for historical weeks
           const [year, week] = selectedWeek.split("-").map(Number);
-          weekYear = year;
-          weekNumber = week;
+          const { data, error } = await (supabase as any).rpc(
+            "get_team_leaderboard_data",
+            {
+              p_limit: 50,
+              p_week_number: week,
+              p_week_year: year,
+            }
+          );
+          if (error) throw error;
+          return data || [];
         }
-
-        const { data, error } = await (supabase as any).rpc(
-          "get_team_leaderboard_data",
-          {
-            p_limit: 50,
-            p_week_number: weekNumber || null,
-            p_week_year: weekYear || null,
-          }
-        );
-
-        if (error) throw error;
-        return data || [];
       },
       initialData: selectedWeek === "current" ? initialTeamData : undefined,
+      staleTime: 60_000,
     });
+
+  // Stable string key for streak user IDs (avoids new array reference every render)
+  const streakUserIds = useMemo(
+    () => rawDbData?.map((e: any) => e.user_id)?.join(",") ?? "",
+    [rawDbData]
+  );
 
   // React Query: Fetch streaks for current leaderboard data
   const { data: userStreaks = new Map(), isPending: streaksLoading } = useQuery(
     {
-      queryKey: [
-        "leaderboard",
-        "streaks",
-        rawDbData?.map((e: DBLeaderboardEntry) => e.user_id),
-      ],
+      queryKey: ["leaderboard", "streaks", streakUserIds],
       queryFn: async () => {
-        const userIds = rawDbData.map(
-          (entry: DBLeaderboardEntry) => entry.user_id
-        );
+        const userIds = streakUserIds.split(",").filter(Boolean);
         if (userIds.length === 0) return new Map();
 
         const response = await fetch("/api/leaderboard/streaks", {
@@ -642,6 +701,7 @@ export default function LeaderboardPageClient({
         return new Map(Object.entries(streaks));
       },
       enabled: rawDbData.length > 0,
+      staleTime: 60_000,
     }
   );
 
@@ -658,6 +718,25 @@ export default function LeaderboardPageClient({
       convertToTeamLeaderboardEntry(entry, userTeamIds)
     );
   }, [rawTeamDbData, userTeamIds]);
+
+  // Most improved user this week (highest percentage XP gain)
+  const mostImproved = useMemo(() => {
+    if (!leaderboardData?.length) return null;
+    return (
+      leaderboardData
+        .filter((e: LeaderboardEntry) => e.xp.change > 0)
+        .sort((a: LeaderboardEntry, b: LeaderboardEntry) => {
+          const prevA = a.xp.current - a.xp.change;
+          const prevB = b.xp.current - b.xp.change;
+          // If previous XP was 0 (brand new), cap percentage at the absolute change value
+          const pctA = prevA > 0 ? (a.xp.change / prevA) * 100 : a.xp.change;
+          const pctB = prevB > 0 ? (b.xp.change / prevB) * 100 : b.xp.change;
+          // Tie-break by absolute change
+          if (pctB !== pctA) return pctB - pctA;
+          return b.xp.change - a.xp.change;
+        })[0] ?? null
+    );
+  }, [leaderboardData]);
 
   // Current weeks list depends on active tab
   const currentWeeks =
@@ -719,159 +798,297 @@ export default function LeaderboardPageClient({
                 })}
               </SelectContent>
             </Select>
-
-            <Button
-              variant="outline"
-              className="flex items-center gap-2"
-              disabled
-              title="Coming soon"
-            >
-              <BookOpen className="h-4 w-4" />
-              Read About Rankings
-            </Button>
           </div>
         </div>
       </Tabs>
 
-      {/* Individual Leaderboard Table */}
+      {/* Context label */}
+      <p className="text-muted-foreground text-xs">
+        {selectedWeek === "current"
+          ? "Live rankings — changes since last Monday"
+          : (() => {
+              const week = currentWeeks.find(
+                (w) => `${w.week_year}-${w.week_number}` === selectedWeek
+              );
+              if (!week) return "Historical snapshot";
+              const start = new Date(week.week_start + "T00:00:00");
+              const end = new Date(week.week_end + "T00:00:00");
+              const fmt = (d: Date) =>
+                d.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                });
+              return `Snapshot from ${fmt(start)}–${fmt(end)}`;
+            })()}
+      </p>
+
+      {/* Most Improved — only show for current week */}
+      {activeTab === "individual" &&
+        selectedWeek === "current" &&
+        mostImproved &&
+        mostImproved.xp.change > 0 && (
+          <div className="flex items-center gap-3 rounded-lg border border-amber-200/50 bg-gradient-to-r from-amber-50 to-transparent p-3 dark:from-amber-950/20">
+            <Flame className="h-5 w-5 text-amber-500" />
+            <div>
+              <span className="text-sm font-medium">
+                {mostImproved.user.name}
+              </span>
+              <span className="text-muted-foreground ml-2 text-xs">
+                Most improved this week — +
+                {mostImproved.xp.change.toLocaleString()} XP
+              </span>
+            </div>
+          </div>
+        )}
+
+      {/* Individual Leaderboard */}
       {activeTab === "individual" && (
         <Card className="border-none shadow-none">
-          <CardContent className="overflow-x-auto p-0">
-            <div
-              className="border-border text-muted-foreground grid min-w-[800px] gap-4 border-b p-4 text-sm font-medium"
-              style={{
-                gridTemplateColumns: "80px 200px 1fr 1fr 1fr 1fr 1fr 100px",
-              }}
-            >
-              <div>Rank</div>
-              <div>User</div>
-              <div>XP</div>
-              <div>Points</div>
-              <div>Achievements</div>
-              <div>Tasks</div>
-              <div>Streak</div>
-              <div className="text-center">Change</div>
+          <CardContent className="p-0">
+            {/* Desktop table (sm+) */}
+            <div className="hidden overflow-x-auto sm:block">
+              <div
+                className="border-border text-muted-foreground grid min-w-[700px] gap-4 border-b p-4 text-sm font-medium"
+                style={{
+                  gridTemplateColumns: "80px 200px 1fr 1fr 1fr 1fr 100px",
+                }}
+              >
+                <div>Rank</div>
+                <div>User</div>
+                <div>XP</div>
+                <div>Tasks</div>
+                <div>Reviews</div>
+                <div>Streak</div>
+                <div className="text-center">Change</div>
+              </div>
+
+              <AnimatePresence mode="wait">
+                {loading ? (
+                  <motion.div
+                    key="skeleton"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="p-6"
+                  >
+                    <LeaderboardSkeleton />
+                  </motion.div>
+                ) : leaderboardData.length > 0 ? (
+                  <motion.div
+                    key="data"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <AnimatePresence mode="popLayout">
+                      {leaderboardData.map(
+                        (item: LeaderboardEntry, index: number) => (
+                          <LeaderboardRow
+                            key={`${item.user.name}-${item.rank}`}
+                            entry={item}
+                            index={index}
+                          />
+                        )
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-muted-foreground p-8 text-center"
+                  >
+                    {selectedWeek === "current" ? (
+                      <p>No leaderboard data available yet.</p>
+                    ) : (
+                      <>
+                        <p>No data available for this week.</p>
+                        <p className="mt-1 text-sm">
+                          Weekly snapshots will be generated automatically.
+                        </p>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            <AnimatePresence mode="wait">
-              {loading ? (
-                <motion.div
-                  key="skeleton"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="p-6"
-                >
-                  <LeaderboardSkeleton />
-                </motion.div>
-              ) : leaderboardData.length > 0 ? (
-                <motion.div
-                  key="data"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <AnimatePresence mode="popLayout">
-                    {leaderboardData.map(
-                      (item: LeaderboardEntry, index: number) => (
-                        <LeaderboardRow
-                          key={`${item.user.name}-${item.rank}`}
-                          entry={item}
-                          index={index}
-                        />
-                      )
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="text-muted-foreground p-8 text-center"
-                >
-                  <p>No leaderboard data available for this week.</p>
-                  <p className="mt-1 text-sm">
-                    Weekly snapshots will be generated automatically.
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Mobile cards (<sm) */}
+            <div className="block sm:hidden">
+              <AnimatePresence mode="wait">
+                {loading ? (
+                  <motion.div
+                    key="skeleton-mobile"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="p-6"
+                  >
+                    <LeaderboardSkeleton />
+                  </motion.div>
+                ) : leaderboardData.length > 0 ? (
+                  <motion.div
+                    key="data-mobile"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <AnimatePresence mode="popLayout">
+                      {leaderboardData.map(
+                        (item: LeaderboardEntry, index: number) => (
+                          <LeaderboardMobileRow
+                            key={`mobile-${item.user.name}-${item.rank}`}
+                            entry={item}
+                            index={index}
+                          />
+                        )
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="empty-mobile"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-muted-foreground p-8 text-center"
+                  >
+                    <p>No leaderboard data available yet.</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Team Leaderboard Table */}
+      {/* Team Leaderboard */}
       {activeTab === "teams" && (
         <Card className="border-none shadow-none">
-          <CardContent className="overflow-x-auto p-0">
-            <div
-              className="border-border text-muted-foreground grid min-w-[700px] gap-4 border-b p-4 text-sm font-medium"
-              style={{
-                gridTemplateColumns: "80px 200px 1fr 1fr 1fr 1fr 100px",
-              }}
-            >
-              <div>Rank</div>
-              <div>Team</div>
-              <div>XP</div>
-              <div>Points</div>
-              <div>Tasks</div>
-              <div>Meetings</div>
-              <div className="text-center">Change</div>
+          <CardContent className="p-0">
+            {/* Desktop table (sm+) */}
+            <div className="hidden overflow-x-auto sm:block">
+              <div
+                className="border-border text-muted-foreground grid min-w-[700px] gap-4 border-b p-4 text-sm font-medium"
+                style={{
+                  gridTemplateColumns: "80px 200px 1fr 1fr 1fr 1fr 100px",
+                }}
+              >
+                <div>Rank</div>
+                <div>Team</div>
+                <div>XP</div>
+                <div>Points</div>
+                <div>Tasks</div>
+                <div>Meetings</div>
+                <div className="text-center">Change</div>
+              </div>
+
+              <AnimatePresence mode="wait">
+                {teamLoading ? (
+                  <motion.div
+                    key="team-skeleton"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="p-6"
+                  >
+                    <LeaderboardSkeleton />
+                  </motion.div>
+                ) : teamLeaderboardData.length > 0 ? (
+                  <motion.div
+                    key="team-data"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <AnimatePresence mode="popLayout">
+                      {teamLeaderboardData.map(
+                        (item: TeamLeaderboardEntry, index: number) => (
+                          <TeamLeaderboardRow
+                            key={`${item.team.name}-${item.rank}`}
+                            entry={item}
+                            index={index}
+                          />
+                        )
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="team-empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-muted-foreground p-8 text-center"
+                  >
+                    {selectedWeek === "current" ? (
+                      <p>No team leaderboard data available yet.</p>
+                    ) : (
+                      <>
+                        <p>No team data available for this week.</p>
+                        <p className="mt-1 text-sm">
+                          Weekly snapshots will be generated automatically.
+                        </p>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            <AnimatePresence mode="wait">
-              {teamLoading ? (
-                <motion.div
-                  key="team-skeleton"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="p-6"
-                >
-                  <LeaderboardSkeleton />
-                </motion.div>
-              ) : teamLeaderboardData.length > 0 ? (
-                <motion.div
-                  key="team-data"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <AnimatePresence mode="popLayout">
-                    {teamLeaderboardData.map(
-                      (item: TeamLeaderboardEntry, index: number) => (
-                        <TeamLeaderboardRow
-                          key={`${item.team.name}-${item.rank}`}
-                          entry={item}
-                          index={index}
-                        />
-                      )
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="team-empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="text-muted-foreground p-8 text-center"
-                >
-                  <p>No team leaderboard data available for this week.</p>
-                  <p className="mt-1 text-sm">
-                    Weekly snapshots will be generated automatically.
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Mobile cards (<sm) */}
+            <div className="block sm:hidden">
+              <AnimatePresence mode="wait">
+                {teamLoading ? (
+                  <motion.div
+                    key="team-skeleton-mobile"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="p-6"
+                  >
+                    <LeaderboardSkeleton />
+                  </motion.div>
+                ) : teamLeaderboardData.length > 0 ? (
+                  <motion.div
+                    key="team-data-mobile"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <AnimatePresence mode="popLayout">
+                      {teamLeaderboardData.map(
+                        (item: TeamLeaderboardEntry, index: number) => (
+                          <TeamLeaderboardMobileRow
+                            key={`team-mobile-${item.team.name}-${item.rank}`}
+                            entry={item}
+                            index={index}
+                          />
+                        )
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="team-empty-mobile"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-muted-foreground p-8 text-center"
+                  >
+                    <p>No team leaderboard data available yet.</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </CardContent>
         </Card>
       )}

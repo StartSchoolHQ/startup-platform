@@ -1,6 +1,7 @@
 export interface LeaderboardEntry {
   rank: number;
   user: {
+    userId: string;
     name: string;
     avatar: string;
     teams: string;
@@ -22,6 +23,8 @@ export interface LeaderboardEntry {
     current: number;
     change: number;
   };
+  weeklyReports: number;
+  peerReviews: number;
   streak: {
     days: number;
     type: "active" | "warning" | "inactive";
@@ -29,6 +32,7 @@ export interface LeaderboardEntry {
   change: {
     direction: "up" | "down" | "none";
     amount: number;
+    isNew?: boolean;
   };
   rankIcon?: "crown" | "trophy" | "medal" | "flame" | "none";
 }
@@ -36,10 +40,12 @@ export interface LeaderboardEntry {
 export interface TeamLeaderboardEntry {
   rank: number;
   team: {
+    teamId: string;
     name: string;
     logoUrl?: string;
     memberCount: number;
     isCurrentUserTeam?: boolean;
+    xpPerMember?: number;
   };
   xp: {
     current: number;
@@ -60,6 +66,7 @@ export interface TeamLeaderboardEntry {
   change: {
     direction: "up" | "down" | "none";
     amount: number;
+    isNew?: boolean;
   };
   rankIcon?: "crown" | "trophy" | "medal" | "none";
 }

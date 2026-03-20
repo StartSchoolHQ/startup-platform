@@ -1,26 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Simple count-up animation hook
- * Animates a number from 0 to the target value
+ * Animates a number from previous value to the target value
+ * Never flashes to 0 on re-renders
  */
 export function useCountUp(
   targetValue: number,
   duration: number = 800
 ): number {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(targetValue);
+  const prevValueRef = useRef<number | null>(null);
+  const frameRef = useRef<number>(0);
 
   useEffect(() => {
-    // Reset when target changes
-    setCount(0);
-
-    // Skip animation for 0
-    if (targetValue === 0) {
-      return;
-    }
+    const startValue =
+      prevValueRef.current !== null ? prevValueRef.current : targetValue;
+    prevValueRef.current = targetValue;
 
     const startTime = Date.now();
-    const startValue = 0;
 
     const animate = () => {
       const now = Date.now();
@@ -36,16 +34,16 @@ export function useCountUp(
       setCount(current);
 
       if (progress < 1) {
-        requestAnimationFrame(animate);
+        frameRef.current = requestAnimationFrame(animate);
       } else {
         setCount(targetValue); // Ensure we end exactly at target
       }
     };
 
-    const animationFrame = requestAnimationFrame(animate);
+    frameRef.current = requestAnimationFrame(animate);
 
     return () => {
-      cancelAnimationFrame(animationFrame);
+      cancelAnimationFrame(frameRef.current);
     };
   }, [targetValue, duration]);
 
