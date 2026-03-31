@@ -7,6 +7,7 @@ export interface StatsCard {
   subtitle: string;
   icon: LucideIcon;
   iconColor: string;
+  href?: string;
 }
 
 export interface TeamStat {

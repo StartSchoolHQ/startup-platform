@@ -8,14 +8,29 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { usePathname } from "next/navigation";
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WeeklyReportBanner } from "@/components/dashboard/weekly-report-banner";
+
+const pageNames: Record<string, string> = {
+  admin: "Admin",
+  leaderboard: "Leaderboard",
+  "my-journey": "My Journey",
+  "peer-review": "Peer Review",
+  "team-journey": "All Teams",
+  "transaction-history": "Transaction History",
+  support: "Support",
+  account: "Account",
+  invitations: "Invitations",
+};
 
 function PageLoader() {
   return (
@@ -41,6 +56,17 @@ export function DashboardLayoutClient({
   children: React.ReactNode;
 }) {
   const { loading } = useApp();
+  const pathname = usePathname();
+
+  // Derive current page name from pathname
+  const segments = pathname.replace(/^\/dashboard\/?/, "").split("/");
+  const currentPageSlug = segments[0] || "";
+  const currentPageName = currentPageSlug
+    ? (pageNames[currentPageSlug] ??
+      currentPageSlug
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase()))
+    : "";
 
   return (
     <SidebarProvider>
@@ -53,10 +79,16 @@ export function DashboardLayoutClient({
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/dashboard">
-                    StartSchool Startup Module
-                  </BreadcrumbLink>
+                  <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
                 </BreadcrumbItem>
+                {currentPageName && (
+                  <>
+                    <BreadcrumbSeparator className="hidden md:block" />
+                    <BreadcrumbItem className="hidden md:block">
+                      <BreadcrumbPage>{currentPageName}</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </>
+                )}
               </BreadcrumbList>
             </Breadcrumb>
           </div>

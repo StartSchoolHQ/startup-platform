@@ -49,7 +49,7 @@ const navMainItems = [
     hidden: true,
   },
   {
-    title: "All Products",
+    title: "All Teams",
     url: "/dashboard/team-journey",
     icon: Users,
   },

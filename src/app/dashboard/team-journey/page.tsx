@@ -231,13 +231,13 @@ export default function TeamJourneyPage() {
   const getHeaderText = () => {
     switch (activeTab) {
       case "all-products":
-        return "All Products";
+        return "All Teams";
       case "my-products":
-        return "My Products";
+        return "My Teams";
       case "archive":
         return "Archive";
       default:
-        return "All Products";
+        return "All Teams";
     }
   };
 
@@ -263,8 +263,8 @@ export default function TeamJourneyPage() {
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <TabsList className="grid w-full grid-cols-3 sm:w-fit">
-              <TabsTrigger value="all-products">All Products</TabsTrigger>
-              <TabsTrigger value="my-products">My Products</TabsTrigger>
+              <TabsTrigger value="all-products">All Teams</TabsTrigger>
+              <TabsTrigger value="my-products">My Teams</TabsTrigger>
               <TabsTrigger value="archive">Archive</TabsTrigger>
             </TabsList>
 

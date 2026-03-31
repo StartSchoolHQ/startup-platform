@@ -17,7 +17,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   Eye,
-  Flame,
   Gem,
   Handshake,
   ListChecks,
@@ -719,25 +718,6 @@ export default function LeaderboardPageClient({
     );
   }, [rawTeamDbData, userTeamIds]);
 
-  // Most improved user this week (highest percentage XP gain)
-  const mostImproved = useMemo(() => {
-    if (!leaderboardData?.length) return null;
-    return (
-      leaderboardData
-        .filter((e: LeaderboardEntry) => e.xp.change > 0)
-        .sort((a: LeaderboardEntry, b: LeaderboardEntry) => {
-          const prevA = a.xp.current - a.xp.change;
-          const prevB = b.xp.current - b.xp.change;
-          // If previous XP was 0 (brand new), cap percentage at the absolute change value
-          const pctA = prevA > 0 ? (a.xp.change / prevA) * 100 : a.xp.change;
-          const pctB = prevB > 0 ? (b.xp.change / prevB) * 100 : b.xp.change;
-          // Tie-break by absolute change
-          if (pctB !== pctA) return pctB - pctA;
-          return b.xp.change - a.xp.change;
-        })[0] ?? null
-    );
-  }, [leaderboardData]);
-
   // Current weeks list depends on active tab
   const currentWeeks =
     activeTab === "individual" ? availableWeeks : teamAvailableWeeks;
@@ -821,25 +801,6 @@ export default function LeaderboardPageClient({
               return `Snapshot from ${fmt(start)}–${fmt(end)}`;
             })()}
       </p>
-
-      {/* Most Improved — only show for current week */}
-      {activeTab === "individual" &&
-        selectedWeek === "current" &&
-        mostImproved &&
-        mostImproved.xp.change > 0 && (
-          <div className="flex items-center gap-3 rounded-lg border border-amber-200/50 bg-gradient-to-r from-amber-50 to-transparent p-3 dark:from-amber-950/20">
-            <Flame className="h-5 w-5 text-amber-500" />
-            <div>
-              <span className="text-sm font-medium">
-                {mostImproved.user.name}
-              </span>
-              <span className="text-muted-foreground ml-2 text-xs">
-                Most improved this week — +
-                {mostImproved.xp.change.toLocaleString()} XP
-              </span>
-            </div>
-          </div>
-        )}
 
       {/* Individual Leaderboard */}
       {activeTab === "individual" && (

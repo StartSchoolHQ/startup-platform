@@ -1,100 +1,180 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useApp } from "@/contexts/app-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import {
   Users,
-  FileText,
-  WandSparkles,
   CheckCircle2,
   Zap,
   CreditCard,
+  Target,
+  CheckCircle,
   Building2,
-  User,
   AlertCircle,
   RefreshCw,
+  Trophy,
 } from "lucide-react";
-import { IndividualWeeklyReportModal } from "@/components/weekly-reports/individual-weekly-report-modal";
-import { hasUserSubmittedThisWeekIndividual } from "@/lib/weekly-reports";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
-import {
-  TeamItem,
-  ActivityItem,
-  StatItem,
-} from "@/components/dashboard/dashboard-items";
-import { BorderedContainer } from "@/components/dashboard/bordered-container";
+import { TeamItem, StatItem } from "@/components/dashboard/dashboard-items";
 import { IconContainer } from "@/components/dashboard/icon-container";
 import { StatsGridSkeleton } from "@/components/ui/stats-grid-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  getStatsCards,
-  getTeamProgressData,
-  getPersonalProgressData,
-} from "@/data/dashboard-data";
+// WhatsNextCard hidden temporarily — uncomment to re-enable
+// import { WhatsNextCard } from "@/components/dashboard/whats-next-card";
 // Onborda disabled temporarily — uncomment to re-enable
 // import { DashboardTourTrigger } from "@/components/onboarding/dashboard-tour-trigger";
-import { useState } from "react";
-import {
-  StatsCard,
-  TeamProgressData,
-  PersonalProgressData,
-} from "@/types/dashboard";
+import { useMemo } from "react";
+import { StatsCard, TeamProgressData } from "@/types/dashboard";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
 
 export default function OverviewPage() {
   const { firstName, user } = useApp();
   const queryClient = useQueryClient();
-  const [isIndividualReportModalOpen, setIsIndividualReportModalOpen] =
-    useState(false);
 
-  // React Query: Stats cards
+  // React Query: Consolidated dashboard overview (single RPC call)
   const {
-    data: statsCards = [],
-    isPending: isLoadingStats,
-    isError: isStatsError,
+    data: dashboardOverview,
+    isPending: isLoadingOverview,
+    isError: isOverviewError,
   } = useQuery({
-    queryKey: ["dashboard", "stats", user?.id],
-    queryFn: () => getStatsCards(user!.id),
+    queryKey: ["dashboard", "overview", user?.id],
+    queryFn: async () => {
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc(
+        "get_dashboard_overview",
+        { p_user_id: user!.id }
+      );
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
     enabled: !!user?.id,
+    staleTime: 60_000,
   });
 
-  // React Query: Team progress
-  const {
-    data: teamProgressData,
-    isPending: isLoadingTeam,
-    isError: isTeamError,
-  } = useQuery({
-    queryKey: ["dashboard", "teamProgress", user?.id],
-    queryFn: () => getTeamProgressData(user!.id),
+  // Derive stats cards from the consolidated overview response
+  const statsCards: StatsCard[] = useMemo(() => {
+    if (!dashboardOverview) return [];
+    return [
+      {
+        id: "onborda-xp-balance",
+        title: "XP Balance",
+        value: (dashboardOverview.total_xp ?? 0).toString(),
+        subtitle: "Total experience points",
+        icon: Zap,
+        iconColor: "text-amber-500",
+        href: "/dashboard/transaction-history",
+      },
+      {
+        id: "onborda-points-balance",
+        title: "Points Balance",
+        value: (dashboardOverview.total_points ?? 0).toString(),
+        subtitle: "Available startup capital",
+        icon: CreditCard,
+        iconColor: "text-emerald-500",
+        href: "/dashboard/transaction-history",
+      },
+      {
+        id: "onborda-achievements",
+        title: "Achievements",
+        value: `${dashboardOverview.completed_achievements ?? 0}/${dashboardOverview.total_achievements ?? 0}`,
+        subtitle: "Team achievements unlocked",
+        icon: Target,
+        iconColor: "text-purple-500",
+        href: "/dashboard/team-journey",
+      },
+      {
+        id: "onborda-tasks",
+        title: "Tasks",
+        value: `${dashboardOverview.completed_tasks ?? 0}/${dashboardOverview.total_tasks ?? 0}`,
+        subtitle: "Team tasks completed",
+        icon: CheckCircle,
+        iconColor: "text-blue-500",
+        href: "/dashboard/team-journey",
+      },
+    ];
+  }, [dashboardOverview]);
+
+  // Derive team progress data from the consolidated overview response
+  const teamProgressData: TeamProgressData | null = useMemo(() => {
+    if (!dashboardOverview) return null;
+
+    const teamsRaw = dashboardOverview.teams_data ?? [];
+    const hasTeams = teamsRaw.length > 0;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const teams = teamsRaw.map((t: any) => ({
+      id: t.team_id,
+      name: t.team_name,
+      memberCount: t.member_count ?? 0,
+      completedTasks: t.completed_tasks ?? 0,
+      totalXP: t.team_xp ?? 0,
+      totalPoints: t.team_points ?? 0,
+    }));
+
+    // Aggregate stats only shown when user belongs to multiple teams
+    const stats =
+      hasTeams && teams.length > 1
+        ? [
+            {
+              value: teams
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .reduce((sum: number, t: any) => sum + (t.totalPoints ?? 0), 0)
+                .toString(),
+              label: "Total Team Points",
+              icon: CreditCard,
+              iconColor: "text-black",
+            },
+            {
+              value: teams
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .reduce((sum: number, t: any) => sum + (t.totalXP ?? 0), 0)
+                .toString(),
+              label: "Total Team XP",
+              icon: Zap,
+              iconColor: "text-black",
+            },
+          ]
+        : [];
+
+    return {
+      title: "Your Teams Progress",
+      joinTeamsText: "View Teams",
+      hasTeams,
+      stats,
+      teams,
+    };
+  }, [dashboardOverview]);
+
+  // React Query: Action items from RPC
+  const { data: actionItems } = useQuery({
+    queryKey: ["dashboard", "actionItems", user?.id],
+    queryFn: async () => {
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc(
+        "get_dashboard_action_items",
+        { p_user_id: user!.id }
+      );
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
     enabled: !!user?.id,
+    staleTime: 60_000,
   });
 
-  // React Query: Personal progress
-  // TODO: Re-enable for full release
-  // const { data: personalProgressData, isPending: isLoadingPersonal } = useQuery(
-  //   {
-  //     queryKey: ["dashboard", "personalProgress", user?.id],
-  //     queryFn: () => getPersonalProgressData(user!.id),
-  //     enabled: !!user?.id,
-  //   }
-  // );
-  const personalProgressData = null;
-  const isLoadingPersonal = false;
+  // WhatsNextCard hidden — uncomment queries below when re-enabling
+  // const { data: hasSubmittedThisWeek = false, isPending: isLoadingSubmission } = useQuery({...});
+  // const { data: pendingTasks = [] } = useQuery({...});
 
-  // React Query: Weekly report submission status
-  const { data: hasSubmittedThisWeek = false, isPending: isLoadingSubmission } =
-    useQuery({
-      queryKey: ["dashboard", "weeklySubmission", user?.id],
-      queryFn: () => hasUserSubmittedThisWeekIndividual(user!.id),
-      enabled: !!user?.id,
-    });
-
-  const loading =
-    isLoadingStats || isLoadingTeam || isLoadingPersonal || isLoadingSubmission;
-  const hasError = isStatsError || isTeamError;
+  const loading = isLoadingOverview;
+  const hasError = isOverviewError;
 
   if (loading) {
     return (
@@ -104,6 +184,7 @@ export default function OverviewPage() {
           <p className="text-muted-foreground">Loading your dashboard...</p>
         </div>
         <StatsGridSkeleton />
+        <Skeleton className="h-48 w-full rounded-lg" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
@@ -166,6 +247,25 @@ export default function OverviewPage() {
         <p className="text-muted-foreground">
           Here you can see progress for you and your team
         </p>
+
+        {/* Leaderboard rank badge */}
+        {actionItems && actionItems.leaderboard_rank > 0 && (
+          <Link
+            href="/dashboard/leaderboard"
+            className="text-muted-foreground hover:text-foreground mt-2 inline-flex items-center gap-2 text-sm transition-colors"
+          >
+            <Trophy className="h-4 w-4 text-amber-500" />
+            <span>
+              Ranked <strong>#{actionItems.leaderboard_rank}</strong> of{" "}
+              {actionItems.leaderboard_total_users}
+            </span>
+            {actionItems.leaderboard_xp_change > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                +{actionItems.leaderboard_xp_change} XP this week
+              </Badge>
+            )}
+          </Link>
+        )}
       </div>
 
       {/* Stats cards grid */}
@@ -189,22 +289,25 @@ export default function OverviewPage() {
               subtitle={card.subtitle}
               icon={card.icon}
               iconColor={card.iconColor}
+              href={card.href}
             />
           </motion.div>
         ))}
       </div>
 
+      {/* What's Next action section — hidden for now */}
+      {/* {actionItems && (
+        <WhatsNextCard
+          pendingTasksCount={actionItems.pending_tasks_count ?? 0}
+          pendingReviewsCount={actionItems.pending_reviews_count ?? 0}
+          pendingTasks={pendingTasks}
+        />
+      )} */}
+
       {/* Progress cards */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6">
         {teamProgressData && <TeamProgressCard data={teamProgressData} />}
-        {/* TODO: Re-enable Personal Progress for full release */}
-        {/* {personalProgressData && (
-          <PersonalProgressCard
-            data={personalProgressData}
-            hasSubmittedThisWeek={hasSubmittedThisWeek}
-            onOpenReportModal={() => setIsIndividualReportModalOpen(true)}
-          />
-        )} */}
+        {/* TODO: Re-enable Personal Progress for full release (next year's batch) */}
       </div>
 
       {/* Individual Weekly Report Modal */}
@@ -334,8 +437,8 @@ function TeamProgressCard({ data }: { data: TeamProgressData }) {
   );
 }
 
-// Progress card component for personal
-function PersonalProgressCard({
+// TODO: Re-enable PersonalProgressCard for full release
+/* function PersonalProgressCard({
   data,
   hasSubmittedThisWeek,
   onOpenReportModal,
@@ -360,14 +463,12 @@ function PersonalProgressCard({
       </CardHeader>
       <CardContent className="flex flex-1 flex-col">
         <div className="flex-1 space-y-6">
-          {/* Stats row */}
           <div className="grid grid-cols-2 gap-4">
             {data.stats.map((stat, index) => (
               <StatItem key={index} stat={stat} />
             ))}
           </div>
 
-          {/* Activities */}
           <div className="grid grid-cols-2 gap-4">
             {data.activities.map((activity, index) => (
               <ActivityItem key={index} activity={activity} />
@@ -375,7 +476,6 @@ function PersonalProgressCard({
           </div>
         </div>
 
-        {/* Action buttons */}
         <div className="mt-6">
           <BorderedContainer className="w-full justify-center">
             <Button
@@ -406,4 +506,4 @@ function PersonalProgressCard({
       </CardContent>
     </Card>
   );
-}
+} */

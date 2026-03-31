@@ -87,67 +87,9 @@ interface ProductDetailPageProps {
   }>;
 }
 
-interface Strike {
-  id: string;
-  title: string;
-  datetime: string;
-  status: "explained" | "waiting-explanation" | "rejected" | "resolved";
-  action: "done" | "explain" | "rejected";
-  rejectionReason?: string;
-}
-
-interface WeeklyReportSubmission {
-  submission_data?: {
-    whatDidYouDoThisWeek?: string;
-    whatWereYourBlockers?: string;
-    whatWasYourBiggestAchievement?: string;
-    clientsContacted?: number;
-    meetingsHeld?: number;
-  };
-  users?: {
-    name?: string;
-    avatar_url?: string;
-  };
-}
-
-interface WeeklyReport {
-  id: string;
-  week: string;
-  dateRange: string;
-  weeklyFill: {
-    avatars: string[];
-    names: string[];
-  };
-  clients: number;
-  meetings: number;
-  status: "complete" | "done" | "missed";
-  submissions?: WeeklyReportSubmission[];
-}
-
-interface TeamDetails {
-  id: string;
-  name: string;
-  description: string | null;
-  website?: string | null;
-  logo_url?: string | null;
-  status: "active" | "archived";
-  created_at: string | null;
-  member_count: number | null;
-  strikes_count?: number | null;
-  members: {
-    user_id: string;
-    team_role: string | null;
-    joined_at: string | null;
-    users: {
-      name: string | null;
-      email: string;
-      avatar_url: string | null;
-      graduation_level: number | null;
-      total_xp: number;
-      total_points: number;
-    } | null;
-  }[];
-}
+// TODO: Re-enable Strike, WeeklyReport when weekly reports section is added
+// interface Strike { ... }
+// interface WeeklyReport { ... }
 
 export default function ProductDetailPage(props: ProductDetailPageProps) {
   const params = use(props.params);
@@ -184,15 +126,8 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
     [searchParams, router]
   );
 
-  // Extract team ID from params (needed for queries)
-  const [teamId, setTeamId] = useState<string | null>(null);
-  useEffect(() => {
-    const extractId = async () => {
-      const { id } = await params;
-      setTeamId(id);
-    };
-    extractId();
-  }, [params]);
+  // Team ID from params (already unwrapped by use())
+  const teamId = params.id;
 
   // UI state only
   const [activeModal, setActiveModal] = useState<
@@ -733,7 +668,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                 }
               );
             }
-          } catch (error) {
+          } catch {
             // Fallback to invalidation
             queryClient.invalidateQueries({
               queryKey: ["teamJourney", "achievements", teamId, user?.id],
@@ -842,6 +777,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
     }
 
     return tasks;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAchievementId, statusFilter, teammateFilter, allTasks]);
 
   // Countdown timer for refresh button
@@ -853,6 +789,35 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
       return () => clearTimeout(timer);
     }
   }, [refreshCountdown]);
+
+  const renderMemberCard = (member: any) => (
+    <div
+      key={member.user_id}
+      className="border-border group flex items-center gap-3 rounded-md border p-2"
+    >
+      <Avatar className="h-10 w-10 transition-transform duration-300 ease-out group-hover:scale-115">
+        <AvatarImage src={member.users?.avatar_url || ""} />
+        <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 font-bold text-white">
+          {member.users?.name
+            ? member.users.name
+                .split(" ")
+                .map((n: string) => n[0])
+                .join("")
+                .toUpperCase()
+            : "U"}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex-1">
+        <div className="text-sm font-semibold">
+          {member.users?.name || "Unknown User"}
+        </div>
+        <div className="text-muted-foreground text-xs">
+          {(member.users?.total_xp || 0).toLocaleString()} XP |{" "}
+          {(member.users?.total_points || 0).toLocaleString()} Points
+        </div>
+      </div>
+    </div>
+  );
 
   // Handle loading and error states in the render return
   if (loadingState.page || userLoading) {
@@ -870,7 +835,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
           </p>
         </div>
         <Button variant="outline" asChild>
-          <Link href="/dashboard/team-journey">Back to Products</Link>
+          <Link href="/dashboard/team-journey">Back to All Teams</Link>
         </Button>
       </div>
     );
@@ -902,28 +867,28 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
       value: totalTeamXP.toLocaleString(),
       subtitle: "From completed team activities",
       icon: Zap,
-      iconColor: "text-black dark:text-white",
+      iconColor: "text-amber-500",
     },
     {
       title: "Points Earned as Team",
       value: teamPointsEarned.toLocaleString(),
       subtitle: "From completed team tasks",
       icon: CreditCard,
-      iconColor: "text-black dark:text-white",
+      iconColor: "text-emerald-500",
     },
     {
       title: "Total Clients",
       value: teamStats.clientsContacted.toString(),
       subtitle: "Clients contacted via weekly reports",
       icon: UserCheck,
-      iconColor: "text-black dark:text-white",
+      iconColor: "text-blue-500",
     },
     {
       title: "Achievements",
       value: achievementProgress,
       subtitle: `${completedAchievements} completed`,
       icon: Trophy,
-      iconColor: "text-black dark:text-white",
+      iconColor: "text-purple-500",
     },
   ];
 
@@ -934,7 +899,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="/dashboard/team-journey">Products</Link>
+              <Link href="/dashboard/team-journey">All Teams</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -943,10 +908,10 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      {/* Product Header */}
-      <div className="flex items-start justify-between">
+      {/* Team Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Avatar className="h-10 w-10 shrink-0 rounded-lg">
               {team.logo_url ? (
                 <AvatarImage
@@ -1104,35 +1069,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             {/* Team Members - 2 columns */}
             <Collapsible open={showAllMembers} onOpenChange={setShowAllMembers}>
               <div className="grid grid-cols-2 gap-4">
-                {team.members.slice(0, 4).map((member: any) => (
-                  <div
-                    key={member.user_id}
-                    className="border-border group flex items-center gap-3 rounded-md border p-2"
-                  >
-                    <Avatar className="peer h-10 w-10 transition-transform duration-300 ease-out group-hover:scale-115">
-                      <AvatarImage src={member.users?.avatar_url || ""} />
-                      <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 font-bold text-white">
-                        {member.users?.name
-                          ? member.users.name
-                              .split(" ")
-                              .map((n: string) => n[0])
-                              .join("")
-                              .toUpperCase()
-                          : "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold">
-                        {member.users?.name || "Unknown User"}
-                      </div>
-                      <div className="text-muted-foreground text-xs">
-                        {(member.users?.total_xp || 0).toLocaleString()} XP |{" "}
-                        {(member.users?.total_points || 0).toLocaleString()}{" "}
-                        Points
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                {team.members.slice(0, 4).map(renderMemberCard)}
               </div>
 
               {/* Additional Members (Collapsible) */}
@@ -1140,38 +1077,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                 <CollapsibleContent>
                   <div className="min-h-0">
                     <div className="mt-4 grid grid-cols-2 gap-4">
-                      {team.members.slice(4).map((member: any) => (
-                        <div
-                          key={member.user_id}
-                          className="border-border group flex items-center gap-3 rounded-md border p-2"
-                        >
-                          <Avatar className="h-10 w-10 transition-transform duration-300 ease-out group-hover:scale-115">
-                            <AvatarImage src={member.users?.avatar_url || ""} />
-                            <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 font-bold text-white">
-                              {member.users?.name
-                                ? member.users.name
-                                    .split(" ")
-                                    .map((n: string) => n[0])
-                                    .join("")
-                                    .toUpperCase()
-                                : "U"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold">
-                              {member.users?.name || "Unknown User"}
-                            </div>
-                            <div className="text-muted-foreground text-xs">
-                              {(member.users?.total_xp || 0).toLocaleString()}{" "}
-                              XP |{" "}
-                              {(
-                                member.users?.total_points || 0
-                              ).toLocaleString()}{" "}
-                              Points
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                      {team.members.slice(4).map(renderMemberCard)}
                     </div>
                   </div>
                 </CollapsibleContent>
@@ -1405,26 +1311,26 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
       >
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="achievements" className="flex items-center gap-2">
-            <Trophy className="h-4 w-4" />
-            Tasks
+            <Trophy className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Tasks</span>
           </TabsTrigger>
           <TabsTrigger
             value="weekly-reports"
             className="flex items-center gap-2"
           >
-            <FileText className="h-4 w-4" />
-            Weekly Reports
+            <FileText className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Weekly Reports</span>
           </TabsTrigger>
           <TabsTrigger
             value="client-meetings"
             className="flex items-center gap-2"
           >
-            <Users className="h-4 w-4" />
-            Client Meetings
+            <Users className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Client Meetings</span>
           </TabsTrigger>
           <TabsTrigger value="strikes" className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" />
-            Strikes
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Strikes</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1519,9 +1425,30 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                               : achievement.achievement_id
                           )
                         }
-                        className={`transition-all duration-200 ${
+                        role={
+                          teamStats.achievementsUnlocked ? "button" : undefined
+                        }
+                        tabIndex={
+                          teamStats.achievementsUnlocked ? 0 : undefined
+                        }
+                        onKeyDown={
                           teamStats.achievementsUnlocked
-                            ? "cursor-pointer hover:scale-[1.02]"
+                            ? (e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  handleAchievementClick(
+                                    selectedAchievementId ===
+                                      achievement.achievement_id
+                                      ? null
+                                      : achievement.achievement_id
+                                  );
+                                }
+                              }
+                            : undefined
+                        }
+                        className={`rounded-xl transition-all duration-200 ${
+                          teamStats.achievementsUnlocked
+                            ? "hover:ring-primary/30 focus-visible:ring-primary cursor-pointer hover:scale-[1.02] hover:ring-2 focus-visible:ring-2 focus-visible:outline-none"
                             : "cursor-not-allowed opacity-60"
                         }`}
                       >
@@ -1577,6 +1504,11 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                   </Tooltip>
                 ))}
               </div>
+              {teamStats.achievementsUnlocked && !selectedAchievementId && (
+                <p className="text-muted-foreground mt-2 text-center text-xs">
+                  Click an achievement to filter tasks below
+                </p>
+              )}
             </TooltipProvider>
           )}
 

@@ -19,7 +19,6 @@ import {
   getUserAchievementProgress,
   getUserTasksVisible,
   getUserTeams,
-  getUserTaskCompletionStats,
   getPeerReviewStatsFromTransactions,
   getUserStrikes,
   getIndividualActivityStats,
@@ -88,7 +87,8 @@ export async function getStatsCards(userId: string): Promise<StatsCard[]> {
         value: (userProfile.total_xp ?? 0).toString(),
         subtitle: "Total experience points",
         icon: Zap,
-        iconColor: "text-black",
+        iconColor: "text-amber-500",
+        href: "/dashboard/transaction-history",
       },
       {
         id: "onborda-points-balance",
@@ -96,7 +96,8 @@ export async function getStatsCards(userId: string): Promise<StatsCard[]> {
         value: (userProfile.total_points ?? 0).toString(),
         subtitle: "Available startup capital",
         icon: CreditCard,
-        iconColor: "text-black",
+        iconColor: "text-emerald-500",
+        href: "/dashboard/transaction-history",
       },
       {
         id: "onborda-achievements",
@@ -104,7 +105,8 @@ export async function getStatsCards(userId: string): Promise<StatsCard[]> {
         value: `${completedAchievements}/${totalAchievements}`,
         subtitle: "Team achievements unlocked",
         icon: Target,
-        iconColor: "text-black",
+        iconColor: "text-purple-500",
+        href: "/dashboard/team-journey",
       },
       {
         id: "onborda-tasks",
@@ -112,7 +114,8 @@ export async function getStatsCards(userId: string): Promise<StatsCard[]> {
         value: `${completedTasks}/${totalTasks}`,
         subtitle: "Team tasks completed",
         icon: CheckCircle,
-        iconColor: "text-black",
+        iconColor: "text-blue-500",
+        href: "/dashboard/team-journey",
       },
     ];
   } catch (error) {
@@ -195,7 +198,7 @@ export async function getTeamProgressData(
 
     return {
       title: "Your Teams Progress",
-      joinTeamsText: "View Products",
+      joinTeamsText: "View Teams",
       hasTeams,
       stats:
         hasTeams && teamsData.length > 1
@@ -290,28 +293,28 @@ function getDefaultStatsCards(): StatsCard[] {
       value: "0",
       subtitle: "Total experience points",
       icon: Zap,
-      iconColor: "text-black",
+      iconColor: "text-amber-500",
     },
     {
       title: "Points Earned",
-      value: "500",
+      value: "0",
       subtitle: "Available startup capital",
       icon: CreditCard,
-      iconColor: "text-black",
+      iconColor: "text-emerald-500",
     },
     {
       title: "Achievements",
       value: "0/25",
       subtitle: "Achievements unlocked",
       icon: Target,
-      iconColor: "text-black",
+      iconColor: "text-purple-500",
     },
     {
       title: "Tasks",
       value: "0/150",
       subtitle: "Tasks completed",
       icon: Users,
-      iconColor: "text-black",
+      iconColor: "text-blue-500",
     },
   ];
 }
@@ -319,7 +322,7 @@ function getDefaultStatsCards(): StatsCard[] {
 function getDefaultTeamProgressData(): TeamProgressData {
   return {
     title: "Your Teams Progress",
-    joinTeamsText: "View Products",
+    joinTeamsText: "View Teams",
     hasTeams: false,
     stats: [],
     teams: [],
@@ -418,6 +421,7 @@ export async function getAchievementProgressData(
           is_completed: achievement.is_completed,
         })
       ),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       tasks: (tasks as any).map((task: any) => {
         const taskData = task;
         return {
@@ -463,11 +467,14 @@ export async function getFilteredTasksByAchievement(
 
     // Filter by achievement if specified
     const filteredTasks = achievementId
-      ? (tasks as any).filter(
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (tasks as any).filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (task: any) => task.achievement_id === achievementId
         )
       : tasks;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (filteredTasks as any).map((task: any) => {
       const taskData = task;
       return {
