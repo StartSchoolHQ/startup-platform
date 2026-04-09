@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Handshake, ShieldAlert, FileText, BarChart3 } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -10,14 +10,8 @@ import {
   ResponsiveContainer,
   Tooltip,
   Cell,
+  LabelList,
 } from "recharts";
-
-interface TasksByStatus {
-  completed: number;
-  in_progress: number;
-  pending_review: number;
-  not_started: number;
-}
 
 interface TeamData {
   id: string;
@@ -27,10 +21,6 @@ interface TeamData {
 }
 
 interface AdminChartsProps {
-  meetings: number;
-  strikes: number;
-  reports: number;
-  tasksByStatus: TasksByStatus;
   teamPoints: TeamData[];
   teamXp: TeamData[];
 }
@@ -63,18 +53,12 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export function AdminCharts({
-  meetings,
-  strikes,
-  reports,
-  teamPoints,
-  teamXp,
-}: AdminChartsProps) {
+export function AdminCharts({ teamPoints, teamXp }: AdminChartsProps) {
   const teamPointsData = teamPoints
     .filter((team) => team.team_points > 0)
     .sort((a, b) => a.team_points - b.team_points)
     .map((team) => ({
-      name: team.name.length > 25 ? team.name.slice(0, 25) + "…" : team.name,
+      name: team.name.length > 20 ? team.name.slice(0, 20) + "…" : team.name,
       fullName: team.name,
       value: team.team_points,
     }));
@@ -83,150 +67,117 @@ export function AdminCharts({
     .filter((team) => (team.total_xp || 0) > 0)
     .sort((a, b) => (a.total_xp || 0) - (b.total_xp || 0))
     .map((team) => ({
-      name: team.name.length > 25 ? team.name.slice(0, 25) + "…" : team.name,
+      name: team.name.length > 20 ? team.name.slice(0, 20) + "…" : team.name,
       fullName: team.name,
       value: team.total_xp || 0,
     }));
 
-  const barHeight = 36;
+  const barHeight = 34;
   const hasChartData = teamPointsData.length > 0 || teamXpData.length > 0;
 
+  if (!hasChartData) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center gap-2 py-12">
+          <BarChart3 className="text-muted-foreground h-10 w-10" />
+          <p className="text-muted-foreground text-sm">
+            No team data to chart yet
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="space-y-4">
-      {/* Activity Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2">
+      {teamPointsData.length > 0 && (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Meetings</CardTitle>
-            <Handshake className="text-muted-foreground h-4 w-4" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Team Points (Top 10)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{meetings}</div>
-            <p className="text-muted-foreground text-xs">Total meetings held</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Strikes</CardTitle>
-            <ShieldAlert className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{strikes}</div>
-            <p className="text-muted-foreground text-xs">
-              Total strikes issued
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Weekly Reports
-            </CardTitle>
-            <FileText className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{reports}</div>
-            <p className="text-muted-foreground text-xs">Reports submitted</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts */}
-      {hasChartData ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {teamPointsData.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Team Points (Top 10)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer
-                  width="100%"
-                  height={teamPointsData.length * barHeight + 40}
-                >
-                  <BarChart
-                    data={teamPointsData}
-                    layout="vertical"
-                    margin={{
-                      left: 10,
-                      right: 30,
-                      top: 0,
-                      bottom: 0,
+            <ResponsiveContainer
+              width="100%"
+              height={teamPointsData.length * barHeight + 20}
+            >
+              <BarChart
+                data={teamPointsData}
+                layout="vertical"
+                margin={{ left: 10, right: 50, top: 0, bottom: 0 }}
+              >
+                <XAxis type="number" hide />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={130}
+                  tick={{ fontSize: 11 }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={18}>
+                  <LabelList
+                    dataKey="value"
+                    position="right"
+                    formatter={(v) => Number(v).toLocaleString()}
+                    style={{
+                      fontSize: 11,
+                      fill: "hsl(var(--muted-foreground))",
                     }}
-                  >
-                    <XAxis type="number" hide />
-                    <YAxis
-                      type="category"
-                      dataKey="name"
-                      width={150}
-                      tick={{ fontSize: 12 }}
+                  />
+                  {teamPointsData.map((_entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
                     />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
-                      {teamPointsData.map((_entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
-          {teamXpData.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Team XP (Top 10)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer
-                  width="100%"
-                  height={teamXpData.length * barHeight + 40}
-                >
-                  <BarChart
-                    data={teamXpData}
-                    layout="vertical"
-                    margin={{
-                      left: 10,
-                      right: 30,
-                      top: 0,
-                      bottom: 0,
-                    }}
-                  >
-                    <XAxis type="number" hide />
-                    <YAxis
-                      type="category"
-                      dataKey="name"
-                      width={150}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
-                      {teamXpData.map((_entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      ) : (
+      {teamXpData.length > 0 && (
         <Card>
-          <CardContent className="flex flex-col items-center gap-2 py-12">
-            <BarChart3 className="text-muted-foreground h-10 w-10" />
-            <p className="text-muted-foreground text-sm">
-              No team data to chart yet
-            </p>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Team XP (Top 10)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer
+              width="100%"
+              height={teamXpData.length * barHeight + 20}
+            >
+              <BarChart
+                data={teamXpData}
+                layout="vertical"
+                margin={{ left: 10, right: 50, top: 0, bottom: 0 }}
+              >
+                <XAxis type="number" hide />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={130}
+                  tick={{ fontSize: 11 }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={18}>
+                  <LabelList
+                    dataKey="value"
+                    position="right"
+                    formatter={(v) => Number(v).toLocaleString()}
+                    style={{
+                      fontSize: 11,
+                      fill: "hsl(var(--muted-foreground))",
+                    }}
+                  />
+                  {teamXpData.map((_entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       )}

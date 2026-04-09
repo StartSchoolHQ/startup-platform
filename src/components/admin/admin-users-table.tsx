@@ -20,8 +20,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface User {
   id: string;
@@ -35,6 +43,67 @@ interface User {
   total_points: number;
 }
 
+type SortKey =
+  | "name"
+  | "total_xp"
+  | "total_points"
+  | "created_at"
+  | "last_sign_in_at";
+type SortDir = "asc" | "desc";
+
+function relativeDate(date: string | null): string {
+  if (!date) return "Never";
+  const diff = Date.now() - new Date(date).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+}
+
+function SortableHeader({
+  label,
+  sortKey,
+  currentSort,
+  currentDir,
+  onSort,
+  className,
+}: {
+  label: string;
+  sortKey: SortKey;
+  currentSort: SortKey | null;
+  currentDir: SortDir;
+  onSort: (key: SortKey) => void;
+  className?: string;
+}) {
+  const isActive = currentSort === sortKey;
+  return (
+    <TableHead
+      className={cn("hover:bg-muted/50 cursor-pointer select-none", className)}
+      onClick={() => onSort(sortKey)}
+    >
+      <div
+        className={cn(
+          "flex items-center gap-1",
+          className?.includes("text-right") && "justify-end"
+        )}
+      >
+        {label}
+        {isActive ? (
+          currentDir === "asc" ? (
+            <ArrowUp className="h-3.5 w-3.5" />
+          ) : (
+            <ArrowDown className="h-3.5 w-3.5" />
+          )
+        ) : (
+          <ArrowUpDown className="text-muted-foreground/50 h-3.5 w-3.5" />
+        )}
+      </div>
+    </TableHead>
+  );
+}
+
 export function AdminUsersTable() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +115,8 @@ export function AdminUsersTable() {
   } | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const limit = 50;
 
   useEffect(() => {
@@ -67,6 +138,55 @@ export function AdminUsersTable() {
       })
       .catch(() => setLoading(false));
   }, [page, search, filter]);
+
+  const handleSort = useCallback(
+    (key: SortKey) => {
+      if (sortKey === key) {
+        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+      } else {
+        setSortKey(key);
+        setSortDir("desc");
+      }
+    },
+    [sortKey]
+  );
+
+  const sortedUsers = useMemo(() => {
+    if (!sortKey) return users;
+    return [...users].sort((a, b) => {
+      let aVal: string | number | null = a[sortKey];
+      let bVal: string | number | null = b[sortKey];
+
+      // Handle nulls
+      if (aVal === null || aVal === undefined)
+        aVal = sortDir === "asc" ? Infinity : -Infinity;
+      if (bVal === null || bVal === undefined)
+        bVal = sortDir === "asc" ? Infinity : -Infinity;
+
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        return sortDir === "asc"
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
+      }
+      // Dates as strings
+      if (sortKey === "created_at" || sortKey === "last_sign_in_at") {
+        const aTime =
+          typeof aVal === "string"
+            ? new Date(aVal).getTime()
+            : (aVal as number);
+        const bTime =
+          typeof bVal === "string"
+            ? new Date(bVal).getTime()
+            : (bVal as number);
+        return sortDir === "asc" ? aTime - bTime : bTime - aTime;
+      }
+      return sortDir === "asc"
+        ? (aVal as number) - (bVal as number)
+        : (bVal as number) - (aVal as number);
+    });
+  }, [users, sortKey, sortDir]);
+
+  const [now] = useState(() => Date.now());
 
   const totalPages = Math.ceil(total / limit);
 
@@ -108,14 +228,46 @@ export function AdminUsersTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <SortableHeader
+                label="Name"
+                sortKey="name"
+                currentSort={sortKey}
+                currentDir={sortDir}
+                onSort={handleSort}
+              />
               <TableHead>Email</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead>XP</TableHead>
-              <TableHead>Points</TableHead>
-              <TableHead>Joined</TableHead>
-              <TableHead>Last Login</TableHead>
+              <SortableHeader
+                label="XP"
+                sortKey="total_xp"
+                currentSort={sortKey}
+                currentDir={sortDir}
+                onSort={handleSort}
+                className="text-right"
+              />
+              <SortableHeader
+                label="Points"
+                sortKey="total_points"
+                currentSort={sortKey}
+                currentDir={sortDir}
+                onSort={handleSort}
+                className="text-right"
+              />
+              <SortableHeader
+                label="Joined"
+                sortKey="created_at"
+                currentSort={sortKey}
+                currentDir={sortDir}
+                onSort={handleSort}
+              />
+              <SortableHeader
+                label="Last Login"
+                sortKey="last_sign_in_at"
+                currentSort={sortKey}
+                currentDir={sortDir}
+                onSort={handleSort}
+              />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -129,58 +281,80 @@ export function AdminUsersTable() {
                   ))}
                 </TableRow>
               ))
-            ) : users.length === 0 ? (
+            ) : sortedUsers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center">
                   No users found
                 </TableCell>
               </TableRow>
             ) : (
-              users.map((user) => (
-                <TableRow
-                  key={user.id}
-                  className="hover:bg-muted/50 cursor-pointer"
-                  onClick={() =>
-                    setSelectedUser({
-                      id: user.id,
-                      name: user.name || user.email,
-                    })
-                  }
-                >
-                  <TableCell className="font-medium">
-                    {user.name || "—"}
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    {user.status === "active" ? (
-                      <Badge variant="default">Active</Badge>
-                    ) : user.status === "pending" ? (
-                      <Badge variant="secondary">Pending</Badge>
-                    ) : (
-                      <Badge variant="outline">Archived</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {user.primary_role === "admin" ? (
-                      <Badge variant="destructive">Admin</Badge>
-                    ) : (
-                      <span className="text-sm">User</span>
-                    )}
-                  </TableCell>
-                  <TableCell>{user.total_xp?.toLocaleString() || 0}</TableCell>
-                  <TableCell>
-                    {user.total_points?.toLocaleString() || 0}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {user.last_sign_in_at
-                      ? new Date(user.last_sign_in_at).toLocaleDateString()
-                      : "Never"}
-                  </TableCell>
-                </TableRow>
-              ))
+              sortedUsers.map((user) => {
+                const daysSinceLogin = user.last_sign_in_at
+                  ? Math.floor(
+                      (now - new Date(user.last_sign_in_at).getTime()) /
+                        86400000
+                    )
+                  : null;
+                const isInactive =
+                  daysSinceLogin === null || daysSinceLogin > 14;
+
+                return (
+                  <TableRow
+                    key={user.id}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() =>
+                      setSelectedUser({
+                        id: user.id,
+                        name: user.name || user.email,
+                      })
+                    }
+                  >
+                    <TableCell className="font-medium">
+                      {user.name || "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {user.email}
+                    </TableCell>
+                    <TableCell>
+                      {user.status === "active" ? (
+                        <Badge variant="default">Active</Badge>
+                      ) : user.status === "pending" ? (
+                        <Badge variant="secondary">Pending</Badge>
+                      ) : (
+                        <Badge variant="outline">Archived</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {user.primary_role === "admin" ? (
+                        <Badge variant="destructive">Admin</Badge>
+                      ) : (
+                        <span className="text-sm">User</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {user.total_xp?.toLocaleString() || 0}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {user.total_points?.toLocaleString() || 0}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {relativeDate(user.created_at)}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={cn(
+                          "text-sm",
+                          isInactive
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-muted-foreground"
+                        )}
+                      >
+                        {relativeDate(user.last_sign_in_at)}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -212,7 +386,6 @@ export function AdminUsersTable() {
         </div>
       </div>
 
-      {/* User Detail Modal */}
       <UserDetailModal
         userId={selectedUser?.id || null}
         userName={selectedUser?.name || ""}

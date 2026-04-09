@@ -169,7 +169,7 @@ export function AdminSuggestionsTable() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="text-muted-foreground line-clamp-3 max-w-md text-sm whitespace-pre-wrap">
+                    <div className="text-muted-foreground max-w-md text-sm whitespace-pre-wrap">
                       {suggestion.suggestion_text}
                     </div>
                   </td>

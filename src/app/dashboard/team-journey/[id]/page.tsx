@@ -75,6 +75,7 @@ import {
   Trophy,
   UserCheck,
   Users,
+  X,
   Zap,
 } from "lucide-react";
 import Link from "next/link";
@@ -1504,39 +1505,38 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                   </Tooltip>
                 ))}
               </div>
-              {teamStats.achievementsUnlocked && !selectedAchievementId && (
-                <p className="text-muted-foreground mt-2 text-center text-xs">
-                  Click an achievement to filter tasks below
-                </p>
-              )}
             </TooltipProvider>
           )}
 
-          {/* Filter Status */}
-          {selectedAchievementId && (
-            <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-blue-800">
-                  <span className="font-medium">Showing tasks for:</span>{" "}
-                  {
-                    achievements.find(
-                      (a) => a.achievement_id === selectedAchievementId
-                    )?.achievement_name
-                  }
-                </div>
-                <button
-                  onClick={() => handleAchievementClick(null)}
-                  className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                >
-                  Show All Tasks
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Task Filters */}
+          {/* Unified Task Filters */}
           {teamStats.achievementsUnlocked && (
             <div className="mt-4 flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm">
+                  Achievement:
+                </span>
+                <Select
+                  value={selectedAchievementId ?? "all"}
+                  onValueChange={(value) =>
+                    handleAchievementClick(value === "all" ? null : value)
+                  }
+                >
+                  <SelectTrigger className="h-8 w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    {achievements.map((a) => (
+                      <SelectItem
+                        key={a.achievement_id}
+                        value={a.achievement_id}
+                      >
+                        {a.achievement_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground text-sm">Status:</span>
                 <Select
@@ -1583,6 +1583,23 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                   </SelectContent>
                 </Select>
               </div>
+              {(selectedAchievementId ||
+                statusFilter !== "all" ||
+                teammateFilter !== "all") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2 text-sm"
+                  onClick={() => {
+                    handleAchievementClick(null);
+                    setStatusFilter("all");
+                    setTeammateFilter("all");
+                  }}
+                >
+                  <X className="mr-1 h-3 w-3" />
+                  Clear filters
+                </Button>
+              )}
             </div>
           )}
 

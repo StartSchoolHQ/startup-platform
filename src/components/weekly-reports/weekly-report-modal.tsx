@@ -391,11 +391,12 @@ export function WeeklyReportModal({
 
       // If we have an existing draft, update it to submitted status
       // Otherwise, insert a new record
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       let submitError: Error | null = null;
 
       if (existingDraftId) {
         // Update the draft to submitted
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error } = await (supabase as any)
           .from("weekly_reports")
           .update({
@@ -410,6 +411,7 @@ export function WeeklyReportModal({
           submitError = new Error(`Failed to submit report: ${error.message}`);
       } else {
         // Insert new record
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error } = await (supabase as any)
           .from("weekly_reports")
           .insert({
@@ -661,16 +663,17 @@ export function WeeklyReportModal({
                 <Label htmlFor="meetingsHeld">Number of meetings held</Label>
                 <Input
                   id="meetingsHeld"
-                  type="number"
-                  min="0"
+                  type="text"
+                  inputMode="numeric"
                   placeholder="0"
-                  value={formData.meetingsHeld}
-                  onChange={(e) =>
+                  value={formData.meetingsHeld || ""}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "");
                     setFormData((prev) => ({
                       ...prev,
-                      meetingsHeld: parseInt(e.target.value) || 0,
-                    }))
-                  }
+                      meetingsHeld: parseInt(val) || 0,
+                    }));
+                  }}
                 />
               </div>
               {formData.meetingsHeld > 0 && (
@@ -824,10 +827,9 @@ export function WeeklyReportModal({
                       onClick={() => {
                         setFormData((prev) => ({
                           ...prev,
-                          nextWeekCommitments:
-                            prev.nextWeekCommitments.filter(
-                              (_, i) => i !== index
-                            ),
+                          nextWeekCommitments: prev.nextWeekCommitments.filter(
+                            (_, i) => i !== index
+                          ),
                         }));
                       }}
                     >

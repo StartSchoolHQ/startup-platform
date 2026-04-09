@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createClient();
     const {
@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // ⚡ OPTIMIZED: Parallelize ALL queries with Promise.all()
+    const adminClient = createAdminClient();
+
     const [
       usersResult,
       teamsResult,
@@ -33,14 +34,14 @@ export async function GET(request: NextRequest) {
       strikesResult,
       reportsResult,
       teamXpResult,
+      weeklyTrendsResult,
+      programHealthResult,
     ] = await Promise.all([
-      // Get user stats from our users table (much faster than auth.admin.listUsers!)
+      // User counts
       supabase
         .from("users")
         .select("id, created_at", { count: "exact", head: false })
         .then((res) => {
-          const adminClient = createAdminClient();
-          // Only fetch confirmed status from auth (lighter query)
           return adminClient.auth.admin
             .listUsers({ perPage: 1000 })
             .then((authRes) => ({
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
             }));
         }),
 
-      // Get both total and active teams in ONE query
+      // Teams
       supabase
         .from("teams")
         .select("status")
@@ -60,15 +61,14 @@ export async function GET(request: NextRequest) {
           active: res.data?.filter((t) => t.status === "active").length || 0,
         })),
 
-      // Get total tasks count
+      // Total task templates
       supabase
         .from("tasks")
         .select("*", { count: "exact", head: true })
         .then((res) => res.count || 0),
 
-      // Get ALL task progress statuses in ONE query (instead of 3 separate queries!)
-      // Use admin client to bypass RLS for accurate counts
-      createAdminClient()
+      // Task progress statuses
+      adminClient
         .from("task_progress")
         .select("status")
         .then((res) => {
@@ -87,33 +87,44 @@ export async function GET(request: NextRequest) {
           };
         }),
 
-      // Get completed meetings count (admin client to bypass RLS)
-      createAdminClient()
+      // Meetings
+      adminClient
         .from("client_meetings")
         .select("*", { count: "exact", head: true })
         .eq("status", "completed")
         .then((res) => res.count || 0),
 
-      // Get active strikes count (admin client to bypass RLS)
-      createAdminClient()
+      // Active strikes
+      adminClient
         .from("team_strikes")
         .select("*", { count: "exact", head: true })
         .eq("status", "active")
         .then((res) => res.count || 0),
 
-      // Get total reports count (admin client to bypass RLS)
-      createAdminClient()
+      // Total reports
+      adminClient
         .from("weekly_reports")
         .select("*", { count: "exact", head: true })
         .then((res) => res.count || 0),
 
-      // Get team XP data
+      // Team XP rankings
       supabase
         .rpc("get_top_teams_with_xp", { team_limit: 10 })
         .then((res) => res.data || []),
+
+      // Weekly trends (last 14 weeks)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (adminClient.rpc as any)("get_admin_weekly_trends").then(
+        (res: { data: unknown }) => res.data || []
+      ),
+
+      // Program health metrics
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (adminClient.rpc as any)("get_admin_program_health").then(
+        (res: { data: unknown[] }) => res.data?.[0] || null
+      ),
     ]);
 
-    // Short client-side cache to reduce rapid refresh load (admin-only data)
     return NextResponse.json(
       {
         users: {
@@ -135,17 +146,19 @@ export async function GET(request: NextRequest) {
         reports: reportsResult,
         tasksByStatus: taskProgressResult,
         teamPoints:
-          teamXpResult?.map((t) => ({
-            id: t.id,
-            name: t.name,
-            team_points: t.team_points,
-          })) || [],
+          teamXpResult?.map(
+            (t: { id: string; name: string; team_points: number }) => ({
+              id: t.id,
+              name: t.name,
+              team_points: t.team_points,
+            })
+          ) || [],
         teamXp: teamXpResult || [],
+        weeklyTrends: weeklyTrendsResult,
+        programHealth: programHealthResult,
       },
       {
         headers: {
-          // Cache for 10 seconds client-side, stale-while-revalidate for 30s
-          // private = never cached by CDN (admin data stays private)
           "Cache-Control": "private, max-age=10, stale-while-revalidate=30",
         },
       }

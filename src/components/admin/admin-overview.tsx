@@ -1,18 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
-  Users,
-  UsersRound,
-  CheckCircle,
-  ListTodo,
   AlertTriangle,
   RefreshCw,
+  ListChecks,
+  Users,
+  UsersRound,
+  FileSearch,
+  TrendingUp,
+  FileText,
+  ArrowRight,
 } from "lucide-react";
+import Link from "next/link";
+import { ProgramHealthCards } from "./program-health-cards";
+import { WeeklyTrendsChart } from "./weekly-trends-chart";
+import { TaskStatusChart } from "./task-status-chart";
 import { AdminCharts } from "./admin-charts";
+import { NeedsAttentionFeed } from "./needs-attention-feed";
 
 interface TeamData {
   id: string;
@@ -36,6 +44,122 @@ interface Stats {
   };
   teamPoints: TeamData[];
   teamXp: TeamData[];
+  weeklyTrends: {
+    week_number: number;
+    week_year: number;
+    week_label: string;
+    report_submissions: number;
+    tasks_completed: number;
+    active_students: number;
+  }[];
+  programHealth: {
+    total_students: number;
+    active_7d: number;
+    active_14d: number;
+    at_risk_students: number;
+    reports_this_week: number;
+    reports_last_week: number;
+    tasks_this_week: number;
+    tasks_last_week: number;
+    pending_strikes: number;
+    pending_reviews: number;
+    avg_xp_per_student: number;
+    total_active_teams: number;
+  } | null;
+}
+
+function OverviewSkeleton() {
+  return (
+    <div className="space-y-4">
+      {/* Health cards skeleton */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4">
+              <Skeleton className="mb-3 h-3 w-20" />
+              <Skeleton className="mb-2 h-7 w-16" />
+              <Skeleton className="h-3 w-28" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      {/* Charts skeleton */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardContent className="p-6">
+            <Skeleton className="mb-4 h-4 w-40" />
+            <Skeleton className="h-52 w-full" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <Skeleton className="mb-4 h-4 w-40" />
+            <Skeleton className="h-52 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+const ADMIN_LINKS = [
+  {
+    title: "Tasks",
+    icon: ListChecks,
+    href: "/dashboard/admin/tasks",
+    color: "text-blue-600",
+  },
+  {
+    title: "Users",
+    icon: Users,
+    href: "/dashboard/admin/users",
+    color: "text-green-600",
+  },
+  {
+    title: "Teams",
+    icon: UsersRound,
+    href: "/dashboard/admin/teams",
+    color: "text-purple-600",
+  },
+  {
+    title: "Peer Reviews",
+    icon: FileSearch,
+    href: "/dashboard/admin/peer-reviews",
+    color: "text-pink-600",
+  },
+  {
+    title: "Progress",
+    icon: TrendingUp,
+    href: "/dashboard/admin/progress",
+    color: "text-teal-600",
+  },
+  {
+    title: "Audit Logs",
+    icon: FileText,
+    href: "/dashboard/admin/audit-logs",
+    color: "text-orange-600",
+  },
+];
+
+function QuickNav() {
+  return (
+    <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
+      {ADMIN_LINKS.map((link) => {
+        const Icon = link.icon;
+        return (
+          <Link key={link.href} href={link.href}>
+            <Card className="cursor-pointer transition-shadow hover:shadow-md">
+              <CardContent className="flex items-center gap-2 p-3">
+                <Icon className={`h-4 w-4 ${link.color}`} />
+                <span className="text-sm font-medium">{link.title}</span>
+                <ArrowRight className="text-muted-foreground ml-auto h-3.5 w-3.5" />
+              </CardContent>
+            </Card>
+          </Link>
+        );
+      })}
+    </div>
+  );
 }
 
 export function AdminOverview() {
@@ -60,42 +184,7 @@ export function AdminOverview() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-4 rounded" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="mb-1 h-7 w-16" />
-                <Skeleton className="h-3 w-32" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-5 w-40" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-48 w-full" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-5 w-40" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-48 w-full" />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    return <OverviewSkeleton />;
   }
 
   if (!stats) {
@@ -120,73 +209,27 @@ export function AdminOverview() {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.users.total}</div>
-            <p className="text-muted-foreground text-xs">
-              {stats.users.confirmed} confirmed, {stats.users.pending} pending
-            </p>
-          </CardContent>
-        </Card>
+      {/* Program Health — the most important section */}
+      {stats.programHealth && (
+        <ProgramHealthCards health={stats.programHealth} />
+      )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Teams</CardTitle>
-            <UsersRound className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.teams.active}</div>
-            <p className="text-muted-foreground text-xs">
-              {stats.teams.total} total teams
-            </p>
-          </CardContent>
-        </Card>
+      {/* Needs Attention — actionable items */}
+      <NeedsAttentionFeed health={stats.programHealth} />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Tasks Available
-            </CardTitle>
-            <ListTodo className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.tasks.total}</div>
-            <p className="text-muted-foreground text-xs">
-              Template tasks created
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Completed Tasks
-            </CardTitle>
-            <CheckCircle className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.tasks.completed}</div>
-            <p className="text-muted-foreground text-xs">
-              {stats.tasks.inProgress} in progress
-            </p>
-          </CardContent>
-        </Card>
+      {/* Charts row: Weekly Trends + Task Pipeline */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {stats.weeklyTrends && stats.weeklyTrends.length > 0 && (
+          <WeeklyTrendsChart data={stats.weeklyTrends} />
+        )}
+        <TaskStatusChart data={stats.tasksByStatus} />
       </div>
 
-      {/* Charts Section */}
-      <AdminCharts
-        meetings={stats.meetings}
-        strikes={stats.strikes}
-        reports={stats.reports}
-        tasksByStatus={stats.tasksByStatus}
-        teamPoints={stats.teamPoints}
-        teamXp={stats.teamXp}
-      />
+      {/* Team Rankings */}
+      <AdminCharts teamPoints={stats.teamPoints} teamXp={stats.teamXp} />
+
+      {/* Quick Nav */}
+      <QuickNav />
     </div>
   );
 }
