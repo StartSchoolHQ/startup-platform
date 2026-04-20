@@ -2,13 +2,11 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  AlertTriangle,
   FileText,
   ClipboardCheck,
   TrendingUp,
   TrendingDown,
   Minus,
-  Activity,
   ShieldAlert,
   Eye,
 } from "lucide-react";
@@ -17,17 +15,12 @@ import { useRouter } from "next/navigation";
 
 interface ProgramHealth {
   total_students: number;
-  active_7d: number;
-  active_14d: number;
-  at_risk_students: number;
   reports_this_week: number;
   reports_last_week: number;
   tasks_this_week: number;
   tasks_last_week: number;
   pending_strikes: number;
   pending_reviews: number;
-  avg_xp_per_student: number;
-  total_active_teams: number;
 }
 
 interface ProgramHealthCardsProps {
@@ -78,55 +71,12 @@ function TrendBadge({
 export function ProgramHealthCards({ health }: ProgramHealthCardsProps) {
   const router = useRouter();
 
-  const engagementRate =
-    health.total_students > 0
-      ? Math.round((health.active_7d / health.total_students) * 100)
-      : 0;
-
   const reportRate =
     health.total_students > 0
       ? Math.round((health.reports_this_week / health.total_students) * 100)
       : 0;
 
   const cards = [
-    {
-      label: "Engagement Rate",
-      value: `${engagementRate}%`,
-      subtitle: `${health.active_7d} of ${health.total_students} active (7d)`,
-      icon: Activity,
-      href: "/dashboard/admin/progress",
-      color:
-        engagementRate >= 70
-          ? "text-emerald-600"
-          : engagementRate >= 40
-            ? "text-amber-500"
-            : "text-red-500",
-      bgColor:
-        engagementRate >= 70
-          ? "bg-emerald-50 dark:bg-emerald-950/20"
-          : engagementRate >= 40
-            ? "bg-amber-50 dark:bg-amber-950/20"
-            : "bg-red-50 dark:bg-red-950/20",
-    },
-    {
-      label: "At Risk Students",
-      value: health.at_risk_students,
-      subtitle: "No activity in 14+ days",
-      icon: AlertTriangle,
-      href: "/dashboard/admin/progress",
-      color:
-        health.at_risk_students === 0
-          ? "text-emerald-600"
-          : health.at_risk_students <= 5
-            ? "text-amber-500"
-            : "text-red-500",
-      bgColor:
-        health.at_risk_students === 0
-          ? "bg-emerald-50 dark:bg-emerald-950/20"
-          : health.at_risk_students <= 5
-            ? "bg-amber-50 dark:bg-amber-950/20"
-            : "bg-red-50 dark:bg-red-950/20",
-    },
     {
       label: "Reports This Week",
       value: `${health.reports_this_week}/${health.total_students}`,
@@ -192,7 +142,7 @@ export function ProgramHealthCards({ health }: ProgramHealthCardsProps) {
   ];
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => {
         const Icon = card.icon;
         return (

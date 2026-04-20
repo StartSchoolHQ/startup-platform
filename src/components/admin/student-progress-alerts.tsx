@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, Clock, FileText, Target } from "lucide-react";
 
 interface TeamProgress {
@@ -164,58 +163,56 @@ export function StudentProgressAlerts({ teams }: StudentProgressAlertsProps) {
         <CardDescription>Teams that may need attention</CardDescription>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[300px] pr-4">
-          <div className="space-y-3">
-            {alerts.map((alert, idx) => (
-              <div
-                key={`${alert.team_id}-${alert.type}-${idx}`}
-                className={`rounded-lg border p-3 ${
-                  alert.severity === "red"
-                    ? "border-red-200 bg-red-50"
-                    : "border-yellow-200 bg-yellow-50"
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`mt-0.5 ${
+        <div className="space-y-3">
+          {alerts.map((alert, idx) => (
+            <div
+              key={`${alert.team_id}-${alert.type}-${idx}`}
+              className={`rounded-lg border p-3 ${
+                alert.severity === "red"
+                  ? "border-red-200 bg-red-50"
+                  : "border-yellow-200 bg-yellow-50"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className={`mt-0.5 ${
+                    alert.severity === "red"
+                      ? "text-red-600"
+                      : "text-yellow-600"
+                  }`}
+                >
+                  {alertIcon(alert.type)}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{alert.team_name}</span>
+                    <Badge
+                      className={
+                        alert.severity === "red"
+                          ? "bg-red-100 text-red-800 hover:bg-red-100"
+                          : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+                      }
+                    >
+                      {alert.severity === "red" ? "Urgent" : "Warning"}
+                    </Badge>
+                  </div>
+                  <p
+                    className={`text-sm ${
                       alert.severity === "red"
-                        ? "text-red-600"
-                        : "text-yellow-600"
+                        ? "text-red-700"
+                        : "text-yellow-700"
                     }`}
                   >
-                    {alertIcon(alert.type)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{alert.team_name}</span>
-                      <Badge
-                        className={
-                          alert.severity === "red"
-                            ? "bg-red-100 text-red-800 hover:bg-red-100"
-                            : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-                        }
-                      >
-                        {alert.severity === "red" ? "Urgent" : "Warning"}
-                      </Badge>
-                    </div>
-                    <p
-                      className={`text-sm ${
-                        alert.severity === "red"
-                          ? "text-red-700"
-                          : "text-yellow-700"
-                      }`}
-                    >
-                      {alert.message}
-                    </p>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      Suggested: {alert.suggestion}
-                    </p>
-                  </div>
+                    {alert.message}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Suggested: {alert.suggestion}
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
-        </ScrollArea>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

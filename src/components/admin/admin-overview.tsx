@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { ProgramHealthCards } from "./program-health-cards";
+import { HealthSnapshot } from "./health-snapshot";
 import { WeeklyTrendsChart } from "./weekly-trends-chart";
 import { TaskStatusChart } from "./task-status-chart";
 import { AdminCharts } from "./admin-charts";
@@ -65,15 +66,40 @@ interface Stats {
     pending_reviews: number;
     avg_xp_per_student: number;
     total_active_teams: number;
+    // v2 fields
+    students_active: number;
+    students_slowing: number;
+    students_at_risk: number;
+    teams_active: number;
+    teams_slowing: number;
+    teams_at_risk: number;
+    students_active_wow_delta: number;
+    students_at_risk_wow_delta: number;
+    teams_active_wow_delta: number;
+    teams_at_risk_wow_delta: number;
   } | null;
 }
 
 function OverviewSkeleton() {
   return (
     <div className="space-y-4">
-      {/* Health cards skeleton */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {Array.from({ length: 6 }).map((_, i) => (
+      {/* Health Snapshot skeleton (2 wide cards) */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="space-y-3 p-5">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-3 w-40" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      {/* Operational cards skeleton (4 cards) */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i}>
             <CardContent className="p-4">
               <Skeleton className="mb-3 h-3 w-20" />
@@ -209,7 +235,29 @@ export function AdminOverview() {
 
   return (
     <div className="space-y-4">
-      {/* Program Health — the most important section */}
+      {/* Health Snapshot — weekly check-in view (TOP) */}
+      {stats.programHealth && (
+        <HealthSnapshot
+          students={{
+            active: stats.programHealth.students_active ?? 0,
+            slowing: stats.programHealth.students_slowing ?? 0,
+            at_risk: stats.programHealth.students_at_risk ?? 0,
+            active_wow_delta:
+              stats.programHealth.students_active_wow_delta ?? 0,
+            at_risk_wow_delta:
+              stats.programHealth.students_at_risk_wow_delta ?? 0,
+          }}
+          teams={{
+            active: stats.programHealth.teams_active ?? 0,
+            slowing: stats.programHealth.teams_slowing ?? 0,
+            at_risk: stats.programHealth.teams_at_risk ?? 0,
+            active_wow_delta: stats.programHealth.teams_active_wow_delta ?? 0,
+            at_risk_wow_delta: stats.programHealth.teams_at_risk_wow_delta ?? 0,
+          }}
+        />
+      )}
+
+      {/* Operational cards — This Week (BELOW) */}
       {stats.programHealth && (
         <ProgramHealthCards health={stats.programHealth} />
       )}

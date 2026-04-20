@@ -118,9 +118,9 @@ export async function GET() {
         (res: { data: unknown }) => res.data || []
       ),
 
-      // Program health metrics
+      // Program health metrics (v2: includes student/team bucket counts + WoW deltas)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (adminClient.rpc as any)("get_admin_program_health").then(
+      (adminClient.rpc as any)("get_admin_program_health_v2").then(
         (res: { data: unknown[] }) => res.data?.[0] || null
       ),
     ]);
