@@ -55,3 +55,10 @@ settings.local.json
 .claude/
 .github/
 .vscode/
+
+# V2 sandbox (local-only, not for commit)
+/DEMOV2/
+CHECK THIS/
+PAGES.md
+GOOGLE_PLAN.md
+StartSchool Public Platform Redesign.html

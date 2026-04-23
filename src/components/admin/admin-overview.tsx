@@ -13,6 +13,7 @@ import {
   FileSearch,
   TrendingUp,
   FileText,
+  ClipboardList,
   ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
@@ -158,6 +159,12 @@ const ADMIN_LINKS = [
     icon: TrendingUp,
     href: "/dashboard/admin/progress",
     color: "text-teal-600",
+  },
+  {
+    title: "Weekly Reports",
+    icon: ClipboardList,
+    href: "/dashboard/admin/weekly-reports",
+    color: "text-indigo-600",
   },
   {
     title: "Audit Logs",
