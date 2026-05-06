@@ -8,7 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AlertTriangle, Clock, FileText, Target } from "lucide-react";
+import { AlertTriangle, FileText, Target } from "lucide-react";
+import { useMemo } from "react";
 
 interface TeamProgress {
   team_id: string;
@@ -18,6 +19,7 @@ interface TeamProgress {
   tasks_approved: number;
   tasks_in_progress: number;
   weekly_reports_count: number;
+  last_report_at: string | null;
   days_since_last_activity: number;
   health_status: "green" | "yellow" | "red";
 }
@@ -25,7 +27,7 @@ interface TeamProgress {
 interface Alert {
   team_id: string;
   team_name: string;
-  type: "inactive" | "zero_tasks" | "no_reports" | "stalled";
+  type: "zero_tasks" | "no_reports" | "stalled";
   severity: "red" | "yellow";
   message: string;
   suggestion: string;
@@ -36,92 +38,79 @@ interface StudentProgressAlertsProps {
 }
 
 export function StudentProgressAlerts({ teams }: StudentProgressAlertsProps) {
-  // Generate alerts from team data
-  const alerts: Alert[] = [];
+  const alerts = useMemo(() => {
+    // Captured once per memo evaluation; safe for "days ago" formatting.
+    // eslint-disable-next-line react-hooks/purity
+    const nowMs = Date.now();
+    const list: Alert[] = [];
 
-  teams.forEach((team) => {
-    // Inactive 14+ days
-    if (
-      team.days_since_last_activity >= 14 &&
-      team.days_since_last_activity < 10000
-    ) {
-      alerts.push({
-        team_id: team.team_id,
-        team_name: team.team_name,
-        type: "inactive",
-        severity: "red",
-        message: `No activity in ${team.days_since_last_activity} days`,
-        suggestion: "Reach out to check if they need help",
-      });
-    }
-    // Inactive 7-14 days
-    else if (
-      team.days_since_last_activity >= 7 &&
-      team.days_since_last_activity < 14
-    ) {
-      alerts.push({
-        team_id: team.team_id,
-        team_name: team.team_name,
-        type: "inactive",
-        severity: "yellow",
-        message: `Slowing down — ${team.days_since_last_activity} days since last activity`,
-        suggestion: "Send a check-in message",
-      });
-    }
+    teams.forEach((team) => {
+      // Zero approved tasks — guard with `weekly_reports_count >= 1` so brand-new
+      // teams (no reports, no tasks yet) don't false-positive. Established teams
+      // with at least one report but zero approvals are the genuine signal.
+      if (team.tasks_approved === 0 && team.weekly_reports_count >= 1) {
+        list.push({
+          team_id: team.team_id,
+          team_name: team.team_name,
+          type: "zero_tasks",
+          severity: "red",
+          message: "No completed tasks yet",
+          suggestion: "Schedule onboarding call",
+        });
+      }
 
-    // Zero approved tasks
-    if (team.tasks_approved === 0) {
-      alerts.push({
-        team_id: team.team_id,
-        team_name: team.team_name,
-        type: "zero_tasks",
-        severity: "red",
-        message: "No completed tasks yet",
-        suggestion: "Schedule onboarding call",
-      });
-    }
+      // No weekly report submitted in the last 14 days (covers both "never" and "stopped").
+      const daysSinceReport = team.last_report_at
+        ? Math.floor(
+            (nowMs - new Date(team.last_report_at).getTime()) / 86400000
+          )
+        : null;
+      if (
+        team.member_count > 0 &&
+        (daysSinceReport === null || daysSinceReport >= 14)
+      ) {
+        list.push({
+          team_id: team.team_id,
+          team_name: team.team_name,
+          type: "no_reports",
+          severity: "yellow",
+          message:
+            daysSinceReport === null
+              ? "Never submitted a weekly report"
+              : `No weekly report in ${daysSinceReport} days`,
+          suggestion: "Remind about weekly report requirement",
+        });
+      }
 
-    // No weekly reports in last 2 weeks (heuristic: < 2 reports and team exists)
-    if (team.weekly_reports_count === 0 && team.member_count > 0) {
-      alerts.push({
-        team_id: team.team_id,
-        team_name: team.team_name,
-        type: "no_reports",
-        severity: "yellow",
-        message: "Never submitted a weekly report",
-        suggestion: "Remind about weekly report requirement",
-      });
-    }
+      // Stalled: has tasks in progress but nothing approved recently
+      if (
+        team.tasks_in_progress >= 3 &&
+        team.tasks_approved < 2 &&
+        team.days_since_last_activity > 5
+      ) {
+        list.push({
+          team_id: team.team_id,
+          team_name: team.team_name,
+          type: "stalled",
+          severity: "yellow",
+          message: `${team.tasks_in_progress} tasks in progress, but slow approvals`,
+          suggestion: "Check if tasks are stuck in review",
+        });
+      }
+    });
 
-    // Stalled: has tasks in progress but nothing approved recently
-    if (
-      team.tasks_in_progress >= 3 &&
-      team.tasks_approved < 2 &&
-      team.days_since_last_activity > 5
-    ) {
-      alerts.push({
-        team_id: team.team_id,
-        team_name: team.team_name,
-        type: "stalled",
-        severity: "yellow",
-        message: `${team.tasks_in_progress} tasks in progress, but slow approvals`,
-        suggestion: "Check if tasks are stuck in review",
-      });
-    }
-  });
+    list.sort((a, b) => {
+      if (a.severity !== b.severity) {
+        return a.severity === "red" ? -1 : 1;
+      }
+      return 0;
+    });
 
-  // Sort by severity (red first), then by type
-  alerts.sort((a, b) => {
-    if (a.severity !== b.severity) {
-      return a.severity === "red" ? -1 : 1;
-    }
-    return 0;
-  });
+    return list;
+  }, [teams]);
 
   const alertIcon = (type: Alert["type"]) => {
     switch (type) {
-      case "inactive":
-        return <Clock className="h-4 w-4" />;
       case "zero_tasks":
         return <Target className="h-4 w-4" />;
       case "no_reports":

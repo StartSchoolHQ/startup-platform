@@ -66,7 +66,6 @@ interface StudentProgress {
   team_name: string | null;
   role: string;
   total_xp: number;
-  last_sign_in_at: string | null;
   last_transaction_at: string | null;
   last_report_at: string | null;
   last_active_at: string | null;
@@ -252,6 +251,7 @@ export default function StudentProgressPage() {
         tasks_approved: t.tasks_approved,
         tasks_in_progress: t.tasks_in_progress,
         weekly_reports_count: t.weekly_reports_count,
+        last_report_at: t.last_report_at,
         days_since_last_activity:
           t.days_since_last_xp >= 9999 ? 99999 : t.days_since_last_xp,
         health_status: t.health_status,
@@ -508,20 +508,12 @@ export default function StudentProgressPage() {
                       <TableHead>Team</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead className="text-right">XP</TableHead>
-                      <TableHead>Last Login</TableHead>
                       <TableHead>Last Activity</TableHead>
                       <TableHead>Health</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredStudents.map((s) => {
-                      const daysSinceLogin = s.last_sign_in_at
-                        ? Math.floor(
-                            (Date.now() -
-                              new Date(s.last_sign_in_at).getTime()) /
-                              86400000
-                          )
-                        : 9999;
                       return (
                         <TableRow key={s.user_id} className="hover:bg-muted/50">
                           <TableCell>
@@ -547,9 +539,6 @@ export default function StudentProgressPage() {
                           <TableCell className="text-right tabular-nums">
                             {s.total_xp.toLocaleString()}
                           </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {formatDaysAgo(daysSinceLogin)}
-                          </TableCell>
                           <TableCell
                             className={
                               s.days_since_last_active >= 14
@@ -569,7 +558,7 @@ export default function StudentProgressPage() {
                     })}
                     {filteredStudents.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={8} className="py-8 text-center">
+                        <TableCell colSpan={7} className="py-8 text-center">
                           <p className="text-muted-foreground text-sm">
                             No students in this bucket
                           </p>
