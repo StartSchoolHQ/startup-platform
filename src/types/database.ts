@@ -1422,6 +1422,18 @@ export type Database = {
         };
         Returns: Json;
       };
+      distribute_team_rewards_v2: {
+        Args: {
+          p_points_amount: number;
+          p_progress_id?: string;
+          p_reviewer_id?: string;
+          p_task_id?: string;
+          p_task_title?: string;
+          p_team_id: string;
+          p_xp_amount: number;
+        };
+        Returns: Json;
+      };
       generate_weekly_leaderboard_snapshots: {
         Args: { p_week_number?: number; p_week_year?: number };
         Returns: Json;
@@ -1429,6 +1441,61 @@ export type Database = {
       generate_weekly_team_leaderboard_snapshots: {
         Args: { p_week_number?: number; p_week_year?: number };
         Returns: Json;
+      };
+      get_admin_program_health: {
+        Args: never;
+        Returns: {
+          active_14d: number;
+          active_7d: number;
+          at_risk_students: number;
+          avg_xp_per_student: number;
+          pending_reviews: number;
+          pending_strikes: number;
+          reports_last_week: number;
+          reports_this_week: number;
+          tasks_last_week: number;
+          tasks_this_week: number;
+          total_active_teams: number;
+          total_students: number;
+        }[];
+      };
+      get_admin_program_health_v2: {
+        Args: never;
+        Returns: {
+          active_14d: number;
+          active_7d: number;
+          at_risk_students: number;
+          avg_xp_per_student: number;
+          pending_reviews: number;
+          pending_strikes: number;
+          reports_last_week: number;
+          reports_this_week: number;
+          students_active: number;
+          students_active_wow_delta: number;
+          students_at_risk: number;
+          students_at_risk_wow_delta: number;
+          students_slowing: number;
+          tasks_last_week: number;
+          tasks_this_week: number;
+          teams_active: number;
+          teams_active_wow_delta: number;
+          teams_at_risk: number;
+          teams_at_risk_wow_delta: number;
+          teams_slowing: number;
+          total_active_teams: number;
+          total_students: number;
+        }[];
+      };
+      get_admin_weekly_trends: {
+        Args: never;
+        Returns: {
+          active_students: number;
+          report_submissions: number;
+          tasks_completed: number;
+          week_label: string;
+          week_number: number;
+          week_year: number;
+        }[];
       };
       get_audit_logs: {
         Args: {
@@ -1511,6 +1578,31 @@ export type Database = {
           name: string;
         }[];
       };
+      get_dashboard_action_items: {
+        Args: { p_user_id: string };
+        Returns: {
+          leaderboard_rank: number;
+          leaderboard_total_users: number;
+          leaderboard_xp_change: number;
+          pending_reviews_count: number;
+          pending_tasks_count: number;
+          total_points: number;
+          total_xp: number;
+          weekly_report_submitted: boolean;
+        }[];
+      };
+      get_dashboard_overview: {
+        Args: { p_user_id: string };
+        Returns: {
+          completed_achievements: number;
+          completed_tasks: number;
+          teams_data: Json;
+          total_achievements: number;
+          total_points: number;
+          total_tasks: number;
+          total_xp: number;
+        }[];
+      };
       get_enhanced_team_tasks: {
         Args: { p_team_id: string };
         Returns: {
@@ -1576,6 +1668,72 @@ export type Database = {
           user_email: string;
           user_id: string;
           user_name: string;
+          xp_change: number;
+        }[];
+      };
+      get_live_leaderboard_data: {
+        Args: { p_limit?: number };
+        Returns: {
+          achievements_change: number;
+          achievements_count: number;
+          is_new_entry: boolean;
+          peer_reviews_count: number;
+          points_change: number;
+          rank_change: number;
+          rank_position: number;
+          tasks_change: number;
+          tasks_completed: number;
+          team_name: string;
+          total_points: number;
+          total_xp: number;
+          user_avatar_url: string;
+          user_email: string;
+          user_id: string;
+          user_name: string;
+          weekly_reports_count: number;
+          xp_change: number;
+        }[];
+      };
+      get_live_team_leaderboard_data: {
+        Args: { p_limit?: number };
+        Returns: {
+          is_new_entry: boolean;
+          meetings_change: number;
+          meetings_count: number;
+          member_count: number;
+          points_change: number;
+          rank_change: number;
+          rank_position: number;
+          tasks_change: number;
+          tasks_completed: number;
+          team_id: string;
+          team_logo_url: string;
+          team_name: string;
+          total_points: number;
+          total_xp: number;
+          xp_change: number;
+          xp_per_member: number;
+        }[];
+      };
+      get_live_weekly_leaderboard_data: {
+        Args: { p_limit?: number };
+        Returns: {
+          achievements_change: number;
+          achievements_count: number;
+          peer_reviews_count: number;
+          points_change: number;
+          rank_change: number;
+          rank_position: number;
+          tasks_change: number;
+          tasks_completed: number;
+          team_name: string;
+          total_points: number;
+          total_xp: number;
+          user_avatar_url: string;
+          user_email: string;
+          user_id: string;
+          user_name: string;
+          weekly_reports_count: number;
           xp_change: number;
         }[];
       };
@@ -1655,6 +1813,46 @@ export type Database = {
           team_status: string;
           total_team_xp: number;
           weekly_reports_count: number;
+        }[];
+      };
+      get_student_progress_overview_v2: {
+        Args: never;
+        Returns: {
+          avg_xp_per_member: number;
+          days_since_last_xp: number;
+          health_status: string;
+          last_report_at: string;
+          last_task_completed_at: string;
+          last_xp_gain_at: string;
+          member_count: number;
+          tasks_approved: number;
+          tasks_in_progress: number;
+          tasks_not_started: number;
+          tasks_pending_review: number;
+          team_description: string;
+          team_id: string;
+          team_name: string;
+          team_status: string;
+          total_team_xp: number;
+          weekly_reports_count: number;
+        }[];
+      };
+      get_students_health_overview_v2: {
+        Args: never;
+        Returns: {
+          days_since_last_active: number;
+          email: string;
+          full_name: string;
+          health_status: string;
+          last_active_at: string;
+          last_report_at: string;
+          last_sign_in_at: string;
+          last_transaction_at: string;
+          role: string;
+          team_id: string;
+          team_name: string;
+          total_xp: number;
+          user_id: string;
         }[];
       };
       get_task_history: {
@@ -1789,6 +1987,7 @@ export type Database = {
           total_points: number;
           total_xp: number;
           xp_change: number;
+          xp_per_member: number;
         }[];
       };
       get_team_meetings: {
@@ -2035,6 +2234,16 @@ export type Database = {
           title: string;
         }[];
       };
+      get_user_pending_tasks: {
+        Args: { p_limit?: number; p_user_id: string };
+        Returns: {
+          due_date: string;
+          task_id: string;
+          task_name: string;
+          task_status: string;
+          team_name: string;
+        }[];
+      };
       get_user_progress_details: { Args: { p_user_id: string }; Returns: Json };
       get_user_tasks_visible: {
         Args: { p_user_id: string };
@@ -2087,6 +2296,14 @@ export type Database = {
           title: string;
         }[];
       };
+      get_user_weekly_streaks: {
+        Args: { p_user_ids: string[] };
+        Returns: {
+          streak_type: string;
+          streak_weeks: number;
+          user_id: string;
+        }[];
+      };
       get_users_for_filter: {
         Args: never;
         Returns: {
@@ -2094,6 +2311,10 @@ export type Database = {
           id: string;
           name: string;
         }[];
+      };
+      get_v5_upmark_factor: {
+        Args: { p_member_count: number };
+        Returns: number;
       };
       has_user_submitted_this_week: {
         Args: { p_team_id: string; p_user_id: string };
@@ -2378,7 +2599,8 @@ export type Database = {
         | "achievement"
         | "meeting"
         | "weekly_report_penalty"
-        | "weekly_report_refund";
+        | "weekly_report_refund"
+        | "admin_grant";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -2566,6 +2788,7 @@ export const Constants = {
         "meeting",
         "weekly_report_penalty",
         "weekly_report_refund",
+        "admin_grant",
       ],
     },
   },
