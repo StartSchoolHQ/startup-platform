@@ -109,10 +109,9 @@ export const WeeklyReportSchema = z
     // Q6: Commitments for next week
     nextWeekCommitments: z
       .array(z.string())
-      .refine(
-        (commitments) => commitments.some((c) => c.trim().length >= 5),
-        { message: "At least one commitment for next week is required" }
-      ),
+      .refine((commitments) => commitments.some((c) => c.trim().length >= 5), {
+        message: "At least one commitment for next week is required",
+      }),
     teamRecognition: z.string().optional(),
     alignmentScore: z.number().int().min(1).max(10),
     alignmentReason: z
@@ -315,3 +314,46 @@ export type PeerReviewHistoryEntry = z.infer<
   typeof peerReviewHistoryEntrySchema
 >;
 export type PeerReviewHistory = z.infer<typeof peerReviewHistorySchema>;
+
+// ============================================
+// SCHOLARSHIP AGREEMENT SCHEMAS
+// ============================================
+
+/**
+ * Student form submission for a scholarship agreement.
+ * Captured by the public /full-scholarship-agreement and
+ * /partial-scholarship-agreement pages before Dokobit eID redirect.
+ * Email is collected twice to catch typos client-side; the schema enforces
+ * the match server-side as defence-in-depth.
+ */
+export const ScholarshipFormSchema = z
+  .object({
+    agreement_type: z.enum(["full", "partial"]),
+    email: z.string().email("Invalid email").max(320).trim().toLowerCase(),
+    confirm_email: z
+      .string()
+      .email("Invalid email")
+      .max(320)
+      .trim()
+      .toLowerCase(),
+    phone: z
+      .string()
+      .min(4, "Phone too short")
+      .max(32, "Phone too long")
+      .regex(
+        /^[+0-9 ()\-]+$/,
+        "Phone may only contain digits, +, spaces, () and -"
+      ),
+    address: z
+      .string()
+      .min(4, "Address too short")
+      .max(500, "Address too long")
+      .trim(),
+    language: z.enum(["lv", "en"]).default("en"),
+  })
+  .refine((v) => v.email === v.confirm_email, {
+    message: "Emails do not match",
+    path: ["confirm_email"],
+  });
+
+export type ScholarshipFormInput = z.infer<typeof ScholarshipFormSchema>;
