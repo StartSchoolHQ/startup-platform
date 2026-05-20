@@ -1,0 +1,158 @@
+﻿
+ StartSchool Student Agreement
+
+This agreement is concluded between
+(Name, Lastname)________________________, hereinafter Student, address at ______________, personal identity number ____________ / born on ____________, and
+Tech Education Foundation, hereinafter StartSchool, address at Stabu iela 50-9, LV-1011 Rīga, Latvia, registration No. 50008325331, represented by its member of the board Anna Andersone.
+
+ 
+
+The parties acknowledge the following:
+the purpose of the StartSchool is to develop IT and entrepreneurial skills of the upcoming technology business leaders who are motivated to use these skills for advancement of their careers and of the businesses they work for, or businesses of their own, with a broader aim to increase the wellbeing of Latvian society.
+To achieve the purpose, several donors have contributed the funds to organize the StartSchool Program and to pay the cost of studies of the selected students. The StartSchool has calculated the investment of donors being above 5000 euro to enable studying of one person completing the full time 12 month program;
+the Student has been selected as highly motivated and suitable candidate to receive the tuition with the StartSchool Program and as a person potentially capable of implementing the purpose of the StartSchool Program;
+selection of the Student over hundreds of other candidates for participation in the StartSchool Program is considered as the trust of the StartSchool Program in Student’s ability to most efficiently use the resources that are allocated to achieve the purpose of the StartSchool Program and not as an award or recognition for the Student’s previous achievements.
+even if the Student is paying partial or full Tuition Fee, the Student benefits from the environment of studies and exchange of ideas and opinions created by involving other students who participate in the StartSchool Program thanks to the support of the donors;
+the donors and organizers of the StartSchool Program do not intend to impose any legal obligation regarding Student’s career choices after completion of the StartSchool Program, but expect Student to use the obtained skills and knowledge for advancement of the Student’s career or business and the Student’s commitment to to increase wellbeing of Latvian society. Considering the above acknowledgements, the parties agree as follows.
+
+Subject of the Agreement
+This agreement provides for the terms under which the Student takes part in the education and mentoring program organized by the StartSchool (hereinafter StartSchool Program) and for the financial obligations of the Parties.
+
+General terms 
+The Study Period of the StartSchool Program starts on 2025, August 26 and ends on 2026, August 29. The Study Period ends prematurely at the moment of termination of the agreement.
+The Student shall be admitted to participation in the StartSchool Program during the study Period subject to payment of the Enrolment Fee and partial or full Tuition Fee (if applicable) by the terms provided in Clause 3 of the agreement.
+StartSchool shall determine the content of the StartSchool Program. Although the StartSchool Program is generally uniform for all its participants and is not tailored to the needs of an individual participant, the specific assignments given to each participant may depend on the participant’s previous achievements. Therefore, some assignments given to the Student may be different from those given to the other participants of the StartSchool Program.
+The StartSchool Program is set up as a guided and mentored self-study program. The Student shall invest their effort in finding and studying the information independently, and shall not rely solely on the information or materials supplied by StartSchool.
+The following shall be available to the Student during the Study Period:
+access to StartSchool education platform and StartSchool environment;
+live coding sessions with professionals;
+site visits to tech companies;
+mentorship from experienced startup founders, entrepreneurs, and technology experts;
+lectures and workshops to gain skills and knowledge needed for building a startup;
+access to a workplace at StartSchool office at StartupHouse, Lastādijas iela 12 k-3, Riga, subject to pre-booking and availability of the workplace.
+During the Study Period the Student shall treat completion of the StartSchool Program assignments as Student’s primary occupation and shall allocate at least 40 hours per week for work on these assignments, and shall take part in StartSchool Program activities according to the schedule set by the StartSchool. The Student hereby acknowledges that they have taken the necessary measures to ensure that means of subsistence are available to the Student during the entire Study Period, considering the limited time that the Student may have for income-generating activities during the Study Period. The Student hereby waives all claims against the StartSchool, its officers, employees and other persons involved in the StartSchool Program regarding possible loss or inconvenience due to Student’s inability to generate income during the Study Period and due to the possible distress related to the possibly more demanding life conditions during the Study Period.
+The student shall use such tools, systems, platforms and other resources for participation in the StartSchool Program and for completion of the specific assignments, as the StartSchool may assign. The Student shall comply with terms of use of these tools, systems, platforms and other resources as set by their providers.
+
+
+Tuition Fee, Scholarship, Enrolment Fee and Payment Terms
+
+The full Tuition Fee for the StartSchool Program is €5000 for the entire Study Period.
+
+For the Study Period the StartSchool assigns to the Student the following Scholarship, which is made possible through donations from StartSchool founders and partners, and aims to support motivated students with high potential to contribute to Latvia’s tech ecosystem:
+Full Tuition Scholarship: Covers 100% of the tuition fee (€5000). The Student shall pay  the Enrolment Fee. 
+Partial Tuition Scholarship: Covers 60% of the tuition fee. The Student shall pay €2000 partial Tuition Fee and the Enrolment fee in full.
+
+The StartSchool may cancel the Tuition Scholarship due to the Student’s sub-optimal performance as provided in Clause 4 of this Agreement, or due to a material breach of the Code of Conduct by the Student.
+
+The Student shall pay the part of the  Tuition Fee not covered by the Tuition Scholarship in two instalments:
+First installment of the Tuition Fee - €1000 within 14 days after signing of this agreement;
+Second installment of the  Tuition Fee -  €1000 by 31 January 2026.
+The Student may propose payment of the Tuition Fee in more than 2 instalments according to the schedule agreed between the Student and the StartSchool. Agreement to such Student’s proposal is at StartSchool’s discretion. The agreement on a payment schedule other than provided in clause 3.4. of this Agreement is effective if formalized in writing and signed by the Student and the StartSchool.
+
+Enrolment Fee
+The Student shall pay to the StartSchool the Enrolment fee of €500 within 14 days from signing of this Agreement by bank transfer to the StartSchool bank account provided herein. 
+The Student’s failure to pay the Enrolment fee by the deadline provided in this clause above shall be considered as Student’s withdrawal from this agreement.
+
+The Enrolment fee is partial compensation of StartSchool’s expenses related to setting up the conditions needed for the Student’s participation in the StartSchool Program. The Enrolment fee is non-refundable.
+
+All payments shall be made by bank transfer to the following account:
+
+Bank: Swedbank AS
+
+SWIFT Code: HABALV22
+
+IBAN: LV90HABA0551055781933
+
+Beneficiary: Tech Education Foundation, Nodibinājums
+Payment note: Payment According to Agreement
+
+Any payment is considered made when the money is received in the StartSchool’s bank account.
+
+If a student requires an installment plan, a separate written agreement must be concluded within 14 days from signing of this Agreement.
+
+Performance Reviews
+Student progress and program compliance will be evaluated at three checkpoints during the study period:
+End of October 2025
+End of December 2025
+End of March 2026
+At these checkpoints the StartSchool may assess the Student’s performance according to the following Performance Requirements:
+completion of mandatory assignments: all mandatory assignments must be completed;
+attendance in required sessions: minimum 75% of the required sessions should be attended;
+demonstrated progress and engagement as defined by the StartSchool Program Manager.
+If, based on the assessment, the Student is found to have failed to meet the Performance Requirements and does not provide a justifiable reason (at StartSchool’s reasonable discretion), then the StartSchool may cancel the Scholarship assigned to the Student. The StartSchool shall notify the Student about StartSchool’s decision to cancel the Scholarship via email.
+The StartSchool shall notify the Student via email of the StartSchool’s decision to cancel the Scholarship (hereinafter Cancellation Notice). The Student then may:
+notify the StartSchool on the Student’s intention to continue participation in the StartSchool Program within 14 days after receiving the Cancellation Notice.
+if the Student has notified the StartSchool on the Student’s intention to continue participation in the StartSchool Program within the above term, the Student shall pay to the StartSchool within 28 days after receiving the Cancellation Notice:
+the Tuition Fee in full, if the Student had been assigned Full Tuition Scholarship
+the remaining part of the Tuition Fee, considering payments that the Student has already made under clause 3.4. of this Agreement
+Student’s failure to notify the StartSchool on Student’s intention or Student’s failure to pay the Tuition Fee in full within the term provided herein is considered as the Student’s withdrawal from this agreement, which withdrawal is effective without any further formalities. For the avoidance of the doubt, no refund or reduction of the Tuition Fee will be provided for any period already studied under Tuition Scholarship.
+The Student may propose payment of the Tuition Fee in several instalments according to the schedule agreed between the Student and the StartSchool. Agreement to such Student’s proposal is at StartSchool’s discretion. The agreement on a payment schedule other than provided in Clause 3 of this Agreement is effective if formalized in writing and signed by the Student and the StartSchool.
+
+
+
+
+Consequences of Late or Non-Payment
+
+If the Student delays a payment, then the Student shall pay to StartSchool a late payment penalty of 0.1% from the delayed payment for each overdue day.
+
+If the Student fails to pay within 30 days of the due date, StartSchool may suspend the Student’s access to educational resources, mentorship, and facilities. If the Student fails to pay within 45 days of the due date, StartSchool may withdraw from the Agreement unilaterally.
+
+If the Agreement is terminated due to delay of payment, then the Tuition Fee already paid shall not be refunded.
+
+
+Suspension and Rejoining the Program
+The Student may request StartSchool to suspend the Student’s participation in the StartSchool Program for one year. If the Student has received full or partial Tuition Scholarship, then the StartSchool may ask the Student for the reason of the request and may reject the request if the Start School, at its reasonable opinion, does not find the reason substantial. The StartSchool shall notify the Student on granting the suspension via email.
+If the Student’s participation in the StartSchool Program has been suspended, then the performance of the obligations of the parties provided in this Agreement is suspended until the Student resumes the participation in the StartSchool Program, or this Agreement is terminated.
+The Student whose participation in the StartSchool Program has been suspended, may resume the participation in the Start School in the next year. To resume the Student’s participation in the Program, the Student must notify the StartSchool on resumption until August 1 of the next year. Alternatively, the Student may extend the suspension for another one year notifying the StartSchool on the extension until the term provided for the notice on resumption. If the Student has received full or partial Tuition Scholarship, then the StartSchool may ask the Student for the reason for the extension and may reject the extension if the Start School, at its reasonable opinion, does not find the reason substantial. The StartSchool shall notify the Student on granting the extension via email. If the suspension is extended for another year, then to resume the Student’s participation in the Program, the Student must notify the StartSchool on resumption until August 1 of the next year. The total period of suspension may not exceed 2 years.
+If the Student resumes the participation in the StartSchool Program, then the obligations of the Parties provided in this agreement resume. The Student shall not be required to complete the part of the StartSchool Program they had completed until suspension. The Student shall pay the unpaid Tuition Fee instalments (if due), and their payment due dates shall be considered extended for the duration of the suspension (i.e, for one or two years).
+If the Student neither notifies the Start School on resuming of the Student’s participation, nor requests the extension by the deadline and as otherwise provided in Clause 4 of this Agreement, then it is considered that the Student has withdrawn themself from the Agreement on the day when the term for notification or the resumption has expired.
+
+
+Further Participation After First Year
+
+If the Student has not completed the StartSchool Program within the Study Period and wishes to continue participation in the StartSchool Program beyond this period, the Student may ask for the StartSchool’s proposal for extension of the Study Period. The StartSchool may propose the terms for the Student’s further participation in the StartSchool Program and the fees payable for such participation at StartSchool’s discretion. The agreement on the Student’s participation in the StartSchool Program is effective if signed by both parties.
+
+Notwithstanding the Student’s possible continued participation in the StartSchool Program, this Agreement expires upon the end of the Study Period.
+
+Effective date and Termination
+The agreement is effective from the date of the last signature and is effective until its complete execution or until its termination.
+Without prejudice to the StartSchool’s right to withdraw from this Agreement provided elsewhere in this Agreement, the StartSchool may withdraw from this agreement at any time, at will, and especially if:
+The StartSchool considers the results of the Student’s participation in StartSchool Program suboptimal
+Suboptimal result means that the Student fails to follow the program completion pace set by the Program Manager or participates in less than 50% of StartSchool mandatory sessions without a reasonable cause, or if the Student does not reach goals set at individual meetings. 
+Student does not comply with the StartSchool Code of Conduct
+Code of Conduct is an Annex of this Agreement and is an integral part of it.
+If the Student breaches the Code of Conduct, then the StartSchool issues a written warning and may have a discussion with the Student concerning the breach. The Student must improve their approach and make sure to comply with the Code of Conduct. If another breach occurs, then StartSchool issues a written warning to the Student and the Student is invited to a Disciplinary Committee meeting. The StartSchool may withdraw from the Agreement if the Disciplinary Committee so suggests after the second breach. Otherwise, the StartSchool may withdraw form the Agreement if the Student commits th third breach of the Code of Conduct.
+Student’s further participation in the StartSchool Program is incompatible with the purpose of the StartSchool or the StartSchool Program.
+Although the Student should apply their best effort to complete the StartSchool Program, the Student may withdraw from this agreement at any time, at will. When withdrawing from the agreement, the student shall consider every opportunity not to do so and shall withdraw only when there is a substantial reason to do so. The Student shall notify the StartScholl on withdrawal from this Agreement by sending a formal withdrawal notice via email to start@startschool.org. If the Student withdraws from the Agreement, the already paid Tuition Fee shall not be refunded.
+The withdrawing party shall notify the other party of the withdrawal by submitting a written and signed withdrawal notice to the other party by sending it to the other party’s address or email address. The agreement is terminated on the 5th day following the dispatch of the withdrawal notice. The Student’s payment obligations provided in clause 8.7 of this agreement remain effective until fulfilment.
+If either  StartSchool or the Student withdraws from the agreement, then the Enrollment fee is not refunded.
+If StartSchool withdraws from this agreement at will (without referring to Clause 5.2. or to paragraph 8.2.1., 8.2.2. or 8.2.3. of this agreement) and if the Student has paid Tuition Fee in advance for the period after the withdrawal then StartSchool shall refund to the Student the part of the Tuition Fee paid for the period after the withdrawal.
+ If StartSchool withdraws from this agreement because of Student’s breach of this agreement (referring to Clause 5.2. or to paragraph 8.2.1., 8.2.2. or 8.2.3. of this agreement) or if Student withdraws from this agreement, and if at the time of such withdrawal the Student has not paid Tuition Fee in the amount due from the Student for the entire study period until the withdrawal, then the Student shall, upon StartSchool’s request, pay the Tuition Fee due from the Student for the period until withdrawal from the agreement.
+If the Student withdraws from the agreement after 2 months from the Study Period start date, or if StartSchool withdraws from this Agreement on the grounds specified in paragraphs 8.2.1., 8.2.2., 8.2.3., then the Student shall pay the StartSchool the compensation of €200 for each  month when the Student has been assigned a Tuition Scholarship (either full or partial), for the period starting from 2 months after the Study Period start date until termination of the agreement. The compensation is not payable for the period when the Student has not been assigned a Tuition Scholarship (either full or partial). The compensation is a partial compensation for the StartSchool’s expenses related to providing the possibility for the Student to participate in the StartSchool Program. For the avoidance of the doubt, the compensation provided herein is payable also if the Agreement is terminated because the Student’s participation in the StartSchool Program has not been resumed after it was suspended, and if the Student has not completed the StartSchool Program within the Study Period and has not concluded the agreement on further participation in the StartSchool Program.
+In case of withdrawal, the Student shall pay the Tuition Fee (clause 8.8.) and compensation (Clause 8.9)  within 14 days upon sending of the StartSchool’s payment request  to the Student’s e-mail address. The Student shall pay a late payment penalty of 0.1% from the amount of the delayed payment per each overdue day applied to the outstanding balance.
+
+Information and confidentiality
+The Student shall not disclose to third parties the information about the process of implementation of the StartSchool Program, that, if learned by third parties, may cause violation of other person's rights or damage to the reputation of the StartSchool or to StartSchool Program. The Student may reveal the information about its participation in the StartSchool Program insofar as it pertains only to the Student and does not include information about other persons without their express consent.
+The Student agrees that their participation in the StartSchool Program activities and assignments may be recorded in photographs or on video and such recordings may be used to illustrate the StartSchool Program and the StartSchool Program for a non-commercial purpose.
+The Student hereby irrevocably permits the StartSchool to use for educational purposes and for promotion of the StartSchool and the StartSchool Program any material that the Student has prepared or made available to the StartSchool or the involved tutors, mentors or other StartSchool personnel, in course of the Student's participation in the StartSchool Program. The permission especially enables the StartSchool to use such material for tuition of other StartSchool Program students. The permission is effective worldwide and without limitation of the term. The Student hereby acknowledges that by receiving the education provided by the StartSchool the value whereof exceeds the Student's payments to the StartSchool, the Student has received sufficient compensation for the permission stated in this clause and hereby waives all claims for the remuneration in relation to the permission granted under this clause and in relation to use of the material in compliance with this permission. The permission does not apply to the parts of such material that are expressly noted as developed or authored by persons other than the Student (e.g., quotes, reused software code, etc.).
+
+Final provisions
+The relationship arising from this agreement is governed by the normative acts effective in the Republic of Latvia.
+Amendments to this agreement are effective if formalized in writing and signed by the parties.
+
+
+Particulars of the parties
+the Student: email XXX, phone +371 9 8765432
+the StartSchool: email start@startschool.org, phone +371 28660693, bank: Swedbank AS, SWIFT code: HABALV22, IBAN: LV90HABA0551055781933, Tech Education Foundation.
+
+Signatures of the Parties
+
+ 
+The Student:		_____________________________
+ 
+The StartSchool: 	_____________________________
+Anna Andersone on behalf of Tech Education Foundation
+
+
+
+
