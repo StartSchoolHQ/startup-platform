@@ -1,0 +1,313 @@
+/**
+ * Scholarship-agreement data facade.
+ *
+ * Every WRITE goes through a `scholarship_*` RPC. Every READ uses the
+ * admin client (service role) because:
+ *   1. RLS denies all anon/authenticated INSERT/UPDATE/DELETE.
+ *   2. Public API routes (e.g. start-identity callback) need to look up
+ *      a draft by its dokobit_auth_token without any logged-in user.
+ *   3. Admin routes need cross-user SELECT for the queue/list views.
+ *
+ * The seam-audit script blocks any code outside the scholarship module
+ * from importing this file — see `scripts/seam-audit.mjs`.
+ */
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { Database } from "@/types/database";
+
+type Row = Database["public"]["Tables"]["scholarship_agreements"]["Row"];
+type EventRow =
+  Database["public"]["Tables"]["scholarship_agreement_events"]["Row"];
+type AgreementType = Database["public"]["Enums"]["scholarship_agreement_type"];
+type Language = Database["public"]["Enums"]["scholarship_agreement_language"];
+type Status = Database["public"]["Enums"]["scholarship_agreement_status"];
+type Json =
+  Database["public"]["Tables"]["scholarship_agreement_events"]["Row"]["payload"];
+
+function admin() {
+  return createAdminClient();
+}
+
+// ============================================================
+// Write — student form submission + identity
+// ============================================================
+
+export interface SubmitFormInput {
+  agreement_type: AgreementType;
+  email: string;
+  phone: string;
+  address: string;
+  language: Language;
+  dokobit_auth_token: string;
+  expires_at: string;
+}
+
+/**
+ * Creates a draft scholarship_agreements row. The Dokobit session token
+ * becomes the row's correlation key through the identity callback —
+ * callers MUST mint the Dokobit auth session BEFORE calling this and
+ * pass the resulting session_token in as `dokobit_auth_token`.
+ */
+export async function submitForm(input: SubmitFormInput): Promise<Row> {
+  const { data, error } = await admin().rpc("scholarship_submit_form", {
+    p_type: input.agreement_type,
+    p_email: input.email,
+    p_phone: input.phone,
+    p_address: input.address,
+    p_language: input.language,
+    p_dokobit_auth_token: input.dokobit_auth_token,
+    p_expires_at: input.expires_at,
+  });
+  if (error) throw error;
+  return data as Row;
+}
+
+export interface RecordIdentityInput {
+  dokobit_auth_token: string;
+  personal_code: string;
+  country_code: string;
+  name: string;
+  surname: string;
+}
+
+/**
+ * Locks identity on the draft row keyed by `dokobit_auth_token`.
+ * Throws `scholarship_identity_mismatch` if a different personal_code
+ * tries to re-identify against the same draft.
+ */
+export async function recordIdentity(input: RecordIdentityInput): Promise<Row> {
+  const { data, error } = await admin().rpc("scholarship_record_identity", {
+    p_dokobit_auth_token: input.dokobit_auth_token,
+    p_personal_code: input.personal_code,
+    p_country_code: input.country_code,
+    p_name: input.name,
+    p_surname: input.surname,
+  });
+  if (error) throw error;
+  return data as Row;
+}
+
+// ============================================================
+// Write — signing lifecycle
+// ============================================================
+
+export interface RecordSigningSessionInput {
+  id: string;
+  signing_token: string;
+  signer_token: string;
+  unsigned_pdf_path: string;
+}
+
+export async function recordSigningSession(
+  input: RecordSigningSessionInput
+): Promise<Row> {
+  const { data, error } = await admin().rpc(
+    "scholarship_record_signing_session",
+    {
+      p_id: input.id,
+      p_signing_token: input.signing_token,
+      p_signer_token: input.signer_token,
+      p_unsigned_pdf_path: input.unsigned_pdf_path,
+    }
+  );
+  if (error) throw error;
+  return data as Row;
+}
+
+export async function recordStudentSigned(signingToken: string): Promise<Row> {
+  const { data, error } = await admin().rpc(
+    "scholarship_record_signer_signed",
+    { p_signing_token: signingToken }
+  );
+  if (error) throw error;
+  return data as Row;
+}
+
+export async function recordSchoolSigner(input: {
+  id: string;
+  school_signer_token: string;
+}): Promise<Row> {
+  const { data, error } = await admin().rpc(
+    "scholarship_record_school_signer",
+    {
+      p_id: input.id,
+      p_school_signer_token: input.school_signer_token,
+    }
+  );
+  if (error) throw error;
+  return data as Row;
+}
+
+/**
+ * Attaches a Dokobit batch_token to N student-signed agreements at once.
+ * Returns the number of rows successfully transitioned.
+ */
+export async function attachBatch(
+  ids: string[],
+  batchToken: string
+): Promise<number> {
+  const { data, error } = await admin().rpc("scholarship_attach_batch", {
+    p_ids: ids,
+    p_batch_token: batchToken,
+  });
+  if (error) throw error;
+  return data as number;
+}
+
+export async function recordSchoolSigned(signingToken: string): Promise<Row> {
+  const { data, error } = await admin().rpc(
+    "scholarship_record_school_signed",
+    { p_signing_token: signingToken }
+  );
+  if (error) throw error;
+  return data as Row;
+}
+
+export async function recordArchived(input: {
+  id: string;
+  signed_doc_path: string;
+}): Promise<Row> {
+  const { data, error } = await admin().rpc("scholarship_record_archived", {
+    p_id: input.id,
+    p_signed_doc_path: input.signed_doc_path,
+  });
+  if (error) throw error;
+  return data as Row;
+}
+
+// ============================================================
+// Write — events, admin actions
+// ============================================================
+
+export type ManualEventType =
+  | "identity_started"
+  | "email_completed_sent"
+  | "error";
+
+/**
+ * Logs a manual event to the append-only audit trail. State-changing
+ * transitions already write their own events via the dedicated RPCs;
+ * this is for side-channel observability (e.g. n8n delivery confirmation,
+ * error during retry).
+ */
+export async function recordEvent(input: {
+  id: string;
+  event_type: ManualEventType;
+  payload?: Record<string, unknown>;
+}): Promise<void> {
+  const { error } = await admin().rpc("scholarship_record_event", {
+    p_id: input.id,
+    p_event_type: input.event_type,
+    p_payload: (input.payload ?? {}) as Json,
+  });
+  if (error) throw error;
+}
+
+export async function cancel(id: string, reason: string): Promise<Row> {
+  const { data, error } = await admin().rpc("scholarship_cancel", {
+    p_id: id,
+    p_reason: reason,
+  });
+  if (error) throw error;
+  return data as Row;
+}
+
+/**
+ * Resets a stuck row back to identity_verified so the retry endpoint can
+ * re-run PDF render + Dokobit signing/create. Only callable when the row
+ * has an identity locked in (i.e. has at least made it past Dokobit eID).
+ */
+export async function resetForRetry(id: string): Promise<Row> {
+  const { data, error } = await admin().rpc("scholarship_reset_for_retry", {
+    p_id: id,
+  });
+  if (error) throw error;
+  return data as Row;
+}
+
+// ============================================================
+// Read paths
+// ============================================================
+
+export async function findById(id: string): Promise<Row> {
+  const { data, error } = await admin()
+    .from("scholarship_agreements")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("scholarship_not_found");
+  return data;
+}
+
+export async function findByAuthToken(dokobitAuthToken: string): Promise<Row> {
+  const { data, error } = await admin()
+    .from("scholarship_agreements")
+    .select("*")
+    .eq("dokobit_auth_token", dokobitAuthToken)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("scholarship_not_found");
+  return data;
+}
+
+export async function findBySigningToken(signingToken: string): Promise<Row> {
+  const { data, error } = await admin()
+    .from("scholarship_agreements")
+    .select("*")
+    .eq("dokobit_signing_token", signingToken)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("scholarship_not_found");
+  return data;
+}
+
+export interface ListAgreementsFilters {
+  status?: Status;
+  agreement_type?: AgreementType;
+  search?: string;
+}
+
+export async function listAgreements(
+  filters: ListAgreementsFilters = {}
+): Promise<Row[]> {
+  let query = admin()
+    .from("scholarship_agreements")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (filters.status) query = query.eq("status", filters.status);
+  if (filters.agreement_type) {
+    query = query.eq("agreement_type", filters.agreement_type);
+  }
+  if (filters.search) {
+    query = query.ilike("recipient_email", `%${filters.search}%`);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+/**
+ * Rows the admin can batch-countersign. Sorted oldest-first so the queue
+ * preserves student-signed order.
+ */
+export async function listAwaitingSchool(): Promise<Row[]> {
+  const { data, error } = await admin()
+    .from("scholarship_agreements")
+    .select("*")
+    .eq("status", "student_signed")
+    .order("student_signed_at", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function listEvents(agreementId: string): Promise<EventRow[]> {
+  const { data, error } = await admin()
+    .from("scholarship_agreement_events")
+    .select("*")
+    .eq("agreement_id", agreementId)
+    .order("occurred_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
