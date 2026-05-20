@@ -17,6 +17,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Include the scholarship Handlebars contract templates in the traced
+  // serverless bundle so renderContractHtml can readFileSync them at runtime.
+  outputFileTracingIncludes: {
+    "/agreement/identity-callback": [
+      "./src/lib/scholarship/templates/**/*.hbs",
+    ],
+    "/api/agreements/**": ["./src/lib/scholarship/templates/**/*.hbs"],
+  },
   // PostHog reverse proxy configuration
   async rewrites() {
     return [
