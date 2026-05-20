@@ -47,10 +47,27 @@ export async function updateSession(request: NextRequest) {
     "/auth/reset-password",
     "/profile/setup",
     "/invite",
+    "/full-scholarship-agreement",
+    "/partial-scholarship-agreement",
+    "/agreement/",
   ];
   const isPublicRoute = publicRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
+
+  // Hidden public scholarship pages: noindex + no-referrer so the URLs
+  // don't leak into search engines or third-party Referer headers.
+  const isScholarshipPublic =
+    request.nextUrl.pathname.startsWith("/full-scholarship-agreement") ||
+    request.nextUrl.pathname.startsWith("/partial-scholarship-agreement") ||
+    request.nextUrl.pathname.startsWith("/agreement/");
+  if (isScholarshipPublic) {
+    supabaseResponse.headers.set(
+      "X-Robots-Tag",
+      "noindex, nofollow, noarchive"
+    );
+    supabaseResponse.headers.set("Referrer-Policy", "no-referrer");
+  }
 
   // Skip auth checks for public routes
   if (isPublicRoute) {
