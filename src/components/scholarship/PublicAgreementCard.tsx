@@ -1,4 +1,5 @@
 import { AgreementForm } from "./AgreementForm";
+import { PrivacyNoticeSummary } from "./PrivacyNoticeSummary";
 import { ScholarshipTermsSummary } from "./ScholarshipTermsSummary";
 
 interface PublicAgreementCardProps {
@@ -11,8 +12,9 @@ const HEADINGS: Record<"full" | "partial", string> = {
 };
 
 /**
- * Wraps the agreement form with a friendly heading, a plain-language terms
- * summary, and a quick GDPR pointer. The legal binding text lives in the
+ * Wraps the agreement form with a friendly heading, a plain-language
+ * terms summary, the Art. 13 privacy disclosure (PrivacyNoticeSummary),
+ * and the contact-data form. The legal binding text lives in the
  * contract itself (rendered to PDF after eID); this card is the
  * onboarding view the student sees before identifying themselves.
  */
@@ -34,7 +36,10 @@ export function PublicAgreementCard({
           agreementType={agreementType}
           className="mb-6"
         />
-        <AgreementForm agreementType={agreementType} />
+        <PrivacyNoticeSummary />
+        <div className="mt-6">
+          <AgreementForm agreementType={agreementType} />
+        </div>
       </div>
       <p className="text-center text-xs text-zinc-500">
         Questions? Email{" "}

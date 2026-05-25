@@ -49,18 +49,27 @@ export async function updateSession(request: NextRequest) {
     "/invite",
     "/full-scholarship-agreement",
     "/partial-scholarship-agreement",
+    "/part-time-studies-agreement",
     "/agreement/",
+    "/privacy/scholarship-agreement",
   ];
   const isPublicRoute = publicRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
 
-  // Hidden public scholarship pages: noindex + no-referrer so the URLs
-  // don't leak into search engines or third-party Referer headers.
-  const isScholarshipPublic =
-    request.nextUrl.pathname.startsWith("/full-scholarship-agreement") ||
-    request.nextUrl.pathname.startsWith("/partial-scholarship-agreement") ||
-    request.nextUrl.pathname.startsWith("/agreement/");
+  // Hidden public scholarship pages + the privacy notice: noindex +
+  // no-referrer so the URLs don't leak into search engines or
+  // third-party Referer headers.
+  const scholarshipNoIndexPrefixes = [
+    "/full-scholarship-agreement",
+    "/partial-scholarship-agreement",
+    "/part-time-studies-agreement",
+    "/agreement/",
+    "/privacy/scholarship-agreement",
+  ];
+  const isScholarshipPublic = scholarshipNoIndexPrefixes.some((p) =>
+    request.nextUrl.pathname.startsWith(p)
+  );
   if (isScholarshipPublic) {
     supabaseResponse.headers.set(
       "X-Robots-Tag",

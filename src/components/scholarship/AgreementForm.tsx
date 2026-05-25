@@ -167,6 +167,17 @@ export function AgreementForm({
         error={errors.address}
         onChange={() => clearError("address")}
       />
+      <p className="text-xs text-zinc-600 dark:text-zinc-400">
+        By continuing you confirm that you have read the{" "}
+        <a
+          href="/privacy/scholarship-agreement"
+          className="underline underline-offset-4"
+        >
+          Scholarship Privacy Notice
+        </a>{" "}
+        and understand that StartSchool will process your contact details and
+        the identity data returned by Dokobit to form this agreement.
+      </p>
       <Button type="submit" disabled={submitting} className="w-full">
         {submitting ? "Continuing…" : "Continue to identity check"}
       </Button>

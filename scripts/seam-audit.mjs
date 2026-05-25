@@ -25,6 +25,7 @@ const MODULE_DIRS = [
   "src/app/full-scholarship-agreement",
   "src/app/partial-scholarship-agreement",
   "src/app/agreement",
+  "src/app/privacy/scholarship-agreement",
   "src/app/api/agreements",
   "src/app/api/webhooks/dokobit",
   "src/app/dashboard/admin/agreements",

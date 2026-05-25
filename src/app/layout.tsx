@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
 import { Providers } from "@/components/providers";
-import Script from "next/script";
+import { HotjarScript } from "@/components/analytics/HotjarScript";
+import { PostHogRouteGate } from "@/components/analytics/PostHogRouteGate";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,17 +29,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Hotjar/ContentSquare Tracking Code - Production Only */}
-        {process.env.NEXT_PUBLIC_HOTJAR_SCRIPT_URL &&
-          process.env.NODE_ENV === "production" && (
-            <Script
-              id="hotjar"
-              src={process.env.NEXT_PUBLIC_HOTJAR_SCRIPT_URL}
-              strategy="beforeInteractive"
-            />
-          )}
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -46,6 +36,11 @@ export default function RootLayout({
           {children}
           <Toaster />
           <Analytics />
+          {/* Trackers are route-gated: NO_TRACK_PREFIXES (e.g. scholarship
+              agreement pages) suppresses Hotjar load and forces PostHog
+              opt-out. See `src/lib/analytics/no-track-routes.ts`. */}
+          <HotjarScript />
+          <PostHogRouteGate />
         </Providers>
       </body>
     </html>
