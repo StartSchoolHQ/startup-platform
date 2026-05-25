@@ -70,6 +70,19 @@ export function PrivacyNoticeSummary() {
                 <li key={r.name}>
                   <span className="font-medium">{r.name}</span> — {r.role} (
                   {r.location})
+                  {r.dpa_url && (
+                    <>
+                      {" "}
+                      <a
+                        href={r.dpa_url}
+                        rel="noreferrer noopener"
+                        target="_blank"
+                        className="underline underline-offset-4"
+                      >
+                        DPA
+                      </a>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>

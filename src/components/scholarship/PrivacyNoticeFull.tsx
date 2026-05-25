@@ -85,7 +85,20 @@ export function PrivacyNoticeFull() {
                   key={r.name}
                   className="border-b border-zinc-100 align-top dark:border-zinc-900"
                 >
-                  <td className="py-2 pr-4 font-medium">{r.name}</td>
+                  <td className="py-2 pr-4 font-medium">
+                    {r.dpa_url ? (
+                      <a
+                        href={r.dpa_url}
+                        rel="noreferrer noopener"
+                        target="_blank"
+                        className="underline underline-offset-4"
+                      >
+                        {r.name}
+                      </a>
+                    ) : (
+                      r.name
+                    )}
+                  </td>
                   <td className="py-2 pr-4">{r.role}</td>
                   <td className="py-2 pr-4">{r.location}</td>
                   <td className="py-2 pr-4">{r.transfer_basis}</td>

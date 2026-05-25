@@ -16,6 +16,8 @@ export interface NoticeRecipient {
   role: string;
   location: string;
   transfer_basis: string;
+  /** Public URL of the recipient's Data Processing Agreement, if any. */
+  dpa_url?: string;
 }
 
 export interface NoticeRight {
@@ -85,12 +87,14 @@ export const SCHOLARSHIP_PRIVACY_NOTICE: PrivacyNoticeContent = {
       role: "Electronic identification (eID) and qualified electronic signature",
       location: "Lithuania (EEA)",
       transfer_basis: "Processor in the EEA — no third-country transfer",
+      dpa_url: "https://www.dokobit.com/data-processing-agreement",
     },
     {
       name: "Supabase",
       role: "Database hosting and private storage of the signed agreement",
       location: "European Union region",
       transfer_basis: "Processor in the EEA — no third-country transfer",
+      dpa_url: "https://supabase.com/legal/dpa",
     },
     {
       name: "n8n Cloud",
@@ -98,6 +102,7 @@ export const SCHOLARSHIP_PRIVACY_NOTICE: PrivacyNoticeContent = {
       location: "n8n Cloud (workspace in EU region)",
       transfer_basis:
         "Processor under DPA with Standard Contractual Clauses where applicable",
+      dpa_url: "https://n8n.io/legal/data-processing-agreement/",
     },
     {
       name: "Vercel",
@@ -105,6 +110,7 @@ export const SCHOLARSHIP_PRIVACY_NOTICE: PrivacyNoticeContent = {
       location: "United States (with EU edge delivery)",
       transfer_basis:
         "Standard Contractual Clauses (SCCs) per Vercel Data Processing Addendum",
+      dpa_url: "https://vercel.com/legal/dpa",
     },
     {
       name: "Sentry",
@@ -112,6 +118,7 @@ export const SCHOLARSHIP_PRIVACY_NOTICE: PrivacyNoticeContent = {
       location: "United States",
       transfer_basis:
         "Standard Contractual Clauses (SCCs) per Sentry Data Processing Addendum",
+      dpa_url: "https://sentry.io/legal/dpa/",
     },
     {
       name: "Email delivery provider (via n8n)",
