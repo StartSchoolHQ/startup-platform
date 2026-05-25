@@ -25,6 +25,7 @@ import {
 import { DokobitWebhookPayload } from "@/lib/dokobit/types";
 import {
   findBySigningToken,
+  minimizeArchived,
   recordArchived,
   recordSchoolSigned,
   recordSchoolSigner,
@@ -187,12 +188,30 @@ async function handleSigningCompleted(
     signed_doc_path: docPath,
   });
 
+  // Columns are nullable post-minimization, but the row has only just
+  // been promoted to `archived` and minimization has not yet run, so
+  // these fields are guaranteed populated here. Guard defensively.
+  if (!archived.recipient_email) {
+    throw new Error(
+      "scholarship: cannot send completed email — recipient_email is missing on a just-archived row"
+    );
+  }
+
   await sendCompletedEmail({
     recipient_email: archived.recipient_email,
     recipient_name: archived.signer_name ?? undefined,
     language: archived.language,
     signed_doc_base64: archive.file.content,
     signed_doc_filename: archive.file.name,
+  });
+
+  // Data minimization: now that both parties have signed and the
+  // signed document has been emailed, drop everything except the
+  // signed PDF + minimum index fields. See README "Data
+  // minimization (post-archive)".
+  await minimizeArchived({
+    id: agreement.id,
+    unsigned_pdf_path: archived.unsigned_pdf_path,
   });
 
   return NextResponse.json({ ok: true });

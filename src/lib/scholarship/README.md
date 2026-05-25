@@ -44,7 +44,7 @@ The final `.edoc` is emailed via n8n.
 
 ```
 draft → identity_verified → awaiting_student_signature → student_signed
-  → awaiting_school_signature → school_signed → archived
+  → awaiting_school_signature → school_signed → archived → (minimized)
 ```
 
 Terminal off-paths: `cancelled`, `expired`, `failed`.
@@ -54,12 +54,34 @@ auth session has been created — the Dokobit `session_token` is the row's
 correlation key through the callback. Drafts older than 1 day are reaped
 by the daily cron.
 
+## Data minimization (post-archive)
+
+Once a row reaches `archived` AND the completion email has been sent,
+`data.minimizeArchived(id, unsignedPdfPath)` is called. It:
+
+1. Deletes the unsigned PDF file from the storage bucket.
+2. Calls `scholarship_minimize_archived(p_id)` which nulls out every PII
+   field on the row (email, phone, address, personal_code, country_code,
+   name, surname, all Dokobit tokens, unsigned_pdf_path) and redacts the
+   payload on every event for the agreement.
+3. Inserts a `data_minimized` event for traceability.
+
+What survives: the row's id, agreement_type, language, status, timestamps
+and `signed_doc_path`. The signed PDF/.edoc embeds all of the personal
+data already — keeping the structured copy was duplicate processing.
+
+The events table mutation trigger only permits `payload → NULL`
+redactions; type, agreement_id and occurred_at remain immutable, so the
+audit chain (which steps happened, when) survives.
+
 ## Anti-cheat
 
 A partial unique index on `(signer_personal_code, agreement_type) WHERE
 signer_personal_code IS NOT NULL AND status NOT IN ('cancelled','expired','failed')`
-prevents the same person from receiving a Full AND Partial contract — once
-identity is locked on one, the other RPC fails on the unique constraint.
+backstops the workflow-level control. The primary defence is that
+students are emailed exactly one link (Full OR Partial, never both)
+after manual evaluation. Once a row is minimized the personal_code is
+nulled and the row drops out of the index automatically.
 
 ## Porting to V2
 

@@ -273,13 +273,13 @@ function Field({
   className,
 }: {
   label: string;
-  value: string;
+  value: string | null;
   className?: string;
 }) {
   return (
     <div className={className}>
       <dt className="text-xs tracking-wide text-zinc-500 uppercase">{label}</dt>
-      <dd className="mt-0.5 text-zinc-900">{value}</dd>
+      <dd className="mt-0.5 text-zinc-900">{value ?? "—"}</dd>
     </div>
   );
 }

@@ -114,6 +114,19 @@ export async function completeIdentityAndCreateSigning(
     throw err;
   }
 
+  // Columns are nullable post-minimization, but identity completion
+  // only runs on rows that haven't even reached `archived` yet — they
+  // must be populated. Guard defensively to surface schema drift early.
+  if (
+    !agreement.recipient_email ||
+    !agreement.recipient_phone ||
+    !agreement.recipient_address
+  ) {
+    throw new Error(
+      "scholarship: cannot render contract — recipient fields are missing"
+    );
+  }
+
   // Render the contract PDF via n8n (HTML → PDF) and upload to storage +
   // Dokobit. Each step is independent so a partial failure leaves the row
   // in identity_verified, recoverable by the admin "Retry" action.

@@ -22,6 +22,7 @@ import {
   listAgreements,
   listAwaitingSchool,
   listEvents,
+  minimizeArchived,
   recordIdentity,
   resetForRetry,
   submitForm,
@@ -187,5 +188,78 @@ describe("scholarship/data — admin actions", () => {
   it("resetForRetry rejects draft rows that have no identity_verified_at", async () => {
     const { row } = await createTestDraft();
     await expect(resetForRetry(row.id)).rejects.toThrow();
+  });
+});
+
+describe("scholarship/data — minimizeArchived", () => {
+  it("nulls PII, redacts event payloads, inserts data_minimized event, and is idempotent", async () => {
+    // Set up: draft → identity verified → force-promote to archived via
+    // admin client (bypasses the workflow trigger chain). We pass
+    // unsigned_pdf_path: null to skip the storage delete branch —
+    // storage interactions are exercised in the sandbox E2E, not here.
+    const { authToken, row: draft } = await createTestDraft();
+    await recordIdentity({
+      dokobit_auth_token: authToken,
+      personal_code: randomPersonalCode(),
+      country_code: "LV",
+      name: "Test",
+      surname: "Student",
+    });
+
+    const { error: promoteErr } = await adminClient
+      .from("scholarship_agreements")
+      .update({
+        status: "archived",
+        signed_doc_path: `signed/${draft.id}.edoc`,
+        archived_at: new Date().toISOString(),
+      })
+      .eq("id", draft.id);
+    expect(promoteErr).toBeNull();
+
+    const minimized = await minimizeArchived({
+      id: draft.id,
+      unsigned_pdf_path: null,
+    });
+
+    // PII fields nulled, structural fields kept.
+    expect(minimized.recipient_email).toBeNull();
+    expect(minimized.recipient_phone).toBeNull();
+    expect(minimized.recipient_address).toBeNull();
+    expect(minimized.signer_personal_code).toBeNull();
+    expect(minimized.signer_country_code).toBeNull();
+    expect(minimized.signer_name).toBeNull();
+    expect(minimized.signer_surname).toBeNull();
+    expect(minimized.dokobit_auth_token).toBeNull();
+    expect(minimized.dokobit_signing_token).toBeNull();
+    expect(minimized.unsigned_pdf_path).toBeNull();
+    expect(minimized.status).toBe("archived");
+    expect(minimized.signed_doc_path).toBe(`signed/${draft.id}.edoc`);
+
+    // Audit chain survives but payloads are redacted; data_minimized
+    // is recorded.
+    const events = await listEvents(draft.id);
+    const types = events.map((e) => e.event_type);
+    expect(types).toContain("form_submitted");
+    expect(types).toContain("identity_verified");
+    expect(types).toContain("data_minimized");
+    for (const e of events) {
+      expect(e.payload).toBeNull();
+    }
+
+    // Idempotent rerun: second call is a no-op for the audit log
+    // (no second data_minimized event), and PII stays null.
+    await minimizeArchived({ id: draft.id, unsigned_pdf_path: null });
+    const eventsAfter = await listEvents(draft.id);
+    const minimizedCount = eventsAfter.filter(
+      (e) => e.event_type === "data_minimized"
+    ).length;
+    expect(minimizedCount).toBe(1);
+  });
+
+  it("rejects rows that are not in archived status", async () => {
+    const { row } = await createTestDraft();
+    await expect(
+      minimizeArchived({ id: row.id, unsigned_pdf_path: null })
+    ).rejects.toThrow(/scholarship_minimize_requires_archived_status/);
   });
 });

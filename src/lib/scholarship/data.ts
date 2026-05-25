@@ -174,6 +174,52 @@ export async function recordArchived(input: {
   return data as Row;
 }
 
+const STORAGE_BUCKET = "scholarship-documents";
+
+/**
+ * Post-archive data minimization.
+ *
+ * Call AFTER `recordArchived` AND AFTER the completion email has been
+ * sent — the email needs the unredacted recipient_email and signer_name.
+ *
+ * Two steps, in order:
+ *   1. Delete the unsigned PDF from the storage bucket. The signed
+ *      `.edoc` already lives at `signed_doc_path` and embeds the same
+ *      data; the unsigned intermediate is no longer needed.
+ *   2. Call the SECURITY DEFINER `scholarship_minimize_archived` RPC,
+ *      which nulls out every PII field on the row and redacts every
+ *      event payload for the agreement, then writes a `data_minimized`
+ *      audit event.
+ *
+ * Storage delete is best-effort: if the file is already gone we move on.
+ * The RPC is idempotent — re-running it on an already-minimized row is
+ * a no-op.
+ */
+export async function minimizeArchived(input: {
+  id: string;
+  unsigned_pdf_path: string | null;
+}): Promise<Row> {
+  const client = admin();
+
+  if (input.unsigned_pdf_path) {
+    const { error: storageErr } = await client.storage
+      .from(STORAGE_BUCKET)
+      .remove([input.unsigned_pdf_path]);
+    // 404-equivalents are expected on reruns; do not throw on storage
+    // removal failures because the row-level minimization is still
+    // safe to attempt.
+    if (storageErr && !/not.?found/i.test(storageErr.message)) {
+      throw storageErr;
+    }
+  }
+
+  const { data, error } = await client.rpc("scholarship_minimize_archived", {
+    p_id: input.id,
+  });
+  if (error) throw error;
+  return data as Row;
+}
+
 // ============================================================
 // Write — events, admin actions
 // ============================================================
