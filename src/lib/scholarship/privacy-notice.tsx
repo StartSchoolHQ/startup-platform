@@ -45,12 +45,14 @@ export interface PrivacyNoticeContent {
   automated_decision_making: string;
 }
 
-// Replace `[PLACEHOLDER ...]` strings before going live.
+// TODO before go-live: replace the `[PLACEHOLDER ...]` address. Legal
+// name, registration number and VAT number are verified from the
+// startschool.org footer (Tech Education Foundation, Latvia).
 export const SCHOLARSHIP_PRIVACY_NOTICE: PrivacyNoticeContent = {
   effective_date: "2026-05-25",
   controller: {
-    name: "StartSchool [PLACEHOLDER — legal entity name]",
-    registration_number: "[PLACEHOLDER — registration number]",
+    name: "Tech Education Foundation (StartSchool)",
+    registration_number: "50008325331 (VAT: LV50008325331)",
     address: "[PLACEHOLDER — registered address, Latvia]",
     contact_email: "start@startschool.org",
   },
