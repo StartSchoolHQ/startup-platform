@@ -14,8 +14,9 @@ The final `.edoc` is emailed via n8n.
 | `data.ts` | DB facade — every write goes through a SECURITY DEFINER RPC |
 | `state-machine.ts` | Allowed-transition map (mirror of DB enforcement) |
 | `auth.ts` | `requireAdmin()` server helper |
-| `n8n.ts` | Two webhooks: render-pdf (sync), completed-email (fire-and-forget) |
-| `pdf.ts` | Handlebars render → HTML → n8n PDF |
+| `n8n.ts` | One webhook: completed-email (fire-and-forget) |
+| `pdf-render.ts` | HTML → PDF via puppeteer-core + @sparticuz/chromium |
+| `pdf.ts` | Handlebars render → HTML → in-app PDF |
 | `complete-identity.ts` | eID → PDF → Dokobit signing pipeline |
 | `templates/full-scholarship-en.hbs` | Full-scholarship contract |
 | `templates/partial-scholarship-en.hbs` | Partial-scholarship contract |

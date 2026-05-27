@@ -52,7 +52,10 @@ const STYLES: Record<Status, BadgeStyle> = {
       "bg-amber-500/10 text-amber-700 border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400",
   },
   school_signed: {
-    label: "School signed",
+    // The school is the second/final signer, so this status means both
+    // parties have signed. "School signed" alone is ambiguous (could be
+    // read as "only school has signed").
+    label: "Signed by both parties",
     variant: "outline",
     classes:
       "bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400",

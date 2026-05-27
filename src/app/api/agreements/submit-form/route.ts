@@ -42,10 +42,18 @@ export async function POST(request: Request) {
 
   // Mint the Dokobit auth session BEFORE the DB write so the session_token
   // is available as the row's correlation key from the start.
+  //
+  // In dev with DOKOBIT_IDENTITY_MOCK=true, `createAuthSession` short-
+  // circuits and returns a fake session whose `url` points back to our
+  // own identity-callback page with a `mock-...` session token. The
+  // matching `getAuthStatus` returns hardcoded test identity. Lets us
+  // exercise the entire pipeline (PDF render → signing upload → archive)
+  // without a working Dokobit eID sandbox setup. The flag is server-only
+  // and impossible to enable in prod by mistake (no NEXT_PUBLIC_ prefix).
   const session = await createAuthSession({
     returnUrl,
     countryCode: "LV",
-    authenticationMethods: ["smartid", "eparaksts_mobile", "mobile"],
+    authenticationMethods: ["smartid", "eparaksts_mobile", "smartcard"],
     message: "StartSchool agreement",
   });
 

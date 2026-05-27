@@ -39,9 +39,21 @@ const DokobitWaitingStatus = z
   })
   .passthrough();
 
+// Status endpoint returns 200 with `status: "error"` when the user
+// cancels, the session expires, or their eID account is unusable. See
+// `src/lib/dokobit/errors.ts` for the codes we handle specifically.
+const DokobitErrorStatus = z
+  .object({
+    status: z.literal("error"),
+    error_code: z.number().optional(),
+    message: z.string().optional(),
+  })
+  .passthrough();
+
 export const DokobitAuthStatusResponse = z.union([
   DokobitAuthenticatedStatus,
   DokobitWaitingStatus,
+  DokobitErrorStatus,
 ]);
 
 export type DokobitAuthStatus = z.infer<typeof DokobitAuthStatusResponse>;
@@ -78,25 +90,59 @@ const DokobitSignerEntry = z
     message: "Dokobit signer entry missing access_token",
   });
 
+// /api/signing/create.json: documented response shapes `signers` as a map
+// `{ [signer_id]: signer_access_token }` (per the Documents Gateway spec
+// example), but historical versions of the response have returned an array
+// of `{ id, access_token }` objects. Accept either and normalize to a
+// canonical `[ { id, access_token } ]` array so call sites can iterate.
 export const DokobitCreateSigningResponse = z
   .object({
     status: z.literal("ok"),
     token: z.string(),
-    signers: z.array(DokobitSignerEntry).min(1),
+    signers: z.union([
+      z.array(DokobitSignerEntry).min(1),
+      z
+        .record(z.string(), z.string())
+        .transform((map) =>
+          Object.entries(map).map(([id, access_token]) => ({
+            id,
+            access_token,
+          }))
+        )
+        .refine((arr) => arr.length > 0, {
+          message: "Dokobit signing/create response has no signers",
+        }),
+    ]),
   })
   .passthrough();
 
+// /api/signing/{token}/addsigner.json: Dokobit returns the same map shape
+// as /api/signing/create.json — `signers: { [signer_id]: access_token }`.
+// Historical/alternate flat shapes (`signer_access_token` or `access_token`
+// at the top level) are also accepted as a fallback in case Dokobit varies
+// response format across deployments.
 export const DokobitAddSignerResponse = z
   .object({
     status: z.literal("ok"),
     signer_access_token: z.string().optional(),
     access_token: z.string().optional(),
+    signers: z.record(z.string(), z.string()).optional(),
   })
   .passthrough()
-  .transform((r) => ({
-    status: r.status,
-    signer_access_token: r.signer_access_token ?? r.access_token ?? "",
-  }))
+  .transform((r) => {
+    if (r.signers) {
+      const entries = Object.entries(r.signers);
+      const lastEntry = entries[entries.length - 1];
+      return {
+        status: r.status,
+        signer_access_token: lastEntry?.[1] ?? "",
+      };
+    }
+    return {
+      status: r.status,
+      signer_access_token: r.signer_access_token ?? r.access_token ?? "",
+    };
+  })
   .refine((r) => r.signer_access_token.length > 0, {
     message: "Dokobit addsigner response missing access_token",
   });

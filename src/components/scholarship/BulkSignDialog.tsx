@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
-const BATCH_MAX = 20;
+const BATCH_MAX = 10;
 
 interface BulkSignDialogProps {
   open: boolean;

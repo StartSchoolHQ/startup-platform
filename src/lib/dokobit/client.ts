@@ -75,8 +75,12 @@ export async function dokobitFetch<T>(opts: FetchOpts): Promise<T> {
   }
 
   if (!res.ok) {
+    const bodyPreview =
+      typeof parsed === "object" && parsed !== null
+        ? JSON.stringify(parsed)
+        : String(parsed);
     throw new DokobitError(
-      `Dokobit ${opts.product} ${opts.method} ${opts.path} failed: ${res.status}`,
+      `Dokobit ${opts.product} ${opts.method} ${opts.path} failed: ${res.status} — ${bodyPreview}`,
       res.status,
       parsed
     );

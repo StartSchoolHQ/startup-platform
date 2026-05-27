@@ -7,7 +7,7 @@
 Dokobit's `return_url` after a successful PIN1 lands the student back
 here with the same `session_token` we minted in `/api/agreements/submit-form`.
 This page is the orchestration: verify eID actually completed, lock the
-student's identity on the draft row, render the contract PDF via n8n,
+student's identity on the draft row, render the contract PDF in-process,
 upload it to Dokobit, create a signing session, and 302 the student into
 the Dokobit signing UI so they can PIN2.
 
@@ -24,7 +24,7 @@ the Dokobit signing UI so they can PIN2.
   doesn't match a previous attempt on the same draft, or hits the
   cross-program unique index if the same person already signed the
   other scholarship variant).
-- Renders the contract PDF (`renderContractPdf` → `n8n` render webhook).
+- Renders the contract PDF (`renderContractPdf` → `renderHtmlToPdf` via puppeteer-core + @sparticuz/chromium).
 - Uploads the unsigned PDF to Supabase Storage (`scholarship-documents`
   bucket) and to Dokobit (`file/upload.json`).
 - Creates a single-signer Dokobit signing session.
@@ -44,8 +44,9 @@ On error it renders one of three error cards:
 
 - `auth_not_complete` — Dokobit eID didn't actually succeed.
 - `identity_mismatch` — the lock is held by a different personal code.
-- Generic fallback — anything unexpected (n8n down, Dokobit upload
-  failed, storage failed). Includes an `info@startschool.org` mailto.
+- Generic fallback — anything unexpected (PDF render crashed, Dokobit
+  upload failed, storage failed). Includes an `info@startschool.org`
+  mailto.
 
 ## Thought behind it
 
@@ -64,7 +65,7 @@ anyone who doesn't already possess the token Dokobit handed us.
 - **Page file:** [`src/app/agreement/identity-callback/page.tsx`](../../../src/app/agreement/identity-callback/page.tsx)
 - **Loading:** [`src/app/agreement/identity-callback/loading.tsx`](../../../src/app/agreement/identity-callback/loading.tsx)
 - **Helper:** [`src/lib/scholarship/complete-identity.ts`](../../../src/lib/scholarship/complete-identity.ts) — orchestration; reused by admin retry
-- **External calls:** Dokobit `getAuthStatus`, `file/upload.json`, `signing/create.json`; n8n render-pdf webhook
+- **External calls:** Dokobit `getAuthStatus`, `file/upload.json`, `signing/create.json`. PDF render is in-process (no external call).
 - **Storage:** Supabase bucket `scholarship-documents`, path `unsigned/{id}.pdf`
 
 Last verified against code: 2026-05-20

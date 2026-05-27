@@ -16,7 +16,6 @@
 export const NO_TRACK_PREFIXES = [
   "/full-scholarship-agreement",
   "/partial-scholarship-agreement",
-  "/part-time-studies-agreement",
   "/agreement/",
   "/privacy/scholarship-agreement",
 ] as const;

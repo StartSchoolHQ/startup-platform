@@ -1,5 +1,5 @@
 /**
- * Contract rendering — Handlebars HTML out, n8n-produced PDF out.
+ * Contract rendering — Handlebars HTML out, in-app puppeteer PDF out.
  *
  * The two templates (`full-scholarship-en.hbs`, `partial-scholarship-en.hbs`)
  * live under `src/lib/scholarship/templates/` and are read from disk at
@@ -17,7 +17,7 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 import Handlebars from "handlebars";
-import { renderPdf as n8nRenderPdf } from "./n8n";
+import { renderHtmlToPdf } from "./pdf-render";
 
 export interface ContractSignerData {
   name: string;
@@ -26,8 +26,12 @@ export interface ContractSignerData {
   country_code: string;
 }
 
+import type { Database } from "@/types/database";
+
+type AgreementType = Database["public"]["Enums"]["scholarship_agreement_type"];
+
 export interface ContractRenderInput {
-  agreement_type: "full" | "partial";
+  agreement_type: AgreementType;
   signer: ContractSignerData;
   recipient_email: string;
   recipient_phone: string;
@@ -36,7 +40,10 @@ export interface ContractRenderInput {
   agreement_reference: string;
 }
 
-const TEMPLATE_FILES: Record<ContractRenderInput["agreement_type"], string> = {
+// 'part_time' is a dormant DB enum value (no row uses it). Only the
+// supported variants get a template file; unsupported values throw at
+// runtime in renderContractHtml.
+const TEMPLATE_FILES: Partial<Record<AgreementType, string>> = {
   full: "full-scholarship-en.hbs",
   partial: "partial-scholarship-en.hbs",
 };
@@ -76,16 +83,12 @@ export function renderContractHtml(input: ContractRenderInput): string {
 }
 
 /**
- * Renders the contract HTML, then asks n8n to convert it to a PDF buffer.
- * Throws if n8n is unreachable or returns an empty body.
+ * Renders the contract HTML, then converts it to a PDF buffer in-process
+ * via headless Chromium. Throws if the render returns an empty body.
  */
 export async function renderContractPdf(
   input: ContractRenderInput
 ): Promise<Buffer> {
   const html = renderContractHtml(input);
-  return n8nRenderPdf({
-    template_id: input.agreement_type,
-    language: "en",
-    html,
-  });
+  return renderHtmlToPdf(html);
 }

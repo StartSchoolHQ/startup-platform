@@ -1,6 +1,6 @@
 /**
  * Streamed loading state shown while the identity-callback server
- * component runs the n8n PDF render + Dokobit upload + signing-session
+ * component runs the in-app PDF render + Dokobit upload + signing-session
  * creation (5-15 seconds). Without this, users see a blank page during
  * the orchestration.
  */

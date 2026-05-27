@@ -31,7 +31,7 @@ sequenceDiagram
     Dokobit-->>Backend: GET /agreement/identity-callback?session_token=...
     Backend->>Dokobit: getAuthStatus
     Backend->>Backend: scholarship_record_identity RPC → identity_verified
-    Backend->>N8N: render-pdf webhook (HTML → PDF)
+    Backend->>Backend: renderContractPdf (in-app, puppeteer-core + @sparticuz/chromium)
     Backend->>Dokobit: file/upload + signing/create
     Backend->>Backend: scholarship_record_signing_session RPC
     Backend-->>Student: 302 to Dokobit signing UI
@@ -166,10 +166,10 @@ mutating, then dispatches by state:
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | `403 ip_not_allowed` on webhook | `DOKOBIT_POSTBACK_ALLOWLIST` is set and the Dokobit IP isn't in it | Add the IP from the error log; redeploy |
-| Stuck at `identity_verified` | n8n render-pdf failed | Open the row in admin, click "Retry PDF + signing" |
+| Stuck at `identity_verified` | In-app PDF render or Dokobit upload failed | Open the row in admin, click "Retry PDF + signing" |
 | Stuck at `failed` | Dokobit signing create or archive failed | Same "Retry PDF + signing" rebuilds from the stored auth token |
 | Mismatch error on retry | A different person attempted the URL | Expected — issue a new agreement |
-| Diacritics show as boxes | n8n PDF renderer can't load Google Fonts | Self-host Noto in n8n and reference via local file URLs |
+| Diacritics show as boxes | Headless Chromium couldn't load Google Fonts (Noto) before render | Confirm `waitUntil: "networkidle0"` is in effect and outbound HTTPS to fonts.googleapis.com works from the Vercel function |
 | Realtime not updating admin modal | Tables not in `supabase_realtime` publication | Re-run the publication ADD from `scholarship_rls` migration |
 | Batch fails for admin | Admin only has Smart-ID | Use the sequential path (one PIN per doc) |
 
@@ -197,17 +197,29 @@ mutating, then dispatches by state:
 
 ### Retention
 
-No automatic deletion. Signed contracts are exported manually to
-StartSchool's Google Drive after each cohort intake completes and remain
-in Supabase Storage indefinitely for legal hold. Abandoned drafts (form
-submitted but no identity lock within 24 hours) are reaped by the daily
-cron via `scholarship_expire_pending`.
+Abandoned drafts (form submitted but no identity lock) are reaped by the
+daily cron via `scholarship_expire_pending` after 14 days.
+
+Once both parties have signed and the `.edoc` has been emailed,
+`scholarship_minimize_archived` runs and nulls every PII column on the
+row **except** `signer_name`, `signer_surname`, and `recipient_email` —
+those three are retained so the admin queue can list, search, and filter
+archived contracts by signer. Phone, address, personal code, country
+code, every Dokobit token, and the unsigned PDF path are deleted.
+Event-row payloads are redacted to NULL across the agreement's audit log
+and a `data_minimized` event is recorded.
+
+The signed `.edoc` itself (in Supabase Storage) is retained for the
+duration of the contract plus 3 years (general civil-claim limitation
+under Latvian law) and longer where tax or accounting law requires.
+Manual export to StartSchool's Google Drive after each cohort intake
+provides an independent archival copy.
 
 ### Where data lives
 
 - **Supabase Postgres + Storage** — region `eu-central-1`
 - **Dokobit Identity & Documents Gateway** — Lithuania (EU)
-- **n8n** — verify the hosting region in pre-flight before production
+- **n8n** (email send only) — verify the hosting region in pre-flight before production
 - **StartSchool Google Drive** — controlled by StartSchool admins; access
   audit-logged by Google Workspace
 

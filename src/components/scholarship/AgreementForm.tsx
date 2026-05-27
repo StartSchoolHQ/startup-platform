@@ -6,9 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { SupportedEidMethods } from "./SupportedEidMethods";
+
+type AgreementType = "full" | "partial";
 
 interface AgreementFormProps {
-  agreementType: "full" | "partial";
+  agreementType: AgreementType;
   /** Override for unit tests / Storybook. Defaults to the real API call. */
   onSubmitOverride?: (
     input: SubmitFormInput
@@ -16,7 +19,7 @@ interface AgreementFormProps {
 }
 
 interface SubmitFormInput {
-  agreement_type: "full" | "partial";
+  agreement_type: AgreementType;
   email: string;
   confirm_email: string;
   phone: string;
@@ -32,12 +35,8 @@ interface FieldErrors {
   global?: string;
 }
 
-const FIELD_LABELS: Record<keyof Omit<FieldErrors, "global">, string> = {
-  email: "email",
-  confirm_email: "confirm_email",
-  phone: "phone",
-  address: "address",
-};
+const TEXT_FIELDS = ["email", "confirm_email", "phone", "address"] as const;
+type TextFieldId = (typeof TEXT_FIELDS)[number];
 
 async function defaultSubmit(input: SubmitFormInput) {
   const res = await fetch("/api/agreements/submit-form", {
@@ -49,10 +48,10 @@ async function defaultSubmit(input: SubmitFormInput) {
     const body = await res.json().catch(() => ({}));
     const fieldErrors: FieldErrors = {};
     if (body?.details?.fieldErrors) {
-      for (const field of Object.keys(FIELD_LABELS)) {
+      for (const field of TEXT_FIELDS) {
         const issues = body.details.fieldErrors[field] as string[] | undefined;
         if (issues?.[0]) {
-          fieldErrors[field as keyof typeof FIELD_LABELS] = issues[0];
+          fieldErrors[field] = issues[0];
         }
       }
     }
@@ -181,16 +180,13 @@ export function AgreementForm({
       <Button type="submit" disabled={submitting} className="w-full">
         {submitting ? "Continuing…" : "Continue to identity check"}
       </Button>
-      <p className="text-center text-xs text-zinc-500">
-        You&apos;ll be redirected to Dokobit to confirm your identity with
-        Smart-ID, eParaksts Mobile, or your ID card.
-      </p>
+      <SupportedEidMethods />
     </form>
   );
 }
 
 interface FormFieldProps {
-  id: keyof Omit<FieldErrors, "global">;
+  id: TextFieldId;
   label: string;
   type: string;
   required?: boolean;

@@ -1,17 +1,20 @@
 import { cn } from "@/lib/utils";
 
+type AgreementType = "full" | "partial";
+
 interface ScholarshipTermsSummaryProps {
-  agreementType: "full" | "partial";
+  agreementType: AgreementType;
   className?: string;
 }
 
 interface TermsContent {
   title: string;
   bullets: string[];
-  enrolmentFee: string;
+  /** Optional: rendered as a small note below the bullets. */
+  footnote?: string;
 }
 
-const TERMS: Record<"full" | "partial", TermsContent> = {
+const TERMS: Record<AgreementType, TermsContent> = {
   full: {
     title: "Full Scholarship",
     bullets: [
@@ -20,7 +23,8 @@ const TERMS: Record<"full" | "partial", TermsContent> = {
       "Study period: 26 Aug 2025 – 29 Aug 2026",
       "Performance checkpoints: end of October 2025, December 2025, March 2026",
     ],
-    enrolmentFee: "€500, due within 14 days of signing (non-refundable)",
+    footnote:
+      "Enrolment fee: €500, due within 14 days of signing (non-refundable)",
   },
   partial: {
     title: "Partial Scholarship",
@@ -30,14 +34,15 @@ const TERMS: Record<"full" | "partial", TermsContent> = {
       "Study period: 26 Aug 2025 – 29 Aug 2026",
       "Performance checkpoints: end of October 2025, December 2025, March 2026",
     ],
-    enrolmentFee: "€500, due within 14 days of signing (non-refundable)",
+    footnote:
+      "Enrolment fee: €500, due within 14 days of signing (non-refundable)",
   },
 };
 
 /**
  * Plain-language summary of what the student is signing up for. The full
  * legal text is the contract itself — this is intentionally short.
- * Two variants driven by `agreementType`; share the same layout.
+ * Variants driven by `agreementType`; share the same layout.
  */
 export function ScholarshipTermsSummary({
   agreementType,
@@ -56,9 +61,11 @@ export function ScholarshipTermsSummary({
           <li key={bullet}>{bullet}</li>
         ))}
       </ul>
-      <p className="mt-3 text-xs text-zinc-600 dark:text-zinc-400">
-        Enrolment fee: {terms.enrolmentFee}
-      </p>
+      {terms.footnote && (
+        <p className="mt-3 text-xs text-zinc-600 dark:text-zinc-400">
+          {terms.footnote}
+        </p>
+      )}
     </div>
   );
 }

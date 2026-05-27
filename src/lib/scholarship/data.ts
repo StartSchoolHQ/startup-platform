@@ -326,7 +326,17 @@ export async function listAgreements(
     query = query.eq("agreement_type", filters.agreement_type);
   }
   if (filters.search) {
-    query = query.ilike("recipient_email", `%${filters.search}%`);
+    // PostgREST OR filter — escape commas/parentheses so a malicious
+    // search string can't break out of the operator list.
+    const sanitized = filters.search.replace(/[(),]/g, " ");
+    const needle = `%${sanitized}%`;
+    query = query.or(
+      [
+        `recipient_email.ilike.${needle}`,
+        `signer_name.ilike.${needle}`,
+        `signer_surname.ilike.${needle}`,
+      ].join(",")
+    );
   }
 
   const { data, error } = await query;
@@ -335,14 +345,18 @@ export async function listAgreements(
 }
 
 /**
- * Rows the admin can batch-countersign. Sorted oldest-first so the queue
- * preserves student-signed order.
+ * Rows the admin can batch-countersign. The student-signed webhook has
+ * already added the school as a second signer via `addSigner` and
+ * promoted the row to `awaiting_school_signature` with
+ * `dokobit_school_signer_token` set — that's the state batch needs.
+ *
+ * Sorted oldest-first so the queue preserves order.
  */
 export async function listAwaitingSchool(): Promise<Row[]> {
   const { data, error } = await admin()
     .from("scholarship_agreements")
     .select("*")
-    .eq("status", "student_signed")
+    .eq("status", "awaiting_school_signature")
     .order("student_signed_at", { ascending: true });
   if (error) throw error;
   return data ?? [];

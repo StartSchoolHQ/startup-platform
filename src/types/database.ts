@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -3088,7 +3088,7 @@ export type Database = {
         | "cancelled"
         | "expired"
         | "failed";
-      scholarship_agreement_type: "full" | "partial";
+      scholarship_agreement_type: "full" | "partial" | "part_time";
       scholarship_event_type:
         | "form_submitted"
         | "identity_started"
@@ -3302,7 +3302,7 @@ export const Constants = {
         "expired",
         "failed",
       ],
-      scholarship_agreement_type: ["full", "partial"],
+      scholarship_agreement_type: ["full", "partial", "part_time"],
       scholarship_event_type: [
         "form_submitted",
         "identity_started",

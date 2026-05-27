@@ -31,7 +31,10 @@ import {
   recordSchoolSigner,
   recordStudentSigned,
 } from "@/lib/scholarship/data";
-import { sendCompletedEmail } from "@/lib/scholarship/n8n";
+// Completed-email send is disabled; re-import these when re-enabling
+// the email block in handleSigningCompleted.
+// import { buildAgreementFilename } from "@/lib/scholarship/filename";
+// import { sendCompletedEmail } from "@/lib/scholarship/n8n";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const STORAGE_BUCKET = "scholarship-documents";
@@ -69,6 +72,15 @@ function schoolSignerConfig() {
 }
 
 export async function POST(request: Request) {
+  try {
+    return await handlePostback(request);
+  } catch (err) {
+    console.error("[webhooks/dokobit] postback handler failed:", err);
+    return NextResponse.json({ error: "internal" }, { status: 500 });
+  }
+}
+
+async function handlePostback(request: Request) {
   if (!ipAllowed(request)) {
     return NextResponse.json({ error: "ip_not_allowed" }, { status: 403 });
   }
@@ -160,59 +172,74 @@ async function handleSigningCompleted(
   agreement: Agreement,
   signingToken: string
 ) {
-  if (agreement.status === "archived") {
-    return NextResponse.json({ ok: true, note: "already_archived" });
-  }
-
-  // Out-of-order delivery (completed arrived before school_signed). Ack
-  // and rely on the next retry — never 500 here, would loop forever.
-  if (agreement.status !== "school_signed") {
+  // Out-of-order delivery: completed arrived before school_signed. Ack
+  // 200 so Dokobit stops retrying for now; the next signer_signed
+  // postback will catch up and the user can re-trigger via the admin
+  // retry action. Returning 500 here would loop Dokobit indefinitely.
+  if (agreement.status !== "school_signed" && agreement.status !== "archived") {
     return NextResponse.json({ ok: true, note: "not_yet_school_signed" });
   }
 
-  const archive = await archiveSigning(signingToken);
-  const docBuffer = Buffer.from(archive.file.content, "base64");
-  const docPath = `signed/${agreement.id}.edoc`;
-
+  let row = agreement;
   const supa = createAdminClient();
-  const { error: storageErr } = await supa.storage
-    .from(STORAGE_BUCKET)
-    .upload(docPath, docBuffer, {
-      contentType: "application/octet-stream",
-      upsert: true,
-    });
-  if (storageErr) throw storageErr;
 
-  const archived = await recordArchived({
-    id: agreement.id,
-    signed_doc_path: docPath,
-  });
+  // ── Phase 1: archive download → storage → email → status flip ──
+  // Runs only when status is still `school_signed`. The status update
+  // is the LAST write in this block, so any earlier failure leaves the
+  // row at `school_signed` and the next webhook retry re-runs the whole
+  // chain (storage upload is idempotent via upsert; email is best-effort).
+  if (row.status === "school_signed") {
+    const archive = await archiveSigning(signingToken);
+    const docBuffer = Buffer.from(archive.file.content, "base64");
+    const docPath = `signed/${row.id}.edoc`;
 
-  // Columns are nullable post-minimization, but the row has only just
-  // been promoted to `archived` and minimization has not yet run, so
-  // these fields are guaranteed populated here. Guard defensively.
-  if (!archived.recipient_email) {
-    throw new Error(
-      "scholarship: cannot send completed email — recipient_email is missing on a just-archived row"
-    );
+    const { error: storageErr } = await supa.storage
+      .from(STORAGE_BUCKET)
+      .upload(docPath, docBuffer, {
+        contentType: "application/octet-stream",
+        upsert: true,
+      });
+    if (storageErr) throw storageErr;
+
+    // Completed-email send is intentionally disabled. Decision pending
+    // on whether the signed .edoc is delivered manually by an admin or
+    // automated via n8n later. The signed doc lives in storage at
+    // `signed_doc_path` — admins can download from the agreement detail
+    // modal in the meantime. To re-enable, uncomment the block below.
+    //
+    // if (row.recipient_email && row.signer_name && row.signer_surname) {
+    //   const attachmentFilename = buildAgreementFilename({
+    //     name: row.signer_name,
+    //     surname: row.signer_surname,
+    //     agreement_type: row.agreement_type,
+    //     ext: "edoc",
+    //   });
+    //   await sendCompletedEmail({
+    //     recipient_email: row.recipient_email,
+    //     recipient_name: row.signer_name,
+    //     language: row.language,
+    //     signed_doc_base64: archive.file.content,
+    //     signed_doc_filename: attachmentFilename,
+    //   });
+    // }
+
+    row = await recordArchived({ id: row.id, signed_doc_path: docPath });
   }
 
-  await sendCompletedEmail({
-    recipient_email: archived.recipient_email,
-    recipient_name: archived.signer_name ?? undefined,
-    language: archived.language,
-    signed_doc_base64: archive.file.content,
-    signed_doc_filename: archive.file.name,
-  });
-
-  // Data minimization: now that both parties have signed and the
-  // signed document has been emailed, drop everything except the
-  // signed PDF + minimum index fields. See README "Data
-  // minimization (post-archive)".
-  await minimizeArchived({
-    id: agreement.id,
-    unsigned_pdf_path: archived.unsigned_pdf_path,
-  });
+  // ── Phase 2: minimization ──
+  // Idempotent (RPC NULLs already-null columns, storage delete tolerates
+  // missing files). Detect "needs minimization" by any remaining sensitive
+  // field — protects against a stranded archived-but-not-minimized row.
+  const needsMinimization =
+    row.dokobit_signing_token !== null ||
+    row.signer_personal_code !== null ||
+    row.unsigned_pdf_path !== null;
+  if (needsMinimization) {
+    await minimizeArchived({
+      id: row.id,
+      unsigned_pdf_path: row.unsigned_pdf_path,
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

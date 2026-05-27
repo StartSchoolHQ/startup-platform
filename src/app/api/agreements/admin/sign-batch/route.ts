@@ -17,7 +17,9 @@ import { createBatch } from "@/lib/dokobit/signing";
 import { requireAdmin } from "@/lib/scholarship/auth";
 import { attachBatch, listAwaitingSchool } from "@/lib/scholarship/data";
 
-const BATCH_MAX = 20;
+// Aligned with the Dokobit integration-review recommendation (≤10).
+// See src/lib/dokobit/signing.ts MAX_BATCH_SIZE for the deeper note.
+const BATCH_MAX = 10;
 
 const bodySchema = z.object({
   ids: z.array(z.string().uuid()).min(1).max(BATCH_MAX),
@@ -44,13 +46,19 @@ export async function POST(request: Request) {
     );
   }
 
-  // Verify every selected id is currently student_signed and has a
-  // signing token. Anything else means a stale UI selection.
+  // Verify every selected id is currently in awaiting_school_signature
+  // and has both signing tokens populated. Anything else = stale UI
+  // selection or webhook hasn't promoted the row yet.
   const queue = await listAwaitingSchool();
   const byId = new Map(queue.map((row) => [row.id, row]));
   const rows = parsed.data.ids.map((id) => byId.get(id));
 
-  if (rows.some((row) => !row || !row.dokobit_signing_token)) {
+  if (
+    rows.some(
+      (row) =>
+        !row || !row.dokobit_signing_token || !row.dokobit_school_signer_token
+    )
+  ) {
     return NextResponse.json(
       {
         error: "invalid_rows",
@@ -61,18 +69,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const signingTokens = rows.map((row) => row!.dokobit_signing_token!);
+  const signings = rows.map((row) => ({
+    signing_token: row!.dokobit_signing_token!,
+    signer_token: row!.dokobit_school_signer_token!,
+  }));
   const origin = new URL(request.url).origin;
 
   const batch = await createBatch({
-    signingTokens,
-    signer: {
-      id: `school-batch-${Date.now()}`,
-      name: requiredEnv("SCHOOL_SIGNER_NAME"),
-      surname: requiredEnv("SCHOOL_SIGNER_SURNAME"),
-      code: requiredEnv("SCHOOL_SIGNER_PERSONAL_CODE"),
-      country_code: requiredEnv("SCHOOL_SIGNER_COUNTRY_CODE"),
-    },
+    signings,
     postbackUrl: `${origin}/api/webhooks/dokobit`,
     language: "en",
   });

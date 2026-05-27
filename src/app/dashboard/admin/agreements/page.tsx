@@ -18,14 +18,39 @@ import { AgreementDetailModal } from "@/components/scholarship/AgreementDetailMo
 import { AgreementsTable } from "@/components/scholarship/AgreementsTable";
 import { BulkSignDialog } from "@/components/scholarship/BulkSignDialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import { useApp } from "@/contexts/app-context";
 import type { Database } from "@/types/database";
 import { toast } from "sonner";
 
 type Row = Database["public"]["Tables"]["scholarship_agreements"]["Row"];
+type Status = Database["public"]["Enums"]["scholarship_agreement_status"];
 
-const BATCH_MAX = 20;
+const BATCH_MAX = 10;
+const SEARCH_DEBOUNCE_MS = 250;
+
+// Status options in workflow order. "all" is the no-filter sentinel.
+const STATUS_OPTIONS: Array<{ value: Status | "all"; label: string }> = [
+  { value: "all", label: "All statuses" },
+  { value: "draft", label: "Draft" },
+  { value: "identity_verified", label: "Identity verified" },
+  { value: "awaiting_student_signature", label: "Awaiting student signature" },
+  { value: "student_signed", label: "Signed by student" },
+  { value: "awaiting_school_signature", label: "Awaiting school signature" },
+  { value: "school_signed", label: "Signed by both parties" },
+  { value: "archived", label: "Archived" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "expired", label: "Expired" },
+  { value: "failed", label: "Failed" },
+];
 
 export default function AdminAgreementsPage() {
   const { user, loading } = useApp();
@@ -34,16 +59,32 @@ export default function AdminAgreementsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
 
   // Client-side admin guard. Server-side requireAdmin() is the real fence.
   if (!loading && (!user || user.primary_role !== "admin")) {
     redirect("/dashboard");
   }
 
+  // Debounce the search input so we don't fire a request per keystroke.
+  useEffect(() => {
+    const handle = setTimeout(
+      () => setSearch(searchInput.trim()),
+      SEARCH_DEBOUNCE_MS
+    );
+    return () => clearTimeout(handle);
+  }, [searchInput]);
+
   const reload = useCallback(async () => {
     setRowsLoading(true);
     try {
-      const res = await fetch("/api/agreements/admin");
+      const params = new URLSearchParams();
+      if (search) params.set("q", search);
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      const qs = params.toString();
+      const res = await fetch(`/api/agreements/admin${qs ? `?${qs}` : ""}`);
       if (!res.ok) {
         toast.error("Failed to load agreements");
         return;
@@ -53,16 +94,18 @@ export default function AdminAgreementsPage() {
     } finally {
       setRowsLoading(false);
     }
-  }, []);
+  }, [search, statusFilter]);
 
   useEffect(() => {
     if (user?.primary_role === "admin") reload();
   }, [user, reload]);
 
+  // Rows the admin can batch-countersign: student has signed AND the
+  // school signer has been added via the webhook's addSigner step.
   const eligibleIds = useMemo(
     () =>
       rows
-        .filter((row) => row.status === "student_signed")
+        .filter((row) => row.status === "awaiting_school_signature")
         .map((row) => row.id),
     [rows]
   );
@@ -122,6 +165,44 @@ export default function AdminAgreementsPage() {
         </Button>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          type="search"
+          placeholder="Search by name, surname, or email"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="max-w-sm"
+          aria-label="Search agreements"
+        />
+        <Select
+          value={statusFilter}
+          onValueChange={(value) => setStatusFilter(value as Status | "all")}
+        >
+          <SelectTrigger className="w-[220px]" aria-label="Filter by status">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {(search || statusFilter !== "all") && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setSearchInput("");
+              setStatusFilter("all");
+            }}
+          >
+            Clear
+          </Button>
+        )}
+      </div>
+
       <AgreementsTable
         rows={rows}
         selectedIds={selectedIds}
@@ -131,7 +212,9 @@ export default function AdminAgreementsPage() {
         emptyMessage={
           rowsLoading
             ? "Loading agreements…"
-            : "No agreements yet. Share /full-scholarship-agreement or /partial-scholarship-agreement with students to get started."
+            : search || statusFilter !== "all"
+              ? "No agreements match the current filters."
+              : "No agreements yet. Share /full-scholarship-agreement or /partial-scholarship-agreement with students to get started."
         }
       />
 

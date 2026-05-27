@@ -5,7 +5,7 @@
  * verification + PDF render + signing-session creation, then 302 the
  * student to the Dokobit hosted signing UI.
  *
- * The work takes 5-15 seconds (n8n PDF render + Dokobit upload). Next.js
+ * The work takes 5-15 seconds (in-app PDF render + Dokobit upload). Next.js
  * streams `loading.tsx` while this server component is executing so the
  * user sees a spinner instead of a blank page.
  */
@@ -79,12 +79,26 @@ export default async function IdentityCallbackPage({
     // Next.js uses thrown signals for redirect() — rethrow.
     if (isNextRedirectThrow(err)) throw err;
 
+    // Surface the actual cause in dev so we can debug the orchestration
+    // chain (PDF render, storage upload, Dokobit Documents Gateway calls).
+    if (!(err instanceof CompleteIdentityError)) {
+      console.error("[identity-callback] orchestration failed:", err);
+    }
+
     if (err instanceof CompleteIdentityError) {
       if (err.code === "auth_not_complete") {
         return (
           <ErrorView
             title="Identity check not completed"
             body="Please go back to the previous page and try again."
+          />
+        );
+      }
+      if (err.code === "already_signed") {
+        return (
+          <ErrorView
+            title="You've already signed this agreement"
+            body="Check your inbox (including spam) for the signed contract. If you can't find it, contact StartSchool."
           />
         );
       }
@@ -95,6 +109,9 @@ export default async function IdentityCallbackPage({
             body="For security reasons, only the person whose identity was confirmed in the first attempt can sign this contract."
           />
         );
+      }
+      if (err.code === "auth_error") {
+        return <ErrorView title="Identity check failed" body={err.message} />;
       }
     }
 

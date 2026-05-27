@@ -5,7 +5,8 @@
  * Optional filters via query string:
  *   ?status=...     (scholarship_agreement_status enum value)
  *   ?type=...       (full|partial)
- *   ?q=...          (recipient_email ILIKE substring)
+ *   ?q=...          (substring match across recipient_email,
+ *                    signer_name, signer_surname — case-insensitive)
  *
  * Returns 404 to non-admins (uniform with all other admin endpoints to
  * avoid leaking that the route exists).

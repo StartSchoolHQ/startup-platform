@@ -106,4 +106,12 @@ describe("ScholarshipFormSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("rejects 'part_time' agreement_type (dormant DB enum value, not exposed)", () => {
+    const result = ScholarshipFormSchema.safeParse({
+      ...valid,
+      agreement_type: "part_time",
+    });
+    expect(result.success).toBe(false);
+  });
 });

@@ -49,7 +49,6 @@ export async function updateSession(request: NextRequest) {
     "/invite",
     "/full-scholarship-agreement",
     "/partial-scholarship-agreement",
-    "/part-time-studies-agreement",
     "/agreement/",
     "/privacy/scholarship-agreement",
   ];
@@ -63,7 +62,6 @@ export async function updateSession(request: NextRequest) {
   const scholarshipNoIndexPrefixes = [
     "/full-scholarship-agreement",
     "/partial-scholarship-agreement",
-    "/part-time-studies-agreement",
     "/agreement/",
     "/privacy/scholarship-agreement",
   ];

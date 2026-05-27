@@ -11,6 +11,7 @@
  * the existing UI URL without re-rendering the PDF or re-uploading.
  */
 import { createHash } from "crypto";
+import { userMessageForDokobitError } from "@/lib/dokobit/errors";
 import { getAuthStatus } from "@/lib/dokobit/identity";
 import {
   buildSigningUiUrl,
@@ -22,6 +23,7 @@ import {
   recordIdentity,
   recordSigningSession,
 } from "@/lib/scholarship/data";
+import { buildAgreementFilename } from "@/lib/scholarship/filename";
 import { renderContractPdf } from "@/lib/scholarship/pdf";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -37,7 +39,11 @@ const HAS_SIGNING_SESSION = new Set<string>([
 
 export class CompleteIdentityError extends Error {
   constructor(
-    public readonly code: "auth_not_complete" | "identity_mismatch",
+    public readonly code:
+      | "auth_not_complete"
+      | "identity_mismatch"
+      | "auth_error"
+      | "already_signed",
     message: string
   ) {
     super(message);
@@ -87,6 +93,13 @@ export async function completeIdentityAndCreateSigning(
 
   // Verify the Dokobit eID session actually completed.
   const status = await getAuthStatus(dokobit_session_token);
+  if (status.status === "error") {
+    const friendly = userMessageForDokobitError(status);
+    throw new CompleteIdentityError(
+      "auth_error",
+      friendly ?? "Identity verification failed"
+    );
+  }
   if (status.status !== "ok") {
     throw new CompleteIdentityError(
       "auth_not_complete",
@@ -105,6 +118,12 @@ export async function completeIdentityAndCreateSigning(
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("scholarship_already_signed")) {
+      throw new CompleteIdentityError(
+        "already_signed",
+        "You've already signed this agreement"
+      );
+    }
     if (msg.includes("scholarship_identity_mismatch")) {
       throw new CompleteIdentityError(
         "identity_mismatch",
@@ -127,9 +146,10 @@ export async function completeIdentityAndCreateSigning(
     );
   }
 
-  // Render the contract PDF via n8n (HTML → PDF) and upload to storage +
-  // Dokobit. Each step is independent so a partial failure leaves the row
-  // in identity_verified, recoverable by the admin "Retry" action.
+  // Render the contract PDF in-process (HTML → PDF via headless Chromium)
+  // and upload to storage + Dokobit. Each step is independent so a partial
+  // failure leaves the row in identity_verified, recoverable by the admin
+  // "Retry" action.
   const pdfBuffer = await renderContractPdf({
     agreement_type: agreement.agreement_type,
     signer: {
@@ -156,7 +176,14 @@ export async function completeIdentityAndCreateSigning(
   if (uploadErr) throw uploadErr;
 
   const digest = createHash("sha256").update(pdfBuffer).digest("hex");
-  const filename = `${formatRef(agreement.id)}.pdf`;
+  // User-facing filename. Dokobit shows this in the signing UI and uses it
+  // as the default attachment name when the signer downloads the document.
+  const filename = buildAgreementFilename({
+    name: status.name,
+    surname: status.surname,
+    agreement_type: agreement.agreement_type,
+    ext: "pdf",
+  });
   const upload = await uploadFile({
     name: filename,
     base64Content: pdfBuffer.toString("base64"),
@@ -164,7 +191,10 @@ export async function completeIdentityAndCreateSigning(
   });
 
   const signing = await createSigning({
-    type: "pdf",
+    // `edoc` (ASiC-E container) is the LV legal standard — opens in
+    // eParaksts viewer. `pdf` produces a PDF with embedded signatures
+    // which has the same legal weight but isn't recognised as an .edoc.
+    type: "edoc",
     name: `StartSchool agreement ${formatRef(agreement.id)}`,
     fileToken: upload.token,
     signer: {

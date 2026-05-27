@@ -26,7 +26,11 @@ interface AgreementsTableProps {
 }
 
 function isSelectable(row: Row): boolean {
-  return row.status === "student_signed";
+  // `awaiting_school_signature` = student signed AND school added as
+  // second signer (i.e. dokobit_school_signer_token populated). The
+  // /sign-batch API rejects anything else with 409. `student_signed`
+  // is the transient state in between and never has the school token.
+  return row.status === "awaiting_school_signature";
 }
 
 function formatDate(value: string | null): string {
@@ -36,8 +40,8 @@ function formatDate(value: string | null): string {
 
 /**
  * Admin queue of scholarship agreements. Renders a ShadCN table with:
- *   - A checkbox column that's only enabled for `student_signed` rows
- *     (the rows eligible for the school's batch countersign).
+ *   - A checkbox column that's only enabled for `awaiting_school_signature`
+ *     rows (the rows eligible for the school's batch countersign).
  *   - A header checkbox that selects/deselects all eligible rows.
  *   - Per-row "Detail" button → opens the detail modal.
  *

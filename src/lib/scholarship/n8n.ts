@@ -1,14 +1,12 @@
 /**
  * n8n webhook callers for the scholarship-agreement module.
  *
- * Two webhooks:
- *
- * - `renderPdf` (synchronous): n8n receives the rendered HTML, runs it
- *   through a headless Chromium / Gotenberg, and returns the PDF buffer as
- *   the HTTP response body.
+ * Currently a single webhook:
  *
  * - `sendCompletedEmail` (fire-and-forget): n8n receives the signed `.edoc`
  *   payload (base64) plus recipient details and emails it to the student.
+ *
+ * PDF rendering moved in-app — see `pdf-render.ts`.
  *
  * Every request is signed with HMAC-SHA256 over the raw JSON body using
  * `N8N_SCHOLARSHIP_SHARED_SECRET`. n8n verifies the
@@ -50,22 +48,6 @@ async function postToN8n<T extends object>(
   return res;
 }
 
-export interface RenderPdfInput {
-  template_id: "full" | "partial";
-  language: "lv" | "en";
-  html: string;
-}
-
-export async function renderPdf(input: RenderPdfInput): Promise<Buffer> {
-  const url = requireEnv("N8N_SCHOLARSHIP_RENDER_PDF_URL");
-  const res = await postToN8n(url, input);
-  const buffer = Buffer.from(await res.arrayBuffer());
-  if (buffer.length === 0) {
-    throw new Error("n8n render-pdf returned an empty body");
-  }
-  return buffer;
-}
-
 export interface SendCompletedEmailInput {
   recipient_email: string;
   recipient_name?: string;
@@ -77,6 +59,15 @@ export interface SendCompletedEmailInput {
 export async function sendCompletedEmail(
   input: SendCompletedEmailInput
 ): Promise<void> {
-  const url = requireEnv("N8N_SCHOLARSHIP_COMPLETED_URL");
+  // No-op when n8n isn't configured. Useful for local dev / sandbox
+  // testing where we don't run an n8n stack — the signing pipeline
+  // still progresses to `archived` without sending the email.
+  const url = process.env.N8N_SCHOLARSHIP_COMPLETED_URL;
+  if (!url) {
+    console.warn(
+      "[n8n] N8N_SCHOLARSHIP_COMPLETED_URL not set — skipping completed email"
+    );
+    return;
+  }
   await postToN8n(url, input);
 }

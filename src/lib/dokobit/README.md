@@ -12,6 +12,7 @@ Documents Gateway. Used exclusively by the scholarship-agreement module
 | `identity.ts` | Identity Gateway: `createAuthSession`, `getAuthStatus` |
 | `signing.ts` | Documents Gateway: upload, signing create / add signer / batch / status / archive + URL helpers |
 | `types.ts` | Zod response schemas (all `.passthrough()` for forward-compat) |
+| `errors.ts` | Maps documented Dokobit error codes (6001/6005-6008/7023) to user-facing messages |
 
 ## Environment
 

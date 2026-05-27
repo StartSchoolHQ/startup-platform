@@ -40,21 +40,20 @@ export interface DokobitSigner {
   country_code: string;
 }
 
+// "mobile" (Mobile-ID) is omitted: it's an EE/LT-only service and our LV
+// sandbox token doesn't have it enabled. Re-add if/when a multi-country
+// token or LT/EE student flow is needed.
 const DEFAULT_SIGNING_OPTIONS: DokobitSigningMethod[] = [
   "smartid",
   "eparaksts_mobile",
-  "mobile",
   "stationary",
 ];
 
-// Smart-ID requires per-transaction PIN entry by protocol — not a Dokobit
-// limitation. The batch endpoint therefore excludes smartid.
-const BATCH_SIGNING_OPTIONS: DokobitSigningMethod[] = [
-  "eparaksts_mobile",
-  "stationary",
-];
-
-const MAX_BATCH_SIZE = 20;
+// Dokobit's API allows up to 20, but their integration-review checklist
+// recommends ≤10 per batch for consistent performance. Capped at 10 to
+// match the review criteria. Bump back to 20 only if perf demands it
+// and Dokobit confirms it's acceptable for production.
+const MAX_BATCH_SIZE = 10;
 
 // ============================================================
 // File upload
@@ -90,12 +89,26 @@ interface CreateSigningInput {
   fileToken: string;
   signer: DokobitSigner;
   postbackUrl: string;
+  /**
+   * One of Dokobit's documented signing_purpose enum values. Defaults to
+   * `"signature"`, the only generic-contract-signing variant. Other values
+   * (confirmation, visa, conciliation, registration, …) are listed in
+   * Dokobit's API docs and rarely apply for our scholarship flow.
+   */
   signingPurpose?: string;
   language?: string;
   signingOptions?: DokobitSigningMethod[];
 }
 
 export async function createSigning(input: CreateSigningInput) {
+  // Per Dokobit's spec, signing_purpose and signing_options live on the
+  // signer object, NOT at the top level of /api/signing/create.json.
+  // Passing them at the top level is silently ignored.
+  const signerPayload = {
+    ...input.signer,
+    signing_purpose: input.signingPurpose ?? "signature",
+    signing_options: input.signingOptions ?? DEFAULT_SIGNING_OPTIONS,
+  };
   const raw = await dokobitFetch<unknown>({
     product: "documents",
     method: "POST",
@@ -105,10 +118,8 @@ export async function createSigning(input: CreateSigningInput) {
       name: input.name,
       postback_url: input.postbackUrl,
       language: input.language ?? "en",
-      signing_purpose: input.signingPurpose ?? "agreement",
-      signing_options: input.signingOptions ?? DEFAULT_SIGNING_OPTIONS,
       files: [{ token: input.fileToken }],
-      signers: [input.signer],
+      signers: [signerPayload],
     },
   });
   return DokobitCreateSigningResponse.parse(raw);
@@ -121,23 +132,52 @@ export async function createSigning(input: CreateSigningInput) {
 export async function addSigner(input: {
   signingToken: string;
   signer: DokobitSigner;
+  signingPurpose?: string;
+  signingOptions?: DokobitSigningMethod[];
 }) {
+  // Same shape as `createSigning`: signing_purpose and signing_options
+  // live on the signer object, not at the top level. Dokobit rejects
+  // the request with 400 "[signing_purpose] is missing" if absent.
+  const signerPayload = {
+    ...input.signer,
+    signing_purpose: input.signingPurpose ?? "signature",
+    signing_options: input.signingOptions ?? DEFAULT_SIGNING_OPTIONS,
+  };
   const raw = await dokobitFetch<unknown>({
     product: "documents",
     method: "POST",
     path: `/api/signing/${input.signingToken}/addsigner.json`,
-    body: { signers: [input.signer] },
+    body: { signers: [signerPayload] },
   });
-  return DokobitAddSignerResponse.parse(raw);
+  try {
+    return DokobitAddSignerResponse.parse(raw);
+  } catch (parseErr) {
+    console.error(
+      "[addSigner] response shape unexpected. Raw payload:",
+      JSON.stringify(raw)
+    );
+    throw parseErr;
+  }
 }
 
 // ============================================================
 // Batch signing
 // ============================================================
 
+export interface BatchSigningEntry {
+  /** Token returned by `createSigning`, identifying one document. */
+  signing_token: string;
+  /**
+   * Per-signing access token for the signer who will batch-confirm. For
+   * the scholarship flow that's the school countersigner — the value
+   * `dokobit_school_signer_token` recorded after `addSigner` in the
+   * student-signed webhook.
+   */
+  signer_token: string;
+}
+
 interface CreateBatchInput {
-  signingTokens: string[];
-  signer: DokobitSigner;
+  signings: BatchSigningEntry[];
   postbackUrl: string;
   language?: string;
 }
@@ -146,31 +186,48 @@ interface CreateBatchInput {
  * Bundles existing signing sessions into a single batch so the signer
  * confirms all of them with one PIN entry.
  *
+ * Per Dokobit's spec, every batch entry must carry both the signing token
+ * AND the signer access token issued for THAT signing (from `createSigning`
+ * or `addSigner`). The endpoint does NOT accept a top-level `signers` array.
+ *
  * Constraints:
  * - Max 20 signings per batch (Dokobit limit).
  * - Smart-ID is excluded — Smart-ID's own protocol requires per-doc PIN.
  *   Use the sequential `addSigner` + per-doc UI flow for Smart-ID signers.
  */
 export async function createBatch(input: CreateBatchInput) {
-  if (input.signingTokens.length === 0) {
-    throw new Error("createBatch requires at least one signing token");
+  if (input.signings.length === 0) {
+    throw new Error("createBatch requires at least one signing");
   }
-  if (input.signingTokens.length > MAX_BATCH_SIZE) {
+  if (input.signings.length > MAX_BATCH_SIZE) {
     throw new Error(
-      `createBatch max ${MAX_BATCH_SIZE} signings per batch (got ${input.signingTokens.length})`
+      `createBatch max ${MAX_BATCH_SIZE} signings per batch (got ${input.signings.length})`
     );
   }
+  for (const s of input.signings) {
+    if (!s.signing_token || !s.signer_token) {
+      throw new Error(
+        "createBatch entries require both signing_token and signer_token"
+      );
+    }
+  }
+
+  // Per Dokobit's official Postman example, createbatch.json accepts ONLY
+  // `{signings: [...]}`. `postback_url` and `language` are inherited from
+  // the underlying signing sessions created via /api/signing/create.json —
+  // passing them at the top level returns 400 "field was not expected".
+  void input.postbackUrl;
+  void input.language;
 
   const raw = await dokobitFetch<unknown>({
     product: "documents",
     method: "POST",
     path: "/api/signing/createbatch.json",
     body: {
-      signers: [input.signer],
-      signings: input.signingTokens.map((t) => ({ token: t })),
-      postback_url: input.postbackUrl,
-      language: input.language ?? "en",
-      signing_options: BATCH_SIGNING_OPTIONS,
+      signings: input.signings.map((s) => ({
+        token: s.signing_token,
+        signer_token: s.signer_token,
+      })),
     },
   });
   return DokobitCreateBatchResponse.parse(raw);
@@ -189,13 +246,44 @@ export async function getSigningStatus(signingToken: string) {
   return DokobitSigningStatusResponse.parse(raw);
 }
 
+/**
+ * Fetches the final signed PDF (with embedded qualified e-signatures from
+ * all parties) as base64. Returns the legacy `{file: {content, name}}`
+ * shape so existing callers don't need refactoring.
+ *
+ * Implementation note: Dokobit's documented `/archive.json` endpoint
+ * returns only `{status, token}` — it does NOT include the file body.
+ * The actual signed document is streamed from `/download?access_token=...`,
+ * which is why we GET that endpoint directly (bypassing the JSON-only
+ * `dokobitFetch` wrapper).
+ */
 export async function archiveSigning(signingToken: string) {
-  const raw = await dokobitFetch<unknown>({
-    product: "documents",
-    method: "POST",
-    path: `/api/signing/${signingToken}/archive.json`,
+  const base = process.env.DOKOBIT_DOCUMENTS_BASE_URL;
+  const key = process.env.DOKOBIT_DOCUMENTS_API_KEY;
+  if (!base || !key) {
+    throw new Error(
+      "archiveSigning: DOKOBIT_DOCUMENTS_BASE_URL / _API_KEY not configured"
+    );
+  }
+  const url = new URL(`/api/signing/${signingToken}/download`, base);
+  url.searchParams.set("access_token", key);
+
+  const res = await fetch(url.toString(), { method: "GET" });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(
+      `Dokobit download ${signingToken} failed: ${res.status} — ${body.slice(0, 200)}`
+    );
+  }
+  const bytes = Buffer.from(await res.arrayBuffer());
+
+  return DokobitArchiveResponse.parse({
+    status: "ok",
+    file: {
+      name: `${signingToken}.pdf`,
+      content: bytes.toString("base64"),
+    },
   });
-  return DokobitArchiveResponse.parse(raw);
 }
 
 // ============================================================

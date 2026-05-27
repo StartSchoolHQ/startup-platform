@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Keep the chromium binary out of the Next.js bundler — it must be loaded
+  // at runtime by puppeteer-core (the @sparticuz/chromium binary is ~50MB
+  // and bundling it explodes function size).
+  serverExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
   // Include the scholarship Handlebars contract templates in the traced
   // serverless bundle so renderContractHtml can readFileSync them at runtime.
   outputFileTracingIncludes: {

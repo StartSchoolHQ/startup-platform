@@ -2,11 +2,13 @@ import { AgreementForm } from "./AgreementForm";
 import { PrivacyNoticeSummary } from "./PrivacyNoticeSummary";
 import { ScholarshipTermsSummary } from "./ScholarshipTermsSummary";
 
+type AgreementType = "full" | "partial";
+
 interface PublicAgreementCardProps {
-  agreementType: "full" | "partial";
+  agreementType: AgreementType;
 }
 
-const HEADINGS: Record<"full" | "partial", string> = {
+const HEADINGS: Record<AgreementType, string> = {
   full: "Full Scholarship Agreement",
   partial: "Partial Scholarship Agreement",
 };

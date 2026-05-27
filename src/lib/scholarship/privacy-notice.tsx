@@ -129,7 +129,7 @@ export const SCHOLARSHIP_PRIVACY_NOTICE: PrivacyNoticeContent = {
     },
   ],
   retention:
-    "Drafts that are never completed are automatically deleted 14 days after creation. Once both parties have signed and you have been emailed the final agreement, we minimize what we store: the signed agreement (PDF/.edoc) is retained for the duration of the contract plus 3 years (the general civil-claim limitation period under Latvian law), and the structured contact and identity fields we used to render the contract are deleted. Only the signed document and the minimum metadata needed to identify it (record ID, agreement type, signature timestamps) remain. Where Latvian tax or accounting law requires a longer retention period for any specific record, that longer period applies to that record only.",
+    "Drafts that are never completed are automatically deleted 14 days after creation. Once both parties have signed and you have been emailed the final agreement, we minimize what we store: the signed agreement (PDF/.edoc) is retained for the duration of the contract plus 3 years (the general civil-claim limitation period under Latvian law). On the database row we retain only the minimum needed to administer the contract — your name, surname, and email — together with the agreement type, status, signature timestamps, and the link to the signed document. Phone number, address, personal identity number, country code, and the Dokobit session tokens used to render the contract are deleted at that point. Where Latvian tax or accounting law requires a longer retention period for any specific record, that longer period applies to that record only.",
   rights: [
     {
       title: "Access",

@@ -12,6 +12,7 @@ import { findById } from "@/lib/scholarship/data";
 import type { Database } from "@/types/database";
 
 type Status = Database["public"]["Enums"]["scholarship_agreement_status"];
+type AgreementType = Database["public"]["Enums"]["scholarship_agreement_type"];
 
 const STUDENT_DONE_STATUSES: ReadonlySet<Status> = new Set([
   "student_signed",
@@ -19,6 +20,13 @@ const STUDENT_DONE_STATUSES: ReadonlySet<Status> = new Set([
   "school_signed",
   "archived",
 ]);
+
+// 'part_time' is a dormant DB enum value — no row reaches the thank-you
+// page with it after the removal migration. Map only supported variants.
+const PUBLIC_ROUTE: Partial<Record<AgreementType, string>> = {
+  full: "/full-scholarship-agreement",
+  partial: "/partial-scholarship-agreement",
+};
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -41,7 +49,7 @@ export default async function AgreementThankYouPage({ params }: PageProps) {
   }
 
   if (!STUDENT_DONE_STATUSES.has(agreement.status)) {
-    redirect(`/${agreement.agreement_type}-scholarship-agreement`);
+    redirect(PUBLIC_ROUTE[agreement.agreement_type] ?? "/");
   }
 
   return <ThankYouCard firstName={agreement.signer_name} />;
