@@ -85,18 +85,43 @@ async function handlePostback(request: Request) {
     return NextResponse.json({ error: "ip_not_allowed" }, { status: 403 });
   }
 
+  // Read the raw body once so we can both log it (integration-review
+  // debugging) and parse it tolerantly. Dokobit may send JSON or
+  // application/x-www-form-urlencoded depending on configuration; the
+  // previous code assumed JSON and silently 400'd on form-encoded.
+  const contentType = request.headers.get("content-type") ?? "";
+  const rawBody = await request.text();
   let body: unknown;
   try {
-    body = await request.json();
+    if (contentType.includes("application/x-www-form-urlencoded")) {
+      body = Object.fromEntries(new URLSearchParams(rawBody));
+    } else {
+      body = JSON.parse(rawBody);
+    }
   } catch {
+    console.error(
+      "[webhooks/dokobit] unparseable body — content-type:",
+      contentType,
+      "raw:",
+      rawBody
+    );
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
 
   const parsed = DokobitWebhookPayload.safeParse(body);
   if (!parsed.success) {
+    console.error("[webhooks/dokobit] invalid payload — raw:", rawBody);
     return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
   }
   const { event, signing_token } = parsed.data;
+  console.log(
+    "[webhooks/dokobit] received — event:",
+    event,
+    "signing_token:",
+    signing_token,
+    "content-type:",
+    contentType
+  );
 
   // Re-verify with Dokobit before acting on the postback (defends against
   // replay / forgery / out-of-order delivery).

@@ -201,6 +201,7 @@ export const DokobitArchiveResponse = z
  */
 export const DokobitWebhookPayload = z
   .object({
+    action: z.string().optional(),
     event: z.string().optional(),
     status: z.string().optional(),
     signing_token: z.string().optional(),
@@ -208,7 +209,13 @@ export const DokobitWebhookPayload = z
   })
   .passthrough()
   .transform((p) => ({
-    event: p.event ?? p.status ?? "",
+    // Dokobit's signing postback carries the event name in `action`
+    // (signer_signed | signing_completed | signing_archived | ...).
+    // `status` is just "ok"/"error", so it must be the LAST fallback —
+    // never preferred over the real event, or every postback looks like
+    // the no-op event "ok". `action` was absent on older payloads, so
+    // preferring it here cannot change previously-working behaviour.
+    event: p.action ?? p.event ?? p.status ?? "",
     signing_token: p.signing_token ?? p.token ?? "",
   }))
   .refine((p) => p.signing_token.length > 0, {
