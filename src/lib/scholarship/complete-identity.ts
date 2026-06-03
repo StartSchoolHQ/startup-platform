@@ -22,7 +22,8 @@ import {
   waitForFileUploaded,
 } from "@/lib/dokobit/signing";
 import {
-  findByAuthToken,
+  attachReturnToken,
+  findByCallbackRef,
   recordEvent,
   recordIdentity,
   recordSigningSession,
@@ -141,7 +142,10 @@ function diagnosticPayload(
 }
 
 export interface CompleteIdentityInput {
-  dokobit_session_token: string;
+  /** OUR correlation key from the return_url — used to find the row. */
+  callback_ref: string;
+  /** Dokobit's RETURN_TOKEN (appended to the callback) — used for status. */
+  dokobit_return_token: string;
   origin: string;
 }
 
@@ -162,9 +166,9 @@ function formatDateDDMMYYYY(d: Date): string {
 export async function completeIdentityAndCreateSigning(
   input: CompleteIdentityInput
 ): Promise<CompleteIdentityResult> {
-  const { dokobit_session_token, origin } = input;
+  const { callback_ref, dokobit_return_token, origin } = input;
 
-  const agreement = await findByAuthToken(dokobit_session_token);
+  const agreement = await findByCallbackRef(callback_ref);
 
   // Idempotency: row already has a signing session — return its UI URL.
   if (
@@ -185,7 +189,7 @@ export async function completeIdentityAndCreateSigning(
   const reference = formatRef(agreement.id);
 
   try {
-    return await runOrchestration(agreement, origin, dokobit_session_token);
+    return await runOrchestration(agreement, origin, dokobit_return_token);
   } catch (err) {
     // Handled, user-friendly identity failures pass through untouched.
     if (err instanceof CompleteIdentityError) throw err;
@@ -222,12 +226,14 @@ export async function completeIdentityAndCreateSigning(
  * catch without nesting the whole body in a try block.
  */
 async function runOrchestration(
-  agreement: Awaited<ReturnType<typeof findByAuthToken>>,
+  agreement: Awaited<ReturnType<typeof findByCallbackRef>>,
   origin: string,
-  dokobit_session_token: string
+  dokobit_return_token: string
 ): Promise<CompleteIdentityResult> {
-  // Verify the Dokobit eID session actually completed.
-  const status = await getAuthStatus(dokobit_session_token);
+  // Verify the Dokobit eID session actually completed. Status is fetched
+  // with the RETURN_TOKEN Dokobit appended to the callback — NOT the
+  // create-session token (Dokobit issues two different tokens).
+  const status = await getAuthStatus(dokobit_return_token);
   if (status.status === "error") {
     const friendly = userMessageForDokobitError(status);
     throw new CompleteIdentityError(
@@ -242,10 +248,18 @@ async function runOrchestration(
     );
   }
 
+  // Persist Dokobit's RETURN_TOKEN onto the row so recordIdentity (which
+  // looks the row up by dokobit_auth_token) resolves, and so admin Retry
+  // has a real Dokobit token. Idempotent.
+  await attachReturnToken({
+    id: agreement.id,
+    return_token: dokobit_return_token,
+  });
+
   // Lock identity on the row (or no-op if already locked to the same person).
   try {
     agreement = await recordIdentity({
-      dokobit_auth_token: dokobit_session_token,
+      dokobit_auth_token: dokobit_return_token,
       personal_code: status.code,
       country_code: status.country_code,
       name: status.name,

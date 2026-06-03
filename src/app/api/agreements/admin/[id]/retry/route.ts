@@ -44,6 +44,9 @@ export async function POST(request: Request, { params }: RouteContext) {
   if (!agreement.dokobit_auth_token) {
     return NextResponse.json({ error: "no_auth_token" }, { status: 409 });
   }
+  if (!agreement.callback_ref) {
+    return NextResponse.json({ error: "no_callback_ref" }, { status: 409 });
+  }
 
   try {
     // Reset clears partial signing state and bumps status back to
@@ -53,7 +56,8 @@ export async function POST(request: Request, { params }: RouteContext) {
     const origin = new URL(request.url).origin;
 
     const { signing_ui_url } = await completeIdentityAndCreateSigning({
-      dokobit_session_token: reset.dokobit_auth_token!,
+      callback_ref: reset.callback_ref!,
+      dokobit_return_token: reset.dokobit_auth_token!,
       origin,
     });
 

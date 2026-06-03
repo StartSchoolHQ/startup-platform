@@ -14,10 +14,11 @@
  * The Dokobit session_token IS the correlation key — no per-row access
  * token is exposed to the URL.
  */
+import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { createAuthSession } from "@/lib/dokobit/identity";
-import { submitForm } from "@/lib/scholarship/data";
+import { submitFormV2 } from "@/lib/scholarship/data";
 import { ScholarshipFormSchema } from "@/lib/validation-schemas";
 
 const DRAFT_EXPIRY_DAYS = 14;
@@ -39,7 +40,11 @@ export async function POST(request: Request) {
 
   const requestUrl = new URL(request.url);
   const origin = requestUrl.origin;
-  const returnUrl = `${origin}/agreement/identity-callback`;
+  // OUR correlation key. Dokobit's create-session token and the token it
+  // appends to the callback differ, so we can't key the row by a Dokobit
+  // token — we embed this ref in the return_url and look the row up by it.
+  const callbackRef = randomBytes(24).toString("hex");
+  const returnUrl = `${origin}/agreement/identity-callback?ref=${callbackRef}`;
   // Dev-only: when DOKOBIT_IDENTITY_MOCK=true, ?mock=<scenario> on the
   // form URL drives which Dokobit response the mock returns (ok,
   // cancelled, expired, no_smartid, basic_account, view_app,
@@ -77,13 +82,13 @@ export async function POST(request: Request) {
     Date.now() + DRAFT_EXPIRY_DAYS * 86_400_000
   ).toISOString();
 
-  const row = await submitForm({
+  const row = await submitFormV2({
     agreement_type: parsed.agreement_type,
     email: parsed.email,
     phone: parsed.phone,
     address: parsed.address,
     language: parsed.language,
-    dokobit_auth_token: session.session_token,
+    callback_ref: callbackRef,
     expires_at: expiresAt,
   });
 

@@ -61,6 +61,58 @@ export async function submitForm(input: SubmitFormInput): Promise<Row> {
   return data as Row;
 }
 
+export interface SubmitFormV2Input {
+  agreement_type: AgreementType;
+  email: string;
+  phone: string;
+  address: string;
+  language: Language;
+  /**
+   * OUR self-generated correlation key, embedded in the Dokobit return_url.
+   * Dokobit's create-session token and the token it appends to the callback
+   * differ, so we key the row by this instead — see complete-identity.ts.
+   */
+  callback_ref: string;
+  expires_at: string;
+}
+
+/**
+ * V2 of submitForm: keys the draft by our own `callback_ref` (in return_url)
+ * rather than a Dokobit token. `dokobit_auth_token` stays null until the
+ * identity callback persists Dokobit's RETURN_TOKEN via attachReturnToken.
+ */
+export async function submitFormV2(input: SubmitFormV2Input): Promise<Row> {
+  const { data, error } = await admin().rpc("scholarship_submit_form_v2", {
+    p_type: input.agreement_type,
+    p_email: input.email,
+    p_phone: input.phone,
+    p_address: input.address,
+    p_language: input.language,
+    p_callback_ref: input.callback_ref,
+    p_expires_at: input.expires_at,
+  });
+  if (error) throw error;
+  return data as Row;
+}
+
+/**
+ * Persists Dokobit's RETURN_TOKEN (the token appended to the callback URL,
+ * distinct from the create-session token) onto the row. Called on the
+ * identity callback before recordIdentity so the existing
+ * dokobit_auth_token lookup resolves. Idempotent.
+ */
+export async function attachReturnToken(input: {
+  id: string;
+  return_token: string;
+}): Promise<Row> {
+  const { data, error } = await admin().rpc("scholarship_attach_return_token", {
+    p_id: input.id,
+    p_return_token: input.return_token,
+  });
+  if (error) throw error;
+  return data as Row;
+}
+
 export interface RecordIdentityInput {
   dokobit_auth_token: string;
   personal_code: string;
@@ -290,6 +342,22 @@ export async function findByAuthToken(dokobitAuthToken: string): Promise<Row> {
     .from("scholarship_agreements")
     .select("*")
     .eq("dokobit_auth_token", dokobitAuthToken)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("scholarship_not_found");
+  return data;
+}
+
+/**
+ * Looks up the draft by OUR correlation key (embedded in the Dokobit
+ * return_url). This is the identity-callback's row lookup — Dokobit's
+ * appended token is a different value, so we can't find the row by it.
+ */
+export async function findByCallbackRef(callbackRef: string): Promise<Row> {
+  const { data, error } = await admin()
+    .from("scholarship_agreements")
+    .select("*")
+    .eq("callback_ref", callbackRef)
     .maybeSingle();
   if (error) throw error;
   if (!data) throw new Error("scholarship_not_found");

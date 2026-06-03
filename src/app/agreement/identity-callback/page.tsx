@@ -20,7 +20,9 @@ import {
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  searchParams: Promise<{ session_token?: string }>;
+  // `ref` is our correlation key (we put it in the return_url). `session_token`
+  // is the RETURN_TOKEN Dokobit appends — a different value used for status.
+  searchParams: Promise<{ ref?: string; session_token?: string }>;
 }
 
 interface ErrorViewProps {
@@ -68,9 +70,9 @@ function isNextRedirectThrow(err: unknown): boolean {
 export default async function IdentityCallbackPage({
   searchParams,
 }: PageProps) {
-  const { session_token } = await searchParams;
+  const { ref, session_token } = await searchParams;
 
-  if (!session_token) {
+  if (!ref || !session_token) {
     redirect("/");
   }
 
@@ -81,7 +83,8 @@ export default async function IdentityCallbackPage({
 
   try {
     const { signing_ui_url } = await completeIdentityAndCreateSigning({
-      dokobit_session_token: session_token,
+      callback_ref: ref,
+      dokobit_return_token: session_token,
       origin,
     });
     redirect(signing_ui_url);
