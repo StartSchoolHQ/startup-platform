@@ -17,6 +17,7 @@ import {
   buildSigningUiUrl,
   createSigning,
   uploadFile,
+  waitForFileUploaded,
 } from "@/lib/dokobit/signing";
 import {
   findByAuthToken,
@@ -189,6 +190,12 @@ export async function completeIdentityAndCreateSigning(
     base64Content: pdfBuffer.toString("base64"),
     digestSha256: digest,
   });
+  // Per Dokobit's documented flow, the upload is async on their side —
+  // poll the status endpoint until the file is "uploaded" before kicking
+  // off the signing session. For inline base64 (our case) this almost
+  // always returns immediately; the polling guards against the rare slow
+  // ingestion that would otherwise race against createSigning.
+  await waitForFileUploaded(upload.token);
 
   const signing = await createSigning({
     // `edoc` (ASiC-E container) is the LV legal standard — opens in

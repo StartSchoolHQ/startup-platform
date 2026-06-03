@@ -39,7 +39,11 @@ const TEXT_FIELDS = ["email", "confirm_email", "phone", "address"] as const;
 type TextFieldId = (typeof TEXT_FIELDS)[number];
 
 async function defaultSubmit(input: SubmitFormInput) {
-  const res = await fetch("/api/agreements/submit-form", {
+  // Forward the current URL's query string to the API so dev-mode
+  // `?mock=<scenario>` reaches the route. No-op in prod (the route
+  // only reads `mock` when DOKOBIT_IDENTITY_MOCK=true).
+  const qs = typeof window !== "undefined" ? window.location.search : "";
+  const res = await fetch(`/api/agreements/submit-form${qs}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(input),

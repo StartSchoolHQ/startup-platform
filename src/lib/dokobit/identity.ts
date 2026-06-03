@@ -50,11 +50,70 @@ interface CreateAuthSessionInput {
   code?: string;
   /** Phone number to prefill Mobile-ID form data. */
   phone?: string;
+  /**
+   * Dev-only: when the mock is enabled, encodes a scenario name into the
+   * fake session token so `getAuthStatus` returns the corresponding
+   * Dokobit error code. Lets the integration-review demo walk through
+   * every error path (cancelled, expired, no-account, etc.) without
+   * hitting real Dokobit. Ignored when the mock is off.
+   * See MOCK_SCENARIOS below for the supported keys.
+   */
+  mockScenario?: string;
+}
+
+/**
+ * Dev-mock scenarios → Dokobit error responses surfaced by `getAuthStatus`.
+ * Drive scenarios via `?mock=<key>` on the public form URL.
+ */
+const MOCK_SCENARIOS: Record<
+  string,
+  { ok: true } | { ok: false; error_code: number; message: string }
+> = {
+  ok: { ok: true },
+  cancelled: {
+    ok: false,
+    error_code: 7023,
+    message: "Signing canceled by user.",
+  },
+  expired: { ok: false, error_code: 6005, message: "Signing session expired." },
+  no_smartid: {
+    ok: false,
+    error_code: 6006,
+    message: "User does not have Smart-ID account.",
+  },
+  basic_account: {
+    ok: false,
+    error_code: 6007,
+    message: "User can not use Smart-ID account.",
+  },
+  view_app: {
+    ok: false,
+    error_code: 6008,
+    message: "User should view Smart-ID app or self-service portal",
+  },
+  no_mobile_id: {
+    ok: false,
+    error_code: 6001,
+    message: "User does not have a mobile signature.",
+  },
+};
+
+function safeScenarioKey(input: string | undefined): string {
+  if (!input) return "ok";
+  if (Object.prototype.hasOwnProperty.call(MOCK_SCENARIOS, input)) return input;
+  return "ok";
 }
 
 export async function createAuthSession(input: CreateAuthSessionInput) {
-  if (mockEnabled()) {
-    const sessionToken = MOCK_PREFIX + randomBytes(16).toString("hex");
+  // When an explicit `code` is provided (e.g. from `?test_code=...` on
+  // the demo URL), bypass the mock and hit real Dokobit — the whole
+  // point of test_code is to drive an end-to-end Dokobit + SK Mock
+  // Service flow.
+  if (mockEnabled() && !input.code) {
+    const scenario = safeScenarioKey(input.mockScenario);
+    // Encode scenario into the session token so getAuthStatus can pick
+    // the matching response. Format: `mock-<scenario>-<random>`.
+    const sessionToken = `${MOCK_PREFIX}${scenario}-${randomBytes(8).toString("hex")}`;
     const url = new URL(input.returnUrl);
     url.searchParams.set("session_token", sessionToken);
     return DokobitCreateAuthSessionResponse.parse({
@@ -86,6 +145,20 @@ export async function getAuthStatus(
   sessionToken: string
 ): Promise<DokobitAuthStatus> {
   if (mockEnabled() && sessionToken.startsWith(MOCK_PREFIX)) {
+    // Token format: `mock-<scenario>-<random>`. Strip the prefix, take
+    // the first dash-segment as the scenario, default to "ok".
+    const tail = sessionToken.slice(MOCK_PREFIX.length);
+    const scenarioKey = safeScenarioKey(tail.split("-")[0]);
+    const scenario = MOCK_SCENARIOS[scenarioKey];
+
+    if (!scenario.ok) {
+      return DokobitAuthStatusResponse.parse({
+        status: "error",
+        error_code: scenario.error_code,
+        message: scenario.message,
+      });
+    }
+
     // SK notification-flow test user PNOLV-050405-10009-DEM0-Q ("Adult,
     // OK" in Notification flows). Dokobit Documents Gateway signing
     // uses notification flow (control code + phone push), so this pool

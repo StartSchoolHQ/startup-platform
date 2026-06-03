@@ -69,6 +69,15 @@ export const DokobitUploadResponse = z
   })
   .passthrough();
 
+// /api/file/upload/{token}/status.json — Dokobit ingests the uploaded file
+// asynchronously. Poll this until `status: "uploaded"` before creating a
+// signing session, otherwise createSigning may race against ingestion.
+export const DokobitUploadStatusResponse = z
+  .object({
+    status: z.enum(["uploaded", "pending"]),
+  })
+  .passthrough();
+
 // ============================================================
 // Documents Gateway — signing create / addsigner
 // ============================================================

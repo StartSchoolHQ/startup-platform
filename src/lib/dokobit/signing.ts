@@ -23,6 +23,7 @@ import {
   DokobitCreateSigningResponse,
   DokobitSigningStatusResponse,
   DokobitUploadResponse,
+  DokobitUploadStatusResponse,
 } from "./types";
 
 export type DokobitSigningMethod =
@@ -77,6 +78,47 @@ export async function uploadFile(input: {
     },
   });
   return DokobitUploadResponse.parse(raw);
+}
+
+/**
+ * GET /api/file/upload/{token}/status.json — checks whether Dokobit has
+ * finished ingesting the uploaded file. Returns `"uploaded"` or `"pending"`.
+ */
+export async function getFileUploadStatus(fileToken: string) {
+  const raw = await dokobitFetch<unknown>({
+    product: "documents",
+    method: "GET",
+    path: `/api/file/upload/${fileToken}/status.json`,
+  });
+  return DokobitUploadStatusResponse.parse(raw);
+}
+
+/**
+ * Polls `getFileUploadStatus` until status is `"uploaded"`. Throws if
+ * still pending after `maxAttempts * delayMs` total. For inline base64
+ * uploads the first poll almost always returns `"uploaded"` — this is
+ * defensive against slower ingestion of large files or `file.url`
+ * (remote-fetch) uploads.
+ *
+ * Defaults: up to 10 polls × 500ms = 5s total ceiling.
+ */
+export async function waitForFileUploaded(
+  fileToken: string,
+  options: { maxAttempts?: number; delayMs?: number } = {}
+): Promise<void> {
+  const maxAttempts = options.maxAttempts ?? 10;
+  const delayMs = options.delayMs ?? 500;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const { status } = await getFileUploadStatus(fileToken);
+    if (status === "uploaded") return;
+    // status === "pending" — wait then retry.
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+
+  throw new Error(
+    `Dokobit file ${fileToken} not ingested after ${maxAttempts * delayMs}ms`
+  );
 }
 
 // ============================================================

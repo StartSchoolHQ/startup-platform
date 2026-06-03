@@ -17,6 +17,7 @@ import { redirect } from "next/navigation";
 import { AgreementDetailModal } from "@/components/scholarship/AgreementDetailModal";
 import { AgreementsTable } from "@/components/scholarship/AgreementsTable";
 import { BulkSignDialog } from "@/components/scholarship/BulkSignDialog";
+import { DokobitDemoPanel } from "@/components/scholarship/DokobitDemoPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -164,6 +165,8 @@ export default function AdminAgreementsPage() {
           Sign {selectedIds.size > 0 ? selectedIds.size : ""} selected
         </Button>
       </div>
+
+      <DokobitDemoPanel />
 
       <div className="flex flex-wrap items-center gap-2">
         <Input

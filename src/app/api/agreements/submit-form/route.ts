@@ -37,8 +37,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
 
-  const origin = new URL(request.url).origin;
+  const requestUrl = new URL(request.url);
+  const origin = requestUrl.origin;
   const returnUrl = `${origin}/agreement/identity-callback`;
+  // Dev-only: when DOKOBIT_IDENTITY_MOCK=true, ?mock=<scenario> on the
+  // form URL drives which Dokobit response the mock returns (ok,
+  // cancelled, expired, no_smartid, basic_account, view_app,
+  // no_mobile_id). Ignored in prod (the mock branch in createAuthSession
+  // is gated by env flag).
+  const mockScenario = requestUrl.searchParams.get("mock") ?? undefined;
+  // Review-prep: ?test_code=<LV personal code> prefills Dokobit's `code`
+  // param, which Dokobit forwards to SK as the document number
+  // (PNOLV-<code>-MOCK-Q). For SK Mock Service test users (e.g.
+  // 030403-10016 = USER_REFUSED) this auto-resolves through real Dokobit
+  // — no mock involvement. List of supported codes:
+  // https://sk-eid.github.io/smart-id-documentation/test_accounts.html
+  const testCode = requestUrl.searchParams.get("test_code") ?? undefined;
 
   // Mint the Dokobit auth session BEFORE the DB write so the session_token
   // is available as the row's correlation key from the start.
@@ -55,6 +69,8 @@ export async function POST(request: Request) {
     countryCode: "LV",
     authenticationMethods: ["smartid", "eparaksts_mobile", "smartcard"],
     message: "StartSchool agreement",
+    mockScenario,
+    code: testCode,
   });
 
   const expiresAt = new Date(
