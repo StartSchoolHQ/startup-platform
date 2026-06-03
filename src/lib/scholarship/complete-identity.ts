@@ -11,6 +11,8 @@
  * the existing UI URL without re-rendering the PDF or re-uploading.
  */
 import { createHash } from "crypto";
+import { ZodError } from "zod";
+import { DokobitError } from "@/lib/dokobit/client";
 import { userMessageForDokobitError } from "@/lib/dokobit/errors";
 import { getAuthStatus } from "@/lib/dokobit/identity";
 import {
@@ -21,6 +23,7 @@ import {
 } from "@/lib/dokobit/signing";
 import {
   findByAuthToken,
+  recordEvent,
   recordIdentity,
   recordSigningSession,
 } from "@/lib/scholarship/data";
@@ -52,6 +55,91 @@ export class CompleteIdentityError extends Error {
   }
 }
 
+export interface OrchestrationErrorDetail {
+  /** Short machine code, safe to show on screen (e.g. dokobit_http_400). */
+  code: string;
+  /** One-line human/technical summary, safe to show on screen. */
+  message: string;
+}
+
+/**
+ * Wraps any UNEXPECTED orchestration failure (i.e. not a handled
+ * `CompleteIdentityError`) so the callback page can show a reference code
+ * + technical detail instead of an opaque "something went wrong". The full
+ * raw error is also written to the `error` audit event and console before
+ * this is thrown — see `completeIdentityAndCreateSigning`'s catch.
+ */
+export class OrchestrationError extends Error {
+  constructor(
+    public readonly reference: string,
+    public readonly detail: OrchestrationErrorDetail
+  ) {
+    super(detail.message);
+    this.name = "OrchestrationError";
+  }
+}
+
+/**
+ * Short, on-screen-safe summary of an unexpected failure. NEVER includes
+ * the API key (it lives only in the request query string, never in the
+ * thrown message/body) — for DokobitError we expose only the HTTP status.
+ */
+function summarizeError(err: unknown): OrchestrationErrorDetail {
+  if (err instanceof DokobitError) {
+    return {
+      code: `dokobit_http_${err.status}`,
+      message: `The identity provider returned HTTP ${err.status} while we were preparing your contract.`,
+    };
+  }
+  if (err instanceof ZodError) {
+    const first = err.issues[0];
+    const path = first?.path.join(".") || "(root)";
+    return {
+      code: "dokobit_bad_response_shape",
+      message: `The identity provider returned an unexpected response (field "${path}": ${
+        first?.message ?? "validation failed"
+      }).`,
+    };
+  }
+  if (err instanceof Error) {
+    return { code: "orchestration_error", message: err.message };
+  }
+  return { code: "unknown_error", message: String(err) };
+}
+
+/**
+ * Rich diagnostic payload for the `error` audit event. This lands in our
+ * admin-only events table (not exposed to clients), so it carries the full
+ * Dokobit status + response body / Zod issues / stack to make the root
+ * cause obvious without trawling truncated serverless logs.
+ */
+function diagnosticPayload(
+  err: unknown,
+  reference: string
+): Record<string, unknown> {
+  if (err instanceof DokobitError) {
+    return {
+      reference,
+      kind: "DokobitError",
+      status: err.status,
+      message: err.message,
+      body: err.body,
+    };
+  }
+  if (err instanceof ZodError) {
+    return { reference, kind: "ZodError", issues: err.issues };
+  }
+  if (err instanceof Error) {
+    return {
+      reference,
+      kind: err.name,
+      message: err.message,
+      stack: err.stack ?? null,
+    };
+  }
+  return { reference, kind: "unknown", value: String(err) };
+}
+
 export interface CompleteIdentityInput {
   dokobit_session_token: string;
   origin: string;
@@ -76,7 +164,7 @@ export async function completeIdentityAndCreateSigning(
 ): Promise<CompleteIdentityResult> {
   const { dokobit_session_token, origin } = input;
 
-  let agreement = await findByAuthToken(dokobit_session_token);
+  const agreement = await findByAuthToken(dokobit_session_token);
 
   // Idempotency: row already has a signing session — return its UI URL.
   if (
@@ -92,6 +180,52 @@ export async function completeIdentityAndCreateSigning(
     };
   }
 
+  // Reference shown to the user on failure + correlation key in the audit
+  // trail. Stable across retries (derived from the row id).
+  const reference = formatRef(agreement.id);
+
+  try {
+    return await runOrchestration(agreement, origin, dokobit_session_token);
+  } catch (err) {
+    // Handled, user-friendly identity failures pass through untouched.
+    if (err instanceof CompleteIdentityError) throw err;
+
+    const detail = summarizeError(err);
+
+    // Durable diagnostic: serverless logs truncate, so the real cause goes
+    // into the append-only events table. Best-effort — a logging failure
+    // must never mask the original error.
+    try {
+      await recordEvent({
+        id: agreement.id,
+        event_type: "error",
+        payload: diagnosticPayload(err, reference),
+      });
+    } catch (logErr) {
+      console.error(
+        "[complete-identity] failed to record error event:",
+        logErr
+      );
+    }
+    console.error(
+      `[complete-identity] orchestration failed (${reference}):`,
+      err
+    );
+
+    throw new OrchestrationError(reference, detail);
+  }
+}
+
+/**
+ * The actual identity → PDF → Dokobit signing pipeline. Split out so
+ * `completeIdentityAndCreateSigning` can wrap it in a single diagnostic
+ * catch without nesting the whole body in a try block.
+ */
+async function runOrchestration(
+  agreement: Awaited<ReturnType<typeof findByAuthToken>>,
+  origin: string,
+  dokobit_session_token: string
+): Promise<CompleteIdentityResult> {
   // Verify the Dokobit eID session actually completed.
   const status = await getAuthStatus(dokobit_session_token);
   if (status.status === "error") {

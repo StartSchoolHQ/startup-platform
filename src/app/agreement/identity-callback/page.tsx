@@ -13,6 +13,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   CompleteIdentityError,
+  OrchestrationError,
   completeIdentityAndCreateSigning,
 } from "@/lib/scholarship/complete-identity";
 
@@ -25,14 +26,23 @@ interface PageProps {
 interface ErrorViewProps {
   title: string;
   body: string;
+  /** Support reference + machine code, shown so the user can email it. */
+  reference?: string;
+  code?: string;
 }
 
-function ErrorView({ title, body }: ErrorViewProps) {
+function ErrorView({ title, body, reference, code }: ErrorViewProps) {
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
       <div className="max-w-md text-center">
         <h1 className="mb-2 text-2xl font-semibold">{title}</h1>
         <p className="text-zinc-600">{body}</p>
+        {reference && (
+          <p className="mt-3 rounded bg-zinc-100 p-2 font-mono text-xs text-zinc-700">
+            Reference: {reference}
+            {code ? ` · ${code}` : ""}
+          </p>
+        )}
         <p className="mt-4 text-sm text-zinc-500">
           Need help? Email{" "}
           <a className="underline" href="mailto:start@startschool.org">
@@ -79,9 +89,13 @@ export default async function IdentityCallbackPage({
     // Next.js uses thrown signals for redirect() — rethrow.
     if (isNextRedirectThrow(err)) throw err;
 
-    // Surface the actual cause in dev so we can debug the orchestration
-    // chain (PDF render, storage upload, Dokobit Documents Gateway calls).
-    if (!(err instanceof CompleteIdentityError)) {
+    // OrchestrationError has already been logged + recorded to the audit
+    // trail inside completeIdentityAndCreateSigning. Only log here for
+    // genuinely unexpected throws (e.g. row lookup before orchestration).
+    if (
+      !(err instanceof CompleteIdentityError) &&
+      !(err instanceof OrchestrationError)
+    ) {
       console.error("[identity-callback] orchestration failed:", err);
     }
 
@@ -113,6 +127,17 @@ export default async function IdentityCallbackPage({
       if (err.code === "auth_error") {
         return <ErrorView title="Identity check failed" body={err.message} />;
       }
+    }
+
+    if (err instanceof OrchestrationError) {
+      return (
+        <ErrorView
+          title="Something went wrong"
+          body={`We couldn't finish preparing your contract. ${err.detail.message} Please email the reference below to StartSchool and we'll sort it out.`}
+          reference={err.reference}
+          code={err.detail.code}
+        />
+      );
     }
 
     return (
