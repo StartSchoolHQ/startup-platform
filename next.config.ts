@@ -21,13 +21,23 @@ const nextConfig: NextConfig = {
   // at runtime by puppeteer-core (the @sparticuz/chromium binary is ~50MB
   // and bundling it explodes function size).
   serverExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
-  // Include the scholarship Handlebars contract templates in the traced
-  // serverless bundle so renderContractHtml can readFileSync them at runtime.
+  // Include the scholarship Handlebars contract templates AND the
+  // @sparticuz/chromium binary in the traced serverless bundle.
+  //   - `.hbs` templates: renderContractHtml readFileSync's them at runtime.
+  //   - @sparticuz/chromium: `serverExternalPackages` stops Next from
+  //     bundling it, but the ~50MB chromium binary in its `bin/` dir is
+  //     loaded dynamically, so Next's tracer never sees it. Without this
+  //     include the binary is absent on Vercel and `chromium.executablePath()`
+  //     throws "input directory ... does not exist", killing PDF render.
   outputFileTracingIncludes: {
     "/agreement/identity-callback": [
       "./src/lib/scholarship/templates/**/*.hbs",
+      "./node_modules/@sparticuz/chromium/**",
     ],
-    "/api/agreements/**": ["./src/lib/scholarship/templates/**/*.hbs"],
+    "/api/agreements/**": [
+      "./src/lib/scholarship/templates/**/*.hbs",
+      "./node_modules/@sparticuz/chromium/**",
+    ],
   },
   // PostHog reverse proxy configuration
   async rewrites() {
