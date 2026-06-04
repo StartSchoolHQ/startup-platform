@@ -1,6 +1,5 @@
 import { AgreementForm } from "./AgreementForm";
 import { PrivacyNoticeSummary } from "./PrivacyNoticeSummary";
-import { ScholarshipTermsSummary } from "./ScholarshipTermsSummary";
 
 type AgreementType = "full" | "partial";
 
@@ -34,10 +33,6 @@ export function PublicAgreementCard({
           you fill in your contact details and confirm your identity, we&apos;ll
           prepare the full contract for you to sign electronically.
         </p>
-        <ScholarshipTermsSummary
-          agreementType={agreementType}
-          className="mb-6"
-        />
         <PrivacyNoticeSummary />
         <div className="mt-6">
           <AgreementForm agreementType={agreementType} />
