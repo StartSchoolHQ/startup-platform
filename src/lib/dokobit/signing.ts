@@ -130,6 +130,15 @@ interface CreateSigningInput {
   name: string;
   fileToken: string;
   signer: DokobitSigner;
+  /**
+   * Additional signers placed on the document AT CREATION, after `signer`.
+   * Used to add the school countersigner up front so a single student
+   * signature never completes the document. Each co-signer gets the same
+   * signing_purpose / signing_options as the primary signer. The
+   * create-signing response returns an access token per signer (keyed by
+   * the signer `id`), so give each a stable, correlatable id.
+   */
+  coSigners?: DokobitSigner[];
   postbackUrl: string;
   /**
    * One of Dokobit's documented signing_purpose enum values. Defaults to
@@ -146,11 +155,17 @@ export async function createSigning(input: CreateSigningInput) {
   // Per Dokobit's spec, signing_purpose and signing_options live on the
   // signer object, NOT at the top level of /api/signing/create.json.
   // Passing them at the top level is silently ignored.
-  const signerPayload = {
-    ...input.signer,
-    signing_purpose: input.signingPurpose ?? "signature",
-    signing_options: input.signingOptions ?? DEFAULT_SIGNING_OPTIONS,
-  };
+  const purpose = input.signingPurpose ?? "signature";
+  const options = input.signingOptions ?? DEFAULT_SIGNING_OPTIONS;
+  const toPayload = (s: DokobitSigner) => ({
+    ...s,
+    signing_purpose: purpose,
+    signing_options: options,
+  });
+  const signers = [
+    toPayload(input.signer),
+    ...(input.coSigners ?? []).map(toPayload),
+  ];
   const raw = await dokobitFetch<unknown>({
     product: "documents",
     method: "POST",
@@ -161,14 +176,20 @@ export async function createSigning(input: CreateSigningInput) {
       postback_url: input.postbackUrl,
       language: input.language ?? "en",
       files: [{ token: input.fileToken }],
-      signers: [signerPayload],
+      signers,
     },
   });
   return DokobitCreateSigningResponse.parse(raw);
 }
 
 // ============================================================
-// Add signer (used to attach the school countersigner to a session)
+// Add signer — DEPRECATED for the scholarship flow.
+//
+// The school is now placed on the document as a co-signer at creation
+// (see createSigning `coSigners` + complete-identity.ts), because a
+// single-signer signing completes the instant the student signs. This
+// function is retained only so the previous reactive flow can be restored
+// if the two-signer approach ever needs rolling back.
 // ============================================================
 
 export async function addSigner(input: {
@@ -212,8 +233,8 @@ export interface BatchSigningEntry {
   /**
    * Per-signing access token for the signer who will batch-confirm. For
    * the scholarship flow that's the school countersigner — the value
-   * `dokobit_school_signer_token` recorded after `addSigner` in the
-   * student-signed webhook.
+   * `dokobit_school_signer_token`, recorded at signing creation when the
+   * school is added as a co-signer.
    */
   signer_token: string;
 }

@@ -101,8 +101,9 @@ export default function AdminAgreementsPage() {
     if (user?.primary_role === "admin") reload();
   }, [user, reload]);
 
-  // Rows the admin can batch-countersign: student has signed AND the
-  // school signer has been added via the webhook's addSigner step.
+  // Rows the admin can batch-countersign: the student has signed and the
+  // row has been promoted to awaiting_school_signature (the school was
+  // placed on the document as a co-signer at creation).
   const eligibleIds = useMemo(
     () =>
       rows

@@ -165,6 +165,39 @@ export async function recordSigningSession(
   return data as Row;
 }
 
+export interface RecordSigningSessionV2Input {
+  id: string;
+  signing_token: string;
+  signer_token: string;
+  school_signer_token: string;
+  unsigned_pdf_path: string;
+}
+
+/**
+ * V2 of recordSigningSession: persists the school countersigner's access
+ * token alongside the student's at session-create time. Used by the
+ * two-signer flow where the school is placed on the Dokobit document up
+ * front (see complete-identity.ts), so the row already carries
+ * dokobit_school_signer_token before the student signs — no later
+ * addSigner step. V1 is kept for rollback.
+ */
+export async function recordSigningSessionV2(
+  input: RecordSigningSessionV2Input
+): Promise<Row> {
+  const { data, error } = await admin().rpc(
+    "scholarship_record_signing_session_v2",
+    {
+      p_id: input.id,
+      p_signing_token: input.signing_token,
+      p_signer_token: input.signer_token,
+      p_school_signer_token: input.school_signer_token,
+      p_unsigned_pdf_path: input.unsigned_pdf_path,
+    }
+  );
+  if (error) throw error;
+  return data as Row;
+}
+
 export async function recordStudentSigned(signingToken: string): Promise<Row> {
   const { data, error } = await admin().rpc(
     "scholarship_record_signer_signed",
@@ -413,10 +446,10 @@ export async function listAgreements(
 }
 
 /**
- * Rows the admin can batch-countersign. The student-signed webhook has
- * already added the school as a second signer via `addSigner` and
- * promoted the row to `awaiting_school_signature` with
- * `dokobit_school_signer_token` set — that's the state batch needs.
+ * Rows the admin can batch-countersign. The school is placed on the Dokobit
+ * document as a co-signer at creation, so `dokobit_school_signer_token` is
+ * already set; the student-signed webhook then promotes the row to
+ * `awaiting_school_signature` — that's the state batch needs.
  *
  * Sorted oldest-first so the queue preserves order.
  */

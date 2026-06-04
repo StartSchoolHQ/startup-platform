@@ -2886,6 +2886,50 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      scholarship_record_signing_session_v2: {
+        Args: {
+          p_id: string;
+          p_school_signer_token: string;
+          p_signer_token: string;
+          p_signing_token: string;
+          p_unsigned_pdf_path: string;
+        };
+        Returns: {
+          agreement_type: Database["public"]["Enums"]["scholarship_agreement_type"];
+          archived_at: string | null;
+          callback_ref: string | null;
+          created_at: string;
+          dokobit_auth_token: string | null;
+          dokobit_batch_token: string | null;
+          dokobit_school_signer_token: string | null;
+          dokobit_signer_token: string | null;
+          dokobit_signing_token: string | null;
+          expires_at: string;
+          id: string;
+          identity_verified_at: string | null;
+          language: Database["public"]["Enums"]["scholarship_agreement_language"];
+          recipient_address: string | null;
+          recipient_email: string | null;
+          recipient_phone: string | null;
+          school_signed_at: string | null;
+          signed_doc_path: string | null;
+          signer_country_code: string | null;
+          signer_name: string | null;
+          signer_personal_code: string | null;
+          signer_surname: string | null;
+          status: Database["public"]["Enums"]["scholarship_agreement_status"];
+          status_reason: string | null;
+          student_signed_at: string | null;
+          unsigned_pdf_path: string | null;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "scholarship_agreements";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       scholarship_reset_for_retry: {
         Args: { p_id: string };
         Returns: {

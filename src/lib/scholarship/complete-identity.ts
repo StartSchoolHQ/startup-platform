@@ -26,10 +26,11 @@ import {
   findByCallbackRef,
   recordEvent,
   recordIdentity,
-  recordSigningSession,
+  recordSigningSessionV2,
 } from "@/lib/scholarship/data";
 import { buildAgreementFilename } from "@/lib/scholarship/filename";
 import { renderContractPdf } from "@/lib/scholarship/pdf";
+import { schoolSignerConfig } from "@/lib/scholarship/school-signer";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const STORAGE_BUCKET = "scholarship-documents";
@@ -345,6 +346,14 @@ async function runOrchestration(
   // ingestion that would otherwise race against createSigning.
   await waitForFileUploaded(upload.token);
 
+  // The school (StartSchool board member) is placed on the document as a
+  // co-signer AT CREATION, not bolted on after the student signs. A
+  // single-signer Dokobit signing completes the instant that signer signs,
+  // which previously sealed the contract with only the student's signature
+  // ("all parties signed"). With both signers present up front, the
+  // student's signature leaves the document at 1-of-2 — awaiting the school
+  // — and the reactive addSigner step is gone.
+  const schoolSignerId = `school-${agreement.id}`;
   const signing = await createSigning({
     // `edoc` (ASiC-E container) is the LV legal standard — opens in
     // eParaksts viewer. `pdf` produces a PDF with embedded signatures
@@ -359,20 +368,32 @@ async function runOrchestration(
       code: status.code,
       country_code: status.country_code,
     },
+    coSigners: [{ id: schoolSignerId, ...schoolSignerConfig() }],
     postbackUrl: `${origin}/api/webhooks/dokobit`,
     language: agreement.language,
   });
 
-  const signerEntry = signing.signers[0];
+  // Correlate the returned access tokens back to each signer by the id we
+  // sent — the response order is not guaranteed (Dokobit may return a keyed
+  // object). The student signs first via their token; the school's token is
+  // stored now and used by the admin countersign flow later.
+  const studentEntry = signing.signers.find((s) => s.id === agreement.id);
+  const schoolEntry = signing.signers.find((s) => s.id === schoolSignerId);
+  if (!studentEntry || !schoolEntry) {
+    throw new Error(
+      "scholarship: Dokobit create-signing response missing the student or school signer token"
+    );
+  }
 
-  await recordSigningSession({
+  await recordSigningSessionV2({
     id: agreement.id,
     signing_token: signing.token,
-    signer_token: signerEntry.access_token,
+    signer_token: studentEntry.access_token,
+    school_signer_token: schoolEntry.access_token,
     unsigned_pdf_path: unsignedPath,
   });
 
   return {
-    signing_ui_url: buildSigningUiUrl(signing.token, signerEntry.access_token),
+    signing_ui_url: buildSigningUiUrl(signing.token, studentEntry.access_token),
   };
 }

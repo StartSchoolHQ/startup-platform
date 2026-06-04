@@ -17,11 +17,7 @@
  *      sandbox; populated in production.
  */
 import { NextResponse } from "next/server";
-import {
-  addSigner,
-  archiveSigning,
-  getSigningStatus,
-} from "@/lib/dokobit/signing";
+import { archiveSigning, getSigningStatus } from "@/lib/dokobit/signing";
 import { DokobitWebhookPayload } from "@/lib/dokobit/types";
 import {
   findBySigningToken,
@@ -52,23 +48,6 @@ function ipAllowed(request: Request): boolean {
     request.headers.get("x-real-ip") ??
     "";
   return allow.includes(ip);
-}
-
-function requiredEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Webhook misconfigured: ${name} is not set`);
-  }
-  return value;
-}
-
-function schoolSignerConfig() {
-  return {
-    name: requiredEnv("SCHOOL_SIGNER_NAME"),
-    surname: requiredEnv("SCHOOL_SIGNER_SURNAME"),
-    code: requiredEnv("SCHOOL_SIGNER_PERSONAL_CODE"),
-    country_code: requiredEnv("SCHOOL_SIGNER_COUNTRY_CODE"),
-  };
 }
 
 export async function POST(request: Request) {
@@ -152,33 +131,37 @@ async function handlePostback(request: Request) {
 type Agreement = Awaited<ReturnType<typeof findBySigningToken>>;
 
 async function handleSignerSigned(agreement: Agreement, signingToken: string) {
-  // Student just signed — record + add school as second signer.
+  // Student just signed. The school is ALREADY a co-signer on the Dokobit
+  // document (added at creation in complete-identity.ts), so its access
+  // token is already on the row — we just record the student's signature
+  // and promote the row to awaiting_school_signature. No addSigner call.
   if (agreement.status === "awaiting_student_signature") {
     const updated = await recordStudentSigned(signingToken);
-    const added = await addSigner({
-      signingToken,
-      signer: { id: `school-${updated.id}`, ...schoolSignerConfig() },
-    });
+    if (!updated.dokobit_school_signer_token) {
+      // Two-signer flow guarantees this is set at creation. A null here
+      // means a legacy single-signer row — fail loudly rather than seal a
+      // contract without the school.
+      throw new Error(
+        `scholarship: row ${updated.id} has no school signer token (legacy single-signer session)`
+      );
+    }
     await recordSchoolSigner({
       id: updated.id,
-      school_signer_token: added.signer_access_token,
+      school_signer_token: updated.dokobit_school_signer_token,
     });
     return NextResponse.json({ ok: true });
   }
 
-  // Recovery: previous postback succeeded at recordStudentSigned but
-  // failed before addSigner. Retry just the addSigner step.
+  // Recovery: recordStudentSigned committed but the promotion to
+  // awaiting_school_signature didn't. Re-run just the promotion using the
+  // school token stored at creation.
   if (
     agreement.status === "student_signed" &&
-    !agreement.dokobit_school_signer_token
+    agreement.dokobit_school_signer_token
   ) {
-    const added = await addSigner({
-      signingToken,
-      signer: { id: `school-${agreement.id}`, ...schoolSignerConfig() },
-    });
     await recordSchoolSigner({
       id: agreement.id,
-      school_signer_token: added.signer_access_token,
+      school_signer_token: agreement.dokobit_school_signer_token,
     });
     return NextResponse.json({ ok: true });
   }
