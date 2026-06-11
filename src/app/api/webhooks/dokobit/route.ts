@@ -23,14 +23,13 @@ import {
   findBySigningToken,
   minimizeArchived,
   recordArchived,
+  recordEvent,
   recordSchoolSigned,
   recordSchoolSigner,
   recordStudentSigned,
 } from "@/lib/scholarship/data";
-// Completed-email send is disabled; re-import these when re-enabling
-// the email block in handleSigningCompleted.
-// import { buildAgreementFilename } from "@/lib/scholarship/filename";
-// import { sendCompletedEmail } from "@/lib/scholarship/n8n";
+import { buildAgreementFilename } from "@/lib/scholarship/filename";
+import { sendCompletedEmail } from "@/lib/scholarship/n8n";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const STORAGE_BUCKET = "scholarship-documents";
@@ -209,27 +208,47 @@ async function handleSigningCompleted(
       });
     if (storageErr) throw storageErr;
 
-    // Completed-email send is intentionally disabled. Decision pending
-    // on whether the signed .edoc is delivered manually by an admin or
-    // automated via n8n later. The signed doc lives in storage at
-    // `signed_doc_path` — admins can download from the agreement detail
-    // modal in the meantime. To re-enable, uncomment the block below.
-    //
-    // if (row.recipient_email && row.signer_name && row.signer_surname) {
-    //   const attachmentFilename = buildAgreementFilename({
-    //     name: row.signer_name,
-    //     surname: row.signer_surname,
-    //     agreement_type: row.agreement_type,
-    //     ext: "edoc",
-    //   });
-    //   await sendCompletedEmail({
-    //     recipient_email: row.recipient_email,
-    //     recipient_name: row.signer_name,
-    //     language: row.language,
-    //     signed_doc_base64: archive.file.content,
-    //     signed_doc_filename: attachmentFilename,
-    //   });
-    // }
+    // Email the signed .edoc to the student via n8n. Best-effort: a send
+    // failure must NEVER block archiving (the .edoc is already safely in
+    // storage) nor loop Dokobit's retry. We log the outcome as an event
+    // and proceed. n8n verifies our HMAC signature before processing.
+    if (row.recipient_email && row.signer_name && row.signer_surname) {
+      const attachmentFilename = buildAgreementFilename({
+        name: row.signer_name,
+        surname: row.signer_surname,
+        agreement_type: row.agreement_type,
+        ext: "edoc",
+      });
+      try {
+        await sendCompletedEmail({
+          recipient_email: row.recipient_email,
+          recipient_name: row.signer_name,
+          language: row.language,
+          signed_doc_base64: archive.file.content,
+          signed_doc_filename: attachmentFilename,
+        });
+        await recordEvent({
+          id: row.id,
+          event_type: "email_completed_sent",
+          payload: { recipient_email: row.recipient_email },
+        });
+      } catch (emailErr) {
+        console.error(
+          "[webhooks/dokobit] completed-email send failed for",
+          row.id,
+          emailErr
+        );
+        await recordEvent({
+          id: row.id,
+          event_type: "error",
+          payload: {
+            stage: "completed_email",
+            message:
+              emailErr instanceof Error ? emailErr.message : String(emailErr),
+          },
+        });
+      }
+    }
 
     row = await recordArchived({ id: row.id, signed_doc_path: docPath });
   }

@@ -75,6 +75,41 @@ The events table mutation trigger only permits `payload → NULL`
 redactions; type, agreement_id and occurred_at remain immutable, so the
 audit chain (which steps happened, when) survives.
 
+## n8n completed-email webhook
+
+When a contract reaches `school_signed` and Dokobit fires `signing_completed`,
+the webhook handler downloads the signed `.edoc`, stores it, and POSTs it to
+n8n for delivery to the student. The send is **best-effort** — a failure logs
+an `email_completed_sent`/`error` event but never blocks archiving or loops
+Dokobit's retry. Disabled (no-op + warning) until both env vars are set:
+
+- `N8N_SCHOLARSHIP_COMPLETED_URL` — n8n production webhook URL
+- `N8N_SCHOLARSHIP_SHARED_SECRET` — shared HMAC secret (same value in n8n)
+
+**Request** — `POST {N8N_SCHOLARSHIP_COMPLETED_URL}`
+
+| Header | Value |
+|---|---|
+| `content-type` | `application/json` |
+| `x-startschool-signature` | hex `HMAC-SHA256(secret, rawBody)` |
+
+```jsonc
+{
+  "recipient_email":     "student@example.com",
+  "recipient_name":      "Jānis",      // signer first name (optional)
+  "language":            "en",          // "lv" | "en"
+  "signed_doc_base64":   "<base64 .edoc>",
+  "signed_doc_filename": "Jānis_Bērziņš_Startschool_Agreement.edoc"
+}
+```
+
+**The n8n workflow must:**
+1. Recompute `HMAC-SHA256` over the raw body with the secret and reject if it
+   doesn't match `x-startschool-signature` (defends against URL leaks).
+2. Base64-decode `signed_doc_base64` → attach as `signed_doc_filename`
+   (`application/octet-stream`; `.edoc` is an ASiC-E zip container).
+3. Email it to `recipient_email` and return 2xx (non-2xx → we log an error).
+
 ## Anti-cheat
 
 A partial unique index on `(signer_personal_code, agreement_type) WHERE
