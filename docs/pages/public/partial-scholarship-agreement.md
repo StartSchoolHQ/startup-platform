@@ -16,7 +16,7 @@ is rendered with `agreementType="partial"`, which:
 
 1. Surfaces the partial-specific terms summary (€2000 tuition split into
    two €1000 instalments due within 14 days of signing and on
-   2026-01-31, plus the €500 enrolment fee).
+   2027-01-31, plus the €500 enrolment fee).
 2. Submits `agreement_type: "partial"` to `/api/agreements/submit-form`.
 3. Renders the partial-specific contract PDF (template
    `partial-scholarship-en.hbs`) via n8n after eID.

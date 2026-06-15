@@ -55,7 +55,7 @@ describe("renderContractHtml", () => {
     expect(html).toContain("Partial Tuition Scholarship");
     expect(html).toContain("€2000");
     expect(html).toContain("€1000");
-    expect(html).toContain("31 January 2026");
+    expect(html).toContain("31 January 2027");
     expect(html).toContain("Anna");
     expect(html).toContain("Liepa");
     expect(html).toContain("150298-22222");
