@@ -353,7 +353,15 @@ async function runOrchestration(
   // ("all parties signed"). With both signers present up front, the
   // student's signature leaves the document at 1-of-2 — awaiting the school
   // — and the reactive addSigner step is gone.
-  const schoolSignerId = `school-${agreement.id}`;
+  // Dokobit relates batch signers by the signer `id` ("unique user identifier
+  // from your system"), NOT by personal code. A per-agreement id makes the
+  // board member look like a different user on every contract, so
+  // createbatch.json rejects the batch with "All signer tokens must be related
+  // to same user". A STABLE id (one per board member) is what lets a single
+  // PIN countersign many documents at once. Verified on Dokobit sandbox:
+  // per-agreement id -> 400; constant id -> 200.
+  const schoolConfig = schoolSignerConfig();
+  const schoolSignerId = `school-${schoolConfig.country_code}-${schoolConfig.code}`;
   const signing = await createSigning({
     // `edoc` (ASiC-E container) is the LV legal standard — opens in
     // eParaksts viewer. `pdf` produces a PDF with embedded signatures
@@ -368,7 +376,7 @@ async function runOrchestration(
       code: status.code,
       country_code: status.country_code,
     },
-    coSigners: [{ id: schoolSignerId, ...schoolSignerConfig() }],
+    coSigners: [{ id: schoolSignerId, ...schoolConfig }],
     postbackUrl: `${origin}/api/webhooks/dokobit`,
     language: agreement.language,
   });

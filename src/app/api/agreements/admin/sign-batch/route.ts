@@ -13,6 +13,7 @@
  */
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { DokobitError } from "@/lib/dokobit/client";
 import { createBatch } from "@/lib/dokobit/signing";
 import { requireAdmin } from "@/lib/scholarship/auth";
 import { attachBatch, listAwaitingSchool } from "@/lib/scholarship/data";
@@ -75,11 +76,34 @@ export async function POST(request: Request) {
   }));
   const origin = new URL(request.url).origin;
 
-  const batch = await createBatch({
-    signings,
-    postbackUrl: `${origin}/api/webhooks/dokobit`,
-    language: "en",
-  });
+  let batch;
+  try {
+    batch = await createBatch({
+      signings,
+      postbackUrl: `${origin}/api/webhooks/dokobit`,
+      language: "en",
+    });
+  } catch (err) {
+    // Surface the real Dokobit reason instead of a bare 500. Never echo the
+    // raw body to the client (it can contain request echoes) — log the full
+    // detail server-side and return a stable code + safe message.
+    if (err instanceof DokobitError) {
+      console.error(
+        `[sign-batch] Dokobit createbatch failed: ${err.status} —`,
+        JSON.stringify(err.body)
+      );
+      return NextResponse.json(
+        {
+          error: "dokobit_batch_failed",
+          message:
+            "Dokobit rejected the batch. See server logs for the exact reason.",
+          status: err.status,
+        },
+        { status: 502 }
+      );
+    }
+    throw err;
+  }
 
   await attachBatch(parsed.data.ids, batch.token);
 
