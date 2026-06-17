@@ -39,9 +39,9 @@ type AgreementType = Database["public"]["Enums"]["scholarship_agreement_type"];
 const BATCH_MAX = 10;
 const SEARCH_DEBOUNCE_MS = 250;
 
-// Statuses we never surface in the admin queue — they're terminal dead-ends
-// that only add noise. Hidden from the list and from the status dropdown.
-// View-layer only: the rows still exist in the database.
+// Statuses hidden from the DEFAULT ("All statuses") view to keep the queue
+// clean — terminal dead-ends that are just noise day-to-day. They are NOT
+// removed: still selectable in the dropdown, and always shown in the DB.
 const HIDDEN_STATUSES: ReadonlySet<Status> = new Set(["cancelled", "expired"]);
 
 // Status options in workflow order. "all" is the no-filter sentinel.
@@ -54,6 +54,8 @@ const STATUS_OPTIONS: Array<{ value: Status | "all"; label: string }> = [
   { value: "awaiting_school_signature", label: "Awaiting school signature" },
   { value: "school_signed", label: "Signed by both parties" },
   { value: "archived", label: "Archived" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "expired", label: "Expired" },
   { value: "failed", label: "Failed" },
 ];
 
@@ -114,11 +116,15 @@ export default function AdminAgreementsPage() {
     if (user?.primary_role === "admin") reload();
   }, [user, reload]);
 
-  // Hide terminal dead-end rows (cancelled/expired) from the queue. Pure
-  // view filter — the API still returns them; we just don't render them.
+  // Hide cancelled/expired from the DEFAULT view only. If the admin
+  // explicitly filters to one of those statuses, show them — they're hidden,
+  // not removed. Pure view filter; the rows always exist in the DB.
   const visibleRows = useMemo(
-    () => rows.filter((row) => !HIDDEN_STATUSES.has(row.status)),
-    [rows]
+    () =>
+      statusFilter === "all"
+        ? rows.filter((row) => !HIDDEN_STATUSES.has(row.status))
+        : rows,
+    [rows, statusFilter]
   );
 
   // Rows the admin can batch-countersign: the student has signed and the

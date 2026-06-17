@@ -82,6 +82,27 @@ export class OrchestrationError extends Error {
 }
 
 /**
+ * Supabase errors (PostgrestError, StorageError) are PLAIN OBJECTS, not
+ * `Error` instances — so `err instanceof Error` is false and `String(err)`
+ * yields "[object Object]". Extract a usable message + optional pg code from
+ * anything thrown so RPC `raise exception` messages (e.g.
+ * `scholarship_already_signed`) and real DB errors are never swallowed.
+ */
+function errorInfo(err: unknown): { message: string; code?: string } {
+  if (err instanceof Error) return { message: err.message };
+  if (typeof err === "object" && err !== null) {
+    const o = err as Record<string, unknown>;
+    const message =
+      typeof o.message === "string" && o.message
+        ? o.message
+        : JSON.stringify(o);
+    const code = typeof o.code === "string" ? o.code : undefined;
+    return { message, code };
+  }
+  return { message: String(err) };
+}
+
+/**
  * Short, on-screen-safe summary of an unexpected failure. NEVER includes
  * the API key (it lives only in the request query string, never in the
  * thrown message/body) — for DokobitError we expose only the HTTP status.
@@ -106,7 +127,13 @@ function summarizeError(err: unknown): OrchestrationErrorDetail {
   if (err instanceof Error) {
     return { code: "orchestration_error", message: err.message };
   }
-  return { code: "unknown_error", message: String(err) };
+  // Plain-object throw (Supabase PostgrestError/StorageError). Surface its
+  // real message + pg code instead of an opaque "[object Object]".
+  const info = errorInfo(err);
+  return {
+    code: info.code ? `db_${info.code}` : "unknown_error",
+    message: info.message,
+  };
 }
 
 /**
@@ -139,7 +166,13 @@ function diagnosticPayload(
       stack: err.stack ?? null,
     };
   }
-  return { reference, kind: "unknown", value: String(err) };
+  const info = errorInfo(err);
+  return {
+    reference,
+    kind: "non_error",
+    code: info.code ?? null,
+    message: info.message,
+  };
 }
 
 export interface CompleteIdentityInput {
@@ -267,7 +300,9 @@ async function runOrchestration(
       surname: status.surname,
     });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "";
+    // Supabase surfaces the RPC's `raise exception '...'` as a PostgrestError
+    // (a plain object), so read the message via errorInfo — NOT instanceof.
+    const msg = errorInfo(err).message;
     if (msg.includes("scholarship_already_signed")) {
       throw new CompleteIdentityError(
         "already_signed",
