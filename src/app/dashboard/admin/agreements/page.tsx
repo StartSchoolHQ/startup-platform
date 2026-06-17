@@ -34,9 +34,15 @@ import { toast } from "sonner";
 
 type Row = Database["public"]["Tables"]["scholarship_agreements"]["Row"];
 type Status = Database["public"]["Enums"]["scholarship_agreement_status"];
+type AgreementType = Database["public"]["Enums"]["scholarship_agreement_type"];
 
 const BATCH_MAX = 10;
 const SEARCH_DEBOUNCE_MS = 250;
+
+// Statuses we never surface in the admin queue — they're terminal dead-ends
+// that only add noise. Hidden from the list and from the status dropdown.
+// View-layer only: the rows still exist in the database.
+const HIDDEN_STATUSES: ReadonlySet<Status> = new Set(["cancelled", "expired"]);
 
 // Status options in workflow order. "all" is the no-filter sentinel.
 const STATUS_OPTIONS: Array<{ value: Status | "all"; label: string }> = [
@@ -48,9 +54,14 @@ const STATUS_OPTIONS: Array<{ value: Status | "all"; label: string }> = [
   { value: "awaiting_school_signature", label: "Awaiting school signature" },
   { value: "school_signed", label: "Signed by both parties" },
   { value: "archived", label: "Archived" },
-  { value: "cancelled", label: "Cancelled" },
-  { value: "expired", label: "Expired" },
   { value: "failed", label: "Failed" },
+];
+
+// Type filter options. "all" is the no-filter sentinel.
+const TYPE_OPTIONS: Array<{ value: AgreementType | "all"; label: string }> = [
+  { value: "all", label: "All types" },
+  { value: "full", label: "Full" },
+  { value: "partial", label: "Partial" },
 ];
 
 export default function AdminAgreementsPage() {
@@ -63,6 +74,7 @@ export default function AdminAgreementsPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
+  const [typeFilter, setTypeFilter] = useState<AgreementType | "all">("all");
 
   // Client-side admin guard. Server-side requireAdmin() is the real fence.
   if (!loading && (!user || user.primary_role !== "admin")) {
@@ -84,6 +96,7 @@ export default function AdminAgreementsPage() {
       const params = new URLSearchParams();
       if (search) params.set("q", search);
       if (statusFilter !== "all") params.set("status", statusFilter);
+      if (typeFilter !== "all") params.set("type", typeFilter);
       const qs = params.toString();
       const res = await fetch(`/api/agreements/admin${qs ? `?${qs}` : ""}`);
       if (!res.ok) {
@@ -95,21 +108,28 @@ export default function AdminAgreementsPage() {
     } finally {
       setRowsLoading(false);
     }
-  }, [search, statusFilter]);
+  }, [search, statusFilter, typeFilter]);
 
   useEffect(() => {
     if (user?.primary_role === "admin") reload();
   }, [user, reload]);
+
+  // Hide terminal dead-end rows (cancelled/expired) from the queue. Pure
+  // view filter — the API still returns them; we just don't render them.
+  const visibleRows = useMemo(
+    () => rows.filter((row) => !HIDDEN_STATUSES.has(row.status)),
+    [rows]
+  );
 
   // Rows the admin can batch-countersign: the student has signed and the
   // row has been promoted to awaiting_school_signature (the school was
   // placed on the document as a co-signer at creation).
   const eligibleIds = useMemo(
     () =>
-      rows
+      visibleRows
         .filter((row) => row.status === "awaiting_school_signature")
         .map((row) => row.id),
-    [rows]
+    [visibleRows]
   );
 
   const onToggle = useCallback((id: string) => {
@@ -193,13 +213,31 @@ export default function AdminAgreementsPage() {
             ))}
           </SelectContent>
         </Select>
-        {(search || statusFilter !== "all") && (
+        <Select
+          value={typeFilter}
+          onValueChange={(value) =>
+            setTypeFilter(value as AgreementType | "all")
+          }
+        >
+          <SelectTrigger className="w-[140px]" aria-label="Filter by type">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TYPE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {(search || statusFilter !== "all" || typeFilter !== "all") && (
           <Button
             variant="ghost"
             size="sm"
             onClick={() => {
               setSearchInput("");
               setStatusFilter("all");
+              setTypeFilter("all");
             }}
           >
             Clear
@@ -208,7 +246,7 @@ export default function AdminAgreementsPage() {
       </div>
 
       <AgreementsTable
-        rows={rows}
+        rows={visibleRows}
         selectedIds={selectedIds}
         onToggle={onToggle}
         onToggleAll={onToggleAll}
@@ -216,7 +254,7 @@ export default function AdminAgreementsPage() {
         emptyMessage={
           rowsLoading
             ? "Loading agreements…"
-            : search || statusFilter !== "all"
+            : search || statusFilter !== "all" || typeFilter !== "all"
               ? "No agreements match the current filters."
               : "No agreements yet. Share /full-scholarship-agreement or /partial-scholarship-agreement with students to get started."
         }
