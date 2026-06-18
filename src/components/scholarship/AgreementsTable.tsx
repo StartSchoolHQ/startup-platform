@@ -75,6 +75,9 @@ export function AgreementsTable({
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-8 text-xs font-normal text-zinc-400">
+              #
+            </TableHead>
             <TableHead className="w-10">
               <Checkbox
                 checked={allSelected}
@@ -93,10 +96,13 @@ export function AgreementsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((row) => {
+          {rows.map((row, index) => {
             const canSelect = isSelectable(row);
             return (
               <TableRow key={row.id} className="hover:bg-zinc-50/50">
+                <TableCell className="text-xs text-zinc-400 tabular-nums">
+                  {index + 1}
+                </TableCell>
                 <TableCell>
                   <Checkbox
                     checked={selectedIds.has(row.id)}

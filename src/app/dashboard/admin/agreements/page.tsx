@@ -15,6 +15,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { redirect } from "next/navigation";
 import { AgreementDetailModal } from "@/components/scholarship/AgreementDetailModal";
+import { AgreementsSummaryCard } from "@/components/scholarship/AgreementsSummaryCard";
 import { AgreementsTable } from "@/components/scholarship/AgreementsTable";
 import { BulkSignDialog } from "@/components/scholarship/BulkSignDialog";
 import { DokobitDemoPanel } from "@/components/scholarship/DokobitDemoPanel";
@@ -39,24 +40,25 @@ type AgreementType = Database["public"]["Enums"]["scholarship_agreement_type"];
 const BATCH_MAX = 10;
 const SEARCH_DEBOUNCE_MS = 250;
 
-// Statuses hidden from the DEFAULT ("All statuses") view to keep the queue
-// clean — terminal dead-ends that are just noise day-to-day. They are NOT
-// removed: still selectable in the dropdown, and always shown in the DB.
-const HIDDEN_STATUSES: ReadonlySet<Status> = new Set(["cancelled", "expired"]);
+// The ONLY statuses the admin queue surfaces. Everything else
+// (identity_verified, student_signed, school_signed, cancelled, expired,
+// failed) stays in the DB but is never shown — the board only cares about
+// these four. Acts as a whitelist for both the table and the dropdown.
+const VISIBLE_STATUSES: ReadonlySet<Status> = new Set([
+  "draft",
+  "awaiting_student_signature",
+  "awaiting_school_signature",
+  "archived",
+]);
 
 // Status options in workflow order. "all" is the no-filter sentinel.
+// Kept in lockstep with VISIBLE_STATUSES above.
 const STATUS_OPTIONS: Array<{ value: Status | "all"; label: string }> = [
   { value: "all", label: "All statuses" },
   { value: "draft", label: "Draft" },
-  { value: "identity_verified", label: "Identity verified" },
   { value: "awaiting_student_signature", label: "Awaiting student signature" },
-  { value: "student_signed", label: "Signed by student" },
   { value: "awaiting_school_signature", label: "Awaiting school signature" },
-  { value: "school_signed", label: "Signed by both parties" },
   { value: "archived", label: "Archived" },
-  { value: "cancelled", label: "Cancelled" },
-  { value: "expired", label: "Expired" },
-  { value: "failed", label: "Failed" },
 ];
 
 // Type filter options. "all" is the no-filter sentinel.
@@ -116,15 +118,12 @@ export default function AdminAgreementsPage() {
     if (user?.primary_role === "admin") reload();
   }, [user, reload]);
 
-  // Hide cancelled/expired from the DEFAULT view only. If the admin
-  // explicitly filters to one of those statuses, show them — they're hidden,
-  // not removed. Pure view filter; the rows always exist in the DB.
+  // Whitelist the four statuses the board cares about. Always applied, so a
+  // row in any other status (cancelled/expired/failed/etc.) can never render,
+  // no matter what the API returns. Pure view filter; rows stay in the DB.
   const visibleRows = useMemo(
-    () =>
-      statusFilter === "all"
-        ? rows.filter((row) => !HIDDEN_STATUSES.has(row.status))
-        : rows,
-    [rows, statusFilter]
+    () => rows.filter((row) => VISIBLE_STATUSES.has(row.status)),
+    [rows]
   );
 
   // Rows the admin can batch-countersign: the student has signed and the
@@ -249,6 +248,9 @@ export default function AdminAgreementsPage() {
             Clear
           </Button>
         )}
+        <div className="ml-auto">
+          <AgreementsSummaryCard rows={visibleRows} />
+        </div>
       </div>
 
       <AgreementsTable
