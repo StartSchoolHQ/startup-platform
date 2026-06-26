@@ -107,11 +107,40 @@ describe("ScholarshipFormSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects 'part_time' agreement_type (dormant DB enum value, not exposed)", () => {
+  it("accepts a valid part-time submission with a birthdate", () => {
+    const result = ScholarshipFormSchema.safeParse({
+      ...valid,
+      agreement_type: "part_time",
+      birthdate: "2000-05-15",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a part-time submission missing a birthdate", () => {
     const result = ScholarshipFormSchema.safeParse({
       ...valid,
       agreement_type: "part_time",
     });
     expect(result.success).toBe(false);
+    if (!result.success) {
+      const onBirthdate = result.error.issues.some((i) =>
+        i.path.includes("birthdate")
+      );
+      expect(onBirthdate).toBe(true);
+    }
+  });
+
+  it("rejects a malformed birthdate", () => {
+    const result = ScholarshipFormSchema.safeParse({
+      ...valid,
+      agreement_type: "part_time",
+      birthdate: "15/05/2000",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("does not require birthdate for full/partial", () => {
+    const result = ScholarshipFormSchema.safeParse(valid);
+    expect(result.success).toBe(true);
   });
 });

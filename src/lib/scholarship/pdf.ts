@@ -36,16 +36,18 @@ export interface ContractRenderInput {
   recipient_email: string;
   recipient_phone: string;
   recipient_address: string;
+  /** Pre-formatted "DD.MM.YYYY". Only the part-time template renders it. */
+  birthdate?: string;
   date_today: string;
   agreement_reference: string;
 }
 
-// 'part_time' is a dormant DB enum value (no row uses it). Only the
-// supported variants get a template file; unsupported values throw at
-// runtime in renderContractHtml.
+// Each supported agreement type maps to a template file. Unsupported values
+// throw at runtime in renderContractHtml.
 const TEMPLATE_FILES: Partial<Record<AgreementType, string>> = {
   full: "full-scholarship-en.hbs",
   partial: "partial-scholarship-en.hbs",
+  part_time: "part-time-en.hbs",
 };
 
 const TEMPLATE_DIR = join(

@@ -197,6 +197,15 @@ function formatDateDDMMYYYY(d: Date): string {
   return `${day}.${month}.${d.getUTCFullYear()}`;
 }
 
+// Stored birthdate is a PG `date` ("YYYY-MM-DD"). Reformat to "DD.MM.YYYY"
+// for the contract body with plain string ops — no Date, no timezone shift.
+function formatBirthdate(iso: string | null): string | undefined {
+  if (!iso) return undefined;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return undefined;
+  return `${m[3]}.${m[2]}.${m[1]}`;
+}
+
 export async function completeIdentityAndCreateSigning(
   input: CompleteIdentityInput
 ): Promise<CompleteIdentityResult> {
@@ -346,6 +355,7 @@ async function runOrchestration(
     recipient_email: agreement.recipient_email,
     recipient_phone: agreement.recipient_phone,
     recipient_address: agreement.recipient_address,
+    birthdate: formatBirthdate(agreement.recipient_birthdate),
     date_today: formatDateDDMMYYYY(new Date()),
     agreement_reference: formatRef(agreement.id),
   });

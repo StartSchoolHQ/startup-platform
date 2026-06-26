@@ -21,11 +21,10 @@ const STUDENT_DONE_STATUSES: ReadonlySet<Status> = new Set([
   "archived",
 ]);
 
-// 'part_time' is a dormant DB enum value — no row reaches the thank-you
-// page with it after the removal migration. Map only supported variants.
 const PUBLIC_ROUTE: Partial<Record<AgreementType, string>> = {
   full: "/full-scholarship-agreement",
   partial: "/partial-scholarship-agreement",
+  part_time: "/part-time-agreement",
 };
 
 const UUID_RE =

@@ -4,7 +4,7 @@
  * Lists scholarship agreements for the admin queue page.
  * Optional filters via query string:
  *   ?status=...     (scholarship_agreement_status enum value)
- *   ?type=...       (full|partial)
+ *   ?type=...       (full|partial|part_time)
  *   ?q=...          (substring match across recipient_email,
  *                    signer_name, signer_surname — case-insensitive)
  *
@@ -35,7 +35,11 @@ const ALLOWED_STATUSES: ReadonlySet<Status> = new Set([
   "failed",
 ]);
 
-const ALLOWED_TYPES: ReadonlySet<AgreementType> = new Set(["full", "partial"]);
+const ALLOWED_TYPES: ReadonlySet<AgreementType> = new Set([
+  "full",
+  "partial",
+  "part_time",
+]);
 
 function parseFilters(url: URL): ListAgreementsFilters {
   const filters: ListAgreementsFilters = {};

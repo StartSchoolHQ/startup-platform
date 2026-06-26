@@ -18,7 +18,7 @@ import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { createAuthSession } from "@/lib/dokobit/identity";
-import { submitFormV2 } from "@/lib/scholarship/data";
+import { submitFormV3 } from "@/lib/scholarship/data";
 import { ScholarshipFormSchema } from "@/lib/validation-schemas";
 
 const DRAFT_EXPIRY_DAYS = 14;
@@ -82,11 +82,12 @@ export async function POST(request: Request) {
     Date.now() + DRAFT_EXPIRY_DAYS * 86_400_000
   ).toISOString();
 
-  const row = await submitFormV2({
+  const row = await submitFormV3({
     agreement_type: parsed.agreement_type,
     email: parsed.email,
     phone: parsed.phone,
     address: parsed.address,
+    birthdate: parsed.birthdate,
     language: parsed.language,
     callback_ref: callbackRef,
     expires_at: expiresAt,

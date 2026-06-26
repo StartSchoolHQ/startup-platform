@@ -61,11 +61,13 @@ export async function submitForm(input: SubmitFormInput): Promise<Row> {
   return data as Row;
 }
 
-export interface SubmitFormV2Input {
+export interface SubmitFormV3Input {
   agreement_type: AgreementType;
   email: string;
   phone: string;
   address: string;
+  /** ISO YYYY-MM-DD. Required for part_time, omitted for full/partial. */
+  birthdate?: string;
   language: Language;
   /**
    * OUR self-generated correlation key, embedded in the Dokobit return_url.
@@ -77,16 +79,18 @@ export interface SubmitFormV2Input {
 }
 
 /**
- * V2 of submitForm: keys the draft by our own `callback_ref` (in return_url)
- * rather than a Dokobit token. `dokobit_auth_token` stays null until the
- * identity callback persists Dokobit's RETURN_TOKEN via attachReturnToken.
+ * V3 of submitForm: same as v2 (draft keyed by our own `callback_ref` in
+ * return_url; `dokobit_auth_token` stays null until the identity callback
+ * persists Dokobit's RETURN_TOKEN) plus the optional part-time birthdate.
+ * v2 is retained server-side for rollback.
  */
-export async function submitFormV2(input: SubmitFormV2Input): Promise<Row> {
-  const { data, error } = await admin().rpc("scholarship_submit_form_v2", {
+export async function submitFormV3(input: SubmitFormV3Input): Promise<Row> {
+  const { data, error } = await admin().rpc("scholarship_submit_form_v3", {
     p_type: input.agreement_type,
     p_email: input.email,
     p_phone: input.phone,
     p_address: input.address,
+    p_birthdate: input.birthdate ?? null,
     p_language: input.language,
     p_callback_ref: input.callback_ref,
     p_expires_at: input.expires_at,

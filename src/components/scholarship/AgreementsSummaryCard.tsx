@@ -23,15 +23,17 @@ export function AgreementsSummaryCard({ rows }: AgreementsSummaryCardProps) {
     const acc = {
       full: { signed: 0, awaiting: 0 },
       partial: { signed: 0, awaiting: 0 },
+      part_time: { signed: 0, awaiting: 0 },
     };
     for (const row of rows) {
-      // Only full/partial are surfaced; ignore any other enum value.
       const bucket =
         row.agreement_type === "full"
           ? acc.full
           : row.agreement_type === "partial"
             ? acc.partial
-            : null;
+            : row.agreement_type === "part_time"
+              ? acc.part_time
+              : null;
       if (!bucket) continue;
       if (row.status === "archived") bucket.signed += 1;
       else if (row.status === "awaiting_school_signature") bucket.awaiting += 1;
@@ -54,6 +56,15 @@ export function AgreementsSummaryCard({ rows }: AgreementsSummaryCardProps) {
         label="Partial"
         signed={counts.partial.signed}
         awaiting={counts.partial.awaiting}
+      />
+      <span
+        className="h-4 w-px bg-zinc-200 dark:bg-zinc-800"
+        aria-hidden="true"
+      />
+      <TypeCounts
+        label="Part-time"
+        signed={counts.part_time.signed}
+        awaiting={counts.part_time.awaiting}
       />
     </div>
   );

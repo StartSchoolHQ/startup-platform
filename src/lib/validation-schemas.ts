@@ -328,7 +328,7 @@ export type PeerReviewHistory = z.infer<typeof peerReviewHistorySchema>;
  */
 export const ScholarshipFormSchema = z
   .object({
-    agreement_type: z.enum(["full", "partial"]),
+    agreement_type: z.enum(["full", "partial", "part_time"]),
     email: z.string().email("Invalid email").max(320).trim().toLowerCase(),
     confirm_email: z
       .string()
@@ -349,11 +349,27 @@ export const ScholarshipFormSchema = z
       .min(4, "Address too short")
       .max(500, "Address too long")
       .trim(),
+    // Date of birth (ISO YYYY-MM-DD from the HTML date input). Only the
+    // part-time contract renders it ("born on …"); full/partial omit it.
+    // Required for part_time — enforced in the superRefine below.
+    birthdate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date")
+      .optional(),
     language: z.enum(["lv", "en"]).default("en"),
   })
   .refine((v) => v.email === v.confirm_email, {
     message: "Emails do not match",
     path: ["confirm_email"],
+  })
+  .superRefine((v, ctx) => {
+    if (v.agreement_type === "part_time" && !v.birthdate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Date of birth is required",
+        path: ["birthdate"],
+      });
+    }
   });
 
 export type ScholarshipFormInput = z.infer<typeof ScholarshipFormSchema>;

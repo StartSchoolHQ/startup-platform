@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { SupportedEidMethods } from "./SupportedEidMethods";
 
-type AgreementType = "full" | "partial";
+type AgreementType = "full" | "partial" | "part_time";
 
 interface AgreementFormProps {
   agreementType: AgreementType;
@@ -24,6 +24,8 @@ interface SubmitFormInput {
   confirm_email: string;
   phone: string;
   address: string;
+  /** ISO YYYY-MM-DD. Only sent for part-time agreements. */
+  birthdate?: string;
   language: "en";
 }
 
@@ -32,10 +34,17 @@ interface FieldErrors {
   confirm_email?: string;
   phone?: string;
   address?: string;
+  birthdate?: string;
   global?: string;
 }
 
-const TEXT_FIELDS = ["email", "confirm_email", "phone", "address"] as const;
+const TEXT_FIELDS = [
+  "email",
+  "confirm_email",
+  "phone",
+  "address",
+  "birthdate",
+] as const;
 type TextFieldId = (typeof TEXT_FIELDS)[number];
 
 async function defaultSubmit(input: SubmitFormInput) {
@@ -96,9 +105,18 @@ export function AgreementForm({
     const confirm_email = String(fd.get("confirm_email") ?? "").trim();
     const phone = String(fd.get("phone") ?? "").trim();
     const address = String(fd.get("address") ?? "").trim();
+    const isPartTime = agreementType === "part_time";
+    const birthdate = isPartTime
+      ? String(fd.get("birthdate") ?? "").trim()
+      : "";
 
     if (email !== confirm_email) {
       setErrors({ confirm_email: "Emails do not match" });
+      return;
+    }
+
+    if (isPartTime && !birthdate) {
+      setErrors({ birthdate: "Date of birth is required" });
       return;
     }
 
@@ -113,6 +131,7 @@ export function AgreementForm({
         confirm_email,
         phone,
         address,
+        ...(isPartTime ? { birthdate } : {}),
         language: "en",
       });
       window.location.href = redirect_url;
@@ -170,6 +189,17 @@ export function AgreementForm({
         error={errors.address}
         onChange={() => clearError("address")}
       />
+      {agreementType === "part_time" && (
+        <FormField
+          id="birthdate"
+          label="Date of birth"
+          type="date"
+          autoComplete="bday"
+          required
+          error={errors.birthdate}
+          onChange={() => clearError("birthdate")}
+        />
+      )}
       <p className="text-xs text-zinc-600 dark:text-zinc-400">
         By continuing you confirm that you have read the{" "}
         <a

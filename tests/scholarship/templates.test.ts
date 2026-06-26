@@ -64,6 +64,46 @@ describe("renderContractHtml", () => {
     expect(html).toContain("Rūpniecības iela 5");
   });
 
+  it("renders the part-time template with birthdate, module tracks and Stripe links", () => {
+    const html = renderContractHtml({
+      agreement_type: "part_time",
+      signer: {
+        name: "Pēteris",
+        surname: "Ozols",
+        personal_code: "010300-33333",
+        country_code: "LV",
+      },
+      recipient_email: "peteris@example.com",
+      recipient_phone: "371 23456789",
+      recipient_address: "Tērbatas iela 10, Rīga",
+      birthdate: "15.05.2000",
+      date_today: "26.06.2026",
+      agreement_reference: "SS-2026-0003",
+    });
+
+    expect(html).toContain("part-time studies");
+    expect(html).toContain("born on");
+    expect(html).toContain("15.05.2000");
+    expect(html).toContain("Pēteris");
+    expect(html).toContain("Ozols");
+    expect(html).toContain("010300-33333");
+    expect(html).toContain("peteris@example.com");
+    expect(html).toContain("+371 23456789");
+    expect(html).toContain("Tērbatas iela 10");
+    // Both module tracks rendered inline, verbatim (note the "€400 +VAT" typo).
+    expect(html).toContain(
+      "Tech Module Only — Monthly Tuition Fee: €200 + VAT"
+    );
+    expect(html).toContain(
+      "Tech + Startup Module — Monthly Tuition Fee: €400 +VAT"
+    );
+    expect(html).toContain("https://buy.stripe.com/fZu00k5PZgIbepy4fY6wE00");
+    expect(html).toContain("https://buy.stripe.com/8x2dRa3HR77Bbdmh2K6wE01");
+    // Verbatim typo preserved.
+    expect(html).toContain("commitment to to increase wellbeing");
+    expect(html).toContain("Anna Andersone");
+  });
+
   it("HTML-escapes signer name to prevent template injection", () => {
     const html = renderContractHtml({
       agreement_type: "full",

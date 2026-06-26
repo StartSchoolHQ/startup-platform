@@ -66,6 +66,7 @@ const TYPE_OPTIONS: Array<{ value: AgreementType | "all"; label: string }> = [
   { value: "all", label: "All types" },
   { value: "full", label: "Full" },
   { value: "partial", label: "Partial" },
+  { value: "part_time", label: "Part-time" },
 ];
 
 export default function AdminAgreementsPage() {
