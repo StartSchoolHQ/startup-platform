@@ -96,9 +96,17 @@ export function renderContractHtml(input: ContractRenderInput): string {
  * Renders the contract HTML, then converts it to a PDF buffer in-process
  * via headless Chromium. Throws if the render returns an empty body.
  */
+// Per-type running footer. Only part-time has one in its source document;
+// full/partial render footerless (undefined → no footer).
+const FOOTER_LABELS: Partial<Record<AgreementType, string>> = {
+  part_time: "StartSchool Part-time Student Agreement",
+};
+
 export async function renderContractPdf(
   input: ContractRenderInput
 ): Promise<Buffer> {
   const html = renderContractHtml(input);
-  return renderHtmlToPdf(html);
+  return renderHtmlToPdf(html, {
+    footerLabel: FOOTER_LABELS[input.agreement_type],
+  });
 }

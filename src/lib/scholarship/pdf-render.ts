@@ -36,7 +36,20 @@ async function resolveExecutablePath(): Promise<string> {
   return local;
 }
 
-export async function renderHtmlToPdf(html: string): Promise<Buffer> {
+export interface RenderPdfOptions {
+  /**
+   * When set, renders a running footer on every page: this label on the
+   * left, "page X of Y" on the right. Used by the part-time contract to
+   * match its source document; full/partial pass nothing and render
+   * footerless exactly as before.
+   */
+  footerLabel?: string;
+}
+
+export async function renderHtmlToPdf(
+  html: string,
+  options: RenderPdfOptions = {}
+): Promise<Buffer> {
   const serverless = isServerless();
   const browser = await puppeteer.launch({
     args: serverless
@@ -54,9 +67,18 @@ export async function renderHtmlToPdf(html: string): Promise<Buffer> {
     // document.fonts.ready waits for the actual webfont fetch + parse,
     // which is what we need before rendering Latvian diacritics.
     await page.evaluate(() => document.fonts.ready);
+    const footer = options.footerLabel
+      ? {
+          displayHeaderFooter: true,
+          // Empty header suppresses Chromium's default date/title header.
+          headerTemplate: "<div></div>",
+          footerTemplate: `<div style="font-size:9px; font-style:italic; color:#555; font-family: Georgia, 'Times New Roman', serif; width:100%; margin:0 2cm; display:flex; justify-content:space-between;"><span>${options.footerLabel}</span><span>page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>`,
+        }
+      : {};
     const pdf = await page.pdf({
       printBackground: true,
       preferCSSPageSize: true,
+      ...footer,
     });
     if (pdf.length === 0) {
       throw new Error("PDF renderer returned empty buffer");
