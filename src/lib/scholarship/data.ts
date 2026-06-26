@@ -446,7 +446,49 @@ export async function listAgreements(
 
   const { data, error } = await query;
   if (error) throw error;
-  return data ?? [];
+  const rows = data ?? [];
+
+  // Once a student's FULL scholarship is signed (archived), their earlier
+  // PARTIAL agreement is void — the upgrade supersedes it. Hide the partial so
+  // the admin board isn't shown two contracts for the same student. Keyed on
+  // recipient_email (the link across a student's agreements). Applied even
+  // under a type/status filter, so a superseded partial never surfaces — hence
+  // the standalone lookup below rather than relying on the filtered result set.
+  if (rows.some((r) => r.agreement_type === "partial")) {
+    const signedFullEmails = await signedFullScholarshipEmails();
+    if (signedFullEmails.size > 0) {
+      return rows.filter(
+        (row) =>
+          !(
+            row.agreement_type === "partial" &&
+            row.recipient_email != null &&
+            signedFullEmails.has(row.recipient_email.toLowerCase())
+          )
+      );
+    }
+  }
+
+  return rows;
+}
+
+/**
+ * Lowercased emails of every student whose FULL scholarship has reached
+ * `archived` (the signed end state). Used by listAgreements to suppress
+ * partial agreements that have been superseded by a signed full one.
+ */
+async function signedFullScholarshipEmails(): Promise<Set<string>> {
+  const { data, error } = await admin()
+    .from("scholarship_agreements")
+    .select("recipient_email")
+    .eq("agreement_type", "full")
+    .eq("status", "archived")
+    .not("recipient_email", "is", null);
+  if (error) throw error;
+  const emails = new Set<string>();
+  for (const row of data ?? []) {
+    if (row.recipient_email) emails.add(row.recipient_email.toLowerCase());
+  }
+  return emails;
 }
 
 /**
