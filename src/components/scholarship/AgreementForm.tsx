@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,6 +87,14 @@ export function AgreementForm({
 }: AgreementFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
+  // Computed after mount to avoid SSR/CSR hydration mismatch; caps the
+  // date-of-birth picker at today so a future DOB can't be entered.
+  const [maxBirthdate, setMaxBirthdate] = useState<string | undefined>(
+    undefined
+  );
+  useEffect(() => {
+    setMaxBirthdate(new Date().toISOString().slice(0, 10));
+  }, []);
 
   function clearError(field: keyof FieldErrors) {
     if (errors[field]) {
@@ -195,6 +203,7 @@ export function AgreementForm({
           label="Date of birth"
           type="date"
           autoComplete="bday"
+          max={maxBirthdate}
           required
           error={errors.birthdate}
           onChange={() => clearError("birthdate")}
@@ -226,6 +235,7 @@ interface FormFieldProps {
   required?: boolean;
   placeholder?: string;
   autoComplete?: string;
+  max?: string;
   error?: string;
   onChange?: () => void;
 }
@@ -237,6 +247,7 @@ function FormField({
   required,
   placeholder,
   autoComplete,
+  max,
   error,
   onChange,
 }: FormFieldProps) {
@@ -250,6 +261,7 @@ function FormField({
         required={required}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        max={max}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
         className={cn(

@@ -91,10 +91,13 @@ describe("renderContractHtml", () => {
     expect(html).toContain("+371 23456789");
     expect(html).toContain("Tērbatas iela 10");
     // Both module tracks rendered inline, verbatim (note the "€400 +VAT" typo).
-    expect(html).toContain(
+    // Normalize whitespace the way the rendered PDF collapses it — the .hbs
+    // wraps long lines, so the raw HTML has newlines mid-sentence.
+    const flat = html.replace(/\s+/g, " ");
+    expect(flat).toContain(
       "Tech Module Only — Monthly Tuition Fee: €200 + VAT"
     );
-    expect(html).toContain(
+    expect(flat).toContain(
       "Tech + Startup Module — Monthly Tuition Fee: €400 +VAT"
     );
     expect(html).toContain("https://buy.stripe.com/fZu00k5PZgIbepy4fY6wE00");

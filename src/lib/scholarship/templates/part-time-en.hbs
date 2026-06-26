@@ -16,45 +16,81 @@
       body {
         font-family: "Noto Serif", "DejaVu Serif", Georgia, serif;
         font-size: 11pt;
-        line-height: 1.55;
+        line-height: 1.5;
         color: #111;
         margin: 0;
       }
-      h1,
-      h2,
-      h3 {
-        font-family: "Noto Sans", "DejaVu Sans", sans-serif;
-      }
       h1 {
-        font-size: 18pt;
-        margin: 0 0 0.4cm 0;
-      }
-      h2 {
-        font-size: 13pt;
-        margin: 1cm 0 0.3cm 0;
-      }
-      .meta {
-        color: #555;
-        font-size: 10pt;
-        margin-bottom: 0.6cm;
+        font-family: "Noto Sans", "DejaVu Sans", sans-serif;
+        font-size: 20pt;
+        font-weight: 700;
+        margin: 0 0 0.5cm 0;
       }
       p {
         margin: 0 0 0.4em 0;
       }
-      ol {
-        padding-left: 1.5em;
+      .subhead {
+        font-family: "Noto Sans", "DejaVu Sans", sans-serif;
+        font-weight: 700;
+        font-size: 12pt;
+        margin: 0.5cm 0 0.2cm 0;
       }
-      ol li {
+      .indent {
+        margin: 0 0 0.2em 3em;
+      }
+
+      /* Acknowledgements: A. B. C. … */
+      ol.ack {
+        list-style: upper-alpha;
+        padding-left: 1.8em;
+        margin: 0.2em 0 0.4em 0;
+      }
+      ol.ack > li {
         margin-bottom: 0.4em;
+        padding-left: 0.3em;
       }
-      ul {
-        padding-left: 1.5em;
+
+      /* Contract body: hierarchical decimal numbering (1, 1.1, 2.5.1, …) */
+      ol.contract,
+      ol.contract ol {
+        list-style: none;
+        counter-reset: item;
       }
-      ul li {
-        margin-bottom: 0.2em;
+      ol.contract {
+        padding-left: 0;
+        margin: 0;
+      }
+      ol.contract ol {
+        padding-left: 1.4em;
+        margin: 0.3em 0 0 0;
+      }
+      ol.contract li {
+        counter-increment: item;
+        display: block;
+        margin-bottom: 0.35em;
+      }
+      ol.contract li:before {
+        content: counters(item, ".") ". ";
+      }
+      /* Top level = section headings */
+      ol.contract > li {
+        margin-top: 0.8cm;
+      }
+      ol.contract > li > .t,
+      ol.contract > li:before {
+        font-family: "Noto Sans", "DejaVu Sans", sans-serif;
+        font-weight: 700;
+        font-size: 13pt;
+      }
+
+      .sig-h {
+        font-family: "Noto Sans", "DejaVu Sans", sans-serif;
+        font-weight: 700;
+        font-size: 13pt;
+        margin: 1cm 0 0.3cm 0;
       }
       .signatures {
-        margin-top: 1.4cm;
+        margin-top: 0.4cm;
         page-break-inside: avoid;
       }
       .signatures .sig-row {
@@ -64,7 +100,7 @@
       }
       .signatures .sig-label {
         width: 6cm;
-        font-weight: 600;
+        font-weight: 700;
         font-family: "Noto Sans", "DejaVu Sans", sans-serif;
       }
       .signatures .sig-line {
@@ -77,14 +113,11 @@
   <body>
     <h1>StartSchool Student Agreement for part-time studies</h1>
 
-    <p>This agreement is concluded between</p>
+    <p class="subhead">This agreement is concluded between</p>
     <p>
-      (Name, Lastname)
-      <strong>{{signer.name}} {{signer.surname}}</strong>, hereinafter Student,
-      address at
-      <strong>{{recipient_address}}</strong>, personal identity number
-      <strong>{{signer.personal_code}}</strong>/ born on
-      <strong>{{birthdate}}</strong>, and
+      (Name, Lastname) {{signer.name}} {{signer.surname}}, hereinafter Student,
+      address at {{recipient_address}}, personal identity number
+      {{signer.personal_code}}/ born on {{birthdate}}, and
     </p>
     <p>
       Tech Education Foundation, hereinafter StartSchool, address at Stabu iela
@@ -92,8 +125,8 @@
       its member of the board Anna Andersone.
     </p>
 
-    <p>The parties acknowledge the following:</p>
-    <ol>
+    <p class="subhead">The parties acknowledge the following:</p>
+    <ol class="ack">
       <li>
         The purpose of StartSchool is to develop IT and entrepreneurial skills
         of the upcoming technology business leaders who are motivated to use
@@ -130,379 +163,356 @@
       </li>
     </ol>
 
-    <h2>1. Subject of the Agreement</h2>
-    <ol>
+    <ol class="contract">
       <li>
-        This agreement provides for the terms under which the Student takes part
-        in the education and mentoring program organized by StartSchool
-        (hereinafter the StartSchool Program) and for the financial obligations
-        of the Parties.
+        <span class="t">Subject of the Agreement</span>
+        <ol>
+          <li>This agreement provides for the terms under which the Student takes
+            part in the education and mentoring program organized by StartSchool
+            (hereinafter the StartSchool Program) and for the financial
+            obligations of the Parties.</li>
+        </ol>
       </li>
-    </ol>
 
-    <h2>2. General terms</h2>
-    <ol>
       <li>
-        The Study Period of the StartSchool Program starts on August 24, 2026.
-        The Study Period ends at the moment of termination of the agreement.
-      </li>
-      <li>
-        The Student shall be admitted to the StartSchool Program subject to
-        timely payment of the monthly Tuition Fee as outlined in Clause 3 of
-        this Agreement.
-      </li>
-      <li>
-        StartSchool shall determine the structure and content of the Program.
-        While the curriculum is generally uniform across all participants, the
-        specific assignments, challenges, and expectations may vary based on the
-        Student’s prior experience and demonstrated progress.
-      </li>
-      <li>
-        The StartSchool Program is set up as a guided and mentored self-study
-        program. The Student shall invest their effort in finding and studying
-        the information independently, and shall not rely solely on the
-        information or materials supplied by StartSchool.
-      </li>
-      <li>
-        The following shall be available to the Student during the Study Period:
-        <ul>
-          <li>access to StartSchool education platform and StartSchool
-            environment;</li>
-          <li>live coding sessions with professionals;</li>
-          <li>site visits to tech companies;</li>
-          <li>access to a workplace at StartSchool office at StartupHouse,
-            Lastādijas iela 12 k-3, Riga, subject to pre-booking and
-            availability of the workplace.</li>
-        </ul>
-      </li>
-      <li>
-        Additional Resources for Tech + Startup Module Students
-        <ul>
-          <li>
-            Students who are enrolled in the Tech + Startup Module (i.e., paying
-            €400/month + VAT) will additionally receive access to:
-            <ul>
-              <li>Business workshops and lectures focused on startup
-                development.</li>
-              <li>Structured startup ideation and validation sessions;</li>
-              <li>Fundraising preparation, pitching practice, and related
-                training;</li>
-              <li>Opportunities to engage in founder-specific mentoring.</li>
-            </ul>
-          </li>
-        </ul>
-      </li>
-      <li>
-        Time Commitment
-        <ul>
-          <li>As a part-time student, the Student is expected to dedicate a
-            minimum of 10 hours a week, with 2 hours dedicated to attending
-            weekly coding sessions to make continuous progress through the
-            assigned material and complete all required assignments and
-            activities. While there is no fixed hourly requirement, StartSchool
-            expects a consistent, sustained level of engagement, aligned with
-            the selected module track. Students enrolled in the Tech + Startup
-            Module should anticipate a higher time commitment compared to
-            Tech-only participants.</li>
-        </ul>
-      </li>
-      <li>
-        The student shall use such tools, systems, platforms and other resources
-        for participation in the StartSchool Program and for completion of the
-        specific assignments, as the StartSchool may assign. The Student shall
-        comply with terms of use of these tools, systems, platforms and other
-        resources as set by their providers.
-      </li>
-    </ol>
-
-    <h2>3. Tuition Type, Module Selection, and Payment Terms</h2>
-    <ol>
-      <li>
-        Program Options and Tuition Fees
-        <p>The Student is enrolled in the StartSchool Program as a part-time
-          student and shall select one of the following module tracks:</p>
-        <ul>
-          <li>Tech Module Only — Monthly Tuition Fee: €200 + VAT</li>
-          <li>Tech + Startup Module — Monthly Tuition Fee: €400 +VAT</li>
-        </ul>
-      </li>
-      <li>
-        Tuition Fee Payment Terms
-        <ul>
-          <li>The monthly tuition fee, as defined in clause 3.1, shall be paid
-            in advance by the 25th calendar day of the previous month for the
-            upcoming month.</li>
-        </ul>
-      </li>
-      <li>
-        All payments shall be made by Stripe Payment Subscription link. By
-        subscribing, you authorise Tech Education Foundation (StartSchool) to
-        charge you according to the terms until you cancel.
-        <ul>
-          <li>Tech Module Subscription Payment link:
-            <a
-              href="https://buy.stripe.com/fZu00k5PZgIbepy4fY6wE00"
-            >https://buy.stripe.com/fZu00k5PZgIbepy4fY6wE00</a></li>
-          <li>Tech + Startup Module Subscription Payment link:
-            <a
-              href="https://buy.stripe.com/8x2dRa3HR77Bbdmh2K6wE01"
-            >https://buy.stripe.com/8x2dRa3HR77Bbdmh2K6wE01</a></li>
-        </ul>
-      </li>
-      <li>
-        Any payment is considered made when the money is received in the
-        StartSchool’s bank account.
-      </li>
-    </ol>
-
-    <h2>4. Suspension and Rejoining the Program</h2>
-    <ol>
-      <li>
-        The Student may request to temporarily suspend their participation in
-        the StartSchool Program for a period of up to 12 months, due to
-        personal, professional, or health-related reasons. The request must be
-        submitted in writing to StartSchool and include a brief explanation 3
-        working days before the billing date for the upcoming month to suspend
-        participation starting with that month. The StartSchool shall notify the
-        Student on granting the suspension via email.
-      </li>
-      <li>
-        If the Student’s participation in the StartSchool Program has been
-        suspended, then the performance of the obligations of the parties
-        provided in this Agreement is suspended until the Student resumes the
-        participation in the StartSchool Program, or this Agreement is
-        terminated.
-      </li>
-      <li>
-        The Student whose participation in the StartSchool Program has been
-        suspended, may resume the participation in StartSchool in the following
-        academic year. To resume the Student’s participation in the Program, the
-        total period of suspension may not exceed 1 year.
-      </li>
-      <li>
-        If the Student resumes the participation in the StartSchool Program, then
-        the obligations of the Parties provided in this agreement resume. The
-        Student shall not be required to repeatedly complete the part of the
-        StartSchool Program they had completed until suspension.
-      </li>
-      <li>
-        If the Student neither notifies StartSchool on resuming of the Student’s
-        participation, nor requests the extension by the deadline and as
-        otherwise provided in Clause 4 of this Agreement, then it is considered
-        that the Student has withdrawn themself from the Agreement on the day
-        when the term for notification or the resumption has expired.
-      </li>
-    </ol>
-
-    <h2>5. Ongoing Participation Beyond Study Period</h2>
-    <ol>
-      <li>
-        Ongoing Participation
-        <ul>
-          <li>The Student’s participation in the StartSchool Program is not
-            limited to a fixed duration.</li>
-        </ul>
-      </li>
-      <li>
-        Updated Modules and Fees
-        <ul>
-          <li>StartSchool may update the program structure, learning modules,
-            and tuition fees over time. Any such changes will be communicated to
-            the Student in writing at least 30 days in advance and shall apply
-            from the following calendar month, unless otherwise agreed.</li>
-        </ul>
-      </li>
-      <li>
-        Termination by Student
-        <ul>
-          <li>The Student may withdraw from the Program at any time by submitting
-            written notice to StartSchool no later than 5 working days prior to
-            the billing day of the upcoming month. Withdrawal becomes effective
-            on the last day of the month in which the notice is submitted, unless
-            the Student requests a later effective date.</li>
-        </ul>
-      </li>
-      <li>
-        Termination by StartSchool
-        <ul>
-          <li>StartSchool may terminate the Student’s participation by providing
-            at least 30 days’ notice, except in cases of breach of agreement,
-            Code of Conduct or failure to meet performance obligations, in which
-            case immediate termination may apply.</li>
-        </ul>
-      </li>
-      <li>
-        Effect of Termination
-        <ul>
-          <li>Upon termination, the Student is responsible for all tuition fees
-            due up to and including the final month of participation. No refunds
-            will be issued for months already commenced.</li>
-        </ul>
-      </li>
-    </ol>
-
-    <h2>6. Effective Date and Termination</h2>
-    <ol>
-      <li>
-        Effective Date and Duration
-        <ul>
-          <li>This Agreement enters into force on the date of the last signature
-            and shall remain effective on an ongoing, indefinite basis unless
-            terminated by either party in accordance with this Clause.</li>
-        </ul>
-      </li>
-      <li>
-        Termination by the Student
-        <ul>
-          <li>The Student may terminate this Agreement at any time by notifying
-            StartSchool in writing via email to start@startschool.org no later
-            than 5 working days before the billing date for the upcoming calendar
-            month.</li>
-          <li>The Agreement shall be considered terminated on the last day of the
-            month in which the notice is submitted, unless the Student requests a
-            later termination date.</li>
-          <li>Paid tuition fees are non-refundable, and the Student remains
-            responsible for tuition fees for all calendar months commenced prior
-            to the termination date.</li>
-        </ul>
-      </li>
-      <li>
-        Termination by StartSchool
-        <ul>
-          <li>
-            StartSchool may terminate this Agreement:
-            <ul>
-              <li>At will, by giving the Student at least 30 days' written
-                notice;</li>
-              <li>
-                With immediate effect, in case of any of the following:
-                <ul>
-                  <li>
-                    The Student fails to meet the performance standards set by
-                    the Program Manager, including but not limited to:
-                    <ul>
-                      <li>Failure to follow the required program pace;</li>
-                      <li>Participation in less than 50% of required activities
-                        without a valid reason;</li>
-                      <li>Consistent failure to meet assignment or project
-                        milestones;</li>
-                    </ul>
-                  </li>
-                  <li>The Student materially breaches the Code of Conduct;</li>
-                  <li>The Student’s continued participation is found to be
-                    incompatible with the goals of StartSchool.</li>
-                </ul>
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </li>
-      <li>
-        Code of Conduct Violations
-        <ul>
-          <li>The Code of Conduct is annexed to and forms an integral part of
+        <span class="t">General terms</span>
+        <ol>
+          <li>The Study Period of the StartSchool Program starts on August 24,
+            2026. The Study Period ends at the moment of termination of the
+            agreement.</li>
+          <li>The Student shall be admitted to the StartSchool Program subject to
+            timely payment of the monthly Tuition Fee as outlined in Clause 3 of
             this Agreement.</li>
-          <li>
-            In case of a Code of Conduct violation:
-            <ul>
-              <li>A first breach will result in a written warning and
-                discussion;</li>
-              <li>A second breach may result in referral to the Disciplinary
-                Committee;</li>
-              <li>A third breach or Disciplinary Committee recommendation may
-                result in immediate termination of this Agreement by
-                StartSchool.</li>
-            </ul>
+          <li>StartSchool shall determine the structure and content of the
+            Program. While the curriculum is generally uniform across all
+            participants, the specific assignments, challenges, and expectations
+            may vary based on the Student’s prior experience and demonstrated
+            progress.</li>
+          <li>The StartSchool Program is set up as a guided and mentored
+            self-study program. The Student shall invest their effort in finding
+            and studying the information independently, and shall not rely solely
+            on the information or materials supplied by StartSchool.</li>
+          <li>The following shall be available to the Student during the Study
+            Period:
+            <ol>
+              <li>access to StartSchool education platform and StartSchool
+                environment;</li>
+              <li>live coding sessions with professionals;</li>
+              <li>site visits to tech companies;</li>
+              <li>access to a workplace at StartSchool office at StartupHouse,
+                Lastādijas iela 12 k-3, Riga, subject to pre-booking and
+                availability of the workplace.</li>
+            </ol>
           </li>
-        </ul>
-      </li>
-      <li>
-        Financial Obligations Upon Termination
-        <ul>
-          <li>
-            If the Agreement is terminated for any reason, the Student is
-            responsible for:
-            <ul>
-              <li>All tuition fees accrued up to and including the final month of
-                participation;</li>
-              <li>Any late payment penalties (0.1% per overdue day) if
-                applicable;</li>
-              <li>No refunds will be issued for months already commenced.</li>
-            </ul>
+          <li>Additional Resources for Tech + Startup Module Students
+            <ol>
+              <li>Students who are enrolled in the Tech + Startup Module (i.e.,
+                paying €400/month + VAT) will additionally receive access to:
+                <ol>
+                  <li>Business workshops and lectures focused on startup
+                    development.</li>
+                  <li>Structured startup ideation and validation sessions;</li>
+                  <li>Fundraising preparation, pitching practice, and related
+                    training;</li>
+                  <li>Opportunities to engage in founder-specific mentoring.</li>
+                </ol>
+              </li>
+            </ol>
           </li>
-        </ul>
+          <li>Time Commitment
+            <ol>
+              <li>As a part-time student, the Student is expected to dedicate a
+                minimum of 10 hours a week, with 2 hours dedicated to attending
+                weekly coding sessions to make continuous progress through the
+                assigned material and complete all required assignments and
+                activities. While there is no fixed hourly requirement,
+                StartSchool expects a consistent, sustained level of engagement,
+                aligned with the selected module track. Students enrolled in the
+                Tech + Startup Module should anticipate a higher time commitment
+                compared to Tech-only participants.</li>
+            </ol>
+          </li>
+          <li>The student shall use such tools, systems, platforms and other
+            resources for participation in the StartSchool Program and for
+            completion of the specific assignments, as the StartSchool may
+            assign. The Student shall comply with terms of use of these tools,
+            systems, platforms and other resources as set by their providers.</li>
+        </ol>
       </li>
+
       <li>
-        Refund in Case of Early Termination by StartSchool
-        <ul>
-          <li>If StartSchool terminates the Agreement at will (i.e. not due to
-            Student breach), and the Student has pre-paid tuition for future
-            months, StartSchool will refund the portion of the tuition
-            corresponding to the period after the effective termination
-            date.</li>
-        </ul>
+        <span class="t">Tuition Type, Module Selection, and Payment Terms</span>
+        <ol>
+          <li>Program Options and Tuition Fees
+            <p>The Student is enrolled in the StartSchool Program as a part-time
+              student and shall select one of the following module tracks:</p>
+            <p class="indent">Tech Module Only — Monthly Tuition Fee: €200 +
+              VAT</p>
+            <p class="indent">Tech + Startup Module — Monthly Tuition Fee: €400
+              +VAT</p>
+          </li>
+          <li>Tuition Fee Payment Terms
+            <ol>
+              <li>The monthly tuition fee, as defined in clause 3.1, shall be
+                paid in advance by the 25th calendar day of the previous month
+                for the upcoming month.</li>
+            </ol>
+          </li>
+          <li>All payments shall be made by Stripe Payment Subscription link. By
+            subscribing, you authorise Tech Education Foundation (StartSchool) to
+            charge you according to the terms until you cancel.
+            <ol>
+              <li>Tech Module Subscription Payment link:
+                <a
+                  href="https://buy.stripe.com/fZu00k5PZgIbepy4fY6wE00"
+                >https://buy.stripe.com/fZu00k5PZgIbepy4fY6wE00</a></li>
+              <li>Tech + Startup Module Subscription Payment link:
+                <a
+                  href="https://buy.stripe.com/8x2dRa3HR77Bbdmh2K6wE01"
+                >https://buy.stripe.com/8x2dRa3HR77Bbdmh2K6wE01</a></li>
+            </ol>
+          </li>
+          <li>Any payment is considered made when the money is received in the
+            StartSchool’s bank account.</li>
+        </ol>
+      </li>
+
+      <li>
+        <span class="t">Suspension and Rejoining the Program</span>
+        <ol>
+          <li>The Student may request to temporarily suspend their participation
+            in the StartSchool Program for a period of up to 12 months, due to
+            personal, professional, or health-related reasons. The request must
+            be submitted in writing to StartSchool and include a brief
+            explanation 3 working days before the billing date for the upcoming
+            month to suspend participation starting with that month. The
+            StartSchool shall notify the Student on granting the suspension via
+            email.</li>
+          <li>If the Student’s participation in the StartSchool Program has been
+            suspended, then the performance of the obligations of the parties
+            provided in this Agreement is suspended until the Student resumes the
+            participation in the StartSchool Program, or this Agreement is
+            terminated.</li>
+          <li>The Student whose participation in the StartSchool Program has been
+            suspended, may resume the participation in StartSchool in the
+            following academic year. To resume the Student’s participation in the
+            Program, the total period of suspension may not exceed 1 year.</li>
+          <li>If the Student resumes the participation in the StartSchool
+            Program, then the obligations of the Parties provided in this
+            agreement resume. The Student shall not be required to repeatedly
+            complete the part of the StartSchool Program they had completed until
+            suspension.</li>
+          <li>If the Student neither notifies StartSchool on resuming of the
+            Student’s participation, nor requests the extension by the deadline
+            and as otherwise provided in Clause 4 of this Agreement, then it is
+            considered that the Student has withdrawn themself from the Agreement
+            on the day when the term for notification or the resumption has
+            expired.</li>
+        </ol>
+      </li>
+
+      <li>
+        <span class="t">Ongoing Participation Beyond Study Period</span>
+        <ol>
+          <li>Ongoing Participation
+            <ol>
+              <li>The Student’s participation in the StartSchool Program is not
+                limited to a fixed duration.</li>
+            </ol>
+          </li>
+          <li>Updated Modules and Fees
+            <ol>
+              <li>StartSchool may update the program structure, learning modules,
+                and tuition fees over time. Any such changes will be communicated
+                to the Student in writing at least 30 days in advance and shall
+                apply from the following calendar month, unless otherwise
+                agreed.</li>
+            </ol>
+          </li>
+          <li>Termination by Student
+            <ol>
+              <li>The Student may withdraw from the Program at any time by
+                submitting written notice to StartSchool no later than 5 working
+                days prior to the billing day of the upcoming month. Withdrawal
+                becomes effective on the last day of the month in which the
+                notice is submitted, unless the Student requests a later
+                effective date.</li>
+            </ol>
+          </li>
+          <li>Termination by StartSchool
+            <ol>
+              <li>StartSchool may terminate the Student’s participation by
+                providing at least 30 days’ notice, except in cases of breach of
+                agreement, Code of Conduct or failure to meet performance
+                obligations, in which case immediate termination may apply.</li>
+            </ol>
+          </li>
+          <li>Effect of Termination
+            <ol>
+              <li>Upon termination, the Student is responsible for all tuition
+                fees due up to and including the final month of participation. No
+                refunds will be issued for months already commenced.</li>
+            </ol>
+          </li>
+        </ol>
+      </li>
+
+      <li>
+        <span class="t">Effective Date and Termination</span>
+        <ol>
+          <li>Effective Date and Duration
+            <ol>
+              <li>This Agreement enters into force on the date of the last
+                signature and shall remain effective on an ongoing, indefinite
+                basis unless terminated by either party in accordance with this
+                Clause.</li>
+            </ol>
+          </li>
+          <li>Termination by the Student
+            <ol>
+              <li>The Student may terminate this Agreement at any time by
+                notifying StartSchool in writing via email to start@startschool.org
+                no later than 5 working days before the billing date for the
+                upcoming calendar month.</li>
+              <li>The Agreement shall be considered terminated on the last day of
+                the month in which the notice is submitted, unless the Student
+                requests a later termination date.</li>
+              <li>Paid tuition fees are non-refundable, and the Student remains
+                responsible for tuition fees for all calendar months commenced
+                prior to the termination date.</li>
+            </ol>
+          </li>
+          <li>Termination by StartSchool
+            <ol>
+              <li>StartSchool may terminate this Agreement:
+                <ol>
+                  <li>At will, by giving the Student at least 30 days' written
+                    notice;</li>
+                  <li>With immediate effect, in case of any of the following:
+                    <ol>
+                      <li>The Student fails to meet the performance standards set
+                        by the Program Manager, including but not limited to:
+                        <ol>
+                          <li>Failure to follow the required program pace;</li>
+                          <li>Participation in less than 50% of required
+                            activities without a valid reason;</li>
+                          <li>Consistent failure to meet assignment or project
+                            milestones;</li>
+                        </ol>
+                      </li>
+                      <li>The Student materially breaches the Code of
+                        Conduct;</li>
+                      <li>The Student’s continued participation is found to be
+                        incompatible with the goals of StartSchool.</li>
+                    </ol>
+                  </li>
+                </ol>
+              </li>
+            </ol>
+          </li>
+          <li>Code of Conduct Violations
+            <ol>
+              <li>The Code of Conduct is annexed to and forms an integral part of
+                this Agreement.</li>
+              <li>In case of a Code of Conduct violation:
+                <ol>
+                  <li>A first breach will result in a written warning and
+                    discussion;</li>
+                  <li>A second breach may result in referral to the Disciplinary
+                    Committee;</li>
+                  <li>A third breach or Disciplinary Committee recommendation may
+                    result in immediate termination of this Agreement by
+                    StartSchool.</li>
+                </ol>
+              </li>
+            </ol>
+          </li>
+          <li>Financial Obligations Upon Termination
+            <ol>
+              <li>If the Agreement is terminated for any reason, the Student is
+                responsible for:
+                <ol>
+                  <li>All tuition fees accrued up to and including the final
+                    month of participation;</li>
+                  <li>Any late payment penalties (0.1% per overdue day) if
+                    applicable;</li>
+                  <li>No refunds will be issued for months already commenced.</li>
+                </ol>
+              </li>
+            </ol>
+          </li>
+          <li>Refund in Case of Early Termination by StartSchool
+            <ol>
+              <li>If StartSchool terminates the Agreement at will (i.e. not due to
+                Student breach), and the Student has pre-paid tuition for future
+                months, StartSchool will refund the portion of the tuition
+                corresponding to the period after the effective termination
+                date.</li>
+            </ol>
+          </li>
+        </ol>
+      </li>
+
+      <li>
+        <span class="t">Information and confidentiality</span>
+        <ol>
+          <li>The Student shall not disclose to third parties the information
+            about the process of implementation of the StartSchool Program, that,
+            if learned by third parties, may cause violation of other person's
+            rights or damage to the reputation of StartSchool or to the
+            StartSchool Program. The Student may reveal the information about its
+            participation in the StartSchool Program insofar as it pertains only
+            to the Student and does not include information about other persons
+            without their express consent.</li>
+          <li>The Student agrees that their participation in the StartSchool
+            Program activities and assignments may be recorded in photographs or
+            on video and such recordings may be used to illustrate the
+            StartSchool Program and the StartSchool Program for a non-commercial
+            purpose.</li>
+          <li>The Student hereby irrevocably permits StartSchool to use for
+            educational purposes and for promotion of StartSchool and the
+            StartSchool Program any material that the Student has prepared or made
+            available to StartSchool or the involved tutors, mentors or other
+            StartSchool personnel, in course of the Student's participation in the
+            StartSchool Program. The permission especially enables StartSchool to
+            use such material for tuition of other StartSchool Program students.
+            The permission is effective worldwide and without limitation of the
+            term. The Student hereby acknowledges that by receiving the education
+            provided by StartSchool the value whereof exceeds the Student's
+            payments to StartSchool, the Student has received sufficient
+            compensation for the permission stated in this clause and hereby
+            waives all claims for the remuneration in relation to the permission
+            granted under this clause and in relation to use of the material in
+            compliance with this permission. The permission does not apply to the
+            parts of such material that are expressly noted as developed or
+            authored by persons other than the Student (e.g., quotes, reused
+            software code, etc.).</li>
+        </ol>
+      </li>
+
+      <li>
+        <span class="t">Final provisions</span>
+        <ol>
+          <li>The relationship arising from this agreement is governed by the
+            normative acts effective in the Republic of Latvia.</li>
+          <li>Amendments to this agreement are effective if formalized in writing
+            and signed by the parties.</li>
+        </ol>
+      </li>
+
+      <li>
+        <span class="t">Particulars of the parties</span>
+        <ol>
+          <li>the Student: email {{recipient_email}}, phone
+            +{{stripLeadingPlus recipient_phone}}</li>
+          <li>the StartSchool: email start@startschool.org, phone +371 28660693,
+            bank: Swedbank AS, SWIFT code: HABALV22, IBAN:
+            LV90HABA0551055781933, Tech Education Foundation.</li>
+        </ol>
       </li>
     </ol>
 
-    <h2>7. Information and confidentiality</h2>
-    <ol>
-      <li>
-        The Student shall not disclose to third parties the information about the
-        process of implementation of the StartSchool Program, that, if learned
-        by third parties, may cause violation of other person's rights or damage
-        to the reputation of StartSchool or to the StartSchool Program. The
-        Student may reveal the information about its participation in the
-        StartSchool Program insofar as it pertains only to the Student and does
-        not include information about other persons without their express
-        consent.
-      </li>
-      <li>
-        The Student agrees that their participation in the StartSchool Program
-        activities and assignments may be recorded in photographs or on video
-        and such recordings may be used to illustrate the StartSchool Program and
-        the StartSchool Program for a non-commercial purpose.
-      </li>
-      <li>
-        The Student hereby irrevocably permits StartSchool to use for educational
-        purposes and for promotion of StartSchool and the StartSchool Program any
-        material that the Student has prepared or made available to StartSchool or
-        the involved tutors, mentors or other StartSchool personnel, in course of
-        the Student's participation in the StartSchool Program. The permission
-        especially enables StartSchool to use such material for tuition of other
-        StartSchool Program students. The permission is effective worldwide and
-        without limitation of the term. The Student hereby acknowledges that by
-        receiving the education provided by StartSchool the value whereof exceeds
-        the Student's payments to StartSchool, the Student has received sufficient
-        compensation for the permission stated in this clause and hereby waives
-        all claims for the remuneration in relation to the permission granted
-        under this clause and in relation to use of the material in compliance
-        with this permission. The permission does not apply to the parts of such
-        material that are expressly noted as developed or authored by persons
-        other than the Student (e.g., quotes, reused software code, etc.).
-      </li>
-    </ol>
-
-    <h2>8. Final provisions</h2>
-    <ol>
-      <li>
-        The relationship arising from this agreement is governed by the normative
-        acts effective in the Republic of Latvia.
-      </li>
-      <li>
-        Amendments to this agreement are effective if formalized in writing and
-        signed by the parties.
-      </li>
-    </ol>
-
-    <h2>9. Particulars of the parties</h2>
-    <ol>
-      <li>the Student: email {{recipient_email}}, phone +{{recipient_phone}}</li>
-      <li>the StartSchool: email start@startschool.org, phone +371 28660693,
-        bank: Swedbank AS, SWIFT code: HABALV22, IBAN: LV90HABA0551055781933,
-        Tech Education Foundation.</li>
-    </ol>
-
-    <h2>Signatures of the Parties</h2>
+    <h2 class="sig-h">Signatures of the Parties</h2>
     <div class="signatures">
       <div class="sig-row">
         <div class="sig-label">The Student:</div>

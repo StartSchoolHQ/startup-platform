@@ -19,6 +19,14 @@ import { join } from "path";
 import Handlebars from "handlebars";
 import { renderHtmlToPdf } from "./pdf-render";
 
+// The part-time contract bakes a literal "+" before the phone variable
+// ("phone +{{Phonenumber}}"). Students often type the number with their own
+// leading "+", which would render as "++371…". Strip a single leading "+"
+// (and surrounding spaces) from the value so the literal "+" stands alone.
+Handlebars.registerHelper("stripLeadingPlus", (value: unknown) =>
+  typeof value === "string" ? value.replace(/^\s*\+\s*/, "") : value
+);
+
 export interface ContractSignerData {
   name: string;
   surname: string;
