@@ -78,7 +78,8 @@ export async function getServerSideLeaderboardData(
  * Server-side function to get LIVE individual leaderboard data (current week, real-time)
  */
 export async function getServerSideLiveLeaderboardData(
-  limit: number = 50
+  // null = no cap (Postgres LIMIT NULL returns all rows) — show every student
+  limit: number | null = null
 ): Promise<LeaderboardEntry[]> {
   const supabase = await createClient();
 

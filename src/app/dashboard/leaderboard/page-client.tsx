@@ -619,7 +619,7 @@ export default function LeaderboardPageClient({
         // Use live RPC for current week (real-time, no snapshots)
         const { data, error } = await (supabase as any).rpc(
           "get_live_leaderboard_data",
-          { p_limit: 50 }
+          { p_limit: null } // null = show all students (admins already excluded in RPC)
         );
         if (error) throw error;
         return data || [];
@@ -629,7 +629,7 @@ export default function LeaderboardPageClient({
         const { data, error } = await (supabase as any).rpc(
           "get_leaderboard_data",
           {
-            p_limit: 50,
+            p_limit: null, // null = show all students for historical weeks too
             p_week_number: week,
             p_week_year: year,
           }
