@@ -90,7 +90,7 @@ export async function submitFormV3(input: SubmitFormV3Input): Promise<Row> {
     p_email: input.email,
     p_phone: input.phone,
     p_address: input.address,
-    p_birthdate: input.birthdate ?? null,
+    p_birthdate: input.birthdate ?? undefined,
     p_language: input.language,
     p_callback_ref: input.callback_ref,
     p_expires_at: input.expires_at,

@@ -61,6 +61,16 @@ Numeric casts on jsonb fields guarded with regex checks
    (top 15 by approved count: title, completions), `status_funnel`
    (count per status), `weekly_completions` (approved per week by
    `completed_at`).
+7. `get_analytics_week_detail(p_week_start date)` — all reports of one
+   week (lowest score first) for the Overview drill-down.
+
+**Added during review:** every drill-down row carries `report_id`, and a
+`/api/admin/analytics/report?id=` route returns the full report row so any
+bad score/comment opens the existing `AdminWeeklyReportViewModal` with the
+person's complete weekly report (requested mid-session).
+
+**Chart correction (dataviz):** sentiment line and participation are two
+stacked charts sharing the x-axis — not a dual-axis chart.
 
 ## API routes
 

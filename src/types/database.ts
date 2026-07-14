@@ -1368,6 +1368,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      _analytics_assert_admin: { Args: never; Returns: undefined };
       accept_external_task_for_review: {
         Args: { p_progress_id: string };
         Returns: Json;
@@ -1620,6 +1621,90 @@ export type Database = {
           week_label: string;
           week_number: number;
           week_year: number;
+        }[];
+      };
+      get_analytics_overview: {
+        Args: never;
+        Returns: {
+          active_teams: number;
+          avg_score: number;
+          commitments_completed: number;
+          commitments_total: number;
+          expected_reporters: number;
+          high_scores: number;
+          low_scores: number;
+          max_score: number;
+          min_score: number;
+          real_blockers: number;
+          reports: number;
+          week_start: string;
+        }[];
+      };
+      get_analytics_student_detail: {
+        Args: { p_user_id: string };
+        Returns: {
+          alignment_reason: string;
+          biggest_achievement: string;
+          blockers: string;
+          report_id: string;
+          score: number;
+          submitted_at: string;
+          week_start: string;
+        }[];
+      };
+      get_analytics_students: {
+        Args: never;
+        Returns: {
+          avg_score: number;
+          last_submitted: string;
+          latest_score: number;
+          latest_week: string;
+          prior_avg: number;
+          recent_avg: number;
+          scores: Json;
+          team_name: string;
+          user_id: string;
+          user_name: string;
+          weeks_submitted: number;
+        }[];
+      };
+      get_analytics_tasks: { Args: never; Returns: Json };
+      get_analytics_team_detail: {
+        Args: { p_team_id: string };
+        Returns: {
+          alignment_reason: string;
+          blockers: string;
+          report_id: string;
+          score: number;
+          submitted_at: string;
+          user_id: string;
+          user_name: string;
+          week_start: string;
+        }[];
+      };
+      get_analytics_teams: {
+        Args: never;
+        Returns: {
+          avg_score: number;
+          reports: number;
+          team_id: string;
+          team_name: string;
+          team_status: string;
+          week_start: string;
+        }[];
+      };
+      get_analytics_week_detail: {
+        Args: { p_week_start: string };
+        Returns: {
+          alignment_reason: string;
+          blockers: string;
+          report_id: string;
+          score: number;
+          submitted_at: string;
+          team_id: string;
+          team_name: string;
+          user_id: string;
+          user_name: string;
         }[];
       };
       get_audit_logs: {
@@ -2544,6 +2629,7 @@ export type Database = {
           identity_verified_at: string | null;
           language: Database["public"]["Enums"]["scholarship_agreement_language"];
           recipient_address: string | null;
+          recipient_birthdate: string | null;
           recipient_email: string | null;
           recipient_phone: string | null;
           school_signed_at: string | null;
@@ -2582,6 +2668,7 @@ export type Database = {
           identity_verified_at: string | null;
           language: Database["public"]["Enums"]["scholarship_agreement_language"];
           recipient_address: string | null;
+          recipient_birthdate: string | null;
           recipient_email: string | null;
           recipient_phone: string | null;
           school_signed_at: string | null;
@@ -2621,6 +2708,7 @@ export type Database = {
           identity_verified_at: string | null;
           language: Database["public"]["Enums"]["scholarship_agreement_language"];
           recipient_address: string | null;
+          recipient_birthdate: string | null;
           recipient_email: string | null;
           recipient_phone: string | null;
           school_signed_at: string | null;
@@ -2659,6 +2747,7 @@ export type Database = {
           identity_verified_at: string | null;
           language: Database["public"]["Enums"]["scholarship_agreement_language"];
           recipient_address: string | null;
+          recipient_birthdate: string | null;
           recipient_email: string | null;
           recipient_phone: string | null;
           school_signed_at: string | null;
@@ -2711,6 +2800,7 @@ export type Database = {
           identity_verified_at: string | null;
           language: Database["public"]["Enums"]["scholarship_agreement_language"];
           recipient_address: string | null;
+          recipient_birthdate: string | null;
           recipient_email: string | null;
           recipient_phone: string | null;
           school_signed_at: string | null;
@@ -2749,6 +2839,7 @@ export type Database = {
           identity_verified_at: string | null;
           language: Database["public"]["Enums"]["scholarship_agreement_language"];
           recipient_address: string | null;
+          recipient_birthdate: string | null;
           recipient_email: string | null;
           recipient_phone: string | null;
           school_signed_at: string | null;
@@ -2787,6 +2878,7 @@ export type Database = {
           identity_verified_at: string | null;
           language: Database["public"]["Enums"]["scholarship_agreement_language"];
           recipient_address: string | null;
+          recipient_birthdate: string | null;
           recipient_email: string | null;
           recipient_phone: string | null;
           school_signed_at: string | null;
@@ -2825,6 +2917,7 @@ export type Database = {
           identity_verified_at: string | null;
           language: Database["public"]["Enums"]["scholarship_agreement_language"];
           recipient_address: string | null;
+          recipient_birthdate: string | null;
           recipient_email: string | null;
           recipient_phone: string | null;
           school_signed_at: string | null;
@@ -2868,6 +2961,7 @@ export type Database = {
           identity_verified_at: string | null;
           language: Database["public"]["Enums"]["scholarship_agreement_language"];
           recipient_address: string | null;
+          recipient_birthdate: string | null;
           recipient_email: string | null;
           recipient_phone: string | null;
           school_signed_at: string | null;
@@ -2912,6 +3006,7 @@ export type Database = {
           identity_verified_at: string | null;
           language: Database["public"]["Enums"]["scholarship_agreement_language"];
           recipient_address: string | null;
+          recipient_birthdate: string | null;
           recipient_email: string | null;
           recipient_phone: string | null;
           school_signed_at: string | null;
@@ -2950,6 +3045,7 @@ export type Database = {
           identity_verified_at: string | null;
           language: Database["public"]["Enums"]["scholarship_agreement_language"];
           recipient_address: string | null;
+          recipient_birthdate: string | null;
           recipient_email: string | null;
           recipient_phone: string | null;
           school_signed_at: string | null;
@@ -2996,6 +3092,7 @@ export type Database = {
           identity_verified_at: string | null;
           language: Database["public"]["Enums"]["scholarship_agreement_language"];
           recipient_address: string | null;
+          recipient_birthdate: string | null;
           recipient_email: string | null;
           recipient_phone: string | null;
           school_signed_at: string | null;
@@ -3042,6 +3139,7 @@ export type Database = {
           identity_verified_at: string | null;
           language: Database["public"]["Enums"]["scholarship_agreement_language"];
           recipient_address: string | null;
+          recipient_birthdate: string | null;
           recipient_email: string | null;
           recipient_phone: string | null;
           school_signed_at: string | null;
@@ -3066,7 +3164,7 @@ export type Database = {
       scholarship_submit_form_v3: {
         Args: {
           p_address: string;
-          p_birthdate?: string | null;
+          p_birthdate?: string;
           p_callback_ref: string;
           p_email: string;
           p_expires_at: string;

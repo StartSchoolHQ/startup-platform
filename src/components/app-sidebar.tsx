@@ -113,6 +113,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           url: "/dashboard/admin",
           icon: Settings,
           items: [
+            { title: "Analytics", url: "/dashboard/admin/analytics" },
             { title: "Agreements", url: "/dashboard/admin/agreements" },
             { title: "Users", url: "/dashboard/admin/users" },
             { title: "Teams", url: "/dashboard/admin/teams" },
