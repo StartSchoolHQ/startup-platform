@@ -151,6 +151,101 @@ describe("get_analytics_week_detail", () => {
   });
 });
 
+describe("get_analytics_meetings", () => {
+  it("returns weekly volume, interest funnel, teams and learnings", async () => {
+    const { data, error } = await authed.rpc("get_analytics_meetings");
+    expect(error).toBeNull();
+    expect(data.weekly.length).toBeGreaterThan(0);
+    expect(data.interest_funnel.length).toBeGreaterThan(0);
+    expect(data.by_team.length).toBeGreaterThan(0);
+    const funnelTotal = data.interest_funnel.reduce(
+      (a: number, f: { count: number }) => a + f.count,
+      0
+    );
+    const teamTotal = data.by_team.reduce(
+      (a: number, t: { meetings: number }) => a + t.meetings,
+      0
+    );
+    expect(funnelTotal).toBe(teamTotal);
+  });
+});
+
+describe("get_analytics_retention", () => {
+  it("returns cohort curve and leavers with prior scores", async () => {
+    const { data, error } = await authed.rpc("get_analytics_retention");
+    expect(error).toBeNull();
+    expect(data.total_reporters).toBeGreaterThan(0);
+    expect(data.cohort.length).toBeGreaterThan(0);
+    for (const c of data.cohort) {
+      expect(c.reporters).toBeLessThanOrEqual(data.total_reporters);
+      expect(Number(c.pct_of_all)).toBeGreaterThan(0);
+      expect(Number(c.pct_of_all)).toBeLessThanOrEqual(100);
+    }
+    expect(Array.isArray(data.leavers)).toBe(true);
+    if (data.leavers.length > 0) {
+      expect(data.leavers[0].left_at).toBeTruthy();
+      expect(Array.isArray(data.leavers[0].last_scores)).toBe(true);
+    }
+  });
+});
+
+describe("get_analytics_strikes", () => {
+  it("returns weekly strikes and per-team totals", async () => {
+    const { data, error } = await authed.rpc("get_analytics_strikes");
+    expect(error).toBeNull();
+    expect(data.weekly.length).toBeGreaterThan(0);
+    expect(data.by_team.length).toBeGreaterThan(0);
+    for (const w of data.weekly) {
+      expect(w.resolved + w.explained).toBeLessThanOrEqual(w.strikes);
+    }
+  });
+});
+
+describe("get_analytics_task_friction", () => {
+  it("returns least completed, slowest and rejected tasks", async () => {
+    const { data, error } = await authed.rpc("get_analytics_task_friction");
+    expect(error).toBeNull();
+    expect(data.least_completed.length).toBeGreaterThan(0);
+    for (const t of data.least_completed) {
+      expect(t.approved).toBeLessThanOrEqual(t.assigned);
+      expect(Number(t.approval_rate)).toBeGreaterThanOrEqual(0);
+      expect(Number(t.approval_rate)).toBeLessThanOrEqual(100);
+    }
+    expect(data.slowest.length).toBeGreaterThan(0);
+    for (const t of data.slowest) {
+      expect(Number(t.avg_days)).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("get_analytics_economy", () => {
+  it("returns weekly earn/lose and penalty stats", async () => {
+    const { data, error } = await authed.rpc("get_analytics_economy");
+    expect(error).toBeNull();
+    expect(data.weekly.length).toBeGreaterThan(0);
+    expect(data.by_type.length).toBeGreaterThan(0);
+    expect(data.penalties.penalty_count).toBeGreaterThanOrEqual(
+      data.penalties.refund_count
+    );
+    expect(data.penalties.users_penalized).toBeGreaterThan(0);
+  });
+});
+
+describe("get_analytics_student_detail (extended)", () => {
+  it("includes commitments follow-through per week", async () => {
+    const { data: students } = await authed.rpc("get_analytics_students");
+    const { data, error } = await authed.rpc("get_analytics_student_detail", {
+      p_user_id: students![0].user_id,
+    });
+    expect(error).toBeNull();
+    for (const row of data!) {
+      expect(row.commitments_completed).toBeLessThanOrEqual(
+        row.commitments_total
+      );
+    }
+  });
+});
+
 describe("get_analytics_tasks", () => {
   it("returns top tasks, funnel and weekly completions", async () => {
     const { data, error } = await authed.rpc("get_analytics_tasks");

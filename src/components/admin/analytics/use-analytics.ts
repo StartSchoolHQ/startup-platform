@@ -2,9 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type {
+  EconomyAnalytics,
+  MeetingsAnalytics,
   OverviewWeek,
+  RetentionAnalytics,
+  StrikesAnalytics,
   StudentDetailRow,
   StudentRow,
+  TaskFrictionAnalytics,
   TasksAnalytics,
   TeamDetailRow,
   TeamWeekRow,
@@ -90,6 +95,54 @@ export function useAnalyticsTasks(enabled: boolean) {
   return useQuery({
     queryKey: ["admin-analytics", "tasks"],
     queryFn: () => fetchJson<TasksAnalytics>("/api/admin/analytics/tasks"),
+    staleTime: STALE_TIME,
+    enabled,
+  });
+}
+
+export function useAnalyticsMeetings(enabled: boolean) {
+  return useQuery({
+    queryKey: ["admin-analytics", "meetings"],
+    queryFn: () =>
+      fetchJson<MeetingsAnalytics>("/api/admin/analytics/meetings"),
+    staleTime: STALE_TIME,
+    enabled,
+  });
+}
+
+export function useAnalyticsRetention(enabled: boolean) {
+  return useQuery({
+    queryKey: ["admin-analytics", "retention"],
+    queryFn: () =>
+      fetchJson<RetentionAnalytics>("/api/admin/analytics/retention"),
+    staleTime: STALE_TIME,
+    enabled,
+  });
+}
+
+export function useAnalyticsStrikes(enabled: boolean) {
+  return useQuery({
+    queryKey: ["admin-analytics", "strikes"],
+    queryFn: () => fetchJson<StrikesAnalytics>("/api/admin/analytics/strikes"),
+    staleTime: STALE_TIME,
+    enabled,
+  });
+}
+
+export function useAnalyticsTaskFriction(enabled: boolean) {
+  return useQuery({
+    queryKey: ["admin-analytics", "task-friction"],
+    queryFn: () =>
+      fetchJson<TaskFrictionAnalytics>("/api/admin/analytics/task-friction"),
+    staleTime: STALE_TIME,
+    enabled,
+  });
+}
+
+export function useAnalyticsEconomy(enabled: boolean) {
+  return useQuery({
+    queryKey: ["admin-analytics", "economy"],
+    queryFn: () => fetchJson<EconomyAnalytics>("/api/admin/analytics/economy"),
     staleTime: STALE_TIME,
     enabled,
   });

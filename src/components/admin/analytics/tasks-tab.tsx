@@ -21,6 +21,7 @@ import {
 import { useAnalyticsTasks } from "./use-analytics";
 import { ChartTooltip } from "./chart-tooltip";
 import { TabError, TabSkeleton } from "./shared";
+import { TaskFrictionSection } from "./task-friction-section";
 import { CHART_COLORS, formatWeek } from "./types";
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
@@ -157,6 +158,7 @@ export function TasksTab({ active }: { active: boolean }) {
           </Card>
         </div>
       </div>
+      <TaskFrictionSection active={active} />
     </div>
   );
 }

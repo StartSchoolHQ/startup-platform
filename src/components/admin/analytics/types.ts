@@ -34,6 +34,8 @@ export interface TeamDetailRow {
   score: number | null;
   alignment_reason: string | null;
   blockers: string | null;
+  key_insight: string | null;
+  team_recognition: string | null;
   submitted_at: string | null;
 }
 
@@ -58,6 +60,10 @@ export interface StudentDetailRow {
   alignment_reason: string | null;
   blockers: string | null;
   biggest_achievement: string | null;
+  key_insight: string | null;
+  help_needed: string | null;
+  commitments_total: number;
+  commitments_completed: number;
   submitted_at: string | null;
 }
 
@@ -71,6 +77,95 @@ export interface WeekDetailRow {
   alignment_reason: string | null;
   blockers: string | null;
   submitted_at: string | null;
+}
+
+export interface MeetingsAnalytics {
+  weekly: {
+    week_start: string;
+    meetings: number;
+    willingness_to_pay: number;
+    not_interested: number;
+  }[];
+  interest_funnel: { level: string; count: number }[];
+  by_team: {
+    team_id: string;
+    team_name: string;
+    team_status: string;
+    meetings: number;
+    willingness_to_pay: number;
+    last_meeting: string | null;
+  }[];
+  learnings: {
+    meeting_date: string;
+    team_name: string;
+    client_name: string | null;
+    interest_level: string | null;
+    main_learnings: string | null;
+    client_feedback: string | null;
+  }[];
+}
+
+export interface RetentionAnalytics {
+  total_reporters: number;
+  cohort: { week_start: string; reporters: number; pct_of_all: number }[];
+  departures: { week_start: string; members_left: number }[];
+  teams_archived: { week_start: string; teams: number }[];
+  leavers: {
+    user_id: string;
+    user_name: string | null;
+    team_name: string | null;
+    left_at: string;
+    weeks_reported: number;
+    last_scores: (number | null)[];
+  }[];
+}
+
+export interface StrikesAnalytics {
+  weekly: {
+    week_start: string;
+    strikes: number;
+    resolved: number;
+    explained: number;
+  }[];
+  by_team: { team_name: string; strikes: number; resolved: number }[];
+  recent_explanations: {
+    created_at: string;
+    team_name: string;
+    status: string;
+    explanation: string;
+  }[];
+}
+
+export interface TaskFrictionAnalytics {
+  least_completed: {
+    title: string;
+    assigned: number;
+    approved: number;
+    approval_rate: number;
+  }[];
+  slowest: { title: string; avg_days: number; completions: number }[];
+  most_rejected: {
+    title: string;
+    rejections: number;
+    resubmissions: number;
+  }[];
+  stale_in_progress: { count: number; oldest_started: string | null };
+}
+
+export interface EconomyAnalytics {
+  weekly: {
+    week_start: string;
+    xp_earned: number;
+    points_earned: number;
+    points_lost: number;
+  }[];
+  by_type: { type: string; count: number; xp: number; points: number }[];
+  penalties: {
+    penalty_count: number;
+    refund_count: number;
+    users_penalized: number;
+    points_lost_to_penalties: number;
+  };
 }
 
 export interface TasksAnalytics {

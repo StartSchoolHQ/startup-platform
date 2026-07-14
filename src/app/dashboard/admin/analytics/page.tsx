@@ -9,6 +9,8 @@ import { OverviewTab } from "@/components/admin/analytics/overview-tab";
 import { TeamsTab } from "@/components/admin/analytics/teams-tab";
 import { StudentsTab } from "@/components/admin/analytics/students-tab";
 import { TasksTab } from "@/components/admin/analytics/tasks-tab";
+import { MeetingsTab } from "@/components/admin/analytics/meetings-tab";
+import { ProgramTab } from "@/components/admin/analytics/program-tab";
 
 export default function AdminAnalyticsPage() {
   const { user, loading } = useApp();
@@ -37,6 +39,8 @@ export default function AdminAnalyticsPage() {
           <TabsTrigger value="teams">Teams</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          <TabsTrigger value="meetings">Meetings</TabsTrigger>
+          <TabsTrigger value="program">Program</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
           <OverviewTab active={tab === "overview"} />
@@ -49,6 +53,12 @@ export default function AdminAnalyticsPage() {
         </TabsContent>
         <TabsContent value="tasks">
           <TasksTab active={tab === "tasks"} />
+        </TabsContent>
+        <TabsContent value="meetings">
+          <MeetingsTab active={tab === "meetings"} />
+        </TabsContent>
+        <TabsContent value="program">
+          <ProgramTab active={tab === "program"} />
         </TabsContent>
       </Tabs>
     </div>

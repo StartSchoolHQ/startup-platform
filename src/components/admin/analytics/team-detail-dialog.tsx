@@ -131,6 +131,16 @@ export function TeamDetailDialog({ team, onClose }: Props) {
                         Blocker: {row.blockers}
                       </p>
                     )}
+                    {row.key_insight && (
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        Insight: {row.key_insight}
+                      </p>
+                    )}
+                    {row.team_recognition && (
+                      <p className="mt-1 text-xs text-emerald-600">
+                        Recognition: {row.team_recognition}
+                      </p>
+                    )}
                   </button>
                 ))}
               </div>

@@ -1623,6 +1623,8 @@ export type Database = {
           week_year: number;
         }[];
       };
+      get_analytics_economy: { Args: never; Returns: Json };
+      get_analytics_meetings: { Args: never; Returns: Json };
       get_analytics_overview: {
         Args: never;
         Returns: {
@@ -1640,12 +1642,18 @@ export type Database = {
           week_start: string;
         }[];
       };
+      get_analytics_retention: { Args: never; Returns: Json };
+      get_analytics_strikes: { Args: never; Returns: Json };
       get_analytics_student_detail: {
         Args: { p_user_id: string };
         Returns: {
           alignment_reason: string;
           biggest_achievement: string;
           blockers: string;
+          commitments_completed: number;
+          commitments_total: number;
+          help_needed: string;
+          key_insight: string;
           report_id: string;
           score: number;
           submitted_at: string;
@@ -1668,15 +1676,18 @@ export type Database = {
           weeks_submitted: number;
         }[];
       };
+      get_analytics_task_friction: { Args: never; Returns: Json };
       get_analytics_tasks: { Args: never; Returns: Json };
       get_analytics_team_detail: {
         Args: { p_team_id: string };
         Returns: {
           alignment_reason: string;
           blockers: string;
+          key_insight: string;
           report_id: string;
           score: number;
           submitted_at: string;
+          team_recognition: string;
           user_id: string;
           user_name: string;
           week_start: string;

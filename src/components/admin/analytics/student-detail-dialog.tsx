@@ -101,6 +101,12 @@ export function StudentDetailDialog({ student, onClose }: Props) {
                   >
                     <div className="flex items-center gap-2">
                       <ScoreBadge score={row.score} />
+                      {row.commitments_total > 0 && (
+                        <span className="text-muted-foreground text-xs">
+                          {row.commitments_completed}/{row.commitments_total}{" "}
+                          commitments done
+                        </span>
+                      )}
                       <span className="text-muted-foreground ml-auto text-xs">
                         {formatWeek(row.week_start)}
                       </span>
@@ -118,6 +124,16 @@ export function StudentDetailDialog({ student, onClose }: Props) {
                     {row.biggest_achievement && (
                       <p className="mt-1 text-xs text-emerald-600">
                         Win: {row.biggest_achievement}
+                      </p>
+                    )}
+                    {row.help_needed && (
+                      <p className="mt-1 text-xs text-amber-600">
+                        Needs help: {row.help_needed}
+                      </p>
+                    )}
+                    {row.key_insight && (
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        Insight: {row.key_insight}
                       </p>
                     )}
                   </button>

@@ -112,6 +112,37 @@ Charts: Recharts 3.6 (already installed), tooltip style copied from
   row shape and sane aggregate bounds (scores within 1–10, percentages
   0–100). Read-only, safe against prod data.
 
+## Phase 2 (added same day, user request: "all of them")
+
+Beta-year retro / pivot data. Five more read-only admin-guarded RPCs +
+two new tabs:
+
+- `get_analytics_meetings()` — **Meetings tab**: weekly completed client
+  meetings, validation funnel from `meeting_data->>'interestLevel'`
+  (willingness_to_pay / intent_to_try / introductions / not_interested),
+  per-team contact intensity, latest `mainLearnings`/`clientFeedback`
+  verbatim. Note: `client_type`, `call_type`, `how_it_went`,
+  `new_things_learned` columns are empty on prod — the real content lives
+  in the `meeting_data` jsonb.
+- `get_analytics_retention()` — **Program tab**: weekly reporting cohort
+  (of 67 ever-reporters), team-member departures per week, archived teams,
+  leaver list with each person's last 3 sentiment scores before leaving.
+- `get_analytics_strikes()` — strikes per week + resolution, worst teams,
+  latest explanations verbatim (only type on prod: missed_weekly_report).
+- `get_analytics_economy()` — weekly points earned vs lost, by-type
+  totals, penalty stats. No spend mechanism exists in the data; the story
+  is earn vs penalties (491 penalties / 115 refunds).
+- `get_analytics_task_friction()` — **Tasks tab section**: lowest
+  approval-rate tasks (assigned ≥ 5), slowest (avg start→approval days),
+  most rejected/reworked, stale in-progress count.
+- Drill-downs extended: student detail adds `key_insight`, `help_needed`,
+  per-week commitments follow-through; team detail adds `key_insight`,
+  `team_recognition`.
+
+PostHog product analytics intentionally not integrated — querying it
+requires a personal API key (only the ingestion key is in env). Revisit if
+product-usage data is needed for the retro.
+
 ## Out of scope
 
 AI summary generation (placeholder only), report content editing,
