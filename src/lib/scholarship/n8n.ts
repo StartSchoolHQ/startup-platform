@@ -80,3 +80,33 @@ export async function sendCompletedEmail(
   }
   await postToN8n(url, input);
 }
+
+export interface SendEquipmentCompletedInput {
+  recipient_email: string;
+  /** Full name (first + last) — becomes the Notion row title. */
+  recipient_name: string;
+  recipient_phone: string;
+  language: "lv" | "en";
+  agreement_type: AgreementType;
+  signed_doc_base64: string;
+  signed_doc_filename: string;
+}
+
+/**
+ * Posts a completed laptop/keycard agreement to the "Keycards and Laptops"
+ * n8n workflow, which uploads the signed `.edoc` to the Drive folder for
+ * the item type and creates the "Both signed" row in the Notion tracker
+ * (Requests B3). Same HMAC scheme as sendCompletedEmail.
+ */
+export async function sendEquipmentCompleted(
+  input: SendEquipmentCompletedInput
+): Promise<void> {
+  const url = process.env.N8N_EQUIPMENT_COMPLETED_URL;
+  if (!url) {
+    console.warn(
+      "[n8n] N8N_EQUIPMENT_COMPLETED_URL not set — skipping equipment write-back"
+    );
+    return;
+  }
+  await postToN8n(url, input);
+}

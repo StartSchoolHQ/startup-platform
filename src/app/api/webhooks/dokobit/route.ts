@@ -29,7 +29,10 @@ import {
   recordStudentSigned,
 } from "@/lib/scholarship/data";
 import { buildAgreementFilename } from "@/lib/scholarship/filename";
-import { sendCompletedEmail } from "@/lib/scholarship/n8n";
+import {
+  sendCompletedEmail,
+  sendEquipmentCompleted,
+} from "@/lib/scholarship/n8n";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const STORAGE_BUCKET = "scholarship-documents";
@@ -248,6 +251,40 @@ async function handleSigningCompleted(
               emailErr instanceof Error ? emailErr.message : String(emailErr),
           },
         });
+      }
+
+      // Equipment agreements additionally post to the "Keycards and
+      // Laptops" n8n workflow (Drive archive + Notion tracker row).
+      // Best-effort under the same rules as the email above — a failure
+      // must never block archiving; success is visible as the Notion row
+      // and the n8n execution log.
+      if (row.agreement_type === "laptop" || row.agreement_type === "keycard") {
+        try {
+          await sendEquipmentCompleted({
+            recipient_email: row.recipient_email,
+            recipient_name: `${row.signer_name} ${row.signer_surname}`,
+            recipient_phone: row.recipient_phone ?? "",
+            language: row.language,
+            agreement_type: row.agreement_type,
+            signed_doc_base64: archive.file.content,
+            signed_doc_filename: attachmentFilename,
+          });
+        } catch (equipErr) {
+          console.error(
+            "[webhooks/dokobit] equipment write-back failed for",
+            row.id,
+            equipErr
+          );
+          await recordEvent({
+            id: row.id,
+            event_type: "error",
+            payload: {
+              stage: "equipment_writeback",
+              message:
+                equipErr instanceof Error ? equipErr.message : String(equipErr),
+            },
+          });
+        }
       }
     }
 
