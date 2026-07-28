@@ -115,6 +115,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           items: [
             { title: "Analytics", url: "/dashboard/admin/analytics" },
             { title: "Agreements", url: "/dashboard/admin/agreements" },
+            {
+              title: "Laptops & Keycards",
+              url: "/dashboard/admin/laptops-keycards",
+            },
             { title: "Users", url: "/dashboard/admin/users" },
             { title: "Teams", url: "/dashboard/admin/teams" },
             { title: "Peer Reviews", url: "/dashboard/admin/peer-reviews" },
