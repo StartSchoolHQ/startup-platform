@@ -56,6 +56,8 @@ const TEMPLATE_FILES: Partial<Record<AgreementType, string>> = {
   full: "full-scholarship-en.hbs",
   partial: "partial-scholarship-en.hbs",
   part_time: "part-time-en.hbs",
+  laptop: "laptop-en.hbs",
+  keycard: "keycard-en.hbs",
 };
 
 const TEMPLATE_DIR = join(

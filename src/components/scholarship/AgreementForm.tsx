@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { SupportedEidMethods } from "./SupportedEidMethods";
 
-type AgreementType = "full" | "partial" | "part_time";
+type AgreementType = "full" | "partial" | "part_time" | "laptop" | "keycard";
 
 interface AgreementFormProps {
   agreementType: AgreementType;

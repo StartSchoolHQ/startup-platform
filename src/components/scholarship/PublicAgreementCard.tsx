@@ -1,7 +1,7 @@
 import { AgreementForm } from "./AgreementForm";
 import { PrivacyNoticeSummary } from "./PrivacyNoticeSummary";
 
-type AgreementType = "full" | "partial" | "part_time";
+type AgreementType = "full" | "partial" | "part_time" | "laptop" | "keycard";
 
 interface PublicAgreementCardProps {
   agreementType: AgreementType;
@@ -11,6 +11,28 @@ const HEADINGS: Record<AgreementType, string> = {
   full: "Full Scholarship Agreement",
   partial: "Partial Scholarship Agreement",
   part_time: "Part-time Studies Agreement",
+  laptop: "Computer Usage Agreement",
+  keycard: "Key Card Agreement",
+};
+
+const SCHOLARSHIP_INTRO =
+  "Welcome to StartSchool. Below is a summary of your scholarship. After " +
+  "you fill in your contact details and confirm your identity, we'll " +
+  "prepare the full contract for you to sign electronically.";
+
+// Equipment agreements aren't scholarships — same flow, neutral wording.
+const INTROS: Record<AgreementType, string> = {
+  full: SCHOLARSHIP_INTRO,
+  partial: SCHOLARSHIP_INTRO,
+  part_time: SCHOLARSHIP_INTRO,
+  laptop:
+    "Welcome to StartSchool. After you fill in your contact details and " +
+    "confirm your identity, we'll prepare the full agreement for you to " +
+    "sign electronically.",
+  keycard:
+    "Welcome to StartSchool. After you fill in your contact details and " +
+    "confirm your identity, we'll prepare the full agreement for you to " +
+    "sign electronically.",
 };
 
 /**
@@ -30,9 +52,7 @@ export function PublicAgreementCard({
           {HEADINGS[agreementType]}
         </h1>
         <p className="mb-5 text-zinc-600 dark:text-zinc-400">
-          Welcome to StartSchool. Below is a summary of your scholarship. After
-          you fill in your contact details and confirm your identity, we&apos;ll
-          prepare the full contract for you to sign electronically.
+          {INTROS[agreementType]}
         </p>
         <PrivacyNoticeSummary />
         <div className="mt-6">

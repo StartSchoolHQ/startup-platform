@@ -226,6 +226,7 @@ async function handleSigningCompleted(
           language: row.language,
           signed_doc_base64: archive.file.content,
           signed_doc_filename: attachmentFilename,
+          agreement_type: row.agreement_type,
         });
         await recordEvent({
           id: row.id,

@@ -57,6 +57,25 @@ describe("buildAgreementFilename", () => {
     expect(full).toBe("John_Doe_Startschool_Agreement.edoc");
   });
 
+  it("uses distinct labels for the equipment agreements", () => {
+    expect(
+      buildAgreementFilename({
+        name: "John",
+        surname: "Doe",
+        agreement_type: "laptop",
+        ext: "edoc",
+      })
+    ).toBe("John_Doe_Startschool_Computer_Agreement.edoc");
+    expect(
+      buildAgreementFilename({
+        name: "John",
+        surname: "Doe",
+        agreement_type: "keycard",
+        ext: "edoc",
+      })
+    ).toBe("John_Doe_Startschool_Keycard_Agreement.edoc");
+  });
+
   it("strips file-system-illegal characters", () => {
     expect(
       buildAgreementFilename({

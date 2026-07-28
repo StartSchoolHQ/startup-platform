@@ -25,6 +25,8 @@ const PUBLIC_ROUTE: Partial<Record<AgreementType, string>> = {
   full: "/full-scholarship-agreement",
   partial: "/partial-scholarship-agreement",
   part_time: "/part-time-agreement",
+  laptop: "/laptop-agreement",
+  keycard: "/keycard-agreement",
 };
 
 const UUID_RE =

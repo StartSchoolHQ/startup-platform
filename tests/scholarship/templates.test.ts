@@ -107,6 +107,54 @@ describe("renderContractHtml", () => {
     expect(html).toContain("Anna Andersone");
   });
 
+  it("renders the laptop template with signer name, return act and serial line", () => {
+    const html = renderContractHtml({
+      agreement_type: "laptop",
+      signer: sampleSigner,
+      recipient_email: "janis@example.com",
+      recipient_phone: "+371 20000000",
+      recipient_address: "Brīvības iela 1, Rīga, LV-1010",
+      date_today: "28.07.2026",
+      agreement_reference: "SS-2026-0004",
+    });
+
+    expect(html).toContain("StartSchool Computer Usage Agreement");
+    expect(html).toContain("Jānis");
+    expect(html).toContain("Bērziņš");
+    expect(html).toContain("Count: 1 computer");
+    expect(html).toContain("28.08.2027");
+    expect(html).toContain("Act of return of the computer");
+    expect(html).toContain("Computer serial number: ____________________.");
+    expect(html).toContain("Janis Altgauzens on behalf of Tech Education");
+    // Contact details are collected but not part of this contract's wording.
+    expect(html).not.toContain("janis@example.com");
+  });
+
+  it("renders the keycard template with signer name and office terms", () => {
+    const html = renderContractHtml({
+      agreement_type: "keycard",
+      signer: sampleSigner,
+      recipient_email: "janis@example.com",
+      recipient_phone: "+371 20000000",
+      recipient_address: "Brīvības iela 1, Rīga, LV-1010",
+      date_today: "28.07.2026",
+      agreement_reference: "SS-2026-0005",
+    });
+
+    expect(html).toContain("StartSchool Key Card Agreement");
+    expect(html).toContain("Jānis");
+    expect(html).toContain("Bērziņš");
+    const flat = html.replace(/\s+/g, " ");
+    expect(flat).toContain(
+      "Startup House Riga, StartSchool office - key card</strong>: 1 pcs."
+    );
+    expect(html).toContain("1st floor - Kitchen, wardrobe, event space.");
+    expect(html).toContain("4th floor - StartSchool office.");
+    expect(html).toContain("Janis Altgauzens, Arina Li, Anna Andersone.");
+    expect(html).toContain("Janis Altgauzens on behalf of Tech Education");
+    expect(html).not.toContain("janis@example.com");
+  });
+
   it("HTML-escapes signer name to prevent template injection", () => {
     const html = renderContractHtml({
       agreement_type: "full",

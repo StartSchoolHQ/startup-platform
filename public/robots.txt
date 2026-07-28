@@ -2,4 +2,6 @@ User-agent: *
 Disallow: /full-scholarship-agreement
 Disallow: /partial-scholarship-agreement
 Disallow: /part-time-agreement
+Disallow: /laptop-agreement
+Disallow: /keycard-agreement
 Disallow: /agreement/

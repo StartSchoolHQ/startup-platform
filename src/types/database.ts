@@ -1469,6 +1469,10 @@ export type Database = {
         Returns: Json;
       };
       complete_meeting: { Args: { p_meeting_id: string }; Returns: Json };
+      complete_meeting_backup_v1: {
+        Args: { p_meeting_id: string };
+        Returns: Json;
+      };
       create_individual_task_and_assign_to_users: {
         Args: {
           p_achievement_id?: string;
@@ -3398,7 +3402,12 @@ export type Database = {
         | "cancelled"
         | "expired"
         | "failed";
-      scholarship_agreement_type: "full" | "partial" | "part_time";
+      scholarship_agreement_type:
+        | "full"
+        | "partial"
+        | "part_time"
+        | "laptop"
+        | "keycard";
       scholarship_event_type:
         | "form_submitted"
         | "identity_started"
@@ -3612,7 +3621,13 @@ export const Constants = {
         "expired",
         "failed",
       ],
-      scholarship_agreement_type: ["full", "partial", "part_time"],
+      scholarship_agreement_type: [
+        "full",
+        "partial",
+        "part_time",
+        "laptop",
+        "keycard",
+      ],
       scholarship_event_type: [
         "form_submitted",
         "identity_started",

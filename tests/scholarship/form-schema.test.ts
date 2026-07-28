@@ -143,4 +143,20 @@ describe("ScholarshipFormSchema", () => {
     const result = ScholarshipFormSchema.safeParse(valid);
     expect(result.success).toBe(true);
   });
+
+  it("accepts a valid laptop submission without a birthdate", () => {
+    const result = ScholarshipFormSchema.safeParse({
+      ...valid,
+      agreement_type: "laptop",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a valid keycard submission without a birthdate", () => {
+    const result = ScholarshipFormSchema.safeParse({
+      ...valid,
+      agreement_type: "keycard",
+    });
+    expect(result.success).toBe(true);
+  });
 });

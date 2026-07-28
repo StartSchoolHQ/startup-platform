@@ -328,7 +328,13 @@ export type PeerReviewHistory = z.infer<typeof peerReviewHistorySchema>;
  */
 export const ScholarshipFormSchema = z
   .object({
-    agreement_type: z.enum(["full", "partial", "part_time"]),
+    agreement_type: z.enum([
+      "full",
+      "partial",
+      "part_time",
+      "laptop",
+      "keycard",
+    ]),
     email: z.string().email("Invalid email").max(320).trim().toLowerCase(),
     confirm_email: z
       .string()

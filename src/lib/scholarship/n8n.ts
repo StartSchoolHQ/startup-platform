@@ -14,6 +14,9 @@
  * webhook URL leaks.
  */
 import { createHmac } from "crypto";
+import type { Database } from "@/types/database";
+
+type AgreementType = Database["public"]["Enums"]["scholarship_agreement_type"];
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -54,6 +57,12 @@ export interface SendCompletedEmailInput {
   language: "lv" | "en";
   signed_doc_base64: string;
   signed_doc_filename: string;
+  /**
+   * Lets the n8n workflow branch per agreement type (e.g. laptop/keycard
+   * completions additionally upload to Drive and update the Notion tracker).
+   * Existing workflows that don't read it are unaffected.
+   */
+  agreement_type?: AgreementType;
 }
 
 export async function sendCompletedEmail(

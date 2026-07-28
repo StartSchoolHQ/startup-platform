@@ -24,6 +24,15 @@ type AgreementType = Database["public"]["Enums"]["scholarship_agreement_type"];
 
 const DOC_LABEL = "Startschool_Agreement";
 
+// The scholarship types share one label (type is visible inside the
+// document). The equipment agreements get distinct labels so a student
+// holding both a laptop and a key card agreement doesn't end up with two
+// identically named files in email attachments and the Drive archive.
+const TYPE_DOC_LABELS: Partial<Record<AgreementType, string>> = {
+  laptop: "Startschool_Computer_Agreement",
+  keycard: "Startschool_Keycard_Agreement",
+};
+
 /**
  * Strips characters that file systems / HTTP headers don't accept, then
  * collapses internal whitespace to single underscores. Preserves Unicode
@@ -51,5 +60,8 @@ export interface AgreementFilenameInput {
 export function buildAgreementFilename(input: AgreementFilenameInput): string {
   const first = safe(input.name);
   const last = safe(input.surname);
-  return `${first}_${last}_${DOC_LABEL}.${input.ext}`;
+  const label =
+    (input.agreement_type && TYPE_DOC_LABELS[input.agreement_type]) ??
+    DOC_LABEL;
+  return `${first}_${last}_${label}.${input.ext}`;
 }
