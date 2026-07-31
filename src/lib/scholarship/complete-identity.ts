@@ -405,7 +405,7 @@ async function runOrchestration(
   // to same user". A STABLE id (one per board member) is what lets a single
   // PIN countersign many documents at once. Verified on Dokobit sandbox:
   // per-agreement id -> 400; constant id -> 200.
-  const schoolConfig = schoolSignerConfig();
+  const schoolConfig = schoolSignerConfig(agreement.agreement_type);
   const schoolSignerId = `school-${schoolConfig.country_code}-${schoolConfig.code}`;
   const signing = await createSigning({
     // `edoc` (ASiC-E container) is the LV legal standard — opens in

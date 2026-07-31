@@ -17,6 +17,7 @@ import { DokobitError } from "@/lib/dokobit/client";
 import { createBatch } from "@/lib/dokobit/signing";
 import { requireAdmin } from "@/lib/scholarship/auth";
 import { attachBatch, listAwaitingSchool } from "@/lib/scholarship/data";
+import { signerGroupFor } from "@/lib/scholarship/school-signer";
 
 // Aligned with the Dokobit integration-review recommendation (≤10).
 // See src/lib/dokobit/signing.ts MAX_BATCH_SIZE for the deeper note.
@@ -67,6 +68,23 @@ export async function POST(request: Request) {
           "One or more selected agreements are not ready for batch signing",
       },
       { status: 409 }
+    );
+  }
+
+  // Scholarship and equipment agreements are countersigned by different
+  // people. Dokobit rejects a batch whose signer tokens belong to different
+  // users, so a mixed selection must be split into one batch per signer.
+  const groups = new Set(
+    rows.map((row) => signerGroupFor(row!.agreement_type))
+  );
+  if (groups.size > 1) {
+    return NextResponse.json(
+      {
+        error: "mixed_signer_groups",
+        message:
+          "Scholarship and equipment agreements are signed by different people — batch them separately.",
+      },
+      { status: 400 }
     );
   }
 
