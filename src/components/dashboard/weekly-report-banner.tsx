@@ -44,13 +44,18 @@ async function getUserUnsubmittedTeams(userId: string) {
   return results.filter((r) => !r.submitted);
 }
 
+// Users at or above this XP are exempt from mandatory weekly reports.
+// Mirrors the DB-side exemption in check_missed_weekly_reports_team_context.
+const XP_EXEMPTION_THRESHOLD = 8000;
+
 export function WeeklyReportBanner() {
   const { user } = useAppContext();
+  const isExempt = (user?.total_xp ?? 0) >= XP_EXEMPTION_THRESHOLD;
 
   const { data: unsubmittedTeams = [] } = useQuery({
     queryKey: ["dashboard", "weeklyReportBanner", user?.id],
     queryFn: () => getUserUnsubmittedTeams(user!.id),
-    enabled: !!user?.id,
+    enabled: !!user?.id && !isExempt,
     staleTime: 2 * 60 * 1000,
   });
 
@@ -72,7 +77,7 @@ export function WeeklyReportBanner() {
     return new Date() >= friday;
   })();
 
-  if (!unsubmittedTeams.length || !shouldShowBanner) return null;
+  if (isExempt || !unsubmittedTeams.length || !shouldShowBanner) return null;
 
   const weekLabel = weekBoundaries
     ? `Week ${weekBoundaries.week_number} (${new Date(weekBoundaries.week_start).toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${new Date(weekBoundaries.week_end).toLocaleDateString("en-US", { month: "short", day: "numeric" })})`
