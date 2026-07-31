@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+// Set to 0 on 2026-07-31 (penalties paused for current batch).
+// For the next batch, set back to 100 — must match PENALTY_POINTS in the
+// weekly-strikes-automation edge function.
+const REFUND_POINTS = 0;
+
 export async function POST(request: NextRequest) {
   try {
     // Auth check
@@ -72,6 +77,7 @@ export async function POST(request: NextRequest) {
     let refundTriggered = false;
 
     if (
+      REFUND_POINTS > 0 &&
       strike.strike_type === "missed_weekly_report" &&
       strike.week_number &&
       strike.week_year
@@ -109,8 +115,6 @@ export async function POST(request: NextRequest) {
             .is("left_at", null);
 
           if (members?.length) {
-            const REFUND_POINTS = 100;
-
             // Insert a refund transaction first as a lock marker
             // (if a concurrent request gets here, the duplicate check
             // above will catch it on their next attempt)
