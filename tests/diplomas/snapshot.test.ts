@@ -52,6 +52,47 @@ describe("buildSnapshot", () => {
     expect(s.diploma_number).toBe("B1-S001");
   });
 
+  it("drops tech tracks below 75% from the snapshot", () => {
+    const withLow: RpcDiplomaData = {
+      ...rpc,
+      tech_modules: [
+        ...rpc.tech_modules,
+        {
+          track: "Season 03 React",
+          display_name: "Season 03 React (Frontend)",
+          weeks: null,
+          description: null,
+          percent: 74,
+        },
+        {
+          track: "Season 01 Arc 02",
+          display_name: "Season 01 Arc 02",
+          weeks: null,
+          description: null,
+          percent: 0,
+        },
+        {
+          track: "Season 02 Fullstack",
+          display_name: "Season 02 Fullstack",
+          weeks: 11,
+          description: null,
+          percent: 75,
+        },
+      ],
+    };
+    const s = buildSnapshot({
+      rpc: withLow,
+      batch,
+      diplomaNumber: "B1-S003",
+      diplomaType: "full",
+      issuedDate: "2026-08-03",
+    });
+    expect(s.tech_modules.map((t) => t.track)).toEqual([
+      "Onboarding",
+      "Season 02 Fullstack",
+    ]);
+  });
+
   it("tech_only drops startup modules and startup name", () => {
     const s = buildSnapshot({
       rpc,

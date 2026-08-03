@@ -3,6 +3,12 @@
 // checkReadiness() reports the same conditions without throwing.
 
 import { STARTUP_CATEGORIES } from "./constants";
+
+/**
+ * Tracks below this percentage don't appear on the diploma at all.
+ * 75 exactly IS included (last year's diplomas print 75s).
+ */
+export const TECH_MODULE_MIN_PERCENT = 75;
 import type {
   BatchRow,
   DiplomaReadiness,
@@ -70,6 +76,8 @@ export function buildSnapshot(input: {
     },
     startup_name: diplomaType === "tech_only" ? null : rpc.startup_name,
     startup_modules: startupModules,
-    tech_modules: rpc.tech_modules,
+    tech_modules: rpc.tech_modules.filter(
+      (t) => (t.percent ?? 0) >= TECH_MODULE_MIN_PERCENT
+    ),
   };
 }

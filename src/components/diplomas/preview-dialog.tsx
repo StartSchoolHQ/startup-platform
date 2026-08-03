@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { STARTUP_CATEGORIES } from "@/lib/diplomas/constants";
+import { TECH_MODULE_MIN_PERCENT } from "@/lib/diplomas/snapshot";
 import type { BatchRow } from "@/lib/diplomas/types";
 import { useDiplomaPreview, useIssueDiploma } from "./use-diplomas";
 
@@ -87,12 +88,22 @@ export function PreviewDialog({
                 Tech Module ({data.data.tech_modules.length} tracks)
               </h4>
               <ul className="space-y-0.5 text-sm">
-                {data.data.tech_modules.map((t) => (
-                  <li key={t.track} className="flex justify-between">
-                    <span>{t.display_name}</span>
-                    <span className="tabular-nums">{t.percent ?? "—"}%</span>
-                  </li>
-                ))}
+                {data.data.tech_modules.map((t) => {
+                  const printed = (t.percent ?? 0) >= TECH_MODULE_MIN_PERCENT;
+                  return (
+                    <li
+                      key={t.track}
+                      className={`flex justify-between ${printed ? "" : "text-muted-foreground line-through"}`}
+                    >
+                      <span>{t.display_name}</span>
+                      <span className="tabular-nums">
+                        {t.percent ?? "—"}%
+                        {!printed &&
+                          ` — not printed (<${TECH_MODULE_MIN_PERCENT}%)`}
+                      </span>
+                    </li>
+                  );
+                })}
                 {data.data.tech_modules.length === 0 && (
                   <li className="text-muted-foreground">
                     No Qwasar progress rows.

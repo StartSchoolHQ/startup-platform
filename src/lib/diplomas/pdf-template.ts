@@ -2,6 +2,7 @@
 // layout (diploma.png). Renders ONLY from the frozen DiplomaSnapshot.
 
 import Handlebars from "handlebars";
+import { CEO_SIGNATURE_DATA_URI, STARTSCHOOL_LOGO_DATA_URI } from "./assets";
 import { PROGRAMME_STATIC } from "./constants";
 import type { DiplomaSnapshot } from "./types";
 
@@ -29,10 +30,8 @@ const TEMPLATE = `<!doctype html>
   .top { display: flex; justify-content: space-between; align-items: flex-start; }
   .supp { font-size: 10px; letter-spacing: 0.02em; }
   .supp .no { font-size: 13px; margin-top: 2px; }
-  .brand {
-    background: #ff8ad4; color: #111; font-weight: 700; font-size: 18px;
-    padding: 8px 22px; border-radius: 22px;
-  }
+  .brand img { width: 180px; height: auto; display: block; }
+  .sig img.signature { width: 150px; height: auto; display: block; margin: 0 0 2px auto; }
   h1 { font-size: 26px; font-weight: 400; margin: 14px 0 10px; }
   .facts { display: flex; gap: 24px; margin-bottom: 14px; }
   .facts .col { flex: 1; }
@@ -60,7 +59,7 @@ const TEMPLATE = `<!doctype html>
       {{static.supplementLabel}}
       <div class="no">{{snapshot.diploma_number}}</div>
     </div>
-    <div class="brand">StartSchool&trade;</div>
+    <div class="brand"><img src="{{logoDataUri}}" alt="StartSchool" /></div>
   </div>
 
   <h1>{{snapshot.student.name}}</h1>
@@ -134,7 +133,10 @@ const TEMPLATE = `<!doctype html>
 
   <div class="sig">
     <div class="date">Date:<br />{{fmtDate snapshot.issued_date}}</div>
-    <div class="ceo">{{static.ceoTitle}}:<br />{{static.ceoName}}</div>
+    <div class="ceo">
+      <img class="signature" src="{{signatureDataUri}}" alt="signature" />
+      {{static.ceoTitle}}:<br />{{static.ceoName}}
+    </div>
   </div>
 </body>
 </html>`;
@@ -156,5 +158,7 @@ export function renderDiplomaHtml(snapshot: DiplomaSnapshot): string {
     isFull: snapshot.diploma_type === "full",
     techWeeksTotal,
     startupHoursTotal,
+    logoDataUri: STARTSCHOOL_LOGO_DATA_URI,
+    signatureDataUri: CEO_SIGNATURE_DATA_URI,
   });
 }
