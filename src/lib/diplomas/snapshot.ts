@@ -6,9 +6,9 @@ import { STARTUP_CATEGORIES } from "./constants";
 
 /**
  * Tracks below this percentage don't appear on the diploma at all.
- * 30 exactly IS included.
+ * 15 exactly IS included.
  */
-export const TECH_MODULE_MIN_PERCENT = 30;
+export const TECH_MODULE_MIN_PERCENT = 15;
 import type {
   BatchRow,
   DiplomaReadiness,
