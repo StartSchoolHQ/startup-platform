@@ -58,12 +58,7 @@ export function IssueTab({ active }: { active: boolean }) {
               <TableHead>Student</TableHead>
               <TableHead>Team</TableHead>
               <TableHead>Qwasar</TableHead>
-              <TableHead>
-                Personal code
-                <span className="text-muted-foreground block text-[10px] font-normal">
-                  prints as &quot;Date of birth&quot; (official layout)
-                </span>
-              </TableHead>
+              <TableHead>Personal code</TableHead>
               <TableHead>Startup module completed</TableHead>
               <TableHead>Diploma</TableHead>
               <TableHead />

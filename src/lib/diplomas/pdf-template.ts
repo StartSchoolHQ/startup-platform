@@ -66,7 +66,7 @@ const TEMPLATE = `<!doctype html>
 
   <div class="facts">
     <div class="col">
-      <div class="fact"><span class="label">Date of birth:</span> <b>{{snapshot.student.personal_code}}</b></div>
+      <div class="fact"><span class="label">Personal code:</span> <b>{{snapshot.student.personal_code}}</b></div>
       <div class="fact"><span class="label">Title conferred:</span> <b>{{static.titleConferred}}</b></div>
       <div class="fact"><span class="label">Type of programme:</span> <b>{{static.programmeType}}</b></div>
       <div class="fact"><span class="label">Length of programme:</span> <b>{{static.programmeLength}}</b></div>
