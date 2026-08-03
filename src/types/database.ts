@@ -164,6 +164,115 @@ export type Database = {
           },
         ];
       };
+      deleted_dropouts_backup_20260728: {
+        Row: {
+          deleted_at: string;
+          row_data: Json;
+          tbl: string;
+        };
+        Insert: {
+          deleted_at?: string;
+          row_data: Json;
+          tbl: string;
+        };
+        Update: {
+          deleted_at?: string;
+          row_data?: Json;
+          tbl?: string;
+        };
+        Relationships: [];
+      };
+      diploma_batches: {
+        Row: {
+          admission_date: string | null;
+          completion_date: string | null;
+          created_at: string;
+          id: string;
+          name: string;
+          next_seq: number;
+          number_prefix: string;
+        };
+        Insert: {
+          admission_date?: string | null;
+          completion_date?: string | null;
+          created_at?: string;
+          id?: string;
+          name: string;
+          next_seq?: number;
+          number_prefix: string;
+        };
+        Update: {
+          admission_date?: string | null;
+          completion_date?: string | null;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          next_seq?: number;
+          number_prefix?: string;
+        };
+        Relationships: [];
+      };
+      diplomas: {
+        Row: {
+          batch_id: string;
+          diploma_number: string;
+          diploma_type: string;
+          id: string;
+          issued_at: string;
+          issued_by: string;
+          snapshot: Json;
+          status: string;
+          storage_path: string;
+          user_id: string;
+        };
+        Insert: {
+          batch_id: string;
+          diploma_number: string;
+          diploma_type: string;
+          id?: string;
+          issued_at?: string;
+          issued_by: string;
+          snapshot: Json;
+          status?: string;
+          storage_path: string;
+          user_id: string;
+        };
+        Update: {
+          batch_id?: string;
+          diploma_number?: string;
+          diploma_type?: string;
+          id?: string;
+          issued_at?: string;
+          issued_by?: string;
+          snapshot?: Json;
+          status?: string;
+          storage_path?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "diplomas_batch_id_fkey";
+            columns: ["batch_id"];
+            isOneToOne: false;
+            referencedRelation: "diploma_batches";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "diplomas_issued_by_fkey";
+            columns: ["issued_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "diplomas_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       leaderboard_snapshots: {
         Row: {
           achievements_count: number;
@@ -251,6 +360,66 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      qwasar_progress: {
+        Row: {
+          cohort: string | null;
+          id: string;
+          percent: number | null;
+          qwasar_login: string;
+          qwasar_status: string | null;
+          synced_at: string;
+          track: string;
+        };
+        Insert: {
+          cohort?: string | null;
+          id?: string;
+          percent?: number | null;
+          qwasar_login: string;
+          qwasar_status?: string | null;
+          synced_at?: string;
+          track: string;
+        };
+        Update: {
+          cohort?: string | null;
+          id?: string;
+          percent?: number | null;
+          qwasar_login?: string;
+          qwasar_status?: string | null;
+          synced_at?: string;
+          track?: string;
+        };
+        Relationships: [];
+      };
+      qwasar_tracks: {
+        Row: {
+          csv_column: string;
+          description: string | null;
+          display_name: string;
+          id: string;
+          is_active: boolean;
+          sort_order: number;
+          weeks: number | null;
+        };
+        Insert: {
+          csv_column: string;
+          description?: string | null;
+          display_name: string;
+          id?: string;
+          is_active?: boolean;
+          sort_order?: number;
+          weeks?: number | null;
+        };
+        Update: {
+          csv_column?: string;
+          description?: string | null;
+          display_name?: string;
+          id?: string;
+          is_active?: boolean;
+          sort_order?: number;
+          weeks?: number | null;
+        };
+        Relationships: [];
       };
       revenue_streams: {
         Row: {
@@ -1258,7 +1427,10 @@ export type Database = {
           id: string;
           invited_by: string | null;
           name: string | null;
+          personal_code: string | null;
           primary_role: Database["public"]["Enums"]["primary_role_type"] | null;
+          qwasar_username: string | null;
+          startup_module_completed: boolean;
           status: Database["public"]["Enums"]["status_state"] | null;
           total_points: number;
           total_xp: number;
@@ -1273,9 +1445,12 @@ export type Database = {
           id?: string;
           invited_by?: string | null;
           name?: string | null;
+          personal_code?: string | null;
           primary_role?:
             | Database["public"]["Enums"]["primary_role_type"]
             | null;
+          qwasar_username?: string | null;
+          startup_module_completed?: boolean;
           status?: Database["public"]["Enums"]["status_state"] | null;
           total_points?: number;
           total_xp?: number;
@@ -1290,9 +1465,12 @@ export type Database = {
           id?: string;
           invited_by?: string | null;
           name?: string | null;
+          personal_code?: string | null;
           primary_role?:
             | Database["public"]["Enums"]["primary_role_type"]
             | null;
+          qwasar_username?: string | null;
+          startup_module_completed?: boolean;
           status?: Database["public"]["Enums"]["status_state"] | null;
           total_points?: number;
           total_xp?: number;
@@ -1363,6 +1541,78 @@ export type Database = {
           },
         ];
       };
+      xp8000_strikes_backup_20260731: {
+        Row: {
+          created_at: string | null;
+          description: string | null;
+          explained_at: string | null;
+          explained_by_user_id: string | null;
+          explanation: string | null;
+          id: string | null;
+          points_penalty: number | null;
+          rejected_at: string | null;
+          rejected_by_user_id: string | null;
+          rejection_reason: string | null;
+          resolved_at: string | null;
+          resolved_by_user_id: string | null;
+          status: string | null;
+          strike_type: string | null;
+          team_id: string | null;
+          title: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+          week_number: number | null;
+          week_year: number | null;
+          xp_penalty: number | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          description?: string | null;
+          explained_at?: string | null;
+          explained_by_user_id?: string | null;
+          explanation?: string | null;
+          id?: string | null;
+          points_penalty?: number | null;
+          rejected_at?: string | null;
+          rejected_by_user_id?: string | null;
+          rejection_reason?: string | null;
+          resolved_at?: string | null;
+          resolved_by_user_id?: string | null;
+          status?: string | null;
+          strike_type?: string | null;
+          team_id?: string | null;
+          title?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+          week_number?: number | null;
+          week_year?: number | null;
+          xp_penalty?: number | null;
+        };
+        Update: {
+          created_at?: string | null;
+          description?: string | null;
+          explained_at?: string | null;
+          explained_by_user_id?: string | null;
+          explanation?: string | null;
+          id?: string | null;
+          points_penalty?: number | null;
+          rejected_at?: string | null;
+          rejected_by_user_id?: string | null;
+          rejection_reason?: string | null;
+          resolved_at?: string | null;
+          resolved_by_user_id?: string | null;
+          status?: string | null;
+          strike_type?: string | null;
+          team_id?: string | null;
+          title?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+          week_number?: number | null;
+          week_year?: number | null;
+          xp_penalty?: number | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1423,6 +1673,10 @@ export type Database = {
         Args: { p_achievement_id: string; p_team_id: string };
         Returns: Json;
       };
+      award_team_achievement_backup_v1: {
+        Args: { p_achievement_id: string; p_team_id: string };
+        Returns: Json;
+      };
       calculate_user_week_metrics: {
         Args: { p_user_id: string; p_week_number: number; p_week_year: number };
         Returns: Json;
@@ -1436,6 +1690,10 @@ export type Database = {
         Args: { p_achievement_id: string; p_user_id: string };
         Returns: Json;
       };
+      check_and_award_achievement_backup_v1: {
+        Args: { p_achievement_id: string; p_user_id: string };
+        Returns: Json;
+      };
       check_missed_weekly_reports: {
         Args: never;
         Returns: {
@@ -1444,6 +1702,19 @@ export type Database = {
         }[];
       };
       check_missed_weekly_reports_team_context: {
+        Args: never;
+        Returns: {
+          team_id: string;
+          team_name: string;
+          user_id: string;
+          user_name: string;
+          week_end: string;
+          week_number: number;
+          week_start: string;
+          week_year: number;
+        }[];
+      };
+      check_missed_weekly_reports_team_context_backup_v1: {
         Args: never;
         Returns: {
           team_id: string;
@@ -3225,7 +3496,12 @@ export type Database = {
         };
       };
       send_weekly_report_reminders: { Args: never; Returns: number };
+      send_weekly_report_reminders_backup_v1: { Args: never; Returns: number };
       send_weekly_report_reminders_sunday: { Args: never; Returns: number };
+      send_weekly_report_reminders_sunday_backup_v1: {
+        Args: never;
+        Returns: number;
+      };
       start_individual_task: { Args: { p_progress_id: string }; Returns: Json };
       start_recurring_task: {
         Args: {
