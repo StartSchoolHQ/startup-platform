@@ -52,7 +52,7 @@ describe("buildSnapshot", () => {
     expect(s.diploma_number).toBe("B1-S001");
   });
 
-  it("drops tech tracks below 75% from the snapshot", () => {
+  it("drops tech tracks below 30% from the snapshot", () => {
     const withLow: RpcDiplomaData = {
       ...rpc,
       tech_modules: [
@@ -62,7 +62,7 @@ describe("buildSnapshot", () => {
           display_name: "Season 03 React (Frontend)",
           weeks: null,
           description: null,
-          percent: 74,
+          percent: 29,
         },
         {
           track: "Season 01 Arc 02",
@@ -76,7 +76,7 @@ describe("buildSnapshot", () => {
           display_name: "Season 02 Fullstack",
           weeks: 11,
           description: null,
-          percent: 75,
+          percent: 30,
         },
       ],
     };
