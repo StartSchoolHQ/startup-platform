@@ -1,5 +1,6 @@
 "use client";
 
+import { StudentDiplomaCard } from "@/components/diplomas/student-diploma-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -352,6 +353,7 @@ export default function AccountPage() {
         transition={{ duration: 0.3, delay: 0.1 }}
         className="space-y-6"
       >
+        <StudentDiplomaCard userId={user?.id} />
         <Card>
           <CardHeader>
             <CardTitle>Profile Information</CardTitle>

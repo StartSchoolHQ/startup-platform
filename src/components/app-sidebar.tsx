@@ -127,6 +127,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               url: "/dashboard/admin/weekly-reports",
             },
             { title: "Progress", url: "/dashboard/admin/progress" },
+            { title: "Diplomas", url: "/dashboard/admin/diplomas" },
           ],
         },
       ];
