@@ -379,3 +379,59 @@ export const ScholarshipFormSchema = z
   });
 
 export type ScholarshipFormInput = z.infer<typeof ScholarshipFormSchema>;
+
+// ============================================
+// DIPLOMA SCHEMAS
+// ============================================
+
+export const QwasarProgressUploadSchema = z.object({
+  rows: z
+    .array(
+      z.object({
+        qwasar_login: z.string().min(1),
+        track: z.string().min(1),
+        percent: z.number().int().min(0).max(100),
+        cohort: z.string(),
+        qwasar_status: z.string(),
+      })
+    )
+    .min(1)
+    .max(10000),
+});
+export type QwasarProgressUploadInput = z.infer<
+  typeof QwasarProgressUploadSchema
+>;
+
+export const UsernameMappingUploadSchema = z.object({
+  rows: z
+    .array(z.object({ email: z.string().email(), login: z.string().min(1) }))
+    .min(1)
+    .max(1000),
+});
+export type UsernameMappingUploadInput = z.infer<
+  typeof UsernameMappingUploadSchema
+>;
+
+export const DiplomaIssueSchema = z.object({
+  user_id: z.string().uuid(),
+  batch_id: z.string().uuid(),
+});
+export type DiplomaIssueInput = z.infer<typeof DiplomaIssueSchema>;
+
+export const DiplomaBatchUpsertSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().min(1).max(100),
+  admission_date: z.string().nullable(),
+  completion_date: z.string().nullable(),
+  number_prefix: z.string().min(1).max(10),
+});
+export type DiplomaBatchUpsertInput = z.infer<typeof DiplomaBatchUpsertSchema>;
+
+export const DiplomaStudentUpdateSchema = z.object({
+  user_id: z.string().uuid(),
+  personal_code: z.string().max(30).nullable().optional(),
+  startup_module_completed: z.boolean().optional(),
+});
+export type DiplomaStudentUpdateInput = z.infer<
+  typeof DiplomaStudentUpdateSchema
+>;

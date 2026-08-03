@@ -1731,6 +1731,7 @@ export type Database = {
         Args: { p_action_type: string; p_limit?: number; p_user_id: string };
         Returns: boolean;
       };
+      claim_diploma_number: { Args: { p_batch_id: string }; Returns: string };
       complete_individual_task: {
         Args: {
           p_progress_id: string;
@@ -2099,6 +2100,7 @@ export type Database = {
           total_xp: number;
         }[];
       };
+      get_diploma_data: { Args: { p_user_id: string }; Returns: Json };
       get_enhanced_team_tasks: {
         Args: { p_team_id: string };
         Returns: {
