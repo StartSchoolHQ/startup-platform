@@ -12,6 +12,10 @@ import { createAuthSession, getAuthStatus } from "@/lib/dokobit/identity";
 const ENV = {
   DOKOBIT_IDENTITY_API_KEY: "test-identity-key",
   DOKOBIT_IDENTITY_BASE_URL: "https://id-sandbox.test",
+  // tests/setup.ts loads .env.local, where local dev often enables the
+  // Dokobit mock. These tests assert the REAL request shape, so force
+  // the mock off regardless of the developer's env.
+  DOKOBIT_IDENTITY_MOCK: "false",
 };
 
 interface FetchCall {

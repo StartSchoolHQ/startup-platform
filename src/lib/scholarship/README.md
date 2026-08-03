@@ -61,15 +61,18 @@ Once a row reaches `archived` AND the completion email has been sent,
 `data.minimizeArchived(id, unsignedPdfPath)` is called. It:
 
 1. Deletes the unsigned PDF file from the storage bucket.
-2. Calls `scholarship_minimize_archived(p_id)` which nulls out every PII
-   field on the row (email, phone, address, personal_code, country_code,
-   name, surname, all Dokobit tokens, unsigned_pdf_path) and redacts the
-   payload on every event for the agreement.
+2. Calls `scholarship_minimize_archived(p_id)` which nulls the deep-PII
+   fields on the row (personal_code, country_code, birthdate, all Dokobit
+   tokens, unsigned_pdf_path) and redacts the payload on every event for
+   the agreement.
 3. Inserts a `data_minimized` event for traceability.
 
-What survives: the row's id, agreement_type, language, status, timestamps
-and `signed_doc_path`. The signed PDF/.edoc embeds all of the personal
-data already — keeping the structured copy was duplicate processing.
+What survives: the row's id, agreement_type, language, status, timestamps,
+`signed_doc_path`, and the contact fields — name, surname, email, phone,
+address (kept deliberately via migrations `scholarship_minimize_keep_name_email`
+and `scholarship_minimize_keep_phone_and_address` so the admin queue stays
+searchable and the equipment write-back can reach the student). The signed
+PDF/.edoc embeds the full personal data either way.
 
 The events table mutation trigger only permits `payload → NULL`
 redactions; type, agreement_id and occurred_at remain immutable, so the

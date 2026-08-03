@@ -99,10 +99,11 @@ describe("createSigning request body", () => {
     const signers = body.signers as Array<Record<string, unknown>>;
     expect(signers).toHaveLength(1);
     expect(signers[0].signing_purpose).toBe("signature");
+    // "mobile" (Mobile-ID) is intentionally absent: EE/LT-only service,
+    // the LV sandbox token doesn't have it enabled (see signing.ts).
     expect(signers[0].signing_options).toEqual([
       "smartid",
       "eparaksts_mobile",
-      "mobile",
       "stationary",
     ]);
 
@@ -185,8 +186,11 @@ describe("createBatch request body", () => {
     ]);
     expect(body).not.toHaveProperty("signers");
     expect(body).not.toHaveProperty("signing_options");
-    expect(body.postback_url).toBe("https://app.test/webhook");
-    expect(body.language).toBe("en");
+    // Per Dokobit's Postman example, createbatch.json accepts ONLY
+    // {signings}: postback_url/language are inherited from the underlying
+    // signing sessions; sending them top-level returns 400.
+    expect(body).not.toHaveProperty("postback_url");
+    expect(body).not.toHaveProperty("language");
   });
 
   it("rejects empty input", async () => {
@@ -195,14 +199,14 @@ describe("createBatch request body", () => {
     ).rejects.toThrow(/at least one signing/);
   });
 
-  it("rejects more than 20 signings", async () => {
-    const many = Array.from({ length: 21 }, (_, i) => ({
+  it("rejects more than 10 signings (Dokobit-recommended batch cap)", async () => {
+    const many = Array.from({ length: 11 }, (_, i) => ({
       signing_token: `sig-${i}`,
       signer_token: `tok-${i}`,
     }));
     await expect(
       createBatch({ signings: many, postbackUrl: "https://app.test/webhook" })
-    ).rejects.toThrow(/max 20/);
+    ).rejects.toThrow(/max 10/);
   });
 
   it("rejects entries missing either signing_token or signer_token", async () => {

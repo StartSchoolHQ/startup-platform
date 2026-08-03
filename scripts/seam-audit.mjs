@@ -29,6 +29,12 @@ const MODULE_DIRS = [
   "src/app/api/agreements",
   "src/app/api/webhooks/dokobit",
   "src/app/dashboard/admin/agreements",
+  // Equipment-agreement routes: thin page wrappers around scholarship
+  // components (added with the laptop/keycard feature).
+  "src/app/dashboard/admin/laptops-keycards",
+  "src/app/keycard-agreement",
+  "src/app/laptop-agreement",
+  "src/app/part-time-agreement",
 ];
 
 const ALLOWED_OUTSIDE = [

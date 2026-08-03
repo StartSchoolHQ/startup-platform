@@ -221,10 +221,10 @@ describe("scholarship/data — minimizeArchived", () => {
       unsigned_pdf_path: null,
     });
 
-    // Deep PII fields nulled; name/surname/email kept so the admin queue
-    // can still list and search archived contracts by signer.
-    expect(minimized.recipient_phone).toBeNull();
-    expect(minimized.recipient_address).toBeNull();
+    // Deep PII fields nulled. Contact fields (name/surname/email, and since
+    // migration scholarship_minimize_keep_phone_and_address also phone +
+    // address) are kept so the admin queue can still list/search archived
+    // contracts and the equipment write-back can reach the student.
     expect(minimized.signer_personal_code).toBeNull();
     expect(minimized.signer_country_code).toBeNull();
     expect(minimized.dokobit_auth_token).toBeNull();
@@ -234,6 +234,8 @@ describe("scholarship/data — minimizeArchived", () => {
     expect(minimized.signer_name).toBe("Test");
     expect(minimized.signer_surname).toBe("Student");
     expect(minimized.recipient_email).not.toBeNull();
+    expect(minimized.recipient_phone).not.toBeNull();
+    expect(minimized.recipient_address).not.toBeNull();
 
     expect(minimized.status).toBe("archived");
     expect(minimized.signed_doc_path).toBe(`signed/${draft.id}.edoc`);
