@@ -32,6 +32,22 @@ async function resolveExecutablePath(): Promise<string> {
   return local;
 }
 
+/**
+ * Counts pages in a Chromium-generated PDF. Skia writes page objects
+ * uncompressed, so counting `/Type /Page` markers (excluding `/Pages`
+ * tree nodes) is reliable for our own renderer output.
+ */
+export function countPdfPages(pdf: Buffer): number {
+  const matches = pdf.toString("latin1").match(/\/Type\s*\/Page(?![a-zA-Z])/g);
+  return matches ? matches.length : 0;
+}
+
+/**
+ * Renders HTML to a SINGLE A4 page, always. If the content overflows,
+ * re-prints at progressively smaller scale (Chromium reflows text at
+ * print scale, like the browser print dialog's "Scale" control) until
+ * it fits. Floor of 0.5 — below that something is structurally wrong.
+ */
 export async function renderHtmlToPdf(html: string): Promise<Buffer> {
   const serverless = isServerless();
   const browser = await puppeteer.launch({
@@ -48,14 +64,29 @@ export async function renderHtmlToPdf(html: string): Promise<Buffer> {
     // document.fonts.ready waits for webfont fetch + parse so Latvian
     // diacritics never render with a fallback font.
     await page.evaluate(() => document.fonts.ready);
-    const pdf = await page.pdf({
-      printBackground: true,
-      preferCSSPageSize: true,
-    });
+
+    let pdf = Buffer.from(
+      await page.pdf({ printBackground: true, preferCSSPageSize: true })
+    );
+    for (
+      let scale = 0.9;
+      countPdfPages(pdf) > 1 && scale >= 0.5;
+      scale -= 0.1
+    ) {
+      pdf = Buffer.from(
+        await page.pdf({ printBackground: true, format: "a4", scale })
+      );
+    }
+
     if (pdf.length === 0) {
       throw new Error("PDF renderer returned empty buffer");
     }
-    return Buffer.from(pdf);
+    if (countPdfPages(pdf) > 1) {
+      throw new Error(
+        "Diploma did not fit one A4 page even at 50% scale — check content"
+      );
+    }
+    return pdf;
   } finally {
     await browser.close();
   }
