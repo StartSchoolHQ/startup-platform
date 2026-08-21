@@ -448,47 +448,65 @@ export async function listAgreements(
   if (error) throw error;
   const rows = data ?? [];
 
-  // Once a student's FULL scholarship is signed (archived), their earlier
-  // PARTIAL agreement is void — the upgrade supersedes it. Hide the partial so
-  // the admin board isn't shown two contracts for the same student. Keyed on
-  // recipient_email (the link across a student's agreements). Applied even
-  // under a type/status filter, so a superseded partial never surfaces — hence
-  // the standalone lookup below rather than relying on the filtered result set.
-  if (rows.some((r) => r.agreement_type === "partial")) {
-    const signedFullEmails = await signedFullScholarshipEmails();
-    if (signedFullEmails.size > 0) {
-      return rows.filter(
-        (row) =>
-          !(
-            row.agreement_type === "partial" &&
-            row.recipient_email != null &&
-            signedFullEmails.has(row.recipient_email.toLowerCase())
-          )
-      );
+  // Once a student signs a HIGHER-tier scholarship (archived), their earlier
+  // lower-tier agreement is void — the upgrade supersedes it (part_time →
+  // partial → full). Hide the superseded row so the admin board isn't shown
+  // two contracts for the same student. Keyed on recipient_email (the link
+  // across a student's agreements). Applied even under a type/status filter,
+  // so a superseded row never surfaces — hence the standalone lookup below
+  // rather than relying on the filtered result set. Equipment types (laptop,
+  // keycard) have no tier and are never affected.
+  const supersedable = rows.some((r) => {
+    const tier = SCHOLARSHIP_TIERS[r.agreement_type];
+    return tier !== undefined && tier < MAX_SCHOLARSHIP_TIER;
+  });
+  if (supersedable) {
+    const signedTiers = await maxSignedTierByEmail();
+    if (signedTiers.size > 0) {
+      return rows.filter((row) => {
+        const tier = SCHOLARSHIP_TIERS[row.agreement_type];
+        if (tier === undefined || row.recipient_email == null) return true;
+        const signed = signedTiers.get(row.recipient_email.toLowerCase());
+        return signed === undefined || signed <= tier;
+      });
     }
   }
 
   return rows;
 }
 
+// Scholarship upgrade order, low to high. Equipment types are absent on
+// purpose — they never supersede anything.
+const SCHOLARSHIP_TIER_TYPES = ["part_time", "partial", "full"] as const;
+const SCHOLARSHIP_TIERS: Partial<Record<AgreementType, number>> = {
+  part_time: 1,
+  partial: 2,
+  full: 3,
+};
+const MAX_SCHOLARSHIP_TIER = 3;
+
 /**
- * Lowercased emails of every student whose FULL scholarship has reached
- * `archived` (the signed end state). Used by listAgreements to suppress
- * partial agreements that have been superseded by a signed full one.
+ * Highest signed (archived) scholarship tier per lowercased student email.
+ * Used by listAgreements to suppress agreements superseded by a signed
+ * upgrade.
  */
-async function signedFullScholarshipEmails(): Promise<Set<string>> {
+async function maxSignedTierByEmail(): Promise<Map<string, number>> {
   const { data, error } = await admin()
     .from("scholarship_agreements")
-    .select("recipient_email")
-    .eq("agreement_type", "full")
+    .select("recipient_email, agreement_type")
     .eq("status", "archived")
+    .in("agreement_type", SCHOLARSHIP_TIER_TYPES)
     .not("recipient_email", "is", null);
   if (error) throw error;
-  const emails = new Set<string>();
+  const tiers = new Map<string, number>();
   for (const row of data ?? []) {
-    if (row.recipient_email) emails.add(row.recipient_email.toLowerCase());
+    const tier = SCHOLARSHIP_TIERS[row.agreement_type];
+    if (!row.recipient_email || tier === undefined) continue;
+    const email = row.recipient_email.toLowerCase();
+    const current = tiers.get(email) ?? 0;
+    if (tier > current) tiers.set(email, tier);
   }
-  return emails;
+  return tiers;
 }
 
 /**
