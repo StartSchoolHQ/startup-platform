@@ -40,13 +40,26 @@ export function CloseBatchDialog({
   const [confirm, setConfirm] = useState("");
   const [result, setResult] = useState<CloseBatchResult | null>(null);
 
-  // Defaults: every user checked; teams checked unless an admin is a member.
+  // Defaults: if anyone is already tagged with this batch, pre-check only
+  // them (untagged = next cohort, e.g. a student who joined early). If nobody
+  // is tagged yet, pre-check everyone. Admin teams are never pre-checked.
   useEffect(() => {
     if (!data) return;
+    const anyTagged = data.users.some((u) => u.pre_tagged);
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setUsers(new Set(data.users.map((u) => u.id)));
+    setUsers(
+      new Set(
+        data.users.filter((u) => !anyTagged || u.pre_tagged).map((u) => u.id)
+      )
+    );
+    const anyTeamTagged = data.teams.some((t) => t.pre_tagged);
     setTeams(
-      new Set(data.teams.filter((t) => !t.has_admin_member).map((t) => t.id))
+      new Set(
+        data.teams
+          .filter((t) => !t.has_admin_member)
+          .filter((t) => !anyTeamTagged || t.pre_tagged)
+          .map((t) => t.id)
+      )
     );
   }, [data]);
 

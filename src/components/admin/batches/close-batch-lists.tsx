@@ -86,6 +86,11 @@ export function UsersCheckList(props: {
         <>
           <span className="font-medium">{u.name ?? "—"}</span>{" "}
           <span className="text-muted-foreground">{u.email}</span>
+          {!u.pre_tagged && (
+            <Badge variant="secondary" className="ml-2">
+              not in this batch
+            </Badge>
+          )}
           {u.team_names.length > 0 && (
             <span className="text-muted-foreground block text-xs">
               {u.team_names.join(", ")}
@@ -116,6 +121,11 @@ export function TeamsCheckList(props: {
           {t.has_admin_member && (
             <Badge variant="destructive" className="ml-2">
               admin team
+            </Badge>
+          )}
+          {!t.pre_tagged && !t.has_admin_member && (
+            <Badge variant="secondary" className="ml-2">
+              not in this batch
             </Badge>
           )}
           {t.member_names.length > 0 && (

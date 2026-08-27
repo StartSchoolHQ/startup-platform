@@ -6,12 +6,15 @@ export interface BatchClosePreview {
     id: string;
     name: string | null;
     email: string;
+    /** Already assigned to the batch being closed (pre-checked in the UI). */
+    pre_tagged: boolean;
     team_names: string[];
   }[];
   teams: {
     id: string;
     name: string;
     member_count: number;
+    pre_tagged: boolean;
     member_names: string[];
     has_admin_member: boolean;
   }[];
