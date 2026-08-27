@@ -29,10 +29,13 @@ function postJson<T>(url: string, body: unknown = {}): Promise<T> {
   });
 }
 
-export function useBatchClosePreview(enabled: boolean) {
+export function useBatchClosePreview(batchId: string, enabled: boolean) {
   return useQuery({
-    queryKey: ["admin-batches", "close-preview"],
-    queryFn: () => fetchJson<BatchClosePreview>("/api/admin/batches/preview"),
+    queryKey: ["admin-batches", "close-preview", batchId],
+    queryFn: () =>
+      fetchJson<BatchClosePreview>(
+        `/api/admin/batches/preview?batchId=${batchId}`
+      ),
     enabled,
     staleTime: 0,
   });

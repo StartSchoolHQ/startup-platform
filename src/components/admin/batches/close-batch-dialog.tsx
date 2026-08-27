@@ -32,7 +32,7 @@ export function CloseBatchDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { data, isLoading, isError } = useBatchClosePreview(open);
+  const { data, isLoading, isError } = useBatchClosePreview(batch.id, open);
   const close = useCloseBatch();
   const [users, setUsers] = useState<Set<string>>(new Set());
   const [teams, setTeams] = useState<Set<string>>(new Set());

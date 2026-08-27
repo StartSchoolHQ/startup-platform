@@ -14,8 +14,12 @@ export const PERMANENT_BAN = "876000h";
 
 const admin = () => createAdminClient();
 
-export async function getClosePreview(): Promise<BatchClosePreview> {
-  const { data, error } = await admin().rpc("get_batch_close_preview_v1");
+export async function getClosePreview(
+  batchId: string
+): Promise<BatchClosePreview> {
+  const { data, error } = await admin().rpc("get_batch_close_preview_v1", {
+    p_batch_id: batchId,
+  });
   if (error) throw new Error(`Preview failed: ${error.message}`);
   return data as unknown as BatchClosePreview;
 }

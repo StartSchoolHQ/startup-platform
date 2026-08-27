@@ -2163,7 +2163,10 @@ export type Database = {
           name: string;
         }[];
       };
-      get_batch_close_preview_v1: { Args: never; Returns: Json };
+      get_batch_close_preview_v1: {
+        Args: { p_batch_id: string };
+        Returns: Json;
+      };
       get_dashboard_action_items: {
         Args: { p_user_id: string };
         Returns: {

@@ -184,18 +184,27 @@ describe("reopen_batch_v1", () => {
 });
 
 describe("get_batch_close_preview_v1", () => {
-  it("lists untagged active students and active teams, flags admin teams", async () => {
+  it("lists untagged + this-batch students and active teams, flags admin teams", async () => {
     const sb = getAdminClient();
     const student = await createTestUser();
     const admin = await createTestUser({ primary_role: "admin" });
     const tagged = await createTestUser();
     await sb.from("users").update({ batch_id: batchId }).eq("id", tagged.id);
+    const otherBatch = await createTestUser();
+    const { data: ob } = await sb
+      .from("diploma_batches")
+      .insert({ name: `test_other_${Date.now()}`, number_prefix: "TSO" })
+      .select("id")
+      .single();
+    await sb.from("users").update({ batch_id: ob!.id }).eq("id", otherBatch.id);
     const studentTeam = await createTestTeam(student.id);
     const adminTeam = await createTestTeam(admin.id);
     const helper = await createTestUser();
     await addTestTeamMember(adminTeam.id, helper.id);
 
-    const { data, error } = await sb.rpc("get_batch_close_preview_v1");
+    const { data, error } = await sb.rpc("get_batch_close_preview_v1", {
+      p_batch_id: batchId,
+    });
     expect(error).toBeNull();
     const preview = data as unknown as {
       users: { id: string; team_names: string[] }[];
@@ -206,7 +215,11 @@ describe("get_batch_close_preview_v1", () => {
     const h = preview.users.find((u) => u.id === helper.id);
     expect(h?.team_names).toEqual([adminTeam.name]);
     expect(preview.users.find((u) => u.id === admin.id)).toBeUndefined();
-    expect(preview.users.find((u) => u.id === tagged.id)).toBeUndefined();
+    // Pre-tagged with THIS batch: included. Tagged with another: excluded.
+    expect(preview.users.find((u) => u.id === tagged.id)).toBeDefined();
+    expect(preview.users.find((u) => u.id === otherBatch.id)).toBeUndefined();
+    await sb.from("users").update({ batch_id: null }).eq("id", otherBatch.id);
+    await sb.from("diploma_batches").delete().eq("id", ob!.id);
     expect(
       preview.teams.find((t) => t.id === studentTeam.id)?.has_admin_member
     ).toBe(false);
