@@ -117,7 +117,7 @@ export default function TeamJourneyPage() {
   const { data: allProducts = [], isPending: isLoadingAll } = useQuery({
     queryKey: ["teamJourney", "all", user?.id],
     queryFn: async () => {
-      const options = { status: "all" as const };
+      const options = { status: "active" as const }; // archived (closed-batch) products stay admin-only
       const allTeams = await getAllTeamsForJourney(user!.id, options);
       return (allTeams as DatabaseTeam[])
         .filter((team) => team && Array.isArray(team.team_members))
@@ -130,7 +130,7 @@ export default function TeamJourneyPage() {
   const { data: myProducts = [], isPending: isLoadingMy } = useQuery({
     queryKey: ["teamJourney", "my", user?.id],
     queryFn: async () => {
-      const options = { status: "all" as const };
+      const options = { status: "active" as const }; // archived (closed-batch) products stay admin-only
       const userTeams = await getUserTeamsForJourney(user!.id, options);
       return (userTeams as DatabaseTeam[])
         .filter((team) => team && Array.isArray(team.team_members))
