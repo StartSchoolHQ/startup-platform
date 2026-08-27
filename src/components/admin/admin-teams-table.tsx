@@ -12,7 +12,15 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Eye, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { useBatches } from "@/components/diplomas/use-diplomas";
 import { TeamDetailsModal } from "./team-details-modal";
 
 interface Team {
@@ -24,6 +32,9 @@ interface Team {
   member_count: number;
   meetings_count: number;
   tasks_completed: number;
+  batch_id: string | null;
+  batch_name: string | null;
+  archived_at: string | null;
 }
 
 type SortKey =
@@ -76,6 +87,8 @@ export function AdminTeamsTable() {
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey | null>("total_points");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [filter, setFilter] = useState("active");
+  const { data: batches } = useBatches(true);
 
   useEffect(() => {
     fetch("/api/admin/teams")
@@ -99,9 +112,20 @@ export function AdminTeamsTable() {
     [sortKey]
   );
 
+  const filteredTeams = useMemo(() => {
+    if (filter === "all") return teams;
+    if (filter === "active" || filter === "archived")
+      return teams.filter((t) => t.status === filter);
+    if (filter.startsWith("batch:")) {
+      const id = filter.slice("batch:".length);
+      return teams.filter((t) => t.batch_id === id);
+    }
+    return teams;
+  }, [teams, filter]);
+
   const sortedTeams = useMemo(() => {
-    if (!sortKey) return teams;
-    return [...teams].sort((a, b) => {
+    if (!sortKey) return filteredTeams;
+    return [...filteredTeams].sort((a, b) => {
       const aVal = a[sortKey];
       const bVal = b[sortKey];
 
@@ -116,7 +140,7 @@ export function AdminTeamsTable() {
         ? (aVal as number) - (bVal as number)
         : (bVal as number) - (aVal as number);
     });
-  }, [teams, sortKey, sortDir]);
+  }, [filteredTeams, sortKey, sortDir]);
 
   return (
     <>
@@ -124,6 +148,23 @@ export function AdminTeamsTable() {
         teamId={selectedTeamId}
         onClose={() => setSelectedTeamId(null)}
       />
+      <div className="mb-4 flex justify-end">
+        <Select value={filter} onValueChange={setFilter}>
+          <SelectTrigger className="w-[220px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="archived">Archived</SelectItem>
+            <SelectItem value="all">All teams</SelectItem>
+            {(batches ?? []).map((b) => (
+              <SelectItem key={b.id} value={`batch:${b.id}`}>
+                Batch: {b.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -211,7 +252,10 @@ export function AdminTeamsTable() {
                     {team.status === "active" ? (
                       <Badge variant="default">Active</Badge>
                     ) : (
-                      <Badge variant="secondary">{team.status}</Badge>
+                      <Badge variant="secondary">
+                        Archived
+                        {team.batch_name ? ` (${team.batch_name})` : ""}
+                      </Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">

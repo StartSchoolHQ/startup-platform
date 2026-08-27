@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5";
+    PostgrestVersion: "14.17";
   };
   public: {
     Tables: {
@@ -89,6 +89,30 @@ export type Database = {
           old_data?: Json | null;
           record_id?: string;
           table_name?: string;
+        };
+        Relationships: [];
+      };
+      batch_close_backup_20260827: {
+        Row: {
+          archived_at: string | null;
+          id: string | null;
+          snapshot_updated_at: string | null;
+          status: string | null;
+          tbl: string | null;
+        };
+        Insert: {
+          archived_at?: string | null;
+          id?: string | null;
+          snapshot_updated_at?: string | null;
+          status?: string | null;
+          tbl?: string | null;
+        };
+        Update: {
+          archived_at?: string | null;
+          id?: string | null;
+          snapshot_updated_at?: string | null;
+          status?: string | null;
+          tbl?: string | null;
         };
         Relationships: [];
       };
@@ -185,6 +209,7 @@ export type Database = {
       diploma_batches: {
         Row: {
           admission_date: string | null;
+          closed_at: string | null;
           completion_date: string | null;
           created_at: string;
           id: string;
@@ -194,6 +219,7 @@ export type Database = {
         };
         Insert: {
           admission_date?: string | null;
+          closed_at?: string | null;
           completion_date?: string | null;
           created_at?: string;
           id?: string;
@@ -203,6 +229,7 @@ export type Database = {
         };
         Update: {
           admission_date?: string | null;
+          closed_at?: string | null;
           completion_date?: string | null;
           created_at?: string;
           id?: string;
@@ -907,6 +934,36 @@ export type Database = {
           },
         ];
       };
+      tasks_mojibake_backup_20260813: {
+        Row: {
+          description: string | null;
+          detailed_instructions: string | null;
+          id: string | null;
+          peer_review_criteria: Json | null;
+          review_instructions: string | null;
+          title: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          description?: string | null;
+          detailed_instructions?: string | null;
+          id?: string | null;
+          peer_review_criteria?: Json | null;
+          review_instructions?: string | null;
+          title?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          description?: string | null;
+          detailed_instructions?: string | null;
+          id?: string | null;
+          peer_review_criteria?: Json | null;
+          review_instructions?: string | null;
+          title?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
       team_achievements: {
         Row: {
           achievement_id: string;
@@ -1210,6 +1267,7 @@ export type Database = {
       teams: {
         Row: {
           archived_at: string | null;
+          batch_id: string | null;
           created_at: string | null;
           current_week: number | null;
           description: string | null;
@@ -1227,6 +1285,7 @@ export type Database = {
         };
         Insert: {
           archived_at?: string | null;
+          batch_id?: string | null;
           created_at?: string | null;
           current_week?: number | null;
           description?: string | null;
@@ -1244,6 +1303,7 @@ export type Database = {
         };
         Update: {
           archived_at?: string | null;
+          batch_id?: string | null;
           created_at?: string | null;
           current_week?: number | null;
           description?: string | null;
@@ -1260,6 +1320,13 @@ export type Database = {
           weekly_maintenance_cost?: number | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "teams_batch_id_fkey";
+            columns: ["batch_id"];
+            isOneToOne: false;
+            referencedRelation: "diploma_batches";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "teams_founder_id_fkey1";
             columns: ["founder_id"];
@@ -1420,6 +1487,7 @@ export type Database = {
       users: {
         Row: {
           avatar_url: string | null;
+          batch_id: string | null;
           created_at: string | null;
           daily_validation_xp: number | null;
           email: string;
@@ -1438,6 +1506,7 @@ export type Database = {
         };
         Insert: {
           avatar_url?: string | null;
+          batch_id?: string | null;
           created_at?: string | null;
           daily_validation_xp?: number | null;
           email: string;
@@ -1458,6 +1527,7 @@ export type Database = {
         };
         Update: {
           avatar_url?: string | null;
+          batch_id?: string | null;
           created_at?: string | null;
           daily_validation_xp?: number | null;
           email?: string;
@@ -1476,7 +1546,15 @@ export type Database = {
           total_xp?: number;
           updated_at?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "users_batch_id_fkey";
+            columns: ["batch_id"];
+            isOneToOne: false;
+            referencedRelation: "diploma_batches";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       weekly_reports: {
         Row: {
@@ -1633,6 +1711,7 @@ export type Database = {
         };
         Returns: boolean;
       };
+      assert_admin_or_service_v1: { Args: never; Returns: undefined };
       assign_individual_task: {
         Args: { p_task_id: string; p_user_id: string };
         Returns: Json;
@@ -1732,6 +1811,15 @@ export type Database = {
         Returns: boolean;
       };
       claim_diploma_number: { Args: { p_batch_id: string }; Returns: string };
+      cleanup_test_scholarship_agreements: { Args: never; Returns: number };
+      close_batch_v1: {
+        Args: {
+          p_batch_id: string;
+          p_team_ids: string[];
+          p_user_ids: string[];
+        };
+        Returns: Json;
+      };
       complete_individual_task: {
         Args: {
           p_progress_id: string;
@@ -2075,6 +2163,7 @@ export type Database = {
           name: string;
         }[];
       };
+      get_batch_close_preview_v1: { Args: never; Returns: Json };
       get_dashboard_action_items: {
         Args: { p_user_id: string };
         Returns: {
@@ -2336,6 +2425,24 @@ export type Database = {
         }[];
       };
       get_students_health_overview_v2: {
+        Args: never;
+        Returns: {
+          days_since_last_active: number;
+          email: string;
+          full_name: string;
+          health_status: string;
+          last_active_at: string;
+          last_report_at: string;
+          last_sign_in_at: string;
+          last_transaction_at: string;
+          role: string;
+          team_id: string;
+          team_name: string;
+          total_xp: number;
+          user_id: string;
+        }[];
+      };
+      get_students_health_overview_v2_backup_v1: {
         Args: never;
         Returns: {
           days_since_last_active: number;
@@ -2688,6 +2795,22 @@ export type Database = {
           total_points: number;
         }[];
       };
+      get_teams_with_stats_v2: {
+        Args: never;
+        Returns: {
+          archived_at: string;
+          batch_id: string;
+          batch_name: string;
+          created_at: string;
+          id: string;
+          meetings_count: number;
+          member_count: number;
+          name: string;
+          status: Database["public"]["Enums"]["status_state"];
+          tasks_completed: number;
+          total_points: number;
+        }[];
+      };
       get_top_teams_with_xp: {
         Args: { team_limit?: number };
         Returns: {
@@ -2803,7 +2926,7 @@ export type Database = {
         }[];
       };
       get_users_for_filter: {
-        Args: never;
+        Args: { p_include_archived?: boolean };
         Returns: {
           email: string;
           id: string;
@@ -2826,6 +2949,7 @@ export type Database = {
         Args: { p_amount: number; p_user_id: string };
         Returns: number;
       };
+      is_admin_v1: { Args: never; Returns: boolean };
       is_task_recurring: { Args: { task_id: string }; Returns: boolean };
       mark_all_notifications_seen: {
         Args: { user_id_param: string };
@@ -2854,6 +2978,7 @@ export type Database = {
         Args: { p_team_id: string; p_user_id: string };
         Returns: undefined;
       };
+      reopen_batch_v1: { Args: { p_batch_id: string }; Returns: Json };
       reset_available_recurring_tasks: {
         Args: never;
         Returns: {

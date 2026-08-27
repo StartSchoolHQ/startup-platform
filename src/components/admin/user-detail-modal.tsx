@@ -26,6 +26,9 @@ interface UserDetailModalProps {
   userName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Cohort batch name; null = current cohort / staff. */
+  batchName?: string | null;
+  accountStatus?: "active" | "archived";
 }
 
 interface UserDetails {
@@ -68,6 +71,8 @@ export function UserDetailModal({
   userName,
   open,
   onOpenChange,
+  batchName = null,
+  accountStatus = "active",
 }: UserDetailModalProps) {
   const [details, setDetails] = useState<UserDetails | null>(null);
   const [loading, setLoading] = useState(false);
@@ -126,9 +131,12 @@ export function UserDetailModal({
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
             {userName}
+            {accountStatus === "archived" && (
+              <Badge variant="outline">Archived</Badge>
+            )}
           </DialogTitle>
           <DialogDescription>
-            User progress and activity details
+            Batch: {batchName ?? "Current"} · User progress and activity details
           </DialogDescription>
         </DialogHeader>
 

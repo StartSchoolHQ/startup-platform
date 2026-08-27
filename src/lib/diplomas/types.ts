@@ -60,6 +60,8 @@ export interface BatchRow {
   completion_date: string | null;
   number_prefix: string;
   next_seq: number;
+  /** Set when the cohort was archived via close_batch_v1; null = open. */
+  closed_at?: string | null;
 }
 
 export interface DiplomaReadiness {

@@ -8,6 +8,7 @@ import {
 } from "@/lib/diplomas/csv";
 import { BatchForm } from "./batch-form";
 import { CsvUploadCard } from "./csv-upload-card";
+import { NewBatchForm } from "./new-batch-form";
 import {
   useBatches,
   useUploadQwasarProgress,
@@ -27,6 +28,7 @@ export function SetupTab({ active }: { active: boolean }) {
         {(batches ?? []).map((b) => (
           <BatchForm key={b.id} batch={b} />
         ))}
+        {!isLoading && <NewBatchForm />}
       </div>
       <div className="space-y-4">
         <CsvUploadCard

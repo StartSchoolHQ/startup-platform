@@ -32,15 +32,18 @@ export async function GET(request: NextRequest) {
     const search = url.searchParams.get("search") || "";
     const filter = url.searchParams.get("filter") || "all";
 
-    // Get all profile data first (cheaper than auth.admin.listUsers)
-    const { data: profiles } = await supabase
+    // Get all profile data first (cheaper than auth.admin.listUsers).
+    // Admin client: RLS hides archived (closed-batch) users otherwise.
+    const adminClient = createAdminClient();
+    const { data: profiles } = await adminClient
       .from("users")
-      .select("id, name, primary_role, total_xp, total_points, status");
+      .select(
+        "id, name, primary_role, total_xp, total_points, status, batch_id, batch:diploma_batches(name)"
+      );
 
     const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
 
     // Get auth users (this is expensive - fetches from Auth service)
-    const adminClient = createAdminClient();
     const { data: authData } = await adminClient.auth.admin.listUsers({
       perPage: 1000,
     });
@@ -48,13 +51,25 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     if (filter === "active") {
-      authUsers = authUsers.filter((u) => u.email_confirmed_at);
+      authUsers = authUsers.filter(
+        (u) =>
+          u.email_confirmed_at && profileMap.get(u.id)?.status !== "archived"
+      );
     } else if (filter === "pending") {
       authUsers = authUsers.filter((u) => !u.email_confirmed_at);
+    } else if (filter === "archived") {
+      authUsers = authUsers.filter(
+        (u) => profileMap.get(u.id)?.status === "archived"
+      );
     } else if (filter === "admins") {
       // Filter using already-fetched profile data
       authUsers = authUsers.filter(
         (u) => profileMap.get(u.id)?.primary_role === "admin"
+      );
+    } else if (filter.startsWith("batch:")) {
+      const batchId = filter.slice("batch:".length);
+      authUsers = authUsers.filter(
+        (u) => profileMap.get(u.id)?.batch_id === batchId
       );
     }
 
@@ -87,6 +102,9 @@ export async function GET(request: NextRequest) {
           null,
         email: authUser.email || "",
         status: authUser.email_confirmed_at ? "active" : "pending",
+        account_status: profile?.status === "archived" ? "archived" : "active",
+        batch_id: profile?.batch_id ?? null,
+        batch_name: profile?.batch?.name ?? null,
         primary_role: profile?.primary_role || "user",
         created_at: authUser.created_at,
         last_sign_in_at: authUser.last_sign_in_at || null,

@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/set-state-in-effect -- legacy untyped admin modal; typing it is tracked cleanup debt */
 
 import { useEffect, useState } from "react";
 import {
@@ -111,6 +112,24 @@ export function TeamDetailsModal({ teamId, onClose }: TeamDetailsModalProps) {
                           {data.team.status}
                         </Badge>
                       </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Batch:</span>
+                        <span className="font-medium">
+                          {data.team.batch?.name || "Current"}
+                        </span>
+                      </div>
+                      {data.team.archived_at && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">
+                            Archived:
+                          </span>
+                          <span>
+                            {new Date(
+                              data.team.archived_at
+                            ).toLocaleDateString()}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Founder:</span>
                         <span className="font-medium">

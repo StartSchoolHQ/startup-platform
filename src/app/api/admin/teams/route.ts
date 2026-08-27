@@ -23,7 +23,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch teams with aggregated stats in a single optimized query
-    const { data: teams, error } = await supabase.rpc("get_teams_with_stats");
+    const { data: teams, error } = await supabase.rpc(
+      "get_teams_with_stats_v2"
+    );
 
     if (error) {
       console.error("Error fetching teams:", error);

@@ -435,3 +435,9 @@ export const DiplomaStudentUpdateSchema = z.object({
 export type DiplomaStudentUpdateInput = z.infer<
   typeof DiplomaStudentUpdateSchema
 >;
+
+export const CloseBatchSchema = z.object({
+  userIds: z.array(z.string().uuid()).max(500),
+  teamIds: z.array(z.string().uuid()).max(500),
+});
+export type CloseBatchInput = z.infer<typeof CloseBatchSchema>;

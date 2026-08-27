@@ -29,6 +29,7 @@ import {
   ArrowDown,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useBatches } from "@/components/diplomas/use-diplomas";
 import { cn } from "@/lib/utils";
 
 interface User {
@@ -36,6 +37,9 @@ interface User {
   name: string | null;
   email: string;
   status: string;
+  account_status: "active" | "archived";
+  batch_id: string | null;
+  batch_name: string | null;
   primary_role: string;
   created_at: string;
   last_sign_in_at: string | null;
@@ -112,7 +116,10 @@ export function AdminUsersTable() {
   const [selectedUser, setSelectedUser] = useState<{
     id: string;
     name: string;
+    batchName: string | null;
+    accountStatus: "active" | "archived";
   } | null>(null);
+  const { data: batches } = useBatches(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
@@ -219,7 +226,13 @@ export function AdminUsersTable() {
             <SelectItem value="all">All Users</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="archived">Archived</SelectItem>
             <SelectItem value="admins">Admins</SelectItem>
+            {(batches ?? []).map((b) => (
+              <SelectItem key={b.id} value={`batch:${b.id}`}>
+                Batch: {b.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -306,6 +319,8 @@ export function AdminUsersTable() {
                       setSelectedUser({
                         id: user.id,
                         name: user.name || user.email,
+                        batchName: user.batch_name,
+                        accountStatus: user.account_status,
                       })
                     }
                   >
@@ -316,12 +331,15 @@ export function AdminUsersTable() {
                       {user.email}
                     </TableCell>
                     <TableCell>
-                      {user.status === "active" ? (
+                      {user.account_status === "archived" ? (
+                        <Badge variant="outline">
+                          Archived
+                          {user.batch_name ? ` (${user.batch_name})` : ""}
+                        </Badge>
+                      ) : user.status === "active" ? (
                         <Badge variant="default">Active</Badge>
-                      ) : user.status === "pending" ? (
-                        <Badge variant="secondary">Pending</Badge>
                       ) : (
-                        <Badge variant="outline">Archived</Badge>
+                        <Badge variant="secondary">Pending</Badge>
                       )}
                     </TableCell>
                     <TableCell>
@@ -389,6 +407,8 @@ export function AdminUsersTable() {
       <UserDetailModal
         userId={selectedUser?.id || null}
         userName={selectedUser?.name || ""}
+        batchName={selectedUser?.batchName ?? null}
+        accountStatus={selectedUser?.accountStatus ?? "active"}
         open={!!selectedUser}
         onOpenChange={(open) => !open && setSelectedUser(null)}
       />

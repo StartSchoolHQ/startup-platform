@@ -42,7 +42,7 @@ export async function GET(
     const { data: team, error: teamError } = await supabase
       .from("teams")
       .select(
-        "id, name, description, website, status, created_at, team_points, formation_cost, weekly_maintenance_cost, strikes_count, founder:founder_id(id, name, email)"
+        "id, name, description, website, status, created_at, archived_at, batch_id, team_points, formation_cost, weekly_maintenance_cost, strikes_count, founder:founder_id(id, name, email), batch:diploma_batches(name)"
       )
       .eq("id", teamId)
       .single();

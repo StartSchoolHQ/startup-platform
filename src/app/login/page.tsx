@@ -63,8 +63,13 @@ export default function LoginPage() {
           email: email,
         });
 
-        // Check if this is an incomplete profile trying to login
-        if (error.message.includes("Invalid login credentials")) {
+        if (/banned/i.test(error.message)) {
+          // Account belongs to a closed cohort batch (see close_batch_v1).
+          setError(
+            "This account belongs to a completed programme batch and is no longer active. Contact StartSchool if you need something."
+          );
+        } else if (error.message.includes("Invalid login credentials")) {
+          // Check if this is an incomplete profile trying to login
           // Try to check if user exists with incomplete profile
           const {
             data: { user },
