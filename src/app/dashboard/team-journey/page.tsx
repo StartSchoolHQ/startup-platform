@@ -30,7 +30,7 @@ import {
 import type { DatabaseTeam } from "@/lib/database";
 import { Product } from "@/types/team-journey";
 
-type SortOption = "name" | "status";
+type SortOption = "name";
 
 function CardGridSkeleton() {
   return (
@@ -193,10 +193,6 @@ export default function TeamJourneyPage() {
           // A→Z alphabetical
           comparison = a.name.localeCompare(b.name);
           break;
-        case "status":
-          // Alphabetical (Active → Archived, etc.)
-          comparison = a.status.localeCompare(b.status);
-          break;
         default:
           // Default: sort by name
           comparison = a.name.localeCompare(b.name);
@@ -288,7 +284,6 @@ export default function TeamJourneyPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="name">Name</SelectItem>
-                  <SelectItem value="status">Status</SelectItem>
                 </SelectContent>
               </Select>
 
