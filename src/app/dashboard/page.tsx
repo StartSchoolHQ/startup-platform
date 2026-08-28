@@ -1,269 +1,36 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useApp } from "@/contexts/app-context";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
-import {
-  Users,
-  CheckCircle2,
-  Zap,
-  CreditCard,
-  Target,
-  CheckCircle,
-  Building2,
-  AlertCircle,
-  RefreshCw,
-  Trophy,
-} from "lucide-react";
-import { StatsCardComponent } from "@/components/dashboard/stats-card";
-import { TeamItem, StatItem } from "@/components/dashboard/dashboard-items";
-import { IconContainer } from "@/components/dashboard/icon-container";
-import {
-  StatsGridSkeleton,
-  statsGridColumnsClass,
-} from "@/components/ui/stats-grid-skeleton";
-import { Skeleton } from "@/components/ui/skeleton";
-// WhatsNextCard hidden temporarily — uncomment to re-enable
-// import { WhatsNextCard } from "@/components/dashboard/whats-next-card";
+import { Card, CardContent } from "@/components/ui/card";
+import { OverviewSkeleton } from "@/components/dashboard/overview-skeleton";
+import { TeamJourneyOverview } from "@/components/dashboard/team-journey-overview";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
 // Onborda disabled temporarily — uncomment to re-enable
 // import { DashboardTourTrigger } from "@/components/onboarding/dashboard-tour-trigger";
-import { useMemo } from "react";
-import { StatsCard, TeamProgressData } from "@/types/dashboard";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createClient } from "@/lib/supabase/client";
-import { economyLabels } from "@/lib/economy-labels";
-import { usePlatformSettings } from "@/hooks/use-platform-settings";
 
-const soloLabels = economyLabels("my_journey");
-const teamLabels = economyLabels("team");
-
+/**
+ * Dashboard shell. Owns nothing but the greeting and which economy
+ * sections are on: each journey renders its own data. On a failed settings
+ * read the hook falls back to the journey defaults, so this never blanks
+ * out and never redirects.
+ */
 export default function OverviewPage() {
   const { firstName, user } = useApp();
-  const queryClient = useQueryClient();
-  const { data: journeySettings } = usePlatformSettings();
+  const { data: journeys, isLoading: isLoadingSettings } =
+    usePlatformSettings();
+
   const isAdmin = user?.primary_role === "admin";
+  const showMyJourney = journeys.myJourney || isAdmin;
+  const showTeamJourney = journeys.teamJourney || isAdmin;
 
-  // React Query: Consolidated dashboard overview (single RPC call)
-  const {
-    data: dashboardOverview,
-    isPending: isLoadingOverview,
-    isError: isOverviewError,
-  } = useQuery({
-    queryKey: ["dashboard", "overview", user?.id],
-    queryFn: async () => {
-      const supabase = createClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any).rpc(
-        "get_dashboard_overview_v2",
-        { p_user_id: user!.id }
-      );
-      if (error) throw error;
-      return data?.[0] ?? null;
-    },
-    enabled: !!user?.id,
-    staleTime: 60_000,
-  });
-
-  // Derive stats cards from the consolidated overview response. The two
-  // economy cards follow the active programme phase; admins always see both.
-  const showTeamJourney = journeySettings.teamJourney || isAdmin;
-
-  const statsCards: StatsCard[] = useMemo(() => {
-    if (!dashboardOverview) return [];
-
-    const cards: StatsCard[] = [];
-
-    if (journeySettings.myJourney || isAdmin) {
-      cards.push({
-        id: "onborda-my-journey-balance",
-        title: "My Journey",
-        value: `${dashboardOverview.my_journey_xp ?? 0} ${soloLabels.xp}`,
-        subtitle: `${dashboardOverview.my_journey_credits ?? 0} ${soloLabels.points}`,
-        icon: Zap,
-        iconColor: "text-amber-500",
-        href: "/dashboard/my-journey",
-      });
-    }
-
-    // Team Journey card + the two team-scoped cards below it all link into
-    // /dashboard/team-journey, which bounces students back while the phase is
-    // off — so they must be gated on exactly the same condition.
-    if (showTeamJourney) {
-      cards.push(
-        {
-          id: "onborda-team-journey-balance",
-          title: "Team Journey",
-          value: `${dashboardOverview.team_xp ?? 0} ${teamLabels.xp}`,
-          subtitle: `${dashboardOverview.team_points ?? 0} ${teamLabels.points}`,
-          icon: CreditCard,
-          iconColor: "text-emerald-500",
-          href: "/dashboard/team-journey",
-        },
-        {
-          id: "onborda-achievements",
-          title: "Achievements",
-          value: `${dashboardOverview.completed_achievements ?? 0}/${dashboardOverview.total_achievements ?? 0}`,
-          subtitle: "Team achievements unlocked",
-          icon: Target,
-          iconColor: "text-purple-500",
-          href: "/dashboard/team-journey",
-        },
-        {
-          id: "onborda-tasks",
-          title: "Tasks",
-          value: `${dashboardOverview.completed_tasks ?? 0}/${dashboardOverview.total_tasks ?? 0}`,
-          subtitle: "Team tasks completed",
-          icon: CheckCircle,
-          iconColor: "text-blue-500",
-          href: "/dashboard/team-journey",
-        }
-      );
-    }
-
-    return cards;
-  }, [dashboardOverview, journeySettings, isAdmin, showTeamJourney]);
-
-  // Derive team progress data from the consolidated overview response
-  const teamProgressData: TeamProgressData | null = useMemo(() => {
-    if (!dashboardOverview) return null;
-
-    const teamsRaw = dashboardOverview.teams_data ?? [];
-    const hasTeams = teamsRaw.length > 0;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const teams = teamsRaw.map((t: any) => ({
-      id: t.team_id,
-      name: t.team_name,
-      memberCount: t.member_count ?? 0,
-      completedTasks: t.completed_tasks ?? 0,
-      totalXP: t.team_xp ?? 0,
-      totalPoints: t.team_points ?? 0,
-    }));
-
-    // Aggregate stats only shown when user belongs to multiple teams
-    const stats =
-      hasTeams && teams.length > 1
-        ? [
-            {
-              value: teams
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .reduce((sum: number, t: any) => sum + (t.totalPoints ?? 0), 0)
-                .toString(),
-              label: "Total Team Points",
-              icon: CreditCard,
-              iconColor: "text-black",
-            },
-            {
-              value: teams
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .reduce((sum: number, t: any) => sum + (t.totalXP ?? 0), 0)
-                .toString(),
-              label: "Total Team XP",
-              icon: Zap,
-              iconColor: "text-black",
-            },
-          ]
-        : [];
-
-    return {
-      title: "Your Teams Progress",
-      joinTeamsText: "View Teams",
-      hasTeams,
-      stats,
-      teams,
-    };
-  }, [dashboardOverview]);
-
-  // React Query: Action items from RPC
-  const { data: actionItems } = useQuery({
-    queryKey: ["dashboard", "actionItems", user?.id],
-    queryFn: async () => {
-      const supabase = createClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any).rpc(
-        "get_dashboard_action_items",
-        { p_user_id: user!.id }
-      );
-      if (error) throw error;
-      return data?.[0] ?? null;
-    },
-    enabled: !!user?.id,
-    staleTime: 60_000,
-  });
-
-  // WhatsNextCard hidden — uncomment queries below when re-enabling
-  // const { data: hasSubmittedThisWeek = false, isPending: isLoadingSubmission } = useQuery({...});
-  // const { data: pendingTasks = [] } = useQuery({...});
-
-  const loading = isLoadingOverview;
-  const hasError = isOverviewError;
-
-  // Keeps the skeleton the same shape as the grid it stands in for.
-  const expectedCardCount =
-    (journeySettings.myJourney || isAdmin ? 1 : 0) + (showTeamJourney ? 3 : 0);
-
-  if (loading) {
+  if (isLoadingSettings) {
     return (
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Hi {firstName} 👋</h1>
           <p className="text-muted-foreground">Loading your dashboard...</p>
         </div>
-        <StatsGridSkeleton count={expectedCardCount} />
-        <Skeleton className="h-48 w-full rounded-lg" />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-10 w-10 rounded-lg" />
-                <Skeleton className="h-5 w-40" />
-              </div>
-              <Skeleton className="h-8 w-24 rounded-md" />
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16 rounded-lg" />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  if (hasError) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Hi {firstName} 👋</h1>
-          <p className="text-muted-foreground">
-            Here you can see progress for you and your team
-          </p>
-        </div>
-        <Card className="border-red-500/20">
-          <CardContent className="flex flex-col items-center justify-center py-10 text-center">
-            <AlertCircle className="text-muted-foreground mb-3 h-10 w-10" />
-            <p className="text-muted-foreground mb-4 text-sm">
-              Failed to load dashboard data. Please try again.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                queryClient.invalidateQueries({ queryKey: ["dashboard"] })
-              }
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Retry
-            </Button>
-          </CardContent>
-        </Card>
+        <OverviewSkeleton />
       </div>
     );
   }
@@ -277,253 +44,22 @@ export default function OverviewPage() {
         <p className="text-muted-foreground">
           Here you can see progress for you and your team
         </p>
-
-        {/* Leaderboard rank badge — Team economy data, so it follows the
-            Team Journey phase. */}
-        {showTeamJourney && actionItems && actionItems.leaderboard_rank > 0 && (
-          <Link
-            href="/dashboard/leaderboard"
-            className="text-muted-foreground hover:text-foreground mt-2 inline-flex items-center gap-2 text-sm transition-colors"
-          >
-            <Trophy className="h-4 w-4 text-amber-500" />
-            <span>
-              Ranked <strong>#{actionItems.leaderboard_rank}</strong> of{" "}
-              {actionItems.leaderboard_total_users}
-            </span>
-            {actionItems.leaderboard_xp_change > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                +{actionItems.leaderboard_xp_change} Team XP this week
-              </Badge>
-            )}
-          </Link>
-        )}
       </div>
 
-      {/* Stats cards grid */}
-      <div className={`grid gap-4 ${statsGridColumnsClass(statsCards.length)}`}>
-        {statsCards.map((card, index) => (
-          <motion.div
-            key={index}
-            id={card.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{
-              type: "spring",
-              stiffness: 260,
-              damping: 20,
-              delay: index * 0.05,
-            }}
-          >
-            <StatsCardComponent
-              title={card.title}
-              value={card.value}
-              subtitle={card.subtitle}
-              icon={card.icon}
-              iconColor={card.iconColor}
-              href={card.href}
-            />
-          </motion.div>
-        ))}
-      </div>
+      {/* My Journey overview — <MyJourneyOverview /> mounts here, gated on
+          `showMyJourney`. */}
 
-      {/* What's Next action section — hidden for now */}
-      {/* {actionItems && (
-        <WhatsNextCard
-          pendingTasksCount={actionItems.pending_tasks_count ?? 0}
-          pendingReviewsCount={actionItems.pending_reviews_count ?? 0}
-          pendingTasks={pendingTasks}
-        />
-      )} */}
+      {showTeamJourney && <TeamJourneyOverview />}
 
-      {/* Progress cards */}
-      <div className="grid grid-cols-1 gap-6">
-        {showTeamJourney && teamProgressData && (
-          <TeamProgressCard data={teamProgressData} />
-        )}
-        {/* TODO: Re-enable Personal Progress for full release (next year's batch) */}
-      </div>
+      {!showMyJourney && !showTeamJourney && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+            <p className="text-muted-foreground text-sm">
+              Your dashboard will fill up once the programme starts.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
-
-// Progress card component for teams
-function TeamProgressCard({ data }: { data: TeamProgressData }) {
-  const router = useRouter();
-  // Get the first team name for the title, or use default
-  const teamName = data.teams.length > 0 ? data.teams[0].name : "Your Teams";
-  const cardTitle =
-    data.teams.length === 1
-      ? `${teamName} Team Progress`
-      : "Your Teams Progress";
-
-  return (
-    <Card className="flex h-full flex-col">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
-        <div className="flex items-center gap-3">
-          <IconContainer
-            icon={Building2}
-            iconColor="text-black dark:text-white"
-            backgroundColor="bg-gray-100 dark:bg-gray-800"
-          />
-          <CardTitle className="text-lg font-semibold">{cardTitle}</CardTitle>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => router.push("/dashboard/team-journey")}
-        >
-          {data.joinTeamsText}
-        </Button>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col">
-        <div className="flex-1 space-y-6">
-          {!data.hasTeams ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Users className="text-muted-foreground mb-3 h-10 w-10" />
-              <p className="text-muted-foreground mb-1 font-medium">
-                No team yet
-              </p>
-              <p className="text-muted-foreground mb-4 text-sm">
-                Join a team to start collaborating
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push("/dashboard/team-journey")}
-              >
-                Browse Teams
-              </Button>
-            </div>
-          ) : (
-            <>
-              {/* Stats row - only show aggregate totals if multiple teams */}
-              {data.stats.length > 0 && (
-                <div className="grid grid-cols-2 gap-4">
-                  {data.stats.map((stat, index) => (
-                    <StatItem key={index} stat={stat} />
-                  ))}
-                </div>
-              )}
-
-              {/* Team member stats - show for each team */}
-              {data.teams.map((team) => (
-                <div key={team.id}>
-                  {data.teams.length > 1 && (
-                    <h3 className="text-muted-foreground mb-3 text-sm font-semibold">
-                      {team.name}
-                    </h3>
-                  )}
-                  <div className="grid grid-cols-2 gap-4">
-                    <TeamItem
-                      stat={{
-                        value: team.memberCount.toString(),
-                        label: "Members",
-                        icon: Users,
-                        iconColor: "text-black dark:text-white",
-                      }}
-                    />
-                    <TeamItem
-                      stat={{
-                        value: team.completedTasks.toString(),
-                        label: "Tasks Completed",
-                        icon: CheckCircle2,
-                        iconColor: "text-black dark:text-white",
-                      }}
-                    />
-                    <TeamItem
-                      stat={{
-                        value: team.totalPoints.toString(),
-                        label: "Team Points",
-                        icon: CreditCard,
-                        iconColor: "text-black dark:text-white",
-                      }}
-                    />
-                    <TeamItem
-                      stat={{
-                        value: team.totalXP.toString(),
-                        label: "Team XP",
-                        icon: Zap,
-                        iconColor: "text-black dark:text-white",
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// TODO: Re-enable PersonalProgressCard for full release
-/* function PersonalProgressCard({
-  data,
-  hasSubmittedThisWeek,
-  onOpenReportModal,
-}: {
-  data: PersonalProgressData;
-  hasSubmittedThisWeek: boolean;
-  onOpenReportModal: () => void;
-}) {
-  const router = useRouter();
-  return (
-    <Card className="flex h-full flex-col">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
-        <div className="flex items-center gap-3">
-          <IconContainer
-            icon={User}
-            iconColor="text-black dark:text-white"
-            backgroundColor="bg-gray-100 dark:bg-gray-800"
-          />
-          <CardTitle className="text-lg font-semibold">{data.title}</CardTitle>
-        </div>
-        <div className="w-[80px]"></div>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col">
-        <div className="flex-1 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            {data.stats.map((stat, index) => (
-              <StatItem key={index} stat={stat} />
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {data.activities.map((activity, index) => (
-              <ActivityItem key={index} activity={activity} />
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <BorderedContainer className="w-full justify-center">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-10 grow"
-              disabled={true}
-              onClick={onOpenReportModal}
-            >
-              <FileText className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span className="truncate">
-                {hasSubmittedThisWeek
-                  ? "Report Submitted"
-                  : "Submit Personal Weekly Report"}
-              </span>
-            </Button>
-            <Button
-              size="sm"
-              className="bg-foreground text-background hover:bg-foreground/90 h-10 grow"
-              onClick={() => router.push("/dashboard/my-journey")}
-              disabled
-            >
-              <WandSparkles className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span className="truncate">View Progress</span>
-            </Button>
-          </BorderedContainer>
-        </div>
-      </CardContent>
-    </Card>
-  );
-} */
