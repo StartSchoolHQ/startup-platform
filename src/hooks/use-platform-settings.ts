@@ -62,6 +62,7 @@ async function fetchJourneySettings(): Promise<JourneySettings> {
 export function usePlatformSettings(): {
   data: JourneySettings;
   isLoading: boolean;
+  isError: boolean;
 } {
   const [mounted, setMounted] = useState(false);
 
@@ -72,15 +73,28 @@ export function usePlatformSettings(): {
     setMounted(true);
   }, []);
 
-  const { data = JOURNEY_DEFAULTS, isLoading } = useQuery({
+  const {
+    data = JOURNEY_DEFAULTS,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: JOURNEYS_QUERY_KEY,
     queryFn: fetchJourneySettings,
     enabled: mounted,
     staleTime: 5 * 60 * 1000,
   });
 
+  useEffect(() => {
+    if (isError) {
+      // `data` silently falls back to JOURNEY_DEFAULTS on failure, so surface
+      // the cause — journey guards must never redirect off a failed read.
+      console.error("Failed to load journey settings:", error);
+    }
+  }, [isError, error]);
+
   // Disabled queries report isLoading === false, so gate on mount too.
-  return { data, isLoading: isLoading || !mounted };
+  return { data, isLoading: isLoading || !mounted, isError };
 }
 
 export function useSetJourneys(): UseMutationResult<

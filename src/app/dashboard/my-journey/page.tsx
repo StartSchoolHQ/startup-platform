@@ -319,7 +319,11 @@ function StrikeRow({ strike }: { strike: Strike }) {
 
 export default function MyJourneyPage() {
   const { user, loading: userLoading } = useAppContext();
-  const { data: journeys, isLoading: journeysLoading } = usePlatformSettings();
+  const {
+    data: journeys,
+    isLoading: journeysLoading,
+    isError: journeysError,
+  } = usePlatformSettings();
   const queryClient = useQueryClient();
 
   // UI state only
@@ -373,15 +377,17 @@ export default function MyJourneyPage() {
   });
 
   // Journey guard: students lose this page while the My Journey phase is off.
-  // Admins always keep access. Never redirect before both loads settle —
-  // the page shows its normal loading state until then.
-  const guardReady = !journeysLoading && !userLoading;
+  // Admins always keep access. Only a successful settings read may redirect —
+  // a failed fetch falls back to JOURNEY_DEFAULTS, which would otherwise bounce
+  // students off the page. Until then the page shows its normal loading state.
+  const settingsSettled = !journeysLoading && !userLoading;
+  const guardReady = settingsSettled && !journeysError;
   const journeyBlocked =
     guardReady && !journeys.myJourney && user?.primary_role !== "admin";
 
   // Check if any query is loading
   const loading =
-    !guardReady ||
+    !settingsSettled ||
     !user?.id ||
     !profile ||
     !availableTasksData ||

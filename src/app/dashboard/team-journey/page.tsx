@@ -84,7 +84,11 @@ function CardGridSkeleton() {
 
 export default function TeamJourneyPage() {
   const { user, loading: userLoading } = useAppContext();
-  const { data: journeys, isLoading: journeysLoading } = usePlatformSettings();
+  const {
+    data: journeys,
+    isLoading: journeysLoading,
+    isError: journeysError,
+  } = usePlatformSettings();
   const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -240,12 +244,15 @@ export default function TeamJourneyPage() {
   };
 
   // Journey guard: students lose this page while the Team Journey phase is
-  // off. Admins always keep access. Never redirect before both loads settle.
-  const guardReady = !journeysLoading && !userLoading;
+  // off. Admins always keep access. Only a successful settings read may
+  // redirect — a failed fetch falls back to JOURNEY_DEFAULTS and must never
+  // bounce anyone off the page.
+  const settingsSettled = !journeysLoading && !userLoading;
+  const guardReady = settingsSettled && !journeysError;
   if (guardReady && !journeys.teamJourney && user?.primary_role !== "admin") {
     redirect("/dashboard");
   }
-  if (!guardReady) {
+  if (!settingsSettled) {
     return (
       <div className="space-y-6">
         <CardGridSkeleton />
