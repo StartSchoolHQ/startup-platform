@@ -20,6 +20,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle, FileText, Link, Upload, X, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { economyLabels, type Economy } from "@/lib/economy-labels";
 
 // Common interfaces
 interface ExternalUrl {
@@ -97,6 +98,8 @@ interface TaskDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   mode: "submission" | "review" | "feedback";
+  /** Which economy the task's rewards are booked against — drives the labels. */
+  economy: Economy;
 
   // Submission mode props
   onSubmit?: (submissionData: SubmissionData) => Promise<void>;
@@ -124,6 +127,7 @@ export function TaskDetailsModal({
   isOpen,
   onClose,
   mode,
+  economy,
   onSubmit,
   taskTitle,
   formSchema,
@@ -133,6 +137,8 @@ export function TaskDetailsModal({
   onReviewSubmit,
   submittingReview = false,
 }: TaskDetailsModalProps) {
+  const labels = economyLabels(economy);
+
   // Submission mode state
   const [formData, setFormData] = useState<Record<string, string | string[]>>(
     {}
@@ -582,7 +588,8 @@ export function TaskDetailsModal({
                 Team: <strong>{taskData.teams?.name}</strong>
               </span>
               <span>
-                XP Reward: <strong>{taskData.tasks?.base_xp_reward}</strong>
+                {labels.xp} Reward:{" "}
+                <strong>{taskData.tasks?.base_xp_reward}</strong>
               </span>
             </div>
           </div>

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { X, Upload, Link, FileText } from "lucide-react";
+import { economyLabels } from "@/lib/economy-labels";
 
 interface ExternalUrl {
   url: string;
@@ -69,6 +70,10 @@ export function TaskSubmissionModal({
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  const submissionLabels = economyLabels(
+    isIndividualTask ? "my_journey" : "team"
+  );
 
   // Default form schema if none provided
   const defaultSchema: FormSchema = {
@@ -357,7 +362,7 @@ export function TaskSubmissionModal({
           <DialogDescription>
             Complete your submission for <strong>{taskTitle}</strong>.{" "}
             {isIndividualTask
-              ? "This will be automatically approved and you'll receive XP/points immediately."
+              ? `This will be automatically approved and you'll receive ${submissionLabels.xp} and ${submissionLabels.points} immediately.`
               : "This will be sent to peer reviewers who will provide feedback within 2-3 days. You'll be notified when the review is complete."}
           </DialogDescription>
         </DialogHeader>

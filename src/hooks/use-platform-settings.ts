@@ -119,8 +119,11 @@ export function useSetJourneys(): UseMutationResult<
       return toJourneySettings(data);
     },
     retry: 0,
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Programme phase updated");
+      // Seed the cache with what the RPC actually stored before refetching —
+      // otherwise the Switch snaps back to the stale value for a beat.
+      queryClient.setQueryData(JOURNEYS_QUERY_KEY, data);
       queryClient.invalidateQueries({ queryKey: JOURNEYS_QUERY_KEY });
     },
     onError: (error) => {

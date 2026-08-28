@@ -36,6 +36,10 @@ import { toast } from "sonner";
 import { getTeamDetails } from "@/lib/database";
 import { ClientMeetingSchema } from "@/lib/validation-schemas";
 import { FileText, Trash2, Pencil, Save } from "lucide-react";
+import { economyLabels } from "@/lib/economy-labels";
+
+// Client meetings are a Team Journey activity.
+const teamLabels = economyLabels("team");
 
 interface EditMeetingData {
   id: string;
@@ -156,6 +160,8 @@ export function AddClientMeetingModal({
           meetingDate = editMeeting.created_at.split("T")[0];
         }
 
+        // Pre-existing pattern: one-shot prefill guarded by isInitialized.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setFormData({
           clientName: editMeeting.client_name || "",
           responsibleUserId: editMeeting.responsible_user_id || "",
@@ -266,6 +272,7 @@ export function AddClientMeetingModal({
   // Load team members when modal opens
   useEffect(() => {
     if (open && teamId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadTeamMembers();
     }
   }, [open, teamId, loadTeamMembers]);
@@ -305,6 +312,7 @@ export function AddClientMeetingModal({
       const selectedDate = new Date(meetingFormData.meetingDate);
       selectedDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any).from("client_meetings").insert({
         team_id: teamId,
         client_name: meetingFormData.clientName,
@@ -424,6 +432,7 @@ export function AddClientMeetingModal({
 
       // Call the save_meeting_draft RPC function
       // Cast to any to bypass TypeScript - function exists but types not regenerated
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any).rpc(
         "save_meeting_draft",
         {
@@ -569,8 +578,8 @@ export function AddClientMeetingModal({
             </DialogTitle>
             <DialogDescription>
               {isEditMode
-                ? "Update the meeting details. Note: XP and points will not be awarded again."
-                : "Document your client interaction. Complete to earn 50 XP + 25 points!"}
+                ? `Update the meeting details. Note: ${teamLabels.xp} and ${teamLabels.points} will not be awarded again.`
+                : `Document your client interaction. Complete to earn 50 ${teamLabels.xp} + 25 ${teamLabels.points}!`}
             </DialogDescription>
           </DialogHeader>
 

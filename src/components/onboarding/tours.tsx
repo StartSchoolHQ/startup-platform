@@ -11,10 +11,10 @@ export const TOURS: Tour[] = [
     steps: [
       {
         icon: "⚡",
-        title: "XP Balance",
+        title: "My Journey",
         content:
-          "This is your Experience Points (XP) balance. You earn XP by completing tasks, attending meetings, and contributing to your team. XP reflects your overall activity and growth on the platform — the more you do, the more XP you earn!",
-        selector: "#onborda-xp-balance",
+          "Your solo balance: My Journey XP and My Journey Credits, both earned by finishing solo tasks on your own.",
+        selector: "#onborda-my-journey-balance",
         side: "bottom",
         showControls: true,
         pointerPadding: 8,
@@ -22,10 +22,10 @@ export const TOURS: Tour[] = [
       },
       {
         icon: "💳",
-        title: "Points Balance",
+        title: "Team Journey",
         content:
-          "Points are your startup capital. You earn them alongside XP from tasks and team activities. Points can be spent on unlocking premium features, resources, and rewards within the platform. Think of them as your in-platform currency!",
-        selector: "#onborda-points-balance",
+          "Your startup balance: Team XP counts toward the 8,000 you need to graduate, and Team Points are the capital your team spends on its costs.",
+        selector: "#onborda-team-journey-balance",
         side: "bottom",
         showControls: true,
         pointerPadding: 8,

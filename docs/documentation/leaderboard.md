@@ -1,6 +1,6 @@
 # Leaderboard System
 
-> The leaderboard ranks students and teams within each economy — My Journey XP / Credits and Team XP / Team Points — alongside achievements, tasks completed, and meetings held. It uses a weekly snapshot system to track progress over time and display week-over-week changes.
+> The leaderboard ranks students and teams within each economy — My Journey XP / My Journey Credits and Team XP / Team Points — alongside achievements, tasks completed, and meetings held. It uses a weekly snapshot system to track progress over time and display week-over-week changes.
 
 ## Overview
 
@@ -13,8 +13,8 @@ The leaderboard lives at `/dashboard/leaderboard`. Since the two-economies
 split (2026-08-28) it is organised by programme phase rather than by
 "individual vs team":
 
-- **My Journey** — students ranked by My Journey XP, with Credits and
-  individual tasks completed. Live data only, no week selector.
+- **My Journey** — students ranked by My Journey XP, with My Journey Credits
+  and individual tasks completed. Live data only, no week selector.
 - **Team Journey** — sub-tabs **Teams** and **Members**, both ranked by the
   Team economy (Team XP, tiebreak Team Points), both with the week selector
   that lists all weeks with available snapshot data.
@@ -123,7 +123,7 @@ never shown a bare "XP" or "Points" — labels come from
 
 | Board                     | XP column        | Points column | Stored on `users`                     |
 | ------------------------- | ---------------- | ------------- | ------------------------------------- |
-| My Journey                | "My Journey XP"  | "Credits"     | `my_journey_xp`, `my_journey_credits` |
+| My Journey                | "My Journey XP"  | "My Journey Credits" | `my_journey_xp`, `my_journey_credits` |
 | Team Journey — Teams      | "Team XP"        | "Team Points" | summed from members' `team_xp` / `team_points` |
 | Team Journey — Members    | "Team XP"        | "Team Points" | `team_xp`, `team_points`              |
 
@@ -327,9 +327,9 @@ Animates numbers from 0 to target value with ease-out cubic easing.
 
 | Tab | Data Source | Columns |
 |-----|------------|---------|
-| My Journey | `get_live_my_journey_leaderboard_v1` RPC | Rank, User, My Journey XP, Credits, Tasks |
-| Team Journey → Teams | `get_team_leaderboard_data` RPC | Rank, Team, Team XP, Team Points, Tasks, Meetings, Members, Change |
-| Team Journey → Members | `get_live_team_members_leaderboard_v1` (current) / `get_leaderboard_data` (past weeks) | Rank, User, Team XP, Team Points, Achievements, Tasks, Streak, Change |
+| My Journey | `get_live_my_journey_leaderboard_v1` RPC | Rank, Student, My Journey XP, My Journey Credits, Tasks done |
+| Team Journey → Teams | `get_team_leaderboard_data` RPC | Rank, Team, Team XP, Team Points, Tasks, Meetings, Change |
+| Team Journey → Members | `get_live_team_members_leaderboard_v1` (current) / `get_leaderboard_data` (past weeks) | Rank, Student, Team XP, Tasks, Reviews, Streak, Change |
 
 ### Week Selector
 
@@ -474,7 +474,7 @@ interface LeaderboardEntry {
 | `src/components/leaderboard/team-journey-board.tsx` | Team Journey shell with Teams / Members sub-tabs |
 | `src/components/leaderboard/teams-board.tsx` | Teams board |
 | `src/components/leaderboard/members-board.tsx` | Members board (Team economy) |
-| `src/components/leaderboard/leaderboard-board-shell.tsx` | Shared board frame (title, week selector, states) |
+| `src/components/leaderboard/leaderboard-board-shell.tsx` | Shared board frame: card, desktop header grid, loading/data/empty states, mobile card mirror. The title and week selector live in `team-journey-board.tsx`. |
 | `src/components/leaderboard/member-row.tsx`, `team-row.tsx`, `row-styles.ts`, `mappers.ts` | Shared row rendering + DB→UI mapping |
 | `src/components/leaderboard/rank-icon.tsx` | Rank position icons |
 | `src/components/leaderboard/change-indicator.tsx` | Week-over-week arrows |

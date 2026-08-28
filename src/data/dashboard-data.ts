@@ -25,6 +25,10 @@ import {
   getTeamPointsEarned,
   getTeamXPEarned,
 } from "@/lib/database";
+import { economyLabels } from "@/lib/economy-labels";
+
+const soloLabels = economyLabels("my_journey");
+const teamLabels = economyLabels("team");
 
 // Function to get real stats cards data
 export async function getStatsCards(userId: string): Promise<StatsCard[]> {
@@ -82,22 +86,22 @@ export async function getStatsCards(userId: string): Promise<StatsCard[]> {
 
     return [
       {
-        id: "onborda-xp-balance",
-        title: "XP Balance",
-        value: (userProfile.total_xp ?? 0).toString(),
-        subtitle: "Total experience points",
+        id: "onborda-my-journey-balance",
+        title: "My Journey",
+        value: `${userProfile.my_journey_xp ?? 0} ${soloLabels.xp}`,
+        subtitle: `${userProfile.my_journey_credits ?? 0} ${soloLabels.points}`,
         icon: Zap,
         iconColor: "text-amber-500",
-        href: "/dashboard/transaction-history",
+        href: "/dashboard/my-journey",
       },
       {
-        id: "onborda-points-balance",
-        title: "Points Balance",
-        value: (userProfile.total_points ?? 0).toString(),
-        subtitle: "Available startup capital",
+        id: "onborda-team-journey-balance",
+        title: "Team Journey",
+        value: `${userProfile.team_xp ?? 0} ${teamLabels.xp}`,
+        subtitle: `${userProfile.team_points ?? 0} ${teamLabels.points}`,
         icon: CreditCard,
         iconColor: "text-emerald-500",
-        href: "/dashboard/transaction-history",
+        href: "/dashboard/team-journey",
       },
       {
         id: "onborda-achievements",

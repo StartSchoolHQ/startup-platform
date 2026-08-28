@@ -1964,6 +1964,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
       {/* Task Submission Modal */}
       <TaskDetailsModal
         mode="submission"
+        economy="team"
         isOpen={showSubmissionModal}
         onClose={() => setShowSubmissionModal(false)}
         onSubmit={handleSubmissionSubmit}

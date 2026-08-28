@@ -40,6 +40,10 @@ import {
 } from "lucide-react";
 
 import { TaskDetailsModal } from "@/components/ui/task-details-modal";
+import { economyLabels } from "@/lib/economy-labels";
+
+// Peer review sits entirely in the Team economy.
+const teamLabels = economyLabels("team");
 
 interface PeerReviewStats {
   availableTasksCount: number;
@@ -474,7 +478,7 @@ export default function PeerReviewPage() {
       toast.success(`${reviewType} submitted successfully! \u2705`, {
         description: `Task ${
           variables.decision
-        }. You earned ${estimatedXP} XP and ${estimatedPoints} points.${
+        }. You earned ${estimatedXP} ${teamLabels.xp} and ${estimatedPoints} ${teamLabels.points}.${
           variables.isContinuation ? " (Continuation review)" : ""
         }`,
         duration: 5000,
@@ -585,14 +589,14 @@ export default function PeerReviewPage() {
           iconColor="text-black dark:text-white"
         />
         <StatsCardComponent
-          title="Points Earned"
+          title={`${teamLabels.points} Earned`}
           value={loading ? "..." : peerReviewStats.totalPointsEarned.toString()}
           subtitle="From peer reviews"
           icon={CreditCard}
           iconColor="text-black dark:text-white"
         />
         <StatsCardComponent
-          title="XP Earned"
+          title={`${teamLabels.xp} Earned`}
           value={loading ? "..." : peerReviewStats.totalXpEarned.toString()}
           subtitle="From peer reviews"
           icon={Zap}
@@ -676,10 +680,10 @@ export default function PeerReviewPage() {
                         Difficulty
                       </th>
                       <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                        Reviewer XP (10%)
+                        Reviewer {teamLabels.xp} (10%)
                       </th>
                       <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                        Reviewer Points (10%)
+                        Reviewer {teamLabels.points} (10%)
                       </th>
                       <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                         Submitted
@@ -771,10 +775,10 @@ export default function PeerReviewPage() {
                       Difficulty
                     </th>
                     <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Reviewer XP (10%)
+                      Reviewer {teamLabels.xp} (10%)
                     </th>
                     <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                      Reviewer Points (10%)
+                      Reviewer {teamLabels.points} (10%)
                     </th>
                     <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                       Submitted
@@ -935,10 +939,10 @@ export default function PeerReviewPage() {
                         Difficulty
                       </th>
                       <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                        XP Earned
+                        {teamLabels.xp} Earned
                       </th>
                       <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                        Points Earned
+                        {teamLabels.points} Earned
                       </th>
                       <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                         Status
@@ -1142,6 +1146,7 @@ export default function PeerReviewPage() {
       {/* Review Modal */}
       <TaskDetailsModal
         mode="review"
+        economy="team"
         isOpen={modalState.isOpen}
         onClose={() =>
           setModalState({

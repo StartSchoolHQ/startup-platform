@@ -22,7 +22,10 @@ import {
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
 import { TeamItem, StatItem } from "@/components/dashboard/dashboard-items";
 import { IconContainer } from "@/components/dashboard/icon-container";
-import { StatsGridSkeleton } from "@/components/ui/stats-grid-skeleton";
+import {
+  StatsGridSkeleton,
+  statsGridColumnsClass,
+} from "@/components/ui/stats-grid-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 // WhatsNextCard hidden temporarily — uncomment to re-enable
 // import { WhatsNextCard } from "@/components/dashboard/whats-next-card";
@@ -32,7 +35,11 @@ import { useMemo } from "react";
 import { StatsCard, TeamProgressData } from "@/types/dashboard";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import { economyLabels } from "@/lib/economy-labels";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
+
+const soloLabels = economyLabels("my_journey");
+const teamLabels = economyLabels("team");
 
 export default function OverviewPage() {
   const { firstName, user } = useApp();
@@ -63,57 +70,62 @@ export default function OverviewPage() {
 
   // Derive stats cards from the consolidated overview response. The two
   // economy cards follow the active programme phase; admins always see both.
+  const showTeamJourney = journeySettings.teamJourney || isAdmin;
+
   const statsCards: StatsCard[] = useMemo(() => {
     if (!dashboardOverview) return [];
 
-    const economyCards: StatsCard[] = [];
+    const cards: StatsCard[] = [];
 
     if (journeySettings.myJourney || isAdmin) {
-      economyCards.push({
+      cards.push({
         id: "onborda-my-journey-balance",
         title: "My Journey",
-        value: `${dashboardOverview.my_journey_xp ?? 0} XP`,
-        subtitle: `${dashboardOverview.my_journey_credits ?? 0} Credits`,
+        value: `${dashboardOverview.my_journey_xp ?? 0} ${soloLabels.xp}`,
+        subtitle: `${dashboardOverview.my_journey_credits ?? 0} ${soloLabels.points}`,
         icon: Zap,
         iconColor: "text-amber-500",
         href: "/dashboard/my-journey",
       });
     }
 
-    if (journeySettings.teamJourney || isAdmin) {
-      economyCards.push({
-        id: "onborda-team-journey-balance",
-        title: "Team Journey",
-        value: `${dashboardOverview.team_xp ?? 0} Team XP`,
-        subtitle: `${dashboardOverview.team_points ?? 0} Team Points`,
-        icon: CreditCard,
-        iconColor: "text-emerald-500",
-        href: "/dashboard/team-journey",
-      });
+    // Team Journey card + the two team-scoped cards below it all link into
+    // /dashboard/team-journey, which bounces students back while the phase is
+    // off — so they must be gated on exactly the same condition.
+    if (showTeamJourney) {
+      cards.push(
+        {
+          id: "onborda-team-journey-balance",
+          title: "Team Journey",
+          value: `${dashboardOverview.team_xp ?? 0} ${teamLabels.xp}`,
+          subtitle: `${dashboardOverview.team_points ?? 0} ${teamLabels.points}`,
+          icon: CreditCard,
+          iconColor: "text-emerald-500",
+          href: "/dashboard/team-journey",
+        },
+        {
+          id: "onborda-achievements",
+          title: "Achievements",
+          value: `${dashboardOverview.completed_achievements ?? 0}/${dashboardOverview.total_achievements ?? 0}`,
+          subtitle: "Team achievements unlocked",
+          icon: Target,
+          iconColor: "text-purple-500",
+          href: "/dashboard/team-journey",
+        },
+        {
+          id: "onborda-tasks",
+          title: "Tasks",
+          value: `${dashboardOverview.completed_tasks ?? 0}/${dashboardOverview.total_tasks ?? 0}`,
+          subtitle: "Team tasks completed",
+          icon: CheckCircle,
+          iconColor: "text-blue-500",
+          href: "/dashboard/team-journey",
+        }
+      );
     }
 
-    return [
-      ...economyCards,
-      {
-        id: "onborda-achievements",
-        title: "Achievements",
-        value: `${dashboardOverview.completed_achievements ?? 0}/${dashboardOverview.total_achievements ?? 0}`,
-        subtitle: "Team achievements unlocked",
-        icon: Target,
-        iconColor: "text-purple-500",
-        href: "/dashboard/team-journey",
-      },
-      {
-        id: "onborda-tasks",
-        title: "Tasks",
-        value: `${dashboardOverview.completed_tasks ?? 0}/${dashboardOverview.total_tasks ?? 0}`,
-        subtitle: "Team tasks completed",
-        icon: CheckCircle,
-        iconColor: "text-blue-500",
-        href: "/dashboard/team-journey",
-      },
-    ];
-  }, [dashboardOverview, journeySettings, isAdmin]);
+    return cards;
+  }, [dashboardOverview, journeySettings, isAdmin, showTeamJourney]);
 
   // Derive team progress data from the consolidated overview response
   const teamProgressData: TeamProgressData | null = useMemo(() => {
@@ -190,6 +202,10 @@ export default function OverviewPage() {
   const loading = isLoadingOverview;
   const hasError = isOverviewError;
 
+  // Keeps the skeleton the same shape as the grid it stands in for.
+  const expectedCardCount =
+    (journeySettings.myJourney || isAdmin ? 1 : 0) + (showTeamJourney ? 3 : 0);
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -197,7 +213,7 @@ export default function OverviewPage() {
           <h1 className="text-2xl font-bold">Hi {firstName} 👋</h1>
           <p className="text-muted-foreground">Loading your dashboard...</p>
         </div>
-        <StatsGridSkeleton />
+        <StatsGridSkeleton count={expectedCardCount} />
         <Skeleton className="h-48 w-full rounded-lg" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
@@ -262,8 +278,9 @@ export default function OverviewPage() {
           Here you can see progress for you and your team
         </p>
 
-        {/* Leaderboard rank badge */}
-        {actionItems && actionItems.leaderboard_rank > 0 && (
+        {/* Leaderboard rank badge — Team economy data, so it follows the
+            Team Journey phase. */}
+        {showTeamJourney && actionItems && actionItems.leaderboard_rank > 0 && (
           <Link
             href="/dashboard/leaderboard"
             className="text-muted-foreground hover:text-foreground mt-2 inline-flex items-center gap-2 text-sm transition-colors"
@@ -283,7 +300,7 @@ export default function OverviewPage() {
       </div>
 
       {/* Stats cards grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className={`grid gap-4 ${statsGridColumnsClass(statsCards.length)}`}>
         {statsCards.map((card, index) => (
           <motion.div
             key={index}

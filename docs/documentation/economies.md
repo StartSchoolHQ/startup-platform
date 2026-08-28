@@ -10,7 +10,7 @@ be on at once (and are, for admins).
 
 | Phase            | What it is         | Units earned              | Weekly reports / strikes |
 | ---------------- | ------------------ | ------------------------- | ------------------------ |
-| **My Journey**   | Solo preparation   | My Journey XP · Credits   | No                       |
+| **My Journey**   | Solo preparation   | My Journey XP · My Journey Credits | No              |
 | **Team Journey** | The startup phase  | Team XP · Team Points     | Yes                      |
 
 Four balances live on `users`, one pair per economy. Graduation (8,000) is
@@ -20,7 +20,7 @@ Four balances live on `users`, one pair per economy. Graduation (8,000) is
 label comes from `src/lib/economy-labels.ts`:
 
 ```ts
-economyLabels("my_journey"); // { xp: "My Journey XP", points: "Credits" }
+economyLabels("my_journey"); // { xp: "My Journey XP", points: "My Journey Credits" }
 economyLabels("team"); //      { xp: "Team XP",       points: "Team Points" }
 economyFromActivityType(activityType); // "individual" -> my_journey, else team
 ```
@@ -223,7 +223,10 @@ Migrations applied 2026-08-28, in order: `platform_settings_v1`,
 `weekly_reports_team_journey_guard`, `dashboard_overview_v2`,
 `user_progress_details_two_economies`, `my_journey_leaderboard_v1`,
 `team_members_leaderboard_v1`, `weekly_leaderboard_snapshots_v2`,
-`team_progress_details_two_economies`, `dashboard_action_items_team_economy`.
+`team_progress_details_two_economies`, `dashboard_action_items_team_economy`,
+`set_platform_setting_v1_revoke_anon` (revokes EXECUTE on
+`set_platform_setting_v1(text, jsonb)` from `anon` — the function was already
+admin-gated via `is_admin_v1()`, this only tightens the grant).
 
 ## Out of scope / known follow-ups
 

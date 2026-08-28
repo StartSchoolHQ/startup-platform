@@ -81,8 +81,7 @@ export default function IndividualTaskDetailPage() {
 
       // Enhanced success feedback for individual tasks
       toast.success("Task Completed Successfully! 🎉", {
-        description:
-          "XP and points awarded! Your task was automatically approved.",
+        description: `${labels.xp} and ${labels.points} awarded! Your task was automatically approved.`,
         duration: 5000,
       });
     } catch (error) {
@@ -364,9 +363,7 @@ export default function IndividualTaskDetailPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <CreditCard className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm text-gray-600">
-                    My Journey {labels.points}
-                  </span>
+                  <span className="text-sm text-gray-600">{labels.points}</span>
                 </div>
                 <span className="font-semibold">{task.base_points_reward}</span>
               </div>
@@ -453,8 +450,7 @@ export default function IndividualTaskDetailPage() {
 
               {task.status === "approved" && (
                 <div className="mt-2 text-center text-xs text-green-600">
-                  Your {labels.xp} and My Journey {labels.points} have been
-                  awarded!
+                  Your {labels.xp} and {labels.points} have been awarded!
                 </div>
               )}
             </CardContent>

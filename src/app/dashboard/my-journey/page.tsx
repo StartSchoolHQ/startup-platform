@@ -20,7 +20,6 @@ import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import {
   getUserAchievementProgress,
   getUserIndividualTasks,
-  getUserTaskCompletionStats,
   getUserTasksVisible,
 } from "@/lib/database";
 import { economyLabels } from "@/lib/economy-labels";
@@ -68,13 +67,6 @@ export default function MyJourneyPage() {
       enabled: !!user?.id,
     });
 
-  const { data: taskStats = { total: 0, completed: 0, completionRate: 0 } } =
-    useQuery({
-      queryKey: ["myJourney", "taskStats", user?.id],
-      queryFn: () => getUserTaskCompletionStats(user!.id),
-      enabled: !!user?.id,
-    });
-
   const userTasks = useMemo(
     () =>
       buildMyJourneyTasks(availableTasksData, individualTasksData, {
@@ -83,6 +75,20 @@ export default function MyJourneyPage() {
       }),
     [availableTasksData, individualTasksData, user?.name, user?.avatar_url]
   );
+
+  // Derived from the solo tasks actually rendered on this page — the old
+  // `getUserTaskCompletionStats` query counted every `task_progress` row for
+  // the user, team tasks included, against a total of progress rows.
+  const taskStats = useMemo(() => {
+    const total = userTasks.length;
+    const completed = userTasks.filter((t) => t.status === "Finished").length;
+
+    return {
+      total,
+      completed,
+      completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+    };
+  }, [userTasks]);
 
   const achievements = useMemo(
     () =>
@@ -125,7 +131,7 @@ export default function MyJourneyPage() {
         iconColor: "text-amber-500",
       },
       {
-        title: `My Journey ${labels.points}`,
+        title: labels.points,
         value: (user?.my_journey_credits ?? 0).toLocaleString(),
         subtitle: "Earned from solo activities",
         icon: CreditCard,

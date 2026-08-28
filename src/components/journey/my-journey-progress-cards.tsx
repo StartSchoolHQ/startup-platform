@@ -58,8 +58,7 @@ export function MyJourneyProgressCards({
         <CardContent>
           <ul className="text-muted-foreground list-disc space-y-2 pl-5 text-sm">
             <li>
-              Every solo task you finish pays out {solo.xp} and My Journey{" "}
-              {solo.points}.
+              Every solo task you finish pays out {solo.xp} and {solo.points}.
             </li>
             <li>
               Team Journey opens later in the programme — the {team.xp} you earn

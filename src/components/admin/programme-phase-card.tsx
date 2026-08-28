@@ -35,7 +35,7 @@ const PHASE_ROWS: {
 ];
 
 export function ProgrammePhaseCard() {
-  const { data: settings, isLoading } = usePlatformSettings();
+  const { data: settings, isLoading, isError } = usePlatformSettings();
   const setJourneys = useSetJourneys();
 
   const handleToggle = (id: keyof JourneySettings, checked: boolean) => {
@@ -51,24 +51,35 @@ export function ProgrammePhaseCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {PHASE_ROWS.map((row) => (
-          <div key={row.id} className="flex items-center justify-between gap-4">
-            <div className="space-y-0.5">
-              <Label htmlFor={`phase-${row.id}`}>{row.label}</Label>
-              <p className="text-muted-foreground text-sm">{row.helper}</p>
+        {/* On a failed read `settings` falls back to JOURNEY_DEFAULTS — showing
+            switches here would let an admin write those defaults back. */}
+        {isError ? (
+          <p className="text-destructive text-sm">
+            Couldn&apos;t load programme settings — refresh to try again.
+          </p>
+        ) : (
+          PHASE_ROWS.map((row) => (
+            <div
+              key={row.id}
+              className="flex items-center justify-between gap-4"
+            >
+              <div className="space-y-0.5">
+                <Label htmlFor={`phase-${row.id}`}>{row.label}</Label>
+                <p className="text-muted-foreground text-sm">{row.helper}</p>
+              </div>
+              {isLoading ? (
+                <Skeleton className="h-[1.15rem] w-8 rounded-full" />
+              ) : (
+                <Switch
+                  id={`phase-${row.id}`}
+                  checked={settings[row.id]}
+                  disabled={setJourneys.isPending}
+                  onCheckedChange={(checked) => handleToggle(row.id, checked)}
+                />
+              )}
             </div>
-            {isLoading ? (
-              <Skeleton className="h-[1.15rem] w-8 rounded-full" />
-            ) : (
-              <Switch
-                id={`phase-${row.id}`}
-                checked={settings[row.id]}
-                disabled={setJourneys.isPending}
-                onCheckedChange={(checked) => handleToggle(row.id, checked)}
-              />
-            )}
-          </div>
-        ))}
+          ))
+        )}
       </CardContent>
     </Card>
   );

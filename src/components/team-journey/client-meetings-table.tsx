@@ -43,6 +43,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { economyLabels } from "@/lib/economy-labels";
+
+// Client meetings are a Team Journey activity.
+const teamLabels = economyLabels("team");
 
 interface DatabaseClientMeeting {
   id: string;
@@ -168,7 +172,7 @@ export function ClientMeetingsTable({
       queryClient.invalidateQueries({ queryKey: ["clientMeetings"] });
       queryClient.invalidateQueries({ queryKey: ["teamAchievementDashboard"] });
       toast.success(
-        `Draft submitted! +${data.xp_rewarded} XP, +${data.points_rewarded} Points`
+        `Draft submitted! +${data.xp_rewarded} ${teamLabels.xp}, +${data.points_rewarded} ${teamLabels.points}`
       );
     },
     onError: (error: Error) => {
@@ -467,10 +471,10 @@ export function ClientMeetingsTable({
                 Interest
               </th>
               <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                XP
+                {teamLabels.xp}
               </th>
               <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                Points
+                {teamLabels.points}
               </th>
               <th className="text-muted-foreground px-4 py-4 text-right font-medium">
                 Actions
@@ -713,8 +717,8 @@ export function ClientMeetingsTable({
               <br />
               <br />
               <span className="text-muted-foreground text-xs">
-                Note: The XP and points earned from this meeting will not be
-                reversed.
+                Note: The {teamLabels.xp} and {teamLabels.points} earned from
+                this meeting will not be reversed.
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>

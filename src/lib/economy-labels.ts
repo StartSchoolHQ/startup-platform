@@ -1,7 +1,7 @@
 /**
  * Single source of truth for the two economies' student-facing unit labels.
  *
- * My Journey (solo phase) earns "My Journey XP" + "Credits".
+ * My Journey (solo phase) earns "My Journey XP" + "My Journey Credits".
  * Team Journey (startup phase) earns "Team XP" + "Team Points".
  *
  * Students must never see a bare "XP" / "Points" — always route the label
@@ -16,7 +16,7 @@ export interface EconomyLabels {
 }
 
 const LABELS: Record<Economy, EconomyLabels> = {
-  my_journey: { xp: "My Journey XP", points: "Credits" },
+  my_journey: { xp: "My Journey XP", points: "My Journey Credits" },
   team: { xp: "Team XP", points: "Team Points" },
 };
 
