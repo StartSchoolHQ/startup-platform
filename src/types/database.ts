@@ -388,6 +388,27 @@ export type Database = {
           },
         ];
       };
+      platform_settings: {
+        Row: {
+          key: string;
+          updated_at: string;
+          updated_by: string | null;
+          value: Json;
+        };
+        Insert: {
+          key: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          value: Json;
+        };
+        Update: {
+          key?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          value?: Json;
+        };
+        Relationships: [];
+      };
       qwasar_progress: {
         Row: {
           cohort: string | null;
@@ -1494,12 +1515,16 @@ export type Database = {
           graduation_level: number | null;
           id: string;
           invited_by: string | null;
+          my_journey_credits: number;
+          my_journey_xp: number;
           name: string | null;
           personal_code: string | null;
           primary_role: Database["public"]["Enums"]["primary_role_type"] | null;
           qwasar_username: string | null;
           startup_module_completed: boolean;
           status: Database["public"]["Enums"]["status_state"] | null;
+          team_points: number;
+          team_xp: number;
           total_points: number;
           total_xp: number;
           updated_at: string | null;
@@ -1513,6 +1538,8 @@ export type Database = {
           graduation_level?: number | null;
           id?: string;
           invited_by?: string | null;
+          my_journey_credits?: number;
+          my_journey_xp?: number;
           name?: string | null;
           personal_code?: string | null;
           primary_role?:
@@ -1521,6 +1548,8 @@ export type Database = {
           qwasar_username?: string | null;
           startup_module_completed?: boolean;
           status?: Database["public"]["Enums"]["status_state"] | null;
+          team_points?: number;
+          team_xp?: number;
           total_points?: number;
           total_xp?: number;
           updated_at?: string | null;
@@ -1534,6 +1563,8 @@ export type Database = {
           graduation_level?: number | null;
           id?: string;
           invited_by?: string | null;
+          my_journey_credits?: number;
+          my_journey_xp?: number;
           name?: string | null;
           personal_code?: string | null;
           primary_role?:
@@ -1542,6 +1573,8 @@ export type Database = {
           qwasar_username?: string | null;
           startup_module_completed?: boolean;
           status?: Database["public"]["Enums"]["status_state"] | null;
+          team_points?: number;
+          team_xp?: number;
           total_points?: number;
           total_xp?: number;
           updated_at?: string | null;
@@ -1806,6 +1839,19 @@ export type Database = {
           week_year: number;
         }[];
       };
+      check_missed_weekly_reports_team_context_backup_v2: {
+        Args: never;
+        Returns: {
+          team_id: string;
+          team_name: string;
+          user_id: string;
+          user_name: string;
+          week_end: string;
+          week_number: number;
+          week_start: string;
+          week_year: number;
+        }[];
+      };
       check_simple_rate_limit: {
         Args: { p_action_type: string; p_limit?: number; p_user_id: string };
         Returns: boolean;
@@ -1925,6 +1971,10 @@ export type Database = {
         Returns: Json;
       };
       generate_weekly_leaderboard_snapshots: {
+        Args: { p_week_number?: number; p_week_year?: number };
+        Returns: Json;
+      };
+      generate_weekly_leaderboard_snapshots_v2: {
         Args: { p_week_number?: number; p_week_year?: number };
         Returns: Json;
       };
@@ -2192,6 +2242,22 @@ export type Database = {
           total_xp: number;
         }[];
       };
+      get_dashboard_overview_v2: {
+        Args: { p_user_id: string };
+        Returns: {
+          completed_achievements: number;
+          completed_tasks: number;
+          my_journey_credits: number;
+          my_journey_xp: number;
+          team_points: number;
+          team_xp: number;
+          teams_data: Json;
+          total_achievements: number;
+          total_points: number;
+          total_tasks: number;
+          total_xp: number;
+        }[];
+      };
       get_diploma_data: { Args: { p_user_id: string }; Returns: Json };
       get_enhanced_team_tasks: {
         Args: { p_team_id: string };
@@ -2284,6 +2350,18 @@ export type Database = {
           xp_change: number;
         }[];
       };
+      get_live_my_journey_leaderboard_v1: {
+        Args: { p_limit?: number };
+        Returns: {
+          my_journey_credits: number;
+          my_journey_xp: number;
+          rank_position: number;
+          tasks_completed: number;
+          user_avatar_url: string;
+          user_id: string;
+          user_name: string;
+        }[];
+      };
       get_live_team_leaderboard_data: {
         Args: { p_limit?: number };
         Returns: {
@@ -2303,6 +2381,29 @@ export type Database = {
           total_xp: number;
           xp_change: number;
           xp_per_member: number;
+        }[];
+      };
+      get_live_team_members_leaderboard_v1: {
+        Args: { p_limit?: number };
+        Returns: {
+          achievements_change: number;
+          achievements_count: number;
+          is_new_entry: boolean;
+          peer_reviews_count: number;
+          points_change: number;
+          rank_change: number;
+          rank_position: number;
+          tasks_change: number;
+          tasks_completed: number;
+          team_name: string;
+          total_points: number;
+          total_xp: number;
+          user_avatar_url: string;
+          user_email: string;
+          user_id: string;
+          user_name: string;
+          weekly_reports_count: number;
+          xp_change: number;
         }[];
       };
       get_live_weekly_leaderboard_data: {
@@ -2869,6 +2970,10 @@ export type Database = {
         }[];
       };
       get_user_progress_details: { Args: { p_user_id: string }; Returns: Json };
+      get_user_progress_details_backup_v1: {
+        Args: { p_user_id: string };
+        Returns: Json;
+      };
       get_user_tasks_visible: {
         Args: { p_user_id: string };
         Returns: {
@@ -2954,6 +3059,7 @@ export type Database = {
       };
       is_admin_v1: { Args: never; Returns: boolean };
       is_task_recurring: { Args: { task_id: string }; Returns: boolean };
+      journey_enabled_v1: { Args: { p_journey: string }; Returns: boolean };
       mark_all_notifications_seen: {
         Args: { user_id_param: string };
         Returns: number;
@@ -3627,10 +3733,19 @@ export type Database = {
       };
       send_weekly_report_reminders: { Args: never; Returns: number };
       send_weekly_report_reminders_backup_v1: { Args: never; Returns: number };
+      send_weekly_report_reminders_backup_v2: { Args: never; Returns: number };
       send_weekly_report_reminders_sunday: { Args: never; Returns: number };
       send_weekly_report_reminders_sunday_backup_v1: {
         Args: never;
         Returns: number;
+      };
+      send_weekly_report_reminders_sunday_backup_v2: {
+        Args: never;
+        Returns: number;
+      };
+      set_platform_setting_v1: {
+        Args: { p_key: string; p_value: Json };
+        Returns: Json;
       };
       start_individual_task: { Args: { p_progress_id: string }; Returns: Json };
       start_recurring_task: {
