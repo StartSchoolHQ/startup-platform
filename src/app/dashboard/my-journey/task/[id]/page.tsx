@@ -30,6 +30,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TaskDetailSkeleton } from "@/components/ui/task-detail-skeleton";
 import type { TeamTask } from "@/types/team-journey";
 import { SuggestEditsModal } from "@/components/tasks/suggest-edits-modal";
+import { economyLabels } from "@/lib/economy-labels";
+
+const labels = economyLabels("my_journey");
 
 export default function IndividualTaskDetailPage() {
   const params = useParams();
@@ -361,14 +364,16 @@ export default function IndividualTaskDetailPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <CreditCard className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm text-gray-600">Credits</span>
+                  <span className="text-sm text-gray-600">
+                    My Journey {labels.points}
+                  </span>
                 </div>
                 <span className="font-semibold">{task.base_points_reward}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-600">My Journey XP</span>
+                  <span className="text-sm text-gray-600">{labels.xp}</span>
                 </div>
                 <span className="font-semibold">{task.base_xp_reward}</span>
               </div>
@@ -448,7 +453,8 @@ export default function IndividualTaskDetailPage() {
 
               {task.status === "approved" && (
                 <div className="mt-2 text-center text-xs text-green-600">
-                  XP and points have been awarded!
+                  Your {labels.xp} and My Journey {labels.points} have been
+                  awarded!
                 </div>
               )}
             </CardContent>

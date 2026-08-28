@@ -60,6 +60,11 @@ export function TasksTable({
   const router = useRouter();
   const [previewTask, setPreviewTask] = useState<TaskTableItem | null>(null);
   const labels = economyLabels(economy);
+  // Solo tasks have no assignee and live under their own detail route.
+  const isSolo = economy === "my_journey";
+  const taskDetailBase = isSolo
+    ? "/dashboard/my-journey/task"
+    : "/dashboard/team-journey/task";
 
   // Filter out any duplicate recurring tasks that may appear in regular task list
 
@@ -81,9 +86,11 @@ export function TasksTable({
               <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Task
               </th>
-              <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                Responsible
-              </th>
+              {!isSolo && (
+                <th className="text-muted-foreground px-4 py-4 text-left font-medium">
+                  Responsible
+                </th>
+              )}
               <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Difficulty
               </th>
@@ -169,97 +176,101 @@ export function TasksTable({
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-4">
-                  {task.responsible ? (
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage
-                          src={task.responsible.avatar}
-                          alt={task.responsible.name}
-                        />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
-                          {task.responsible.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="text-xs font-medium">
-                          {task.responsible.name}
-                        </div>
-                        <div className="text-muted-foreground text-xs">
-                          {(() => {
-                            try {
-                              const date = new Date(task.responsible.date);
-                              const day = String(date.getDate()).padStart(
-                                2,
-                                "0"
-                              );
-                              const month = String(
-                                date.getMonth() + 1
-                              ).padStart(2, "0");
-                              const year = String(date.getFullYear()).slice(-2);
-                              const hours = String(date.getHours()).padStart(
-                                2,
-                                "0"
-                              );
-                              const minutes = String(
-                                date.getMinutes()
-                              ).padStart(2, "0");
-                              return `${day}-${month}-${year} ${hours}:${minutes}`;
-                            } catch {
-                              return task.responsible.date;
-                            }
-                          })()}
+                {!isSolo && (
+                  <td className="px-4 py-4">
+                    {task.responsible ? (
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage
+                            src={task.responsible.avatar}
+                            alt={task.responsible.name}
+                          />
+                          <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                            {task.responsible.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="text-xs font-medium">
+                            {task.responsible.name}
+                          </div>
+                          <div className="text-muted-foreground text-xs">
+                            {(() => {
+                              try {
+                                const date = new Date(task.responsible.date);
+                                const day = String(date.getDate()).padStart(
+                                  2,
+                                  "0"
+                                );
+                                const month = String(
+                                  date.getMonth() + 1
+                                ).padStart(2, "0");
+                                const year = String(date.getFullYear()).slice(
+                                  -2
+                                );
+                                const hours = String(date.getHours()).padStart(
+                                  2,
+                                  "0"
+                                );
+                                const minutes = String(
+                                  date.getMinutes()
+                                ).padStart(2, "0");
+                                return `${day}-${month}-${year} ${hours}:${minutes}`;
+                              } catch {
+                                return task.responsible.date;
+                              }
+                            })()}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ) : isTeamMember && task.isAvailable ? (
-                    <Select
-                      onValueChange={(userId) => {
-                        if (onAssignTask) {
-                          onAssignTask(task.id, userId);
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="h-8 w-[140px] text-xs">
-                        <SelectValue placeholder="Choose Member" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {teamMembers.map((member) => (
-                          <SelectItem key={member.id} value={member.id}>
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-4 w-4">
-                                <AvatarImage src={member.avatar} />
-                                <AvatarFallback className="text-xs">
-                                  {member.name
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span>{member.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : task.isAvailable === false ? (
-                    <span className="text-muted-foreground text-sm">
-                      Locked
-                    </span>
-                  ) : !isTeamMember ? (
-                    <span className="text-muted-foreground text-sm">
-                      Unassigned
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground text-sm">
-                      Choose Member
-                    </span>
-                  )}
-                </td>
+                    ) : isTeamMember && task.isAvailable ? (
+                      <Select
+                        onValueChange={(userId) => {
+                          if (onAssignTask) {
+                            onAssignTask(task.id, userId);
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="h-8 w-[140px] text-xs">
+                          <SelectValue placeholder="Choose Member" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {teamMembers.map((member) => (
+                            <SelectItem key={member.id} value={member.id}>
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-4 w-4">
+                                  <AvatarImage src={member.avatar} />
+                                  <AvatarFallback className="text-xs">
+                                    {member.name
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span>{member.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : task.isAvailable === false ? (
+                      <span className="text-muted-foreground text-sm">
+                        Locked
+                      </span>
+                    ) : !isTeamMember ? (
+                      <span className="text-muted-foreground text-sm">
+                        Unassigned
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">
+                        Choose Member
+                      </span>
+                    )}
+                  </td>
+                )}
                 <td className="px-4 py-4">
                   <DifficultyBadge
                     level={
@@ -498,9 +509,7 @@ export function TasksTable({
                                 size="sm"
                                 className="border-[#0000ff] px-3 py-2 text-xs text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                                 onClick={() =>
-                                  router.push(
-                                    `/dashboard/team-journey/task/${task.id}`
-                                  )
+                                  router.push(`${taskDetailBase}/${task.id}`)
                                 }
                               >
                                 View Info
@@ -553,9 +562,7 @@ export function TasksTable({
                                 size="sm"
                                 className="border-[#0000ff] px-3 py-2 text-xs text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                                 onClick={() =>
-                                  router.push(
-                                    `/dashboard/team-journey/task/${task.id}`
-                                  )
+                                  router.push(`${taskDetailBase}/${task.id}`)
                                 }
                               >
                                 View Info
@@ -629,9 +636,7 @@ export function TasksTable({
                                 size="sm"
                                 className="border-[#0000ff] px-3 py-2 text-xs text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
                                 onClick={() =>
-                                  router.push(
-                                    `/dashboard/team-journey/task/${task.id}`
-                                  )
+                                  router.push(`${taskDetailBase}/${task.id}`)
                                 }
                               >
                                 View Info

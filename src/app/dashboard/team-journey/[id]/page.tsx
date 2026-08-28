@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
-import { AchievementCard } from "@/components/my-journey/achievement-card";
+import { AchievementsGrid } from "@/components/journey/achievements-grid";
 import { AddClientMeetingModal } from "@/components/team-journey/add-client-meeting-modal";
 import { ClientMeetingsTable } from "@/components/team-journey/client-meetings-table";
 import { ExplainStrikeModal } from "@/components/team-journey/explain-strike-modal";
@@ -36,12 +36,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TeamDetailSkeleton } from "@/components/ui/team-detail-skeleton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { WeeklyReportModal } from "@/components/weekly-reports/weekly-report-modal";
 import { useAppContext } from "@/contexts/app-context";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
@@ -1404,126 +1398,39 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
           )}
 
           {/* Achievement Cards Grid */}
-          {loadingState.achievements ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="space-y-3 rounded-lg border p-4">
-                  <Skeleton className="h-5 w-20 rounded-full" />
-                  <div className="flex items-start gap-2">
-                    <Skeleton className="h-12 w-12 shrink-0 rounded-md" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-5 w-28" />
-                      <Skeleton className="h-4 w-full" />
-                    </div>
-                  </div>
-                  <Skeleton className="h-2 w-full rounded-full" />
-                  <div className="grid grid-cols-2 gap-2">
-                    <Skeleton className="h-14 rounded-lg" />
-                    <Skeleton className="h-14 rounded-lg" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : achievements.length === 0 ? (
-            <div className="text-muted-foreground py-8 text-center">
-              No achievements available for this team
-            </div>
-          ) : (
-            <TooltipProvider>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {achievements.map((achievement) => (
-                  <Tooltip key={achievement.achievement_id}>
-                    <TooltipTrigger asChild>
-                      <div
-                        onClick={() =>
-                          handleAchievementClick(
-                            selectedAchievementId === achievement.achievement_id
-                              ? null
-                              : achievement.achievement_id
-                          )
-                        }
-                        role={
-                          teamStats.achievementsUnlocked ? "button" : undefined
-                        }
-                        tabIndex={
-                          teamStats.achievementsUnlocked ? 0 : undefined
-                        }
-                        onKeyDown={
-                          teamStats.achievementsUnlocked
-                            ? (e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.preventDefault();
-                                  handleAchievementClick(
-                                    selectedAchievementId ===
-                                      achievement.achievement_id
-                                      ? null
-                                      : achievement.achievement_id
-                                  );
-                                }
-                              }
-                            : undefined
-                        }
-                        className={`rounded-xl transition-all duration-200 ${
-                          teamStats.achievementsUnlocked
-                            ? "hover:ring-primary/30 focus-visible:ring-primary cursor-pointer hover:scale-[1.02] hover:ring-2 focus-visible:ring-2 focus-visible:outline-none"
-                            : "cursor-not-allowed opacity-60"
-                        }`}
-                      >
-                        <AchievementCard
-                          economy="team"
-                          title={achievement.achievement_name}
-                          description={
-                            !teamStats.achievementsUnlocked
-                              ? isTeamMember
-                                ? `Need ${
-                                    8 - teamStats.meetingsCount
-                                  } more client meetings`
-                                : "Locked - more client meetings required"
-                              : achievement.achievement_name ===
-                                  "Recurring Tasks"
-                                ? "Weekly recurring team tasks"
-                                : selectedAchievementId ===
-                                    achievement.achievement_id
-                                  ? "Click to show all tasks"
-                                  : "Click to filter tasks"
-                          }
-                          status={
-                            !teamStats.achievementsUnlocked
-                              ? "not-started"
-                              : achievement.achievement_name ===
-                                  "Recurring Tasks"
-                                ? "in-progress"
-                                : achievement.status === "completed"
-                                  ? "finished"
-                                  : achievement.status
-                          }
-                          points={achievement.credits_reward}
-                          xp={achievement.xp_reward}
-                          completedTasks={achievement.completed_tasks}
-                          totalTasks={achievement.total_tasks}
-                          selected={
-                            teamStats.achievementsUnlocked &&
-                            selectedAchievementId === achievement.achievement_id
-                          }
-                        />
-                      </div>
-                    </TooltipTrigger>
-                    {!teamStats.achievementsUnlocked && (
-                      <TooltipContent>
-                        <p className="text-sm">
-                          {isTeamMember
-                            ? `Complete ${
-                                8 - teamStats.meetingsCount
-                              } more client meetings to unlock achievements`
-                            : "This team needs more client meetings to unlock achievements"}
-                        </p>
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                ))}
-              </div>
-            </TooltipProvider>
-          )}
+          <AchievementsGrid
+            economy="team"
+            achievements={achievements.map((a: any) => ({
+              ...a,
+              points_reward: a.credits_reward,
+            }))}
+            loading={loadingState.achievements}
+            selectedId={selectedAchievementId}
+            onSelect={handleAchievementClick}
+            emptyText="No achievements available for this team"
+            locked={!teamStats.achievementsUnlocked}
+            lockedDescription={
+              isTeamMember
+                ? `Need ${8 - teamStats.meetingsCount} more client meetings`
+                : "Locked - more client meetings required"
+            }
+            lockedTooltip={
+              isTeamMember
+                ? `Complete ${
+                    8 - teamStats.meetingsCount
+                  } more client meetings to unlock achievements`
+                : "This team needs more client meetings to unlock achievements"
+            }
+            cardOverride={(a) =>
+              a.achievement_name === "Recurring Tasks"
+                ? {
+                    description: "Weekly recurring team tasks",
+                    status: "in-progress",
+                  }
+                : undefined
+            }
+            showFilterBanner={false}
+          />
 
           {/* Unified Task Filters */}
           {teamStats.achievementsUnlocked && (
