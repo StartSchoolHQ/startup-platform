@@ -1,6 +1,6 @@
 # Leaderboard System
 
-> The leaderboard ranks individual users and teams based on XP, points, achievements, tasks completed, and meetings held. It uses a weekly snapshot system to track progress over time and display week-over-week changes.
+> The leaderboard ranks students and teams within each economy — My Journey XP / Credits and Team XP / Team Points — alongside achievements, tasks completed, and meetings held. It uses a weekly snapshot system to track progress over time and display week-over-week changes.
 
 ## Overview
 
@@ -9,7 +9,20 @@ The leaderboard is a core gamification feature of the StartSchool Platform. It s
 1. **Competition** — users and teams can see how they rank against each other
 2. **Progress tracking** — week-over-week change indicators show whether a user or team is moving up, down, or holding steady
 
-The leaderboard lives at `/dashboard/leaderboard` and offers two views: **Individual** and **Teams**. Users can filter by week using a dropdown that lists all weeks with available snapshot data.
+The leaderboard lives at `/dashboard/leaderboard`. Since the two-economies
+split (2026-08-28) it is organised by programme phase rather than by
+"individual vs team":
+
+- **My Journey** — students ranked by My Journey XP, with Credits and
+  individual tasks completed. Live data only, no week selector.
+- **Team Journey** — sub-tabs **Teams** and **Members**, both ranked by the
+  Team economy (Team XP, tiebreak Team Points), both with the week selector
+  that lists all weeks with available snapshot data.
+
+Each board renders only when its journey is enabled in `platform_settings`
+(see `docs/documentation/economies.md`); admins always see both, and when
+only one journey is on the top-level tabs disappear and just that board's
+title is shown. The old combined-XP "Individual" tab is gone.
 
 ---
 
@@ -102,8 +115,23 @@ User Actions (tasks, meetings, reviews)
 
 ### XP vs Points
 
-- **XP** — Experience points representing overall progress. Primary ranking metric. Cannot be spent.
-- **Points** — Currency-like balance. Can increase or decrease (e.g., team costs, penalties). Secondary ranking metric.
+XP is the primary ranking metric (cannot be spent); points are a
+currency-like balance that can go up or down (team costs, penalties) and
+act as the tiebreaker. Each economy has its own pair, and students are
+never shown a bare "XP" or "Points" — labels come from
+`src/lib/economy-labels.ts`.
+
+| Board                     | XP column        | Points column | Stored on `users`                     |
+| ------------------------- | ---------------- | ------------- | ------------------------------------- |
+| My Journey                | "My Journey XP"  | "Credits"     | `my_journey_xp`, `my_journey_credits` |
+| Team Journey — Teams      | "Team XP"        | "Team Points" | summed from members' `team_xp` / `team_points` |
+| Team Journey — Members    | "Team XP"        | "Team Points" | `team_xp`, `team_points`              |
+
+Which economy a transaction lands in is decided by
+`transactions.activity_type` (`'individual'` → My Journey, anything else →
+Team), applied by the `trg_transactions_split_economy` trigger.
+`users.total_xp` / `total_points` remain as the legacy combined wallet and
+are no longer used for any student-facing ranking.
 
 ### Transaction Types
 
@@ -175,11 +203,37 @@ rank_position, xp_change, points_change, tasks_change,
 meetings_change, rank_change
 ```
 
+#### `get_live_my_journey_leaderboard_v1(p_limit default 50)`
+
+Live My Journey board. Returns:
+
+```
+rank_position, user_id, user_name, user_avatar_url,
+my_journey_xp, my_journey_credits, tasks_completed
+```
+
+Filters `status = 'active'`, `primary_role = 'user'`, confirmed email.
+There is no snapshot equivalent — this board has no week selector.
+
+#### `get_live_team_members_leaderboard_v1(p_limit default 50)`
+
+Live Team Journey → Members board. Same shape as `get_live_leaderboard_data`
+with `total_xp := team_xp` and `total_points := team_points`. Historical
+weeks still come from `get_leaderboard_data` (snapshots).
+
 #### `generate_weekly_leaderboard_snapshots(p_week_number, p_week_year)`
 
 Creates individual snapshots for all active users.
 
 **Returns:** `{ success, message, usersProcessed }`
+
+#### `generate_weekly_leaderboard_snapshots_v2(p_week_number, p_week_year)`
+
+Same body with `total_xp := team_xp` and `total_points := team_points`.
+**This is what cron jobs 3 and 6 run** since 2026-08-28. Snapshot column
+names are unchanged; rows written from that date hold Team economy values,
+earlier rows hold the combined wallet (Batch 2 individual XP was ~0, so the
+history reads the same).
 
 #### `generate_weekly_team_leaderboard_snapshots(p_week_number, p_week_year)`
 
@@ -273,8 +327,9 @@ Animates numbers from 0 to target value with ease-out cubic easing.
 
 | Tab | Data Source | Columns |
 |-----|------------|---------|
-| Individual | `get_leaderboard_data` RPC | Rank, User, XP, Points, Achievements, Tasks, Streak, Change |
-| Teams | `get_team_leaderboard_data` RPC | Rank, Team, XP, Points, Tasks, Meetings, Members, Change |
+| My Journey | `get_live_my_journey_leaderboard_v1` RPC | Rank, User, My Journey XP, Credits, Tasks |
+| Team Journey → Teams | `get_team_leaderboard_data` RPC | Rank, Team, Team XP, Team Points, Tasks, Meetings, Members, Change |
+| Team Journey → Members | `get_live_team_members_leaderboard_v1` (current) / `get_leaderboard_data` (past weeks) | Rank, User, Team XP, Team Points, Achievements, Tasks, Streak, Change |
 
 ### Week Selector
 
@@ -415,6 +470,12 @@ interface LeaderboardEntry {
 | `src/app/dashboard/leaderboard/page.tsx` | Server component, ISR entry |
 | `src/app/dashboard/leaderboard/page-client.tsx` | Client component, full UI |
 | `src/app/dashboard/leaderboard/error.tsx` | Error boundary |
+| `src/components/leaderboard/my-journey-board.tsx` | My Journey board (live only) |
+| `src/components/leaderboard/team-journey-board.tsx` | Team Journey shell with Teams / Members sub-tabs |
+| `src/components/leaderboard/teams-board.tsx` | Teams board |
+| `src/components/leaderboard/members-board.tsx` | Members board (Team economy) |
+| `src/components/leaderboard/leaderboard-board-shell.tsx` | Shared board frame (title, week selector, states) |
+| `src/components/leaderboard/member-row.tsx`, `team-row.tsx`, `row-styles.ts`, `mappers.ts` | Shared row rendering + DB→UI mapping |
 | `src/components/leaderboard/rank-icon.tsx` | Rank position icons |
 | `src/components/leaderboard/change-indicator.tsx` | Week-over-week arrows |
 | `src/components/leaderboard/streak-badge.tsx` | Activity streak display |
