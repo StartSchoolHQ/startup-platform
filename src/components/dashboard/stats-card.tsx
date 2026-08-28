@@ -30,14 +30,22 @@ export function StatsCardComponent({
       ? Math.round((completed / total) * 100)
       : null;
 
-  // Parse numeric values for count-up animation
-  const numericValue =
-    typeof value === "string" ? parseInt(value.replace(/,/g, ""), 10) : 0;
-  const isNumeric = !isNaN(numericValue) && !fractionMatch;
+  // Parse "1,234" or "1,234 Team XP": animate the number, keep the unit suffix
+  const unitMatch =
+    typeof value === "string" && !fractionMatch
+      ? value.match(/^([d,]+)(s+.+)?$/)
+      : null;
+  const numericValue = unitMatch
+    ? parseInt(unitMatch[1].replace(/,/g, ""), 10)
+    : 0;
+  const unitSuffix = unitMatch?.[2] ?? "";
+  const isNumeric = unitMatch !== null && !isNaN(numericValue);
   const animatedValue = useCountUp(isNumeric ? numericValue : 0, 1000);
 
   // Format the display value
-  const displayValue = isNumeric ? animatedValue.toLocaleString() : value;
+  const displayValue = isNumeric
+    ? `${animatedValue.toLocaleString()}${unitSuffix}`
+    : value;
 
   const barColor = progressBarColorMap[iconColor] ?? "bg-primary";
 
