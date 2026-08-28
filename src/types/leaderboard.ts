@@ -37,6 +37,21 @@ export interface LeaderboardEntry {
   rankIcon?: "crown" | "trophy" | "medal" | "flame" | "none";
 }
 
+/** Row of the My Journey (solo economy) board — no weeks, no change deltas. */
+export interface MyJourneyLeaderboardEntry {
+  rank: number;
+  user: {
+    userId: string;
+    name: string;
+    avatar: string;
+    isCurrentUser?: boolean;
+  };
+  xp: number;
+  credits: number;
+  tasks: number;
+  rankIcon?: "crown" | "trophy" | "medal" | "none";
+}
+
 export interface TeamLeaderboardEntry {
   rank: number;
   team: {

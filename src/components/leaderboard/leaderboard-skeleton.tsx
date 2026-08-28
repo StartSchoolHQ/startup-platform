@@ -23,7 +23,7 @@ export function LeaderboardSkeleton() {
             </div>
           </div>
 
-          {/* XP */}
+          {/* Score */}
           <div>
             <Skeleton className="mb-1 h-4 w-16" />
             <Skeleton className="h-3 w-10" />

@@ -8,14 +8,19 @@ import { RankIcon } from "@/components/leaderboard/rank-icon";
 import { ChangeIndicator } from "@/components/leaderboard/change-indicator";
 import { StreakBadge } from "@/components/leaderboard/streak-badge";
 import { LeaderboardEntry, TeamLeaderboardEntry } from "@/types/leaderboard";
+import { economyLabels, type Economy } from "@/lib/economy-labels";
 
 export function LeaderboardMobileRow({
   entry,
   index,
+  economy,
 }: {
   entry: LeaderboardEntry;
   index: number;
+  /** Which economy the totals belong to — drives the unit label. */
+  economy: Economy;
 }) {
+  const labels = economyLabels(economy);
   const isTop3 = entry.rank <= 3;
   const isFirst = entry.rank === 1;
 
@@ -71,7 +76,7 @@ export function LeaderboardMobileRow({
         <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-2 text-xs">
           <span className="flex items-center gap-0.5">
             <Zap className="h-3 w-3 text-green-600" />{" "}
-            {entry.xp.current.toLocaleString()} XP
+            {entry.xp.current.toLocaleString()} {labels.xp}
           </span>
           <span className="flex items-center gap-0.5">
             <ListChecks className="h-3 w-3 text-emerald-600" />{" "}
@@ -107,6 +112,7 @@ export function TeamLeaderboardMobileRow({
   entry: TeamLeaderboardEntry;
   index: number;
 }) {
+  const labels = economyLabels("team");
   const isTop3 = entry.rank <= 3;
   const isFirst = entry.rank === 1;
 
@@ -165,7 +171,7 @@ export function TeamLeaderboardMobileRow({
         <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-2 text-xs">
           <span className="flex items-center gap-0.5">
             <Zap className="h-3 w-3 text-green-600" />{" "}
-            {entry.xp.current.toLocaleString()} XP
+            {entry.xp.current.toLocaleString()} {labels.xp}
           </span>
           <span className="flex items-center gap-0.5">
             <ListChecks className="h-3 w-3 text-emerald-600" />{" "}

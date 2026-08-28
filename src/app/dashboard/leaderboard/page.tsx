@@ -1,12 +1,14 @@
 import {
-  getServerSideLiveLeaderboardData,
   getServerSideAvailableWeeks,
   getServerSideLiveTeamLeaderboardData,
+  getServerSideMyJourneyLeaderboard,
   getServerSideTeamAvailableWeeks,
+  getServerSideTeamMembersLeaderboard,
   getServerSideUserTeamIds,
 } from "@/lib/leaderboard-server";
 import LeaderboardPageClient from "./page-client";
 import { createClient } from "@/lib/supabase/server";
+import { getJourneySettings } from "@/lib/platform-settings";
 
 // Cache leaderboard for 60 seconds (reduces DB load by ~96%)
 export const revalidate = 60;
@@ -17,24 +19,45 @@ export default async function LeaderboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Fetch initial data server-side (individual + team in parallel)
+  const [journeys, profile] = await Promise.all([
+    getJourneySettings(),
+    user?.id
+      ? supabase
+          .from("users")
+          .select("primary_role")
+          .eq("id", user.id)
+          .single()
+          .then(({ data }) => data)
+      : Promise.resolve(null),
+  ]);
+
+  // Admins get both economies prefetched regardless of the current phase.
+  const isAdmin = profile?.primary_role === "admin";
+  const prefetchMyJourney = isAdmin || journeys.myJourney;
+  const prefetchTeamJourney = isAdmin || journeys.teamJourney;
+
   const [
-    initialLeaderboardData,
+    initialMyJourneyData,
+    initialMembersData,
     availableWeeks,
     initialTeamData,
     teamAvailableWeeks,
     userTeamIds,
   ] = await Promise.all([
-    getServerSideLiveLeaderboardData(),
-    getServerSideAvailableWeeks(),
-    getServerSideLiveTeamLeaderboardData(),
-    getServerSideTeamAvailableWeeks(),
-    user?.id ? getServerSideUserTeamIds(user.id) : Promise.resolve([]),
+    prefetchMyJourney ? getServerSideMyJourneyLeaderboard() : [],
+    prefetchTeamJourney ? getServerSideTeamMembersLeaderboard() : [],
+    prefetchTeamJourney ? getServerSideAvailableWeeks() : [],
+    prefetchTeamJourney ? getServerSideLiveTeamLeaderboardData() : [],
+    prefetchTeamJourney ? getServerSideTeamAvailableWeeks() : [],
+    user?.id && prefetchTeamJourney
+      ? getServerSideUserTeamIds(user.id)
+      : Promise.resolve([]),
   ]);
 
   return (
     <LeaderboardPageClient
-      initialData={initialLeaderboardData}
+      initialMyJourneyData={initialMyJourneyData}
+      initialMembersData={initialMembersData}
       availableWeeks={availableWeeks}
       initialTeamData={initialTeamData}
       teamAvailableWeeks={teamAvailableWeeks}

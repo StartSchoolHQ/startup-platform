@@ -40,6 +40,18 @@ export interface LeaderboardEntry {
   is_new_entry?: boolean;
 }
 
+// Type definition for a My Journey leaderboard row returned by
+// `get_live_my_journey_leaderboard_v1`
+export interface MyJourneyLeaderboardRow {
+  rank_position: number;
+  user_id: string;
+  user_name: string;
+  user_avatar_url: string | null;
+  my_journey_xp: number;
+  my_journey_credits: number;
+  tasks_completed: number;
+}
+
 /**
  * Server-side function to get leaderboard data (for use in server components)
  */
@@ -98,6 +110,65 @@ export async function getServerSideLiveLeaderboardData(
     return data || [];
   } catch (error) {
     console.error("Error in getServerSideLiveLeaderboardData:", error);
+    throw error;
+  }
+}
+
+/**
+ * Server-side function to get the LIVE My Journey leaderboard
+ * (solo economy — ranked by My Journey XP, no weekly snapshots)
+ */
+export async function getServerSideMyJourneyLeaderboard(
+  // null = no cap (Postgres LIMIT NULL returns all rows) — show every student
+  limit: number | null = null
+): Promise<MyJourneyLeaderboardRow[]> {
+  const supabase = await createClient();
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc(
+      "get_live_my_journey_leaderboard_v1",
+      { p_limit: limit }
+    );
+
+    if (error) {
+      console.error("Error fetching My Journey leaderboard:", error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in getServerSideMyJourneyLeaderboard:", error);
+    throw error;
+  }
+}
+
+/**
+ * Server-side function to get the LIVE Team Journey members leaderboard
+ * (same row shape as `get_live_leaderboard_data`, but the totals are
+ * Team XP / Team Points)
+ */
+export async function getServerSideTeamMembersLeaderboard(
+  // null = no cap (Postgres LIMIT NULL returns all rows) — show every student
+  limit: number | null = null
+): Promise<LeaderboardEntry[]> {
+  const supabase = await createClient();
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc(
+      "get_live_team_members_leaderboard_v1",
+      { p_limit: limit }
+    );
+
+    if (error) {
+      console.error("Error fetching team members leaderboard:", error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in getServerSideTeamMembersLeaderboard:", error);
     throw error;
   }
 }
