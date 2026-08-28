@@ -714,6 +714,7 @@ export default function MyJourneyPage() {
                   className="cursor-pointer transition-all duration-200 hover:scale-[1.02]"
                 >
                   <AchievementCard
+                    economy="my_journey"
                     title={achievement.achievement_name}
                     description={
                       selectedAchievementId === achievement.achievement_id

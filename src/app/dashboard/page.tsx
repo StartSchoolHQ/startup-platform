@@ -32,10 +32,13 @@ import { useMemo } from "react";
 import { StatsCard, TeamProgressData } from "@/types/dashboard";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
 
 export default function OverviewPage() {
   const { firstName, user } = useApp();
   const queryClient = useQueryClient();
+  const { data: journeySettings } = usePlatformSettings();
+  const isAdmin = user?.primary_role === "admin";
 
   // React Query: Consolidated dashboard overview (single RPC call)
   const {
@@ -48,7 +51,7 @@ export default function OverviewPage() {
       const supabase = createClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any).rpc(
-        "get_dashboard_overview",
+        "get_dashboard_overview_v2",
         { p_user_id: user!.id }
       );
       if (error) throw error;
@@ -58,28 +61,39 @@ export default function OverviewPage() {
     staleTime: 60_000,
   });
 
-  // Derive stats cards from the consolidated overview response
+  // Derive stats cards from the consolidated overview response. The two
+  // economy cards follow the active programme phase; admins always see both.
   const statsCards: StatsCard[] = useMemo(() => {
     if (!dashboardOverview) return [];
-    return [
-      {
-        id: "onborda-xp-balance",
-        title: "XP Balance",
-        value: (dashboardOverview.total_xp ?? 0).toString(),
-        subtitle: "Total experience points",
+
+    const economyCards: StatsCard[] = [];
+
+    if (journeySettings.myJourney || isAdmin) {
+      economyCards.push({
+        id: "onborda-my-journey-balance",
+        title: "My Journey",
+        value: `${dashboardOverview.my_journey_xp ?? 0} XP`,
+        subtitle: `${dashboardOverview.my_journey_credits ?? 0} Credits`,
         icon: Zap,
         iconColor: "text-amber-500",
-        href: "/dashboard/transaction-history",
-      },
-      {
-        id: "onborda-points-balance",
-        title: "Points Balance",
-        value: (dashboardOverview.total_points ?? 0).toString(),
-        subtitle: "Available startup capital",
+        href: "/dashboard/my-journey",
+      });
+    }
+
+    if (journeySettings.teamJourney || isAdmin) {
+      economyCards.push({
+        id: "onborda-team-journey-balance",
+        title: "Team Journey",
+        value: `${dashboardOverview.team_xp ?? 0} Team XP`,
+        subtitle: `${dashboardOverview.team_points ?? 0} Team Points`,
         icon: CreditCard,
         iconColor: "text-emerald-500",
-        href: "/dashboard/transaction-history",
-      },
+        href: "/dashboard/team-journey",
+      });
+    }
+
+    return [
+      ...economyCards,
       {
         id: "onborda-achievements",
         title: "Achievements",
@@ -99,7 +113,7 @@ export default function OverviewPage() {
         href: "/dashboard/team-journey",
       },
     ];
-  }, [dashboardOverview]);
+  }, [dashboardOverview, journeySettings, isAdmin]);
 
   // Derive team progress data from the consolidated overview response
   const teamProgressData: TeamProgressData | null = useMemo(() => {
@@ -309,19 +323,6 @@ export default function OverviewPage() {
         {teamProgressData && <TeamProgressCard data={teamProgressData} />}
         {/* TODO: Re-enable Personal Progress for full release (next year's batch) */}
       </div>
-
-      {/* Individual Weekly Report Modal */}
-      {/* TODO: Re-enable for full release */}
-      {/* {user?.id && (
-        <IndividualWeeklyReportModal
-          open={isIndividualReportModalOpen}
-          onOpenChange={setIsIndividualReportModalOpen}
-          userId={user.id}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-          }}
-        />
-      )} */}
     </div>
   );
 }

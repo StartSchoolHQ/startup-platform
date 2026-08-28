@@ -38,6 +38,8 @@ import { TaskPreviewModal } from "./task-preview-modal";
 
 interface TasksTableProps {
   tasks: TaskTableItem[];
+  /** Which economy the rewards belong to — drives the reward column labels. */
+  economy: "my_journey" | "team";
   isTeamMember?: boolean;
   teamMembers?: Array<{ id: string; name: string; avatar: string }>;
   currentUserId?: string;
@@ -47,6 +49,7 @@ interface TasksTableProps {
 
 export function TasksTable({
   tasks,
+  economy,
   isTeamMember = false,
   teamMembers = [],
   currentUserId,
@@ -55,6 +58,8 @@ export function TasksTable({
 }: TasksTableProps) {
   const router = useRouter();
   const [previewTask, setPreviewTask] = useState<TaskTableItem | null>(null);
+  const xpLabel = economy === "team" ? "Team XP" : "My Journey XP";
+  const pointsLabel = economy === "team" ? "Team Points" : "Credits";
 
   // Filter out any duplicate recurring tasks that may appear in regular task list
 
@@ -65,6 +70,7 @@ export function TasksTable({
         isOpen={!!previewTask}
         onClose={() => setPreviewTask(null)}
         task={previewTask}
+        economy={economy}
         onStartTask={onStartTask}
         canStart={isTeamMember && !!currentUserId && !!onStartTask}
       />
@@ -82,10 +88,10 @@ export function TasksTable({
                 Difficulty
               </th>
               <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                XP
+                {xpLabel}
               </th>
               <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                Points
+                {pointsLabel}
               </th>
               <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Status

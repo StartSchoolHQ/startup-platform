@@ -107,6 +107,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
 
   // Check if task is recurring
   const isRecurringTask =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     task?.title?.includes("Weekly") || (task as any)?.is_recurring === true;
 
   // Check if task has submission data
@@ -255,6 +256,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
 
       const previousTask = queryClient.getQueryData(["task", taskId, user?.id]);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       queryClient.setQueryData(["task", taskId, user?.id], (old: any) => {
         if (!old) return old;
         return {
@@ -278,6 +280,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
       queryClient.invalidateQueries({ queryKey: ["teamJourney"] });
       toast.success("Task started successfully!");
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error, variables, context: any) => {
       // Revert optimistic update on error
       if (context?.previousTask) {
@@ -441,6 +444,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
   // Action handlers
   const handleStartTask = () => startTaskMutation.mutate();
   const handleCompleteTask = () => setShowSubmissionModal(true);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmissionSubmit = async (submissionData: any) => {
     completeTaskMutation.mutate(submissionData);
   };
@@ -1702,14 +1706,14 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <CreditCard className="h-4 w-4 text-black dark:text-white" />
-                  <span className="text-sm text-gray-600">Points</span>
+                  <span className="text-sm text-gray-600">Team Points</span>
                 </div>
                 <span className="font-semibold">{task.base_xp_reward}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-black dark:text-white" />
-                  <span className="text-sm text-gray-600">XP</span>
+                  <span className="text-sm text-gray-600">Team XP</span>
                 </div>
                 <span className="font-semibold">{task.base_xp_reward}</span>
               </div>

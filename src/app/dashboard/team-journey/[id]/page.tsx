@@ -819,8 +819,8 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
           {member.users?.name || "Unknown User"}
         </div>
         <div className="text-muted-foreground text-xs">
-          {(member.users?.total_xp || 0).toLocaleString()} XP |{" "}
-          {(member.users?.total_points || 0).toLocaleString()} Points
+          {(member.users?.team_xp || 0).toLocaleString()} Team XP |{" "}
+          {(member.users?.team_points || 0).toLocaleString()} Team Points
         </div>
       </div>
     </div>
@@ -880,14 +880,14 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
   // Stats cards data for this team
   const statsCards: StatsCard[] = [
     {
-      title: "Total XP",
+      title: "Total Team XP",
       value: totalTeamXP.toLocaleString(),
       subtitle: "From completed team activities",
       icon: Zap,
       iconColor: "text-amber-500",
     },
     {
-      title: "Points Earned as Team",
+      title: "Team Points Earned",
       value: teamPointsEarned.toLocaleString(),
       subtitle: "From completed team tasks",
       icon: CreditCard,
@@ -1077,7 +1077,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                     {totalTeamXP.toLocaleString()}
                   </div>
                   <div className="text-muted-foreground text-xs">
-                    Total Experience Earned
+                    Total Team XP Earned
                   </div>
                 </div>
               </div>
@@ -1198,7 +1198,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                       : teamPointsEarned.toLocaleString()}
                   </div>
                   <div className="text-muted-foreground text-xs">
-                    Total Points Earned
+                    Total Team Points Earned
                   </div>
                 </div>
               </div>
@@ -1215,7 +1215,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                       : teamStats.pointsInvested.toLocaleString()}
                   </div>
                   <div className="text-muted-foreground text-xs">
-                    Total Points Invested
+                    Total Team Points Invested
                   </div>
                 </div>
               </div>
@@ -1470,6 +1470,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
                         }`}
                       >
                         <AchievementCard
+                          economy="team"
                           title={achievement.achievement_name}
                           description={
                             !teamStats.achievementsUnlocked
@@ -1676,6 +1677,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
 
               {/* Convert filtered tasks to TaskTableItem format */}
               <TasksTable
+                economy="team"
                 isTeamMember={isTeamMember}
                 currentUserId={user?.id}
                 tasks={filteredTasks.map((task) => {

@@ -38,6 +38,10 @@ interface UserDetails {
     email: string;
     total_xp: number;
     total_points: number;
+    my_journey_xp: number;
+    my_journey_credits: number;
+    team_xp: number;
+    team_points: number;
     status: string;
     created_at: string;
     last_sign_in_at: string | null;
@@ -169,10 +173,10 @@ export function UserDetailModal({
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold">
-                      {details.user?.total_xp?.toLocaleString() || 0}
+                      {details.user?.team_xp?.toLocaleString() || 0}
                     </div>
                     <div className="text-muted-foreground text-xs">
-                      / 8,000 XP
+                      / 8,000 Team XP
                     </div>
                   </div>
                 </div>

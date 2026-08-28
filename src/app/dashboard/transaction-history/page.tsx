@@ -23,6 +23,7 @@ import Link from "next/link";
 interface Transaction {
   id: string;
   type: string;
+  activity_type: string;
   xp_change: number;
   points_change: number;
   description: string | null;
@@ -46,6 +47,12 @@ const getTransactionIcon = (type: string) => {
       return Star;
   }
 };
+
+/** Rewards are booked per economy — `individual` is My Journey, the rest Team. */
+const getEconomyLabels = (activityType: string) =>
+  activityType === "individual"
+    ? { xp: "My Journey XP", points: "Credits" }
+    : { xp: "Team XP", points: "Team Points" };
 
 const getTransactionColor = () => {
   // Return consistent black theme for all transaction types
@@ -89,6 +96,33 @@ export default function TransactionHistoryPage() {
     enabled: !!user?.id,
   });
 
+  const balanceCards = [
+    {
+      title: "My Journey XP",
+      value: user?.my_journey_xp ?? 0,
+      subtitle: "Solo-phase experience earned",
+      icon: Trophy,
+    },
+    {
+      title: "My Journey Credits",
+      value: user?.my_journey_credits ?? 0,
+      subtitle: "Solo-phase credits available",
+      icon: Star,
+    },
+    {
+      title: "Team XP",
+      value: user?.team_xp ?? 0,
+      subtitle: "Startup-phase experience earned",
+      icon: Trophy,
+    },
+    {
+      title: "Team Points",
+      value: user?.team_points ?? 0,
+      subtitle: "Available startup capital",
+      icon: Star,
+    },
+  ];
+
   if (isPending) {
     return (
       <div className="space-y-6">
@@ -109,7 +143,7 @@ export default function TransactionHistoryPage() {
         <div>
           <h1 className="text-2xl font-bold">Transaction History</h1>
           <p className="text-muted-foreground">
-            Your complete XP and Credits transaction history
+            Your complete My Journey and Team Journey transaction history
           </p>
         </div>
         <Card>
@@ -141,37 +175,26 @@ export default function TransactionHistoryPage() {
       <div>
         <h1 className="text-2xl font-bold">Transaction History</h1>
         <p className="text-muted-foreground">
-          Your complete XP and Credits transaction history
+          Your complete My Journey and Team Journey transaction history
         </p>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total XP</CardTitle>
-            <Trophy className="h-4 w-4 text-black dark:text-white" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{user?.total_xp || 0}</div>
-            <p className="text-muted-foreground text-xs">
-              Experience points earned
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Credits</CardTitle>
-            <Star className="h-4 w-4 text-black dark:text-white" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{user?.total_points || 0}</div>
-            <p className="text-muted-foreground text-xs">
-              Available startup capital
-            </p>
-          </CardContent>
-        </Card>
+      {/* Summary Cards — one balance per economy */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {balanceCards.map((card) => (
+          <Card key={card.title}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {card.title}
+              </CardTitle>
+              <card.icon className="h-4 w-4 text-black dark:text-white" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{card.value}</div>
+              <p className="text-muted-foreground text-xs">{card.subtitle}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Transactions List */}
@@ -186,7 +209,7 @@ export default function TransactionHistoryPage() {
               <div className="text-center">
                 <p className="font-medium">No transactions yet</p>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  Complete tasks or join teams to start earning XP and Credits.
+                  Complete tasks or join teams to start earning rewards.
                 </p>
               </div>
               <Button variant="outline" asChild className="gap-2">
@@ -201,6 +224,7 @@ export default function TransactionHistoryPage() {
               {transactions.map((transaction, index) => {
                 const Icon = getTransactionIcon(transaction.type);
                 const iconColor = getTransactionColor();
+                const labels = getEconomyLabels(transaction.activity_type);
 
                 return (
                   <motion.div
@@ -250,7 +274,7 @@ export default function TransactionHistoryPage() {
                           }
                         >
                           {transaction.xp_change > 0 ? "+" : ""}
-                          {transaction.xp_change} XP
+                          {transaction.xp_change} {labels.xp}
                         </Badge>
                       )}
                       {transaction.points_change !== 0 && (
@@ -267,7 +291,7 @@ export default function TransactionHistoryPage() {
                           }
                         >
                           {transaction.points_change > 0 ? "+" : ""}
-                          {transaction.points_change} Credits
+                          {transaction.points_change} {labels.points}
                         </Badge>
                       )}
                       <Badge variant="outline" className="capitalize">

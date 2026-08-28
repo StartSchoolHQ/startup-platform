@@ -34,7 +34,9 @@ export async function getTeamDetails(teamId: string) {
           avatar_url,
           graduation_level,
           total_xp,
-          total_points
+          total_points,
+          team_xp,
+          team_points
         )
       )
     `

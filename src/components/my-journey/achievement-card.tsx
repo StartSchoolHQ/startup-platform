@@ -8,6 +8,8 @@ interface AchievementCardProps {
   status: "in-progress" | "finished" | "not-started";
   points: number;
   xp: number;
+  /** Which economy the rewards belong to — drives the reward box labels. */
+  economy: "my_journey" | "team";
   selected?: boolean;
   completedTasks?: number;
   totalTasks?: number;
@@ -19,10 +21,14 @@ export function AchievementCard({
   status,
   points,
   xp,
+  economy,
   selected = false,
   completedTasks,
   totalTasks,
 }: AchievementCardProps) {
+  const xpLabel = economy === "team" ? "Team XP" : "My Journey XP";
+  const pointsLabel = economy === "team" ? "Team Points" : "Credits";
+
   const getStatusConfig = (status: AchievementCardProps["status"]) => {
     switch (status) {
       case "in-progress":
@@ -111,7 +117,9 @@ export function AchievementCard({
                 <div className="text-foreground text-base font-semibold">
                   {points}
                 </div>
-                <div className="text-muted-foreground text-xs">Points</div>
+                <div className="text-muted-foreground text-xs">
+                  {pointsLabel}
+                </div>
               </div>
             </div>
           </div>
@@ -124,7 +132,7 @@ export function AchievementCard({
                 <div className="text-foreground text-base font-semibold">
                   {xp}
                 </div>
-                <div className="text-muted-foreground text-xs">XP</div>
+                <div className="text-muted-foreground text-xs">{xpLabel}</div>
               </div>
             </div>
           </div>

@@ -33,6 +33,8 @@ interface TaskPreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   task: TaskTableItem | null;
+  /** Which economy the rewards belong to — drives the reward chip labels. */
+  economy: "my_journey" | "team";
   onStartTask?: (taskId: string) => void;
   canStart?: boolean;
 }
@@ -41,10 +43,14 @@ export function TaskPreviewModal({
   isOpen,
   onClose,
   task,
+  economy,
   onStartTask,
   canStart = true,
 }: TaskPreviewModalProps) {
   if (!task) return null;
+
+  const xpLabel = economy === "team" ? "Team XP" : "My Journey XP";
+  const pointsLabel = economy === "team" ? "Team Points" : "Credits";
 
   const handleStartTask = () => {
     if (onStartTask && task.id) {
@@ -177,7 +183,9 @@ export function TaskPreviewModal({
               />
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-black dark:text-white" />
-                <span className="text-sm font-medium">{task.xp} XP</span>
+                <span className="text-sm font-medium">
+                  {task.xp} {xpLabel}
+                </span>
               </div>
               <Separator
                 orientation="vertical"
@@ -186,7 +194,7 @@ export function TaskPreviewModal({
               <div className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-black dark:text-white" />
                 <span className="text-sm font-medium">
-                  {task.points} Points
+                  {task.points} {pointsLabel}
                 </span>
               </div>
             </div>
