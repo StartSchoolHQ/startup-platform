@@ -33,7 +33,7 @@ export function StatsCardComponent({
   // Parse "1,234" or "1,234 Team XP": animate the number, keep the unit suffix
   const unitMatch =
     typeof value === "string" && !fractionMatch
-      ? value.match(/^([d,]+)(s+.+)?$/)
+      ? value.match(/^([\d,]+)(\s+.+)?$/)
       : null;
   const numericValue = unitMatch
     ? parseInt(unitMatch[1].replace(/,/g, ""), 10)
