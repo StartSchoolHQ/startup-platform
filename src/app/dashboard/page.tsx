@@ -3,6 +3,7 @@
 import { useApp } from "@/contexts/app-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { OverviewSkeleton } from "@/components/dashboard/overview-skeleton";
+import { MyJourneyOverview } from "@/components/dashboard/my-journey-overview";
 import { TeamJourneyOverview } from "@/components/dashboard/team-journey-overview";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 // Onborda disabled temporarily — uncomment to re-enable
@@ -49,8 +50,7 @@ export default function OverviewPage() {
         </p>
       </div>
 
-      {/* My Journey overview — <MyJourneyOverview /> mounts here, gated on
-          `showMyJourney`. */}
+      {showMyJourney && <MyJourneyOverview />}
 
       {showTeamJourney && <TeamJourneyOverview />}
 

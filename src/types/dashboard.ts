@@ -123,3 +123,57 @@ export interface AchievementCardProps {
   isSelected: boolean;
   onClick: (achievementId: string | null) => void;
 }
+
+// ---------------------------------------------------------------------------
+// My Journey dashboard overview — shape of `get_my_journey_overview_v1(uuid)`.
+// The RPC returns a single jsonb object, so these mirror its keys exactly.
+// ---------------------------------------------------------------------------
+
+export type MyJourneyTaskStatus = "in_progress" | "pending_review" | "rejected";
+
+export interface MyJourneyInProgressTask {
+  task_id: string;
+  progress_id: string;
+  title: string;
+  status: MyJourneyTaskStatus;
+  started_at: string | null;
+  xp_reward: number | null;
+  points_reward: number | null;
+}
+
+export interface MyJourneyNextUpTask {
+  task_id: string;
+  title: string;
+  category: string | null;
+  xp_reward: number | null;
+  points_reward: number | null;
+}
+
+export interface MyJourneyAchievementProgress {
+  achievement_id: string;
+  name: string;
+  completed_tasks: number;
+  total_tasks: number;
+  status: "completed" | "in-progress" | "not-started";
+  xp_reward: number | null;
+  points_reward: number | null;
+}
+
+export interface MyJourneyActivityEntry {
+  type: string;
+  description: string | null;
+  xp_change: number | null;
+  points_change: number | null;
+  created_at: string;
+}
+
+export interface MyJourneyOverview {
+  balances: { my_journey_xp: number; my_journey_credits: number };
+  tasks: { completed: number; total: number };
+  achievements: { completed: number; total: number };
+  rank: { position: number | null; total: number };
+  in_progress: MyJourneyInProgressTask[];
+  next_up: MyJourneyNextUpTask | null;
+  achievement_progress: MyJourneyAchievementProgress[];
+  recent_activity: MyJourneyActivityEntry[];
+}

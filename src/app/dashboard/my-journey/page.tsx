@@ -29,7 +29,7 @@ import { StatsCard } from "@/types/dashboard";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, CreditCard, RotateCcw, Trophy, Zap } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { redirect, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -44,9 +44,14 @@ export default function MyJourneyPage() {
   } = usePlatformSettings();
   const queryClient = useQueryClient();
 
-  const [selectedAchievementId, setSelectedAchievementId] = useState<
-    string | null
-  >(null);
+  // `undefined` = the student has not touched the filter yet, so the
+  // `?achievement=<id>` link from the dashboard strip still decides it.
+  const [pickedAchievementId, setPickedAchievementId] = useState<
+    string | null | undefined
+  >(undefined);
+
+  const searchParams = useSearchParams();
+  const achievementParam = searchParams.get("achievement");
 
   const { data: availableTasksData = [], isPending: tasksPending } = useQuery({
     queryKey: ["myJourney", "availableTasks", user?.id],
@@ -106,6 +111,17 @@ export default function MyJourneyPage() {
       ),
     [achievementProgress]
   );
+
+  // The URL only counts until the student picks something, and only when it
+  // names an achievement that actually loaded — a stale link must not filter
+  // the task list down to nothing.
+  const selectedAchievementId = useMemo(() => {
+    if (pickedAchievementId !== undefined) return pickedAchievementId;
+    return achievementParam &&
+      achievements.some((a) => a.achievement_id === achievementParam)
+      ? achievementParam
+      : null;
+  }, [pickedAchievementId, achievementParam, achievements]);
 
   const filteredTasks = useMemo(
     () =>
@@ -260,7 +276,7 @@ export default function MyJourneyPage() {
             achievements={achievements}
             loading={achievementsPending}
             selectedId={selectedAchievementId}
-            onSelect={setSelectedAchievementId}
+            onSelect={setPickedAchievementId}
             emptyText="No achievements available yet"
           />
 
