@@ -10,7 +10,7 @@ import { MyJourneyOverview } from "@/types/dashboard";
  * already has and waits for it — `enabled` keeps the query off until then.
  */
 export function useMyJourneyOverview(userId: string | undefined) {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["dashboard", "my-journey", userId],
     queryFn: async (): Promise<MyJourneyOverview> => {
       const supabase = createClient();
@@ -24,5 +24,5 @@ export function useMyJourneyOverview(userId: string | undefined) {
     staleTime: 60_000,
   });
 
-  return { data, isLoading, isError };
+  return { data, isLoading, isError, refetch };
 }

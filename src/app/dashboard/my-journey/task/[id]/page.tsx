@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +38,7 @@ const labels = economyLabels("my_journey");
 export default function IndividualTaskDetailPage() {
   const params = useParams();
   const { user } = useAppContext();
+  const queryClient = useQueryClient();
   const [task, setTask] = useState<TeamTask | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
@@ -75,6 +77,11 @@ export default function IndividualTaskDetailPage() {
       // Refresh task data to show completed status
       await loadTask();
       setIsSubmissionModalOpen(false);
+
+      // Refresh dashboard overview caches (My Journey stat cards, achievement
+      // progress, etc.) and the My Journey page's own task/achievement lists.
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["myJourney"] });
 
       // Refresh notifications (handled by React Query)
       // No manual refresh needed - queries will auto-update

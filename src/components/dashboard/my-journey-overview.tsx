@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { useApp } from "@/contexts/app-context";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { OverviewSkeleton } from "@/components/dashboard/overview-skeleton";
 import { AchievementProgressStrip } from "@/components/dashboard/my-journey/achievement-progress-strip";
@@ -30,7 +31,7 @@ export function MyJourneyOverview({
   collapsible?: boolean;
 }) {
   const { user } = useApp();
-  const { data, isLoading, isError } = useMyJourneyOverview(user?.id);
+  const { data, isLoading, isError, refetch } = useMyJourneyOverview(user?.id);
   const [isOpen, setIsOpen] = useState(false);
 
   if (isError) {
@@ -38,9 +39,13 @@ export function MyJourneyOverview({
       <Card className="border-red-500/20">
         <CardContent className="flex flex-col items-center justify-center py-8 text-center">
           <AlertCircle className="text-muted-foreground mb-3 h-8 w-8" />
-          <p className="text-muted-foreground text-sm">
-            Couldn&apos;t load your progress — refresh to try again.
+          <p className="text-muted-foreground mb-4 text-sm">
+            Couldn&apos;t load your progress
           </p>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try again
+          </Button>
         </CardContent>
       </Card>
     );

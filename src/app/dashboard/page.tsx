@@ -46,7 +46,9 @@ export default function OverviewPage() {
       <div>
         <h1 className="text-2xl font-bold">Hi {firstName} 👋</h1>
         <p className="text-muted-foreground">
-          Here you can see progress for you and your team
+          {showTeamJourney
+            ? "Here you can see progress for you and your team"
+            : "Here you can see your progress"}
         </p>
       </div>
 

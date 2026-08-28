@@ -182,21 +182,27 @@ Full detail on the phase-aware split, the gating matrix and the
 
 **File:** `src/app/dashboard/my-journey/page.tsx`
 
-- **Profile Header:** Name, status badge, "Submit Weekly Report" button
-- **Stats Cards:** Total XP, Total Credits, Tasks Completed (%), Achievement Rate (%)
-- **Tabs:**
-  - **Achievements** — Grid of achievement cards (filterable), clicking filters task table below
-  - **Weekly Reports** — `IndividualWeeklyReportsTable`
-  - **Strikes** — Penalty records with XP/points impact
-- **Tasks Table:** Task name, difficulty, status, XP, points, action buttons
-  - Actions: Start, Continue, Done, Retry, Waiting (for peer review)
-  - Expandable peer review feedback rows
-  - Difficulty badges: Easy (1), Medium (2), Hard (3+)
-  - Status badges: approved, rejected, pending_review, in_progress, not_started
+- **Header:** `MyJourneyHeader` — avatar, name, "My Journey" badge
+- **Stats Cards** (4): My Journey XP, My Journey Credits, Tasks Completed
+  (`completed/total`), Achievements (`completed/total`) — economy labels via
+  `economyLabels("my_journey")`
+- **Progress:** `MyJourneyProgressCards` (tasks completed) + a "How My
+  Journey works" explainer card
+- **Tabs:** single **Tasks** tab —
+  - `AchievementsGrid` — filterable achievement cards; selecting one filters
+    the task table below
+  - `TasksTable` — task name, difficulty, status, XP, points, action buttons
+    (Start/Continue/Done/Retry/Waiting), difficulty badges (Easy/Medium/Hard),
+    status badges (approved, rejected, pending_review, in_progress,
+    not_started)
+  - A task preview modal opens from the table for task detail without
+    leaving the page
 - **`?achievement=<id>` query param:** preselects that achievement's filter
   on load — this is the link target from the dashboard's My Journey
   achievement-progress strip. A stale or unknown id is ignored (falls back
   to no filter) rather than erroring.
+- Weekly Reports and Strikes tabs and the "Submit Weekly Report" button have
+  been removed from this page.
 
 ### Team Journey / All Products (`/dashboard/team-journey`)
 

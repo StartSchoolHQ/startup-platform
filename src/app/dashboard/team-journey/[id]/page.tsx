@@ -554,7 +554,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         queryKey: ["task", "permissions"],
       });
       queryClient.invalidateQueries({
-        queryKey: ["dashboard", "stats"],
+        queryKey: ["dashboard"],
       });
     },
   });
@@ -704,7 +704,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         queryKey: ["task", "permissions"],
       });
       queryClient.invalidateQueries({
-        queryKey: ["dashboard", "stats"],
+        queryKey: ["dashboard"],
       });
     },
   });

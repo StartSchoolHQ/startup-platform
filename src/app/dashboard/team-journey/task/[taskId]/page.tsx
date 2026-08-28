@@ -336,7 +336,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
       });
       setShowSubmissionModal(false);
       await refetchTask(); // Refetch task data
-      queryClient.invalidateQueries({ queryKey: ["dashboard", "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["teamJourney", "stats"] });
       invalidateNotifications(queryClient, user?.id);
       toast.success("Task Submitted Successfully! ✅", {
@@ -377,7 +377,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
       toast.success("Task cancelled successfully");
       queryClient.invalidateQueries({ queryKey: ["task", taskId] });
       queryClient.invalidateQueries({ queryKey: ["task", "permissions"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard", "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["teamJourney", "stats"] });
       queryClient.invalidateQueries({ queryKey: ["teamJourney"] }); // Refresh tasks list
       // Navigate back to team journey page since task is no longer in progress
@@ -409,7 +409,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
       });
       queryClient.invalidateQueries({ queryKey: ["task", taskId] });
       queryClient.invalidateQueries({ queryKey: ["task", "permissions"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard", "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["teamJourney", "stats"] });
     },
     onError: (error) => {

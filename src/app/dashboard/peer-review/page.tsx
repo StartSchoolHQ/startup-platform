@@ -486,7 +486,7 @@ export default function PeerReviewPage() {
 
       invalidateNotifications(queryClient, user?.id);
       queryClient.invalidateQueries({ queryKey: ["peerReview"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard", "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: (error: Error) => {
       queryClient.invalidateQueries({ queryKey: ["peerReview"] });
