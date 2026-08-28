@@ -65,8 +65,8 @@ export function MyJourneyProgressCards({
               there is what counts toward graduation.
             </li>
             <li>
-              No weekly reports live here; reporting starts once Team Journey
-              opens.
+              Work through the tasks at your own pace — every finished task
+              moves your progress bar above.
             </li>
           </ul>
         </CardContent>
