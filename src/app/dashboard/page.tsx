@@ -15,7 +15,7 @@ import { usePlatformSettings } from "@/hooks/use-platform-settings";
  * out and never redirects.
  */
 export default function OverviewPage() {
-  const { firstName, user } = useApp();
+  const { firstName, user, loading: isLoadingProfile } = useApp();
   const { data: journeys, isLoading: isLoadingSettings } =
     usePlatformSettings();
 
@@ -23,7 +23,10 @@ export default function OverviewPage() {
   const showMyJourney = journeys.myJourney || isAdmin;
   const showTeamJourney = journeys.teamJourney || isAdmin;
 
-  if (isLoadingSettings) {
+  // `isAdmin` reads `user.primary_role`, which is falsy until the profile
+  // resolves — choosing sections before then would flash the wrong one at
+  // admins. Wait for both reads.
+  if (isLoadingSettings || isLoadingProfile) {
     return (
       <div className="space-y-6">
         <div>
