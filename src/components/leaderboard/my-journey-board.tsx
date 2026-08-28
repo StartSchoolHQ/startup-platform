@@ -16,26 +16,9 @@ import { type MyJourneyLeaderboardRow as DBMyJourneyEntry } from "@/lib/leaderbo
 import { createClient } from "@/lib/supabase/client";
 import { economyLabels } from "@/lib/economy-labels";
 import { cn } from "@/lib/utils";
+import { leaderboardRowClass } from "@/components/leaderboard/row-styles";
 
 const GRID_COLUMNS = "80px 220px 1fr 1fr 1fr";
-
-function rowClassName(entry: MyJourneyLeaderboardEntry) {
-  let base =
-    "grid min-w-[640px] gap-4 p-4 border-b border-border items-center hover:bg-muted/30 hover:shadow-md transition-all duration-200";
-
-  if (entry.user.isCurrentUser) {
-    base +=
-      " bg-blue-50 dark:bg-blue-950/50 animate-[pulse-subtle_3s_ease-in-out_infinite]";
-  } else if (entry.rank === 1) {
-    base +=
-      " bg-gradient-to-r from-yellow-50/50 to-transparent dark:from-yellow-950/20";
-  } else if (entry.rank <= 3) {
-    base +=
-      " bg-gradient-to-r from-slate-50/50 to-transparent dark:from-slate-900/20";
-  }
-
-  return base;
-}
 
 function StudentCell({ entry }: { entry: MyJourneyLeaderboardEntry }) {
   return (
@@ -70,7 +53,11 @@ function MyJourneyRow({ entry }: { entry: MyJourneyLeaderboardEntry }) {
       {/* Desktop row (sm+) */}
       <div className="hidden sm:block">
         <div
-          className={rowClassName(entry)}
+          className={leaderboardRowClass({
+            highlighted: entry.user.isCurrentUser,
+            rank: entry.rank,
+            minWidthClass: "min-w-[640px]",
+          })}
           style={{ gridTemplateColumns: GRID_COLUMNS }}
         >
           <div className="flex items-center gap-2">

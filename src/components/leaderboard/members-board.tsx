@@ -3,10 +3,8 @@
 
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LeaderboardSkeleton } from "@/components/leaderboard/leaderboard-skeleton";
+import { LeaderboardBoardShell } from "@/components/leaderboard/leaderboard-board-shell";
 import { LeaderboardMobileRow } from "@/components/leaderboard/leaderboard-mobile-rows";
 import {
   MemberRow,
@@ -105,133 +103,58 @@ export function MembersBoard({
     [rawDbData, currentUserId, userStreaks]
   );
 
-  const emptyState =
-    selectedWeek === "current" ? (
-      <p>No leaderboard data available yet.</p>
-    ) : (
-      <>
-        <p>No data available for this week.</p>
-        <p className="mt-1 text-sm">
-          Weekly snapshots will be generated automatically.
-        </p>
-      </>
-    );
-
   return (
-    <Card className="border-none shadow-none">
-      <CardContent className="p-0">
-        {streaksLoading && (
+    <LeaderboardBoardShell
+      gridColumns={MEMBER_GRID_COLUMNS}
+      loading={loading}
+      isEmpty={entries.length === 0}
+      topSlot={
+        streaksLoading ? (
           <div className="flex items-center justify-end gap-2 pb-2">
             <Skeleton className="h-4 w-4 rounded-full" />
             <Skeleton className="h-4 w-24" />
           </div>
-        )}
-
-        {/* Desktop table (sm+) */}
-        <div className="hidden overflow-x-auto sm:block">
-          <div
-            className="border-border text-muted-foreground grid min-w-[700px] gap-4 border-b p-4 text-sm font-medium"
-            style={{ gridTemplateColumns: MEMBER_GRID_COLUMNS }}
-          >
-            <div>Rank</div>
-            <div>Student</div>
-            <div>{labels.xp}</div>
-            <div>Tasks</div>
-            <div>Reviews</div>
-            <div>Streak</div>
-            <div className="text-center">Change</div>
-          </div>
-
-          <AnimatePresence mode="wait">
-            {loading ? (
-              <motion.div
-                key="skeleton"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="p-6"
-              >
-                <LeaderboardSkeleton />
-              </motion.div>
-            ) : entries.length > 0 ? (
-              <motion.div
-                key="data"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <AnimatePresence mode="popLayout">
-                  {entries.map((item: LeaderboardEntry, index: number) => (
-                    <MemberRow
-                      key={`${item.user.name}-${item.rank}`}
-                      entry={item}
-                      index={index}
-                    />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-muted-foreground p-8 text-center"
-              >
-                {emptyState}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Mobile cards (<sm) */}
-        <div className="block sm:hidden">
-          <AnimatePresence mode="wait">
-            {loading ? (
-              <motion.div
-                key="skeleton-mobile"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="p-6"
-              >
-                <LeaderboardSkeleton />
-              </motion.div>
-            ) : entries.length > 0 ? (
-              <motion.div
-                key="data-mobile"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <AnimatePresence mode="popLayout">
-                  {entries.map((item: LeaderboardEntry, index: number) => (
-                    <LeaderboardMobileRow
-                      key={`mobile-${item.user.name}-${item.rank}`}
-                      entry={item}
-                      index={index}
-                      economy="team"
-                    />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="empty-mobile"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-muted-foreground p-8 text-center"
-              >
-                <p>No leaderboard data available yet.</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </CardContent>
-    </Card>
+        ) : null
+      }
+      headerCells={
+        <>
+          <div>Rank</div>
+          <div>Student</div>
+          <div>{labels.xp}</div>
+          <div>Tasks</div>
+          <div>Reviews</div>
+          <div>Streak</div>
+          <div className="text-center">Change</div>
+        </>
+      }
+      desktopRows={entries.map((item: LeaderboardEntry, index: number) => (
+        <MemberRow
+          key={`${item.user.name}-${item.rank}`}
+          entry={item}
+          index={index}
+        />
+      ))}
+      mobileRows={entries.map((item: LeaderboardEntry, index: number) => (
+        <LeaderboardMobileRow
+          key={`mobile-${item.user.name}-${item.rank}`}
+          entry={item}
+          index={index}
+          economy="team"
+        />
+      ))}
+      desktopEmpty={
+        selectedWeek === "current" ? (
+          <p>No leaderboard data available yet.</p>
+        ) : (
+          <>
+            <p>No data available for this week.</p>
+            <p className="mt-1 text-sm">
+              Weekly snapshots will be generated automatically.
+            </p>
+          </>
+        )
+      }
+      mobileEmpty={<p>No leaderboard data available yet.</p>}
+    />
   );
 }

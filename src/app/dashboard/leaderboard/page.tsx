@@ -63,6 +63,8 @@ export default async function LeaderboardPage() {
       teamAvailableWeeks={teamAvailableWeeks}
       currentUserId={user?.id}
       userTeamIds={userTeamIds}
+      initialJourneys={journeys}
+      isAdmin={isAdmin}
     />
   );
 }

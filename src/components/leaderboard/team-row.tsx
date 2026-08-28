@@ -10,6 +10,7 @@ import { ChangeValue } from "@/components/leaderboard/change-value";
 import { TeamLeaderboardEntry } from "@/types/leaderboard";
 import { useCountUp } from "@/hooks/use-count-up";
 import { economyLabels } from "@/lib/economy-labels";
+import { leaderboardRowClass } from "@/components/leaderboard/row-styles";
 
 export const TEAM_GRID_COLUMNS = "80px 200px 1fr 1fr 1fr 1fr 100px";
 
@@ -27,25 +28,6 @@ export function TeamRow({
   const animatedMeetings = useCountUp(entry.meetings.current, 800);
 
   const isTop3 = entry.rank <= 3;
-  const isFirst = entry.rank === 1;
-
-  const getRowClassName = () => {
-    let baseClass =
-      "grid min-w-[700px] gap-4 p-4 border-b border-border items-center hover:bg-muted/30 hover:shadow-md transition-all duration-200";
-
-    if (entry.team.isCurrentUserTeam) {
-      baseClass +=
-        " bg-blue-50 dark:bg-blue-950/50 animate-[pulse-subtle_3s_ease-in-out_infinite]";
-    } else if (isFirst) {
-      baseClass +=
-        " bg-gradient-to-r from-yellow-50/50 to-transparent dark:from-yellow-950/20";
-    } else if (isTop3) {
-      baseClass +=
-        " bg-gradient-to-r from-slate-50/50 to-transparent dark:from-slate-900/20";
-    }
-
-    return baseClass;
-  };
 
   return (
     <motion.div
@@ -59,7 +41,10 @@ export function TeamRow({
         opacity: { duration: 0.3, delay: index * 0.05 },
         y: { duration: 0.3, delay: index * 0.05 },
       }}
-      className={getRowClassName()}
+      className={leaderboardRowClass({
+        highlighted: entry.team.isCurrentUserTeam,
+        rank: entry.rank,
+      })}
       style={{
         gridTemplateColumns: TEAM_GRID_COLUMNS,
         boxShadow: isTop3 ? "0 0 20px -10px rgba(0,0,0,0.1)" : "none",

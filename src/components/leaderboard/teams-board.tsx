@@ -3,10 +3,8 @@
 
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
-import { LeaderboardSkeleton } from "@/components/leaderboard/leaderboard-skeleton";
 import { TeamLeaderboardMobileRow } from "@/components/leaderboard/leaderboard-mobile-rows";
+import { LeaderboardBoardShell } from "@/components/leaderboard/leaderboard-board-shell";
 import { TeamRow, TEAM_GRID_COLUMNS } from "@/components/leaderboard/team-row";
 import { convertToTeamLeaderboardEntry } from "@/components/leaderboard/mappers";
 import { TeamLeaderboardEntry } from "@/types/leaderboard";
@@ -63,125 +61,49 @@ export function TeamsBoard({
     [rawTeamDbData, userTeamIds]
   );
 
-  const emptyState =
-    selectedWeek === "current" ? (
-      <p>No team leaderboard data available yet.</p>
-    ) : (
-      <>
-        <p>No team data available for this week.</p>
-        <p className="mt-1 text-sm">
-          Weekly snapshots will be generated automatically.
-        </p>
-      </>
-    );
-
   return (
-    <Card className="border-none shadow-none">
-      <CardContent className="p-0">
-        {/* Desktop table (sm+) */}
-        <div className="hidden overflow-x-auto sm:block">
-          <div
-            className="border-border text-muted-foreground grid min-w-[700px] gap-4 border-b p-4 text-sm font-medium"
-            style={{ gridTemplateColumns: TEAM_GRID_COLUMNS }}
-          >
-            <div>Rank</div>
-            <div>Team</div>
-            <div>{labels.xp}</div>
-            <div>{labels.points}</div>
-            <div>Tasks</div>
-            <div>Meetings</div>
-            <div className="text-center">Change</div>
-          </div>
-
-          <AnimatePresence mode="wait">
-            {teamLoading ? (
-              <motion.div
-                key="team-skeleton"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="p-6"
-              >
-                <LeaderboardSkeleton />
-              </motion.div>
-            ) : entries.length > 0 ? (
-              <motion.div
-                key="team-data"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <AnimatePresence mode="popLayout">
-                  {entries.map((item: TeamLeaderboardEntry, index: number) => (
-                    <TeamRow
-                      key={`${item.team.name}-${item.rank}`}
-                      entry={item}
-                      index={index}
-                    />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="team-empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-muted-foreground p-8 text-center"
-              >
-                {emptyState}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Mobile cards (<sm) */}
-        <div className="block sm:hidden">
-          <AnimatePresence mode="wait">
-            {teamLoading ? (
-              <motion.div
-                key="team-skeleton-mobile"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="p-6"
-              >
-                <LeaderboardSkeleton />
-              </motion.div>
-            ) : entries.length > 0 ? (
-              <motion.div
-                key="team-data-mobile"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <AnimatePresence mode="popLayout">
-                  {entries.map((item: TeamLeaderboardEntry, index: number) => (
-                    <TeamLeaderboardMobileRow
-                      key={`team-mobile-${item.team.name}-${item.rank}`}
-                      entry={item}
-                      index={index}
-                    />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="team-empty-mobile"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-muted-foreground p-8 text-center"
-              >
-                <p>No team leaderboard data available yet.</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </CardContent>
-    </Card>
+    <LeaderboardBoardShell
+      gridColumns={TEAM_GRID_COLUMNS}
+      loading={teamLoading}
+      isEmpty={entries.length === 0}
+      headerCells={
+        <>
+          <div>Rank</div>
+          <div>Team</div>
+          <div>{labels.xp}</div>
+          <div>{labels.points}</div>
+          <div>Tasks</div>
+          <div>Meetings</div>
+          <div className="text-center">Change</div>
+        </>
+      }
+      desktopRows={entries.map((item: TeamLeaderboardEntry, index: number) => (
+        <TeamRow
+          key={`${item.team.name}-${item.rank}`}
+          entry={item}
+          index={index}
+        />
+      ))}
+      mobileRows={entries.map((item: TeamLeaderboardEntry, index: number) => (
+        <TeamLeaderboardMobileRow
+          key={`team-mobile-${item.team.name}-${item.rank}`}
+          entry={item}
+          index={index}
+        />
+      ))}
+      desktopEmpty={
+        selectedWeek === "current" ? (
+          <p>No team leaderboard data available yet.</p>
+        ) : (
+          <>
+            <p>No team data available for this week.</p>
+            <p className="mt-1 text-sm">
+              Weekly snapshots will be generated automatically.
+            </p>
+          </>
+        )
+      }
+      mobileEmpty={<p>No team leaderboard data available yet.</p>}
+    />
   );
 }
