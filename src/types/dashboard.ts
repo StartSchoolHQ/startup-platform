@@ -176,4 +176,5 @@ export interface MyJourneyOverview {
   next_up: MyJourneyNextUpTask | null;
   achievement_progress: MyJourneyAchievementProgress[];
   recent_activity: MyJourneyActivityEntry[];
+  has_active_team: boolean;
 }

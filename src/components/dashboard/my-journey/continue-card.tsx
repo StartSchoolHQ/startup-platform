@@ -53,7 +53,7 @@ export function ContinueCard({ tasks }: { tasks: MyJourneyInProgressTask[] }) {
         ) : (
           <ul className="space-y-3">
             {tasks.map((task) => {
-              const meta = STATUS_META[task.status];
+              const meta = STATUS_META[task.status] ?? STATUS_META.in_progress;
               return (
                 <li
                   key={task.progress_id}

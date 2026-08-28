@@ -50,7 +50,7 @@ export default function OverviewPage() {
         </p>
       </div>
 
-      {showMyJourney && <MyJourneyOverview />}
+      {showMyJourney && <MyJourneyOverview collapsible={showTeamJourney} />}
 
       {showTeamJourney && <TeamJourneyOverview />}
 

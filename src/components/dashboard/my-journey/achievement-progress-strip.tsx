@@ -41,7 +41,8 @@ export function AchievementProgressStrip({
             >
               <Card
                 className={`h-full transition-shadow hover:shadow-md ${
-                  STATUS_BORDER[achievement.status]
+                  STATUS_BORDER[achievement.status] ??
+                  STATUS_BORDER["not-started"]
                 }`}
               >
                 <CardContent className="space-y-2 px-4">

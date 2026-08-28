@@ -13,13 +13,17 @@ const labels = economyLabels("my_journey");
  */
 export function MyJourneyStatCards({ data }: { data: MyJourneyOverview }) {
   const showRank = data.rank.total >= 3 && data.rank.position !== null;
+  const balances = data.balances ?? {
+    my_journey_xp: 0,
+    my_journey_credits: 0,
+  };
 
   const cards: StatsCard[] = [
     {
       id: "onborda-my-journey-balance",
       title: labels.xp,
-      value: data.balances.my_journey_xp.toLocaleString(),
-      subtitle: `${data.balances.my_journey_credits.toLocaleString()} ${labels.points}`,
+      value: balances.my_journey_xp.toLocaleString(),
+      subtitle: `${balances.my_journey_credits.toLocaleString()} ${labels.points}`,
       icon: Zap,
       iconColor: "text-amber-500",
       href: "/dashboard/my-journey",
