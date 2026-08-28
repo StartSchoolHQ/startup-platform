@@ -275,7 +275,7 @@ export default function OverviewPage() {
             </span>
             {actionItems.leaderboard_xp_change > 0 && (
               <Badge variant="secondary" className="text-xs">
-                +{actionItems.leaderboard_xp_change} XP this week
+                +{actionItems.leaderboard_xp_change} Team XP this week
               </Badge>
             )}
           </Link>

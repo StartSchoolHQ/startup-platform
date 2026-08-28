@@ -83,9 +83,9 @@ export function CreateTeamDialog({
       return;
     }
 
-    if (user.total_points && user.total_points < TEAM_CREATION_COST) {
+    if (user.team_points && user.team_points < TEAM_CREATION_COST) {
       setError(
-        `Insufficient credits. You need ${TEAM_CREATION_COST} credits to create a team.`
+        `Insufficient Team Points. You need ${TEAM_CREATION_COST} Team Points to create a team.`
       );
       return;
     }
@@ -153,7 +153,7 @@ export function CreateTeamDialog({
   };
 
   const canAfford = user
-    ? (user.total_points ?? 0) >= TEAM_CREATION_COST
+    ? (user.team_points ?? 0) >= TEAM_CREATION_COST
     : false;
 
   return (
@@ -163,7 +163,7 @@ export function CreateTeamDialog({
           <DialogTitle>Create New Product Team</DialogTitle>
           <DialogDescription>
             Form a product team to collaborate with other entrepreneurs.
-            Creating a product team costs {TEAM_CREATION_COST} credits.
+            Creating a product team costs {TEAM_CREATION_COST} Team Points.
           </DialogDescription>
         </DialogHeader>
 
@@ -238,7 +238,9 @@ export function CreateTeamDialog({
               <CreditCard className="text-muted-foreground h-4 w-4" />
               <span className="text-sm">Creation Cost</span>
             </div>
-            <span className="font-semibold">{TEAM_CREATION_COST} Credits</span>
+            <span className="font-semibold">
+              {TEAM_CREATION_COST} Team Points
+            </span>
           </div>
 
           <div className="bg-muted flex items-center justify-between rounded-lg p-3">
@@ -250,7 +252,7 @@ export function CreateTeamDialog({
                 canAfford ? "text-[#ff78c8]" : "text-destructive"
               }`}
             >
-              {user?.total_points || 0} Credits
+              {user?.team_points || 0} Team Points
             </span>
           </div>
 
@@ -280,7 +282,7 @@ export function CreateTeamDialog({
                   Creating...
                 </>
               ) : (
-                `Create Product Team (${TEAM_CREATION_COST} Credits)`
+                `Create Product Team (${TEAM_CREATION_COST} Team Points)`
               )}
             </Button>
           </DialogFooter>

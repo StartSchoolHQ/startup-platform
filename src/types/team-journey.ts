@@ -68,6 +68,7 @@ export interface TeamTask {
   priority: TaskPriority;
   difficulty_level: number;
   base_xp_reward: number;
+  base_points_reward: number;
   is_confidential?: boolean;
   detailed_instructions?: string;
   tips_content?: Array<{

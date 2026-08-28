@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Medal, Zap, CreditCard, ChevronRight } from "lucide-react";
+import { economyLabels, type Economy } from "@/lib/economy-labels";
 
 interface AchievementCardProps {
   title: string;
@@ -9,7 +10,7 @@ interface AchievementCardProps {
   points: number;
   xp: number;
   /** Which economy the rewards belong to — drives the reward box labels. */
-  economy: "my_journey" | "team";
+  economy: Economy;
   selected?: boolean;
   completedTasks?: number;
   totalTasks?: number;
@@ -26,8 +27,7 @@ export function AchievementCard({
   completedTasks,
   totalTasks,
 }: AchievementCardProps) {
-  const xpLabel = economy === "team" ? "Team XP" : "My Journey XP";
-  const pointsLabel = economy === "team" ? "Team Points" : "Credits";
+  const labels = economyLabels(economy);
 
   const getStatusConfig = (status: AchievementCardProps["status"]) => {
     switch (status) {
@@ -118,7 +118,7 @@ export function AchievementCard({
                   {points}
                 </div>
                 <div className="text-muted-foreground text-xs">
-                  {pointsLabel}
+                  {labels.points}
                 </div>
               </div>
             </div>
@@ -132,7 +132,7 @@ export function AchievementCard({
                 <div className="text-foreground text-base font-semibold">
                   {xp}
                 </div>
-                <div className="text-muted-foreground text-xs">{xpLabel}</div>
+                <div className="text-muted-foreground text-xs">{labels.xp}</div>
               </div>
             </div>
           </div>

@@ -1708,7 +1708,7 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
                   <CreditCard className="h-4 w-4 text-black dark:text-white" />
                   <span className="text-sm text-gray-600">Team Points</span>
                 </div>
-                <span className="font-semibold">{task.base_xp_reward}</span>
+                <span className="font-semibold">{task.base_points_reward}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

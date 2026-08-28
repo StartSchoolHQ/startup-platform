@@ -616,6 +616,7 @@ export async function getTaskByIdLazy(
       priority: (taskData.priority as TaskPriority) || "medium",
       difficulty_level: taskData.difficulty_level || 1,
       base_xp_reward: taskData.base_xp_reward || 0,
+      base_points_reward: taskData.base_points_reward || 0,
       xp_reward: taskData.base_xp_reward || 0, // xp_reward maps to base_xp_reward
       detailed_instructions: taskData.detailed_instructions || undefined,
       tips_content:
@@ -783,6 +784,7 @@ export async function getTaskById(
         priority,
         difficulty_level,
         base_xp_reward,
+        base_points_reward,
         detailed_instructions,
         tips_content,
         peer_review_criteria,
@@ -841,6 +843,7 @@ export async function getTaskById(
       priority: (taskData.priority ?? "medium") as TaskPriority,
       difficulty_level: (taskData.difficulty_level ?? 1) as number,
       base_xp_reward: (taskData.base_xp_reward ?? 0) as number,
+      base_points_reward: (taskData.base_points_reward ?? 0) as number,
       status: progressData.status as TaskStatus,
       assigned_to_user_id: progressData.assigned_to_user_id ?? undefined,
       assignee_name: assigneeData?.name ?? undefined,
@@ -1192,6 +1195,7 @@ export async function completeIndividualTask(
     const supabase = createClient();
 
     // Use existing complete_individual_task RPC function
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.rpc as any)(
       "complete_individual_task",
       {

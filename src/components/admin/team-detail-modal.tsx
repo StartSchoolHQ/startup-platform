@@ -33,6 +33,8 @@ interface TeamMember {
   name: string;
   email: string;
   total_xp: number;
+  team_xp: number;
+  team_points: number;
   xp_progress_percent: number;
   joined_at: string;
 }
@@ -199,7 +201,7 @@ export function TeamDetailModal({
                       <div className="mb-2 flex items-center justify-between">
                         <span className="font-medium">{member.name}</span>
                         <span className="text-muted-foreground text-sm">
-                          {member.total_xp.toLocaleString()} / 8,000 Team XP
+                          {member.team_xp.toLocaleString()} / 8,000 Team XP
                         </span>
                       </div>
                       <div className="h-2 w-full rounded-full bg-gray-200">

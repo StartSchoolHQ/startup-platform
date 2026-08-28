@@ -35,11 +35,12 @@ import { TaskTableItem } from "@/types/team-journey";
 import { useRouter } from "next/navigation";
 import { mapUIStatusToBadge } from "@/lib/status-mapper";
 import { TaskPreviewModal } from "./task-preview-modal";
+import { economyLabels, type Economy } from "@/lib/economy-labels";
 
 interface TasksTableProps {
   tasks: TaskTableItem[];
   /** Which economy the rewards belong to — drives the reward column labels. */
-  economy: "my_journey" | "team";
+  economy: Economy;
   isTeamMember?: boolean;
   teamMembers?: Array<{ id: string; name: string; avatar: string }>;
   currentUserId?: string;
@@ -58,8 +59,7 @@ export function TasksTable({
 }: TasksTableProps) {
   const router = useRouter();
   const [previewTask, setPreviewTask] = useState<TaskTableItem | null>(null);
-  const xpLabel = economy === "team" ? "Team XP" : "My Journey XP";
-  const pointsLabel = economy === "team" ? "Team Points" : "Credits";
+  const labels = economyLabels(economy);
 
   // Filter out any duplicate recurring tasks that may appear in regular task list
 
@@ -88,10 +88,10 @@ export function TasksTable({
                 Difficulty
               </th>
               <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                {xpLabel}
+                {labels.xp}
               </th>
               <th className="text-muted-foreground px-4 py-4 text-left font-medium">
-                {pointsLabel}
+                {labels.points}
               </th>
               <th className="text-muted-foreground px-4 py-4 text-left font-medium">
                 Status

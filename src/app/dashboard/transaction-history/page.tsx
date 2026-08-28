@@ -19,6 +19,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getUserTransactions } from "@/lib/database";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { economyFromActivityType, economyLabels } from "@/lib/economy-labels";
 
 interface Transaction {
   id: string;
@@ -47,12 +48,6 @@ const getTransactionIcon = (type: string) => {
       return Star;
   }
 };
-
-/** Rewards are booked per economy — `individual` is My Journey, the rest Team. */
-const getEconomyLabels = (activityType: string) =>
-  activityType === "individual"
-    ? { xp: "My Journey XP", points: "Credits" }
-    : { xp: "Team XP", points: "Team Points" };
 
 const getTransactionColor = () => {
   // Return consistent black theme for all transaction types
@@ -224,7 +219,9 @@ export default function TransactionHistoryPage() {
               {transactions.map((transaction, index) => {
                 const Icon = getTransactionIcon(transaction.type);
                 const iconColor = getTransactionColor();
-                const labels = getEconomyLabels(transaction.activity_type);
+                const labels = economyLabels(
+                  economyFromActivityType(transaction.activity_type)
+                );
 
                 return (
                   <motion.div

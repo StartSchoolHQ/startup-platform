@@ -20,11 +20,12 @@ import {
   Lock,
 } from "lucide-react";
 import { TaskWithAchievement } from "@/types/dashboard";
+import { economyLabels, type Economy } from "@/lib/economy-labels";
 
 interface TasksTableProps {
   tasks: TaskWithAchievement[];
   /** Which economy the rewards belong to — drives the reward chip labels. */
-  economy: "my_journey" | "team";
+  economy: Economy;
   selectedAchievementId?: string | null;
   emptyStateTitle?: string;
   emptyStateDescription?: string;
@@ -84,8 +85,7 @@ export function TasksTable({
   emptyStateTitle = "No tasks available",
   emptyStateDescription = "Tasks will appear here once available",
 }: TasksTableProps) {
-  const xpLabel = economy === "team" ? "Team XP" : "My Journey XP";
-  const creditsLabel = economy === "team" ? "Team Points" : "Credits";
+  const labels = economyLabels(economy);
 
   if (tasks.length === 0) {
     return (
@@ -238,7 +238,7 @@ export function TasksTable({
                         {task.base_xp_reward}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-500">{xpLabel}</div>
+                    <div className="text-xs text-gray-500">{labels.xp}</div>
                   </div>
 
                   <div className="text-center">
@@ -248,7 +248,7 @@ export function TasksTable({
                         {task.base_credits_reward}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-500">{creditsLabel}</div>
+                    <div className="text-xs text-gray-500">{labels.points}</div>
                   </div>
 
                   <div className="flex items-center space-x-1">
