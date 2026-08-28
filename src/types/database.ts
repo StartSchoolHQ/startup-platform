@@ -2230,6 +2230,19 @@ export type Database = {
           weekly_report_submitted: boolean;
         }[];
       };
+      get_dashboard_action_items_backup_v1: {
+        Args: { p_user_id: string };
+        Returns: {
+          leaderboard_rank: number;
+          leaderboard_total_users: number;
+          leaderboard_xp_change: number;
+          pending_reviews_count: number;
+          pending_tasks_count: number;
+          total_points: number;
+          total_xp: number;
+          weekly_report_submitted: boolean;
+        }[];
+      };
       get_dashboard_overview: {
         Args: { p_user_id: string };
         Returns: {
@@ -2427,6 +2440,10 @@ export type Database = {
           weekly_reports_count: number;
           xp_change: number;
         }[];
+      };
+      get_my_journey_overview_v1: {
+        Args: { p_user_id: string };
+        Returns: Json;
       };
       get_recurring_task_status: {
         Args: { team_id_param: string; user_id_param?: string };
@@ -2719,6 +2736,10 @@ export type Database = {
         }[];
       };
       get_team_progress_details: { Args: { p_team_id: string }; Returns: Json };
+      get_team_progress_details_backup_v1: {
+        Args: { p_team_id: string };
+        Returns: Json;
+      };
       get_team_stats_combined: {
         Args: { p_team_id: string };
         Returns: {
