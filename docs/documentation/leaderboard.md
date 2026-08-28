@@ -474,7 +474,7 @@ interface LeaderboardEntry {
 | `src/components/leaderboard/team-journey-board.tsx` | Team Journey shell with Teams / Members sub-tabs |
 | `src/components/leaderboard/teams-board.tsx` | Teams board |
 | `src/components/leaderboard/members-board.tsx` | Members board (Team economy) |
-| `src/components/leaderboard/leaderboard-board-shell.tsx` | Shared board frame: card, desktop header grid, loading/data/empty states, mobile card mirror. The title and week selector live in `team-journey-board.tsx`. |
+| `src/components/leaderboard/leaderboard-board-shell.tsx` | Shared board frame: card, desktop header grid, loading/data/empty states, mobile card mirror. The week selector and sub-tabs live in `team-journey-board.tsx`; the page title and top-level tabs live in `page-client.tsx`. |
 | `src/components/leaderboard/member-row.tsx`, `team-row.tsx`, `row-styles.ts`, `mappers.ts` | Shared row rendering + DB→UI mapping |
 | `src/components/leaderboard/rank-icon.tsx` | Rank position icons |
 | `src/components/leaderboard/change-indicator.tsx` | Week-over-week arrows |

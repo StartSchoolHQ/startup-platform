@@ -1,9 +1,13 @@
 import type { Step } from "onborda";
+import { economyLabels } from "@/lib/economy-labels";
 
 interface Tour {
   tour: string;
   steps: Step[];
 }
+
+const soloLabels = economyLabels("my_journey");
+const teamLabels = economyLabels("team");
 
 export const TOURS: Tour[] = [
   {
@@ -12,8 +16,7 @@ export const TOURS: Tour[] = [
       {
         icon: "⚡",
         title: "My Journey",
-        content:
-          "Your solo balance: My Journey XP and My Journey Credits, both earned by finishing solo tasks on your own.",
+        content: `Your solo balance: ${soloLabels.xp} and ${soloLabels.points}, both earned by finishing solo tasks on your own.`,
         selector: "#onborda-my-journey-balance",
         side: "bottom",
         showControls: true,
@@ -23,8 +26,7 @@ export const TOURS: Tour[] = [
       {
         icon: "💳",
         title: "Team Journey",
-        content:
-          "Your startup balance: Team XP counts toward the 8,000 you need to graduate, and Team Points are the capital your team spends on its costs.",
+        content: `Your startup balance: ${teamLabels.xp} counts toward the 8,000 you need to graduate, and ${teamLabels.points} are the capital your team spends on its costs.`,
         selector: "#onborda-team-journey-balance",
         side: "bottom",
         showControls: true,

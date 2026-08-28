@@ -337,7 +337,9 @@ export default function OverviewPage() {
 
       {/* Progress cards */}
       <div className="grid grid-cols-1 gap-6">
-        {teamProgressData && <TeamProgressCard data={teamProgressData} />}
+        {showTeamJourney && teamProgressData && (
+          <TeamProgressCard data={teamProgressData} />
+        )}
         {/* TODO: Re-enable Personal Progress for full release (next year's batch) */}
       </div>
     </div>

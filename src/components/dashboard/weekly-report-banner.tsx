@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAppContext } from "@/contexts/app-context";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { createClient } from "@/lib/supabase/client";
+import { economyLabels } from "@/lib/economy-labels";
 import {
   hasUserSubmittedThisWeek,
   getCurrentWeekBoundaries,
@@ -48,6 +49,8 @@ async function getUserUnsubmittedTeams(userId: string) {
 // Users at or above this team XP are exempt from mandatory weekly reports.
 // Mirrors the DB-side exemption in check_missed_weekly_reports_team_context.
 const XP_EXEMPTION_THRESHOLD = 8000;
+
+const teamLabels = economyLabels("team");
 
 export function WeeklyReportBanner() {
   const { user } = useAppContext();
@@ -107,7 +110,7 @@ export function WeeklyReportBanner() {
               )}
               . Deadline:{" "}
               <span className="font-semibold">Monday 10:00 Riga time</span>.
-              Missing it costs each team member 100 points!
+              Missing it costs each team member 100 {teamLabels.points}!
             </span>
             <Link
               href={`/dashboard/team-journey/${team.teamId}`}
