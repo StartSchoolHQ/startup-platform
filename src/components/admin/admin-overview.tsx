@@ -23,6 +23,7 @@ import { WeeklyTrendsChart } from "./weekly-trends-chart";
 import { TaskStatusChart } from "./task-status-chart";
 import { AdminCharts } from "./admin-charts";
 import { NeedsAttentionFeed } from "./needs-attention-feed";
+import { ProgrammePhaseCard } from "./programme-phase-card";
 
 interface TeamData {
   id: string;
@@ -222,26 +223,33 @@ export function AdminOverview() {
 
   if (!stats) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center gap-4 py-12">
-          <AlertTriangle className="text-muted-foreground h-10 w-10" />
-          <div className="text-center">
-            <p className="font-medium">Failed to load platform stats</p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              This is usually temporary. Please try again.
-            </p>
-          </div>
-          <Button variant="outline" onClick={fetchStats} className="gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Try Again
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        {/* Phase switch stays reachable even when stats fail to load */}
+        <ProgrammePhaseCard />
+        <Card>
+          <CardContent className="flex flex-col items-center gap-4 py-12">
+            <AlertTriangle className="text-muted-foreground h-10 w-10" />
+            <div className="text-center">
+              <p className="font-medium">Failed to load platform stats</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                This is usually temporary. Please try again.
+              </p>
+            </div>
+            <Button variant="outline" onClick={fetchStats} className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      {/* Programme phase switches (TOP) */}
+      <ProgrammePhaseCard />
+
       {/* Health Snapshot — weekly check-in view (TOP) */}
       {stats.programHealth && (
         <HealthSnapshot

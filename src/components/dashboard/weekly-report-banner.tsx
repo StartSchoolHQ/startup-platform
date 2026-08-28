@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useAppContext } from "@/contexts/app-context";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { createClient } from "@/lib/supabase/client";
 import {
   hasUserSubmittedThisWeek,
@@ -44,18 +45,19 @@ async function getUserUnsubmittedTeams(userId: string) {
   return results.filter((r) => !r.submitted);
 }
 
-// Users at or above this XP are exempt from mandatory weekly reports.
+// Users at or above this team XP are exempt from mandatory weekly reports.
 // Mirrors the DB-side exemption in check_missed_weekly_reports_team_context.
 const XP_EXEMPTION_THRESHOLD = 8000;
 
 export function WeeklyReportBanner() {
   const { user } = useAppContext();
-  const isExempt = (user?.total_xp ?? 0) >= XP_EXEMPTION_THRESHOLD;
+  const { data: journeys } = usePlatformSettings();
+  const isExempt = (user?.team_xp ?? 0) >= XP_EXEMPTION_THRESHOLD;
 
   const { data: unsubmittedTeams = [] } = useQuery({
     queryKey: ["dashboard", "weeklyReportBanner", user?.id],
     queryFn: () => getUserUnsubmittedTeams(user!.id),
-    enabled: !!user?.id && !isExempt,
+    enabled: !!user?.id && !isExempt && journeys.teamJourney,
     staleTime: 2 * 60 * 1000,
   });
 
@@ -76,6 +78,9 @@ export function WeeklyReportBanner() {
     friday.setDate(friday.getDate() + 4);
     return new Date() >= friday;
   })();
+
+  // Weekly reports are paused while the Team Journey phase is off.
+  if (!journeys.teamJourney) return null;
 
   if (isExempt || !unsubmittedTeams.length || !shouldShowBanner) return null;
 

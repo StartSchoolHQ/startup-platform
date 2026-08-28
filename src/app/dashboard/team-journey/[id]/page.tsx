@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/tooltip";
 import { WeeklyReportModal } from "@/components/weekly-reports/weekly-report-modal";
 import { useAppContext } from "@/contexts/app-context";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import {
   getTeamAchievementDashboard,
   getTeamDetails,
@@ -98,14 +99,16 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: journeys } = usePlatformSettings();
+
+  // Weekly reports & strikes are paused while the Team Journey phase is off.
+  // Admins keep seeing them.
+  const showTeamOps = journeys.teamJourney || user?.primary_role === "admin";
 
   // Tab state synced to URL
-  const validDetailTabs = [
-    "achievements",
-    "weekly-reports",
-    "client-meetings",
-    "strikes",
-  ];
+  const validDetailTabs = showTeamOps
+    ? ["achievements", "weekly-reports", "client-meetings", "strikes"]
+    : ["achievements", "client-meetings"];
   const detailTabFromUrl = searchParams.get("tab");
   const activeDetailTab = validDetailTabs.includes(detailTabFromUrl ?? "")
     ? detailTabFromUrl!
@@ -1206,101 +1209,106 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             </div>
 
             {/* Weekly Report */}
-            {(() => {
-              const totalMembers = team.members.length;
-              const submittedCount = team.members.filter(
-                (member) => memberSubmissionStatus[member.user_id]
-              ).length;
-              const allSubmitted =
-                submittedCount === totalMembers && totalMembers > 0;
-              const bgColor = allSubmitted ? "bg-green-50" : "bg-red-50";
-              const borderColor = allSubmitted
-                ? "border-green-100"
-                : "border-red-100";
-              return (
-                <div
-                  className={`flex items-center justify-between rounded-md border p-2 ${bgColor} ${borderColor}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex -space-x-2">
-                      {team.members.map((member) => {
-                        const hasSubmitted =
-                          memberSubmissionStatus[member.user_id];
-                        const hasStatus =
-                          member.user_id in memberSubmissionStatus;
-                        return (
-                          <div key={member.user_id} className="relative">
-                            <Avatar className="h-8 w-8 border-2 border-white">
-                              <AvatarImage
-                                src={member.users?.avatar_url || ""}
-                              />
-                              <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold text-white">
-                                {member.users?.name
-                                  ? member.users.name
-                                      .split(" ")
-                                      .map((n) => n[0])
-                                      .join("")
-                                      .toUpperCase()
-                                  : "U"}
-                              </AvatarFallback>
-                            </Avatar>
-                            {hasStatus && (
-                              <div
-                                className={`absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-white ${
-                                  hasSubmitted ? "bg-green-500" : "bg-red-500"
-                                }`}
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold">Weekly Report</div>
-                      <div className="text-muted-foreground text-xs">
-                        Deadline: Monday 10:00 (Riga)
-                        {weekBoundaries && (
-                          <span>
-                            {" "}
-                            &middot; Week {weekBoundaries.week_number} (
-                            {new Date(
-                              weekBoundaries.week_start
-                            ).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })}
-                            {" – "}
-                            {new Date(
-                              weekBoundaries.week_end
-                            ).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })}
-                            )
-                          </span>
-                        )}
+            {showTeamOps &&
+              (() => {
+                const totalMembers = team.members.length;
+                const submittedCount = team.members.filter(
+                  (member) => memberSubmissionStatus[member.user_id]
+                ).length;
+                const allSubmitted =
+                  submittedCount === totalMembers && totalMembers > 0;
+                const bgColor = allSubmitted ? "bg-green-50" : "bg-red-50";
+                const borderColor = allSubmitted
+                  ? "border-green-100"
+                  : "border-red-100";
+                return (
+                  <div
+                    className={`flex items-center justify-between rounded-md border p-2 ${bgColor} ${borderColor}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex -space-x-2">
+                        {team.members.map((member) => {
+                          const hasSubmitted =
+                            memberSubmissionStatus[member.user_id];
+                          const hasStatus =
+                            member.user_id in memberSubmissionStatus;
+                          return (
+                            <div key={member.user_id} className="relative">
+                              <Avatar className="h-8 w-8 border-2 border-white">
+                                <AvatarImage
+                                  src={member.users?.avatar_url || ""}
+                                />
+                                <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold text-white">
+                                  {member.users?.name
+                                    ? member.users.name
+                                        .split(" ")
+                                        .map((n) => n[0])
+                                        .join("")
+                                        .toUpperCase()
+                                    : "U"}
+                                </AvatarFallback>
+                              </Avatar>
+                              {hasStatus && (
+                                <div
+                                  className={`absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-white ${
+                                    hasSubmitted ? "bg-green-500" : "bg-red-500"
+                                  }`}
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold">
+                          Weekly Report
+                        </div>
+                        <div className="text-muted-foreground text-xs">
+                          Deadline: Monday 10:00 (Riga)
+                          {weekBoundaries && (
+                            <span>
+                              {" "}
+                              &middot; Week {weekBoundaries.week_number} (
+                              {new Date(
+                                weekBoundaries.week_start
+                              ).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                              })}
+                              {" – "}
+                              {new Date(
+                                weekBoundaries.week_end
+                              ).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                              })}
+                              )
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    {isTeamMember && (
+                      <Button
+                        className="gap-2 bg-black text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                        onClick={() => setActiveModal("weeklyReport")}
+                        disabled={
+                          loadingState.submission || hasSubmittedThisWeek
+                        }
+                      >
+                        <FileText className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">
+                          {loadingState.submission
+                            ? "Checking..."
+                            : hasSubmittedThisWeek
+                              ? "Report Submitted"
+                              : "Submit Team Weekly Report"}
+                        </span>
+                      </Button>
+                    )}
                   </div>
-                  {isTeamMember && (
-                    <Button
-                      className="gap-2 bg-black text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
-                      onClick={() => setActiveModal("weeklyReport")}
-                      disabled={loadingState.submission || hasSubmittedThisWeek}
-                    >
-                      <FileText className="h-4 w-4 flex-shrink-0" />
-                      <span className="truncate">
-                        {loadingState.submission
-                          ? "Checking..."
-                          : hasSubmittedThisWeek
-                            ? "Report Submitted"
-                            : "Submit Team Weekly Report"}
-                      </span>
-                    </Button>
-                  )}
-                </div>
-              );
-            })()}
+                );
+              })()}
           </CardContent>
         </Card>
       </div>
@@ -1310,18 +1318,22 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
         onValueChange={setActiveDetailTab}
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList
+          className={`grid w-full ${showTeamOps ? "grid-cols-4" : "grid-cols-2"}`}
+        >
           <TabsTrigger value="achievements" className="flex items-center gap-2">
             <Trophy className="h-4 w-4 shrink-0" />
             <span className="hidden sm:inline">Tasks</span>
           </TabsTrigger>
-          <TabsTrigger
-            value="weekly-reports"
-            className="flex items-center gap-2"
-          >
-            <FileText className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline">Weekly Reports</span>
-          </TabsTrigger>
+          {showTeamOps && (
+            <TabsTrigger
+              value="weekly-reports"
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Weekly Reports</span>
+            </TabsTrigger>
+          )}
           <TabsTrigger
             value="client-meetings"
             className="flex items-center gap-2"
@@ -1329,10 +1341,12 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             <Users className="h-4 w-4 shrink-0" />
             <span className="hidden sm:inline">Client Meetings</span>
           </TabsTrigger>
-          <TabsTrigger value="strikes" className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline">Strikes</span>
-          </TabsTrigger>
+          {showTeamOps && (
+            <TabsTrigger value="strikes" className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Strikes</span>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="achievements" className="mt-6 space-y-6">
@@ -1793,51 +1807,53 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
           )}
         </TabsContent>
 
-        <TabsContent value="weekly-reports" className="mt-6 space-y-6">
-          {/* Weekly Reports Header */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">This Week Progress</h2>
-            <Button variant="outline" className="gap-2" disabled>
-              <ExternalLink className="h-4 w-4" />
-              Read About Weekly Reports
-            </Button>
-          </div>
+        {showTeamOps && (
+          <TabsContent value="weekly-reports" className="mt-6 space-y-6">
+            {/* Weekly Reports Header */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">This Week Progress</h2>
+              <Button variant="outline" className="gap-2" disabled>
+                <ExternalLink className="h-4 w-4" />
+                Read About Weekly Reports
+              </Button>
+            </div>
 
-          {/* Weekly Reports Table */}
-          {loadingState.weeklyReports ? (
-            <div className="space-y-1">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 border-b px-4 py-4"
-                >
-                  <Skeleton className="h-8 w-8 rounded-md" />
-                  <div className="space-y-1">
-                    <Skeleton className="h-4 w-16" />
-                    <Skeleton className="h-3 w-24" />
+            {/* Weekly Reports Table */}
+            {loadingState.weeklyReports ? (
+              <div className="space-y-1">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-4 border-b px-4 py-4"
+                  >
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <div className="flex -space-x-2">
+                      {Array.from({ length: 3 }).map((_, j) => (
+                        <Skeleton
+                          key={j}
+                          className="border-background h-8 w-8 rounded-full border-2"
+                        />
+                      ))}
+                    </div>
+                    <Skeleton className="h-4 w-8" />
+                    <Skeleton className="h-4 w-8" />
+                    <Skeleton className="ml-auto h-8 w-16 rounded-md" />
                   </div>
-                  <div className="flex -space-x-2">
-                    {Array.from({ length: 3 }).map((_, j) => (
-                      <Skeleton
-                        key={j}
-                        className="border-background h-8 w-8 rounded-full border-2"
-                      />
-                    ))}
-                  </div>
-                  <Skeleton className="h-4 w-8" />
-                  <Skeleton className="h-4 w-8" />
-                  <Skeleton className="ml-auto h-8 w-16 rounded-md" />
-                </div>
-              ))}
-            </div>
-          ) : weeklyReports.length === 0 ? (
-            <div className="text-muted-foreground py-8 text-center">
-              No weekly reports found for this team yet.
-            </div>
-          ) : (
-            <WeeklyReportsTable reports={weeklyReports} />
-          )}
-        </TabsContent>
+                ))}
+              </div>
+            ) : weeklyReports.length === 0 ? (
+              <div className="text-muted-foreground py-8 text-center">
+                No weekly reports found for this team yet.
+              </div>
+            ) : (
+              <WeeklyReportsTable reports={weeklyReports} />
+            )}
+          </TabsContent>
+        )}
 
         <TabsContent value="client-meetings" className="mt-6 space-y-6">
           {/* Client Meetings Header */}
@@ -1866,49 +1882,51 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
           )}
         </TabsContent>
 
-        <TabsContent value="strikes" className="mt-6 space-y-6">
-          {/* Strikes Header */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Strikes & Issues</h2>
-            <Button variant="outline" className="gap-2" disabled>
-              <ExternalLink className="h-4 w-4" />
-              Read About Strikes
-            </Button>
-          </div>
+        {showTeamOps && (
+          <TabsContent value="strikes" className="mt-6 space-y-6">
+            {/* Strikes Header */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Strikes & Issues</h2>
+              <Button variant="outline" className="gap-2" disabled>
+                <ExternalLink className="h-4 w-4" />
+                Read About Strikes
+              </Button>
+            </div>
 
-          {/* Strikes Table */}
-          {loadingState.strikes ? (
-            <div className="space-y-1">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 border-b px-4 py-4"
-                >
-                  <Skeleton className="h-8 w-8 rounded-md" />
-                  <div className="space-y-1">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-20" />
+            {/* Strikes Table */}
+            {loadingState.strikes ? (
+              <div className="space-y-1">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-4 border-b px-4 py-4"
+                  >
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                    <Skeleton className="ml-auto h-6 w-28 rounded-full" />
+                    <Skeleton className="h-8 w-20 rounded-md" />
                   </div>
-                  <Skeleton className="ml-auto h-6 w-28 rounded-full" />
-                  <Skeleton className="h-8 w-20 rounded-md" />
-                </div>
-              ))}
-            </div>
-          ) : strikes.length === 0 ? (
-            <div className="text-muted-foreground py-8 text-center">
-              No strikes found for this team. Great job! 🎉
-            </div>
-          ) : (
-            <StrikesTable
-              isTeamMember={isTeamMember}
-              strikes={strikes}
-              onExplainClick={(strike) => {
-                setSelectedStrike(strike);
-                setActiveModal("explainStrike");
-              }}
-            />
-          )}
-        </TabsContent>
+                ))}
+              </div>
+            ) : strikes.length === 0 ? (
+              <div className="text-muted-foreground py-8 text-center">
+                No strikes found for this team. Great job! 🎉
+              </div>
+            ) : (
+              <StrikesTable
+                isTeamMember={isTeamMember}
+                strikes={strikes}
+                onExplainClick={(strike) => {
+                  setSelectedStrike(strike);
+                  setActiveModal("explainStrike");
+                }}
+              />
+            )}
+          </TabsContent>
+        )}
       </Tabs>
       {/* Team Management Modal */}
       {team && userRole && (

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,7 @@ import {
 import { hasUserSubmittedThisWeekIndividual } from "@/lib/weekly-reports";
 import { startTaskLazy } from "@/lib/tasks";
 import { useAppContext } from "@/contexts/app-context";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
 
 // Real task row component for actual user tasks
 function RealTaskRow({
@@ -317,7 +318,8 @@ function StrikeRow({ strike }: { strike: Strike }) {
 }
 
 export default function MyJourneyPage() {
-  const { user } = useAppContext();
+  const { user, loading: userLoading } = useAppContext();
+  const { data: journeys, isLoading: journeysLoading } = usePlatformSettings();
   const queryClient = useQueryClient();
 
   // UI state only
@@ -370,9 +372,20 @@ export default function MyJourneyPage() {
     enabled: !!user?.id,
   });
 
+  // Journey guard: students lose this page while the My Journey phase is off.
+  // Admins always keep access. Never redirect before both loads settle —
+  // the page shows its normal loading state until then.
+  const guardReady = !journeysLoading && !userLoading;
+  const journeyBlocked =
+    guardReady && !journeys.myJourney && user?.primary_role !== "admin";
+
   // Check if any query is loading
   const loading =
-    !user?.id || !profile || !availableTasksData || !individualTasksData;
+    !guardReady ||
+    !user?.id ||
+    !profile ||
+    !availableTasksData ||
+    !individualTasksData;
 
   // Derived data: Process tasks (memoized)
   const userTasks = useMemo(() => {
@@ -405,6 +418,7 @@ export default function MyJourneyPage() {
     };
 
     // Process available tasks
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (availableTasksData as any[]).forEach((task: any) => {
       const taskItem: TaskTableItem = {
         id: task.progress_id || `temp-${task.task_id}`,
@@ -429,6 +443,7 @@ export default function MyJourneyPage() {
     });
 
     // Process individual tasks
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (individualTasksData as any[]).forEach((task: any) => {
       const taskItem: TaskTableItem = {
         id: task.progress_id || task.task_id,
@@ -460,6 +475,7 @@ export default function MyJourneyPage() {
     const achievementsData = Array.isArray(achievementProgress)
       ? achievementProgress
       : [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return achievementsData.map((ach: any) => ({
       achievement_id: ach.achievement_id,
       achievement_name: ach.achievement_name,
@@ -534,6 +550,7 @@ export default function MyJourneyPage() {
       // Optimistically update cache
       queryClient.setQueryData(
         ["myJourney", "availableTasks", user?.id],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (old: any[] = []) =>
           old.map((task) =>
             task.task_id === taskId
@@ -574,6 +591,11 @@ export default function MyJourneyPage() {
     }
     return userTasks;
   }, [selectedAchievementId, userTasks]);
+
+  // Runs after every hook so hook order stays stable.
+  if (journeyBlocked) {
+    redirect("/dashboard");
+  }
 
   return (
     <main className="p-8">

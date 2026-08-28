@@ -19,8 +19,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { motion } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams, useRouter } from "next/navigation";
+import { redirect, useSearchParams, useRouter } from "next/navigation";
 import { useAppContext } from "@/contexts/app-context";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import {
   getAllTeamsForJourney,
   getUserTeamsForJourney,
@@ -82,7 +83,8 @@ function CardGridSkeleton() {
 }
 
 export default function TeamJourneyPage() {
-  const { user } = useAppContext();
+  const { user, loading: userLoading } = useAppContext();
+  const { data: journeys, isLoading: journeysLoading } = usePlatformSettings();
   const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -236,6 +238,20 @@ export default function TeamJourneyPage() {
         return "All Teams";
     }
   };
+
+  // Journey guard: students lose this page while the Team Journey phase is
+  // off. Admins always keep access. Never redirect before both loads settle.
+  const guardReady = !journeysLoading && !userLoading;
+  if (guardReady && !journeys.teamJourney && user?.primary_role !== "admin") {
+    redirect("/dashboard");
+  }
+  if (!guardReady) {
+    return (
+      <div className="space-y-6">
+        <CardGridSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

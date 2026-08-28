@@ -15,7 +15,12 @@ import {
   Settings,
   HelpCircle,
   Rocket,
+  type LucideIcon,
 } from "lucide-react";
+import {
+  usePlatformSettings,
+  type JourneySettings,
+} from "@/hooks/use-platform-settings";
 
 import { NotificationCenter } from "@/components/notification-center";
 
@@ -31,7 +36,15 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-const navMainItems = [
+type NavMainItem = {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  /** When set, the item only shows while that journey is enabled. */
+  journey?: keyof JourneySettings;
+};
+
+const navMainItems: NavMainItem[] = [
   {
     title: "Overview",
     url: "/dashboard",
@@ -46,12 +59,13 @@ const navMainItems = [
     title: "My Journey",
     url: "/dashboard/my-journey",
     icon: User,
-    hidden: true,
+    journey: "myJourney",
   },
   {
     title: "All Teams",
     url: "/dashboard/team-journey",
     icon: Users,
+    journey: "teamJourney",
   },
   {
     title: "Peer Review",
@@ -67,6 +81,8 @@ const navMainItems = [
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useApp();
+  const { data: journeys } = usePlatformSettings();
+  const isAdmin = user?.primary_role === "admin";
 
   // Fetch user's team for dynamic nav link
   const { data: userTeam } = useQuery({
@@ -89,10 +105,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   // Memoize navigation items to prevent flickering
   const navigationItems = React.useMemo(() => {
-    const baseItems = navMainItems.filter((item) => !item.hidden);
+    // Admins see every item regardless of the current programme phase.
+    const baseItems: NavMainItem[] = navMainItems.filter(
+      (item) => isAdmin || !item.journey || journeys[item.journey]
+    );
 
     // Insert dynamic team link after Leaderboard
-    if (userTeam) {
+    if (userTeam && (isAdmin || journeys.teamJourney)) {
       const leaderboardIndex = baseItems.findIndex(
         (item) => item.url === "/dashboard/leaderboard"
       );
@@ -105,7 +124,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     // Add admin section if user is admin (show whenever role is available)
-    if (user?.primary_role === "admin") {
+    if (isAdmin) {
       return [
         ...baseItems,
         {
@@ -134,7 +153,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     return baseItems;
-  }, [user?.primary_role, userTeam]); // Only recreate when admin role or team changes
+    // Only recreate when admin role, team or programme phase changes
+  }, [isAdmin, userTeam, journeys]);
 
   return (
     <Sidebar variant="inset" {...props}>

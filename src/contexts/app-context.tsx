@@ -21,6 +21,10 @@ interface User {
   primary_role: string | null;
   total_xp: number | null;
   total_points: number | null;
+  my_journey_xp: number | null;
+  my_journey_credits: number | null;
+  team_xp: number | null;
+  team_points: number | null;
   graduation_level: number | null;
   created_at: string | null;
 }
@@ -52,7 +56,7 @@ async function fetchUserProfile(): Promise<User | null> {
   const { data: userProfile, error: profileError } = await supabase
     .from("users")
     .select(
-      "id, name, email, avatar_url, primary_role, total_xp, total_points, graduation_level, created_at"
+      "id, name, email, avatar_url, primary_role, total_xp, total_points, my_journey_xp, my_journey_credits, team_xp, team_points, graduation_level, created_at"
     )
     .eq("id", authUser.id)
     .single();
@@ -74,6 +78,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Only mount on client side
   useEffect(() => {
+    // Intentional SSR-hydration guard — the profile query must not run
+    // until the client has mounted.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
