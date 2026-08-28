@@ -148,24 +148,31 @@ interface User {
 
 **File:** `src/app/dashboard/page.tsx`
 **Route:** `/dashboard`
-**Type:** Client Component
+**Type:** Client Component (~68 lines — a shell, not a data page)
 
-### Content Sections
+Full detail on the phase-aware split, the gating matrix and the
+`get_my_journey_overview_v1` RPC lives in
+`docs/documentation/economies.md#dashboard`. Summary:
 
 1. **Header Greeting** — "Hi {firstName} 👋" with subtitle
-2. **Stats Cards** (4-column grid, responsive)
-   - XP Balance (Zap icon)
-   - Points Balance (CreditCard icon)
-   - Team Tasks Completed
-   - Achievements Completed
-   - Fetched via `getStatsCards(user.id)`, query key: `["dashboard", "stats", userId]`
-   - Spring animation with stagger delay
-3. **Team Progress Card**
-   - Member count, tasks completed, total points, total XP
-   - Fetched via `getTeamProgressData(user.id)`, query key: `["dashboard", "teamProgress", userId]`
-   - Action button to browse/join teams
-4. **Personal Progress Card** — Currently disabled (TODO toggle in code)
-5. **Weekly Report Banner** — Shows for teams with unsubmitted reports (Friday–Monday 10:00 Riga time)
+2. The shell reads `usePlatformSettings()` + `useApp()` and renders skeleton
+   (`OverviewSkeleton`) until both resolve, then zero, one or two sections:
+   - **`MyJourneyOverview`** (`src/components/dashboard/my-journey-overview.tsx`)
+     — solo-economy stat cards, Continue / Next up, achievement-progress
+     strip, recent activity. One consolidated RPC via
+     `src/hooks/use-my-journey-overview.ts`. Collapses by default (behind a
+     summary header) when both sections are showing and the student has an
+     active team.
+   - **`TeamJourneyOverview`** (`src/components/dashboard/team-journey-overview.tsx`)
+     — today's dashboard content unchanged: leaderboard rank badge, team
+     stat cards, `TeamProgressCard`. Backed by `get_dashboard_overview_v2` +
+     `get_dashboard_action_items`.
+   - Neither on (student, both phases off) → a single Card: "Your dashboard
+     will fill up once the programme starts."
+   - Admins always see both sections regardless of the phase switches.
+3. **Weekly Report Banner** — rendered by the dashboard layout above the
+   page content, not by this page; shows for teams with unsubmitted reports
+   (Friday–Monday 10:00 Riga time) and only while Team Journey is on.
 
 ---
 
@@ -186,6 +193,10 @@ interface User {
   - Expandable peer review feedback rows
   - Difficulty badges: Easy (1), Medium (2), Hard (3+)
   - Status badges: approved, rejected, pending_review, in_progress, not_started
+- **`?achievement=<id>` query param:** preselects that achievement's filter
+  on load — this is the link target from the dashboard's My Journey
+  achievement-progress strip. A stale or unknown id is ignored (falls back
+  to no filter) rather than erroring.
 
 ### Team Journey / All Products (`/dashboard/team-journey`)
 

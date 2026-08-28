@@ -162,6 +162,97 @@ journey, calling `set_platform_setting_v1` and invalidating
 `["platform-settings", "journeys"]`. Non-admins get a permission error from
 the RPC.
 
+## Dashboard
+
+`/dashboard` (`src/app/dashboard/page.tsx`, a ~68-line shell) reads
+`usePlatformSettings()` + `useApp()` and renders zero, one or two
+independent sections — same split pattern as the leaderboard boards. Each
+section owns its own data fetch; the shell owns only the greeting and the
+gating.
+
+```
+showMyJourney   = journeys.myJourney || isAdmin
+showTeamJourney = journeys.teamJourney || isAdmin
+```
+
+| Reader sees              | myJourney | teamJourney | Rendered                                   |
+| ------------------------- | :-------: | :---------: | ------------------------------------------- |
+| Student, MJ-only           | on        | off          | `MyJourneyOverview` only                     |
+| Student, TJ-only           | off       | on           | `TeamJourneyOverview` only                   |
+| Student, both on           | on        | on           | Both, stacked — see collapse rule below      |
+| Student, neither on        | off       | off          | Card: "Your dashboard will fill up once the programme starts." |
+| Admin                      | any       | any          | Both sections, always                        |
+
+A skeleton (`OverviewSkeleton`) renders until **both** the settings read and
+the profile (`useApp()`) resolve — `isAdmin` reads `user.primary_role`,
+which is falsy while the profile is loading, so choosing sections before
+then would flash the wrong one at admins. On a settings-read error the hook
+falls back to its defaults, so this never blanks out and never redirects —
+same guard semantics as the rest of the phase-aware surfaces.
+
+### Team Journey section
+
+`src/components/dashboard/team-journey-overview.tsx` is today's dashboard
+content, moved as-is: `get_dashboard_overview_v2` + `get_dashboard_action_items`
+queries, the leaderboard rank badge, the three team stat cards
+(`stats-card.tsx`) and `TeamProgressCard` (`team-progress-card.tsx`). No
+logic changed in the move.
+
+### My Journey section
+
+`src/components/dashboard/my-journey-overview.tsx` composes
+`src/components/dashboard/my-journey/{stat-cards,continue-card,next-up-card,
+achievement-progress-strip,recent-activity-card,section-header}.tsx`, backed
+by one hook, `src/hooks/use-my-journey-overview.ts` (query key
+`["dashboard","my-journey",userId]`, `staleTime` 60s), and one RPC:
+
+```
+get_my_journey_overview_v1(p_user_id uuid) returns jsonb
+-- STABLE, SECURITY DEFINER, search_path = public, pg_temp
+-- caller must be p_user_id or is_admin_v1(), else raises 42501
+-- EXECUTE granted to authenticated, service_role; revoked from anon
+```
+
+```jsonc
+{
+  "balances": { "my_journey_xp": 0, "my_journey_credits": 0 }, // coalesced, never null
+  "has_active_team": false,
+  "tasks": { "completed": 0, "total": 0 },       // active individual templates; completed = approved
+  "achievements": { "completed": 0, "total": 0 },// active achievements, context = 'individual'
+  "rank": { "position": null, "total": 0 },       // same eligibility filter as get_live_my_journey_leaderboard_v1
+  "in_progress": [ /* ≤3, status in (in_progress, pending_review, rejected) */ ],
+  "next_up": null,                                // first available task by tasks.sort_order, created_at
+  "achievement_progress": [ /* via get_user_achievement_progress */ ],
+  "recent_activity": [ /* ≤5, activity_type = 'individual' */ ]
+}
+```
+
+Stat row: **My Journey XP** (`#onborda-my-journey-balance`, subtitle My
+Journey Credits) · **Tasks completed** `X/Y` with a progress bar ·
+**Achievements** `X/Y` · **Your rank** `#N of M`, shown only when `M ≥ 3`
+(D4 — otherwise the row drops to three cards). Below that: a **Continue**
+card (resume the closest in-progress task → `/dashboard/my-journey/task/
+[progress_id]`), a **Next up** card (→ `/dashboard/my-journey`), an
+achievement-progress strip (each card links to
+`/dashboard/my-journey?achievement=<id>`, which the My Journey page reads to
+preselect that achievement's filter), and a recent-activity list. Every
+block has its own empty state — a brand-new student with 0 individual
+templates or achievements sees an intentional "nothing yet, here's what to
+do" message, not a blank card.
+
+**Collapse rule (D3):** when both sections are visible **and** the student
+has an active team (`has_active_team` from the RPC), My Journey renders
+collapsed by default behind a `Collapsible` summary header (XP + tasks, so
+it's still glanceable) — Team Journey takes priority in that view. Solo
+students (no team) always see it expanded.
+
+**Rollback:** `DROP FUNCTION public.get_my_journey_overview_v1(uuid);` —
+purely additive; nothing else in this feature touched an existing RPC,
+table or trigger.
+
+Migrations applied 2026-08-28 (after the two-economies migrations above):
+`my_journey_overview_v1`, `my_journey_overview_v1_has_active_team`.
+
 ## Verification checklist
 
 Read-only SQL:
