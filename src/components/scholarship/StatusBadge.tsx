@@ -66,6 +66,17 @@ const STYLES: Record<Status, BadgeStyle> = {
     classes:
       "bg-emerald-600/15 text-emerald-800 border-emerald-600/30 dark:bg-emerald-500/20 dark:text-emerald-400",
   },
+  dropped_out: {
+    label: "Dropped out",
+    variant: "outline",
+    classes:
+      "bg-orange-500/10 text-orange-700 border-orange-500/20 dark:bg-orange-500/20 dark:text-orange-400",
+  },
+  terminated_by_school: {
+    label: "Terminated by school",
+    variant: "destructive",
+    classes: "",
+  },
   cancelled: {
     label: "Cancelled",
     variant: "destructive",

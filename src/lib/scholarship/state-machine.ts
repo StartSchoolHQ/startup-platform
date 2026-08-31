@@ -22,35 +22,51 @@ const FORWARD: Record<ScholarshipStatus, ScholarshipStatus[]> = {
   student_signed: ["awaiting_school_signature"],
   awaiting_school_signature: ["school_signed"],
   school_signed: ["archived"],
-  archived: [],
+  // Post-signature student outcomes (scholarship_set_outcome_v1):
+  // archived ⇄ dropped_out / terminated_by_school. The signed document
+  // survives either way; the outcome statuses just exclude the student
+  // from the "signed" (= active students) count.
+  archived: ["dropped_out", "terminated_by_school"],
+  dropped_out: ["archived"],
+  terminated_by_school: ["archived"],
   cancelled: [],
   expired: [],
   failed: [],
 };
 
-const TERMINAL_FOR_EXPIRE: ScholarshipStatus[] = [
-  "school_signed",
+/** archived + the post-signature outcome statuses that derive from it. */
+const POST_SIGNED: ScholarshipStatus[] = [
   "archived",
-  "cancelled",
-  "expired",
+  "dropped_out",
+  "terminated_by_school",
 ];
 
-const TERMINAL_FOR_FAILED: ScholarshipStatus[] = ["archived", "cancelled"];
+const TERMINAL_FOR_EXPIRE: ScholarshipStatus[] = [
+  "school_signed",
+  "cancelled",
+  "expired",
+  ...POST_SIGNED,
+];
+
+const TERMINAL_FOR_FAILED: ScholarshipStatus[] = ["cancelled", ...POST_SIGNED];
 
 /**
  * Whether a row in `from` status may legitimately transition to `to`.
  *
  * Special branches:
- *   - `cancelled` — allowed from anywhere except `archived` (already final).
+ *   - `cancelled` — allowed from anywhere except the post-signed states
+ *     (archived / dropped_out / terminated_by_school are already final
+ *     signed contracts).
  *   - `expired`   — allowed from any non-terminal pending state.
- *   - `failed`    — allowed from any non-archived, non-cancelled state.
- *   - Everything else follows the FORWARD map (linear happy path).
+ *   - `failed`    — allowed from any non-post-signed, non-cancelled state.
+ *   - Everything else follows the FORWARD map (linear happy path plus the
+ *     archived ⇄ outcome loop).
  */
 export function canTransition(
   from: ScholarshipStatus,
   to: ScholarshipStatus
 ): boolean {
-  if (to === "cancelled") return from !== "archived";
+  if (to === "cancelled") return !POST_SIGNED.includes(from);
   if (to === "expired") return !TERMINAL_FOR_EXPIRE.includes(from);
   if (to === "failed") return !TERMINAL_FOR_FAILED.includes(from);
   return FORWARD[from].includes(to);

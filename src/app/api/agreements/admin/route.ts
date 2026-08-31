@@ -30,6 +30,8 @@ const ALLOWED_STATUSES: ReadonlySet<Status> = new Set([
   "awaiting_school_signature",
   "school_signed",
   "archived",
+  "dropped_out",
+  "terminated_by_school",
   "cancelled",
   "expired",
   "failed",

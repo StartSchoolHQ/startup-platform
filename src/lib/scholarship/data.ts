@@ -346,6 +346,33 @@ export async function cancel(id: string, reason: string): Promise<Row> {
   return data as Row;
 }
 
+/** Statuses `setOutcome` may move a row to. */
+export type OutcomeStatus = Extract<
+  Status,
+  "dropped_out" | "terminated_by_school" | "archived"
+>;
+
+/**
+ * Marks a signed (archived) agreement with a student outcome, or reverts
+ * a mistaken outcome back to `archived`. The RPC enforces the transitions
+ * (archived ⇄ dropped_out/terminated_by_school) and appends a
+ * `status_changed` event; anything else raises
+ * `scholarship_state_transition_denied`.
+ */
+export async function setOutcome(input: {
+  id: string;
+  status: OutcomeStatus;
+  reason: string | null;
+}): Promise<Row> {
+  const { data, error } = await admin().rpc("scholarship_set_outcome_v1", {
+    p_id: input.id,
+    p_status: input.status,
+    p_reason: input.reason ?? undefined,
+  });
+  if (error) throw error;
+  return data as Row;
+}
+
 /**
  * Resets a stuck row back to identity_verified so the retry endpoint can
  * re-run PDF render + Dokobit signing/create. Only callable when the row

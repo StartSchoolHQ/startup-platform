@@ -38,6 +38,12 @@ function formatDate(value: string | null): string {
   return new Date(value).toLocaleDateString();
 }
 
+// Signer name is locked in at identity verification, so drafts and
+// unverified rows legitimately have none yet.
+function fullName(row: Row): string {
+  return [row.signer_name, row.signer_surname].filter(Boolean).join(" ") || "—";
+}
+
 /**
  * Admin queue of scholarship agreements. Renders a ShadCN table with:
  *   - A checkbox column that's only enabled for `awaiting_school_signature`
@@ -87,6 +93,7 @@ export function AgreementsTable({
                 disabled={selectable.length === 0}
               />
             </TableHead>
+            <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Status</TableHead>
@@ -111,9 +118,8 @@ export function AgreementsTable({
                     aria-label={`Select ${row.recipient_email}`}
                   />
                 </TableCell>
-                <TableCell className="font-medium">
-                  {row.recipient_email}
-                </TableCell>
+                <TableCell className="font-medium">{fullName(row)}</TableCell>
+                <TableCell>{row.recipient_email}</TableCell>
                 <TableCell className="capitalize">
                   {row.agreement_type}
                 </TableCell>

@@ -43,12 +43,14 @@ const SEARCH_DEBOUNCE_MS = 250;
 // The ONLY statuses the admin queue surfaces. Everything else
 // (identity_verified, student_signed, school_signed, cancelled, expired,
 // failed) stays in the DB but is never shown — the board only cares about
-// these four. Acts as a whitelist for both the table and the dropdown.
+// these six. Acts as a whitelist for both the table and the dropdown.
 const VISIBLE_STATUSES: ReadonlySet<Status> = new Set([
   "draft",
   "awaiting_student_signature",
   "awaiting_school_signature",
   "archived",
+  "dropped_out",
+  "terminated_by_school",
 ]);
 
 // Status options in workflow order. "all" is the no-filter sentinel.
@@ -59,6 +61,8 @@ const STATUS_OPTIONS: Array<{ value: Status | "all"; label: string }> = [
   { value: "awaiting_student_signature", label: "Awaiting student signature" },
   { value: "awaiting_school_signature", label: "Awaiting school signature" },
   { value: "archived", label: "Archived" },
+  { value: "dropped_out", label: "Dropped out" },
+  { value: "terminated_by_school", label: "Terminated by school" },
 ];
 
 export const TYPE_LABELS: Record<AgreementType, string> = {

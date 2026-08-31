@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
 import { toast } from "sonner";
+import { OutcomeActions } from "./OutcomeActions";
 import { StatusBadge } from "./StatusBadge";
 
 type Row = Database["public"]["Tables"]["scholarship_agreements"]["Row"];
@@ -32,7 +33,20 @@ interface AgreementDetailModalProps {
   onChanged: () => void;
 }
 
-const TERMINAL_STATUSES: Row["status"][] = ["archived", "cancelled"];
+const TERMINAL_STATUSES: Row["status"][] = [
+  "archived",
+  "cancelled",
+  "dropped_out",
+  "terminated_by_school",
+];
+
+// The signed .edoc exists (and stays downloadable) on archived rows and on
+// the post-signature outcome statuses derived from them.
+const DOWNLOADABLE_STATUSES: Row["status"][] = [
+  "archived",
+  "dropped_out",
+  "terminated_by_school",
+];
 
 /**
  * Admin detail modal:
@@ -195,7 +209,7 @@ function DetailBody({ data, onChanged, onClose }: DetailBodyProps) {
 
   const retryable =
     agreement.status === "identity_verified" || agreement.status === "failed";
-  const downloadable = agreement.status === "archived";
+  const downloadable = DOWNLOADABLE_STATUSES.includes(agreement.status);
   const schoolSignable = agreement.status === "awaiting_school_signature";
   const cancellable = !TERMINAL_STATUSES.includes(agreement.status);
 
@@ -241,12 +255,20 @@ function DetailBody({ data, onChanged, onClose }: DetailBodyProps) {
             Download signed .edoc
           </Button>
         )}
+        <OutcomeActions agreement={agreement} onChanged={onChanged} />
         {cancellable && (
           <Button size="sm" variant="destructive" onClick={cancel}>
             Cancel
           </Button>
         )}
       </div>
+
+      {agreement.status_reason && (
+        <p className="rounded-md bg-zinc-50 px-3 py-2 text-sm text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
+          <span className="font-medium">Status reason:</span>{" "}
+          {agreement.status_reason}
+        </p>
+      )}
 
       <div>
         <h3 className="mb-2 text-sm font-semibold">Event timeline</h3>

@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17";
+    PostgrestVersion: "14.5";
   };
   public: {
     Tables: {
@@ -3610,6 +3610,49 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      scholarship_set_outcome_v1: {
+        Args: {
+          p_id: string;
+          p_reason?: string;
+          p_status: Database["public"]["Enums"]["scholarship_agreement_status"];
+        };
+        Returns: {
+          agreement_type: Database["public"]["Enums"]["scholarship_agreement_type"];
+          archived_at: string | null;
+          callback_ref: string | null;
+          created_at: string;
+          dokobit_auth_token: string | null;
+          dokobit_batch_token: string | null;
+          dokobit_school_signer_token: string | null;
+          dokobit_signer_token: string | null;
+          dokobit_signing_token: string | null;
+          expires_at: string;
+          id: string;
+          identity_verified_at: string | null;
+          language: Database["public"]["Enums"]["scholarship_agreement_language"];
+          recipient_address: string | null;
+          recipient_birthdate: string | null;
+          recipient_email: string | null;
+          recipient_phone: string | null;
+          school_signed_at: string | null;
+          signed_doc_path: string | null;
+          signer_country_code: string | null;
+          signer_name: string | null;
+          signer_personal_code: string | null;
+          signer_surname: string | null;
+          status: Database["public"]["Enums"]["scholarship_agreement_status"];
+          status_reason: string | null;
+          student_signed_at: string | null;
+          unsigned_pdf_path: string | null;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "scholarship_agreements";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       scholarship_submit_form: {
         Args: {
           p_address: string;
@@ -3943,7 +3986,9 @@ export type Database = {
         | "archived"
         | "cancelled"
         | "expired"
-        | "failed";
+        | "failed"
+        | "dropped_out"
+        | "terminated_by_school";
       scholarship_agreement_type:
         | "full"
         | "partial"
@@ -3964,7 +4009,8 @@ export type Database = {
         | "cancelled"
         | "expired"
         | "error"
-        | "data_minimized";
+        | "data_minimized"
+        | "status_changed";
       status_state: "active" | "archived";
       task_category_type:
         | "onboarding"
@@ -4162,6 +4208,8 @@ export const Constants = {
         "cancelled",
         "expired",
         "failed",
+        "dropped_out",
+        "terminated_by_school",
       ],
       scholarship_agreement_type: [
         "full",
@@ -4185,6 +4233,7 @@ export const Constants = {
         "expired",
         "error",
         "data_minimized",
+        "status_changed",
       ],
       status_state: ["active", "archived"],
       task_category_type: [
