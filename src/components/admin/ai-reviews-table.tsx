@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,11 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import {
-  AI_REVIEW_DEFAULTS,
-  parseAiReviewSettings,
-} from "@/lib/ai-review/settings";
+import { useAiReviewSettings } from "@/hooks/use-ai-review-settings";
 import { AiReviewsSummary } from "./ai-reviews-summary";
 import { AiReviewsFilters } from "./ai-reviews-filters";
 import { AiReviewsRow } from "./ai-reviews-row";
@@ -28,10 +23,13 @@ import type {
   AiReviewAdminSummary,
 } from "@/types/ai-review-admin";
 
+const SEARCH_DEBOUNCE_MS = 300;
+
 export function AiReviewsTable() {
   const [reviews, setReviews] = useState<AiReviewAdminRow[]>([]);
   const [summary, setSummary] = useState<AiReviewAdminSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [rejectReasonFilter, setRejectReasonFilter] = useState("all");
@@ -44,23 +42,20 @@ export function AiReviewsTable() {
   const abortRef = useRef<AbortController | null>(null);
   const fetchVersion = useRef(0);
 
-  // Same query key shape as the Task 16 settings hook — reads share the
-  // TanStack Query cache once that hook is mounted elsewhere on the page.
-  const { data: settings } = useQuery({
-    queryKey: ["platform-settings", "ai_review"],
-    queryFn: async () => {
-      const { data, error } = await createClient()
-        .from("platform_settings")
-        .select("value")
-        .eq("key", "ai_review")
-        .single();
-      if (error) throw new Error(error.message);
-      return parseAiReviewSettings(data.value);
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-  const attemptFlagThreshold =
-    settings?.attemptFlagThreshold ?? AI_REVIEW_DEFAULTS.attemptFlagThreshold;
+  // Reuse the Task 16 settings hook (shared TanStack Query cache — no
+  // duplicate query when the settings card is mounted on the same page).
+  const { data: settings } = useAiReviewSettings();
+  const attemptFlagThreshold = settings.attemptFlagThreshold;
+
+  // Debounce the free-text search — every keystroke would otherwise fire a
+  // request (main query + attempts subquery + full summary scan).
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(handle);
+  }, [searchInput]);
 
   const fetchReviews = () => {
     abortRef.current?.abort();
@@ -103,11 +98,8 @@ export function AiReviewsTable() {
       <AiReviewsSummary summary={summary} />
 
       <AiReviewsFilters
-        search={search}
-        onSearchChange={(v) => {
-          setSearch(v);
-          setPage(1);
-        }}
+        search={searchInput}
+        onSearchChange={setSearchInput}
         statusFilter={statusFilter}
         onStatusChange={(v) => {
           setStatusFilter(v);

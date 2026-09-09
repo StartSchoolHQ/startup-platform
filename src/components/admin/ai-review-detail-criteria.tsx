@@ -1,5 +1,3 @@
-"use client";
-
 import { CheckCircle2, XCircle } from "lucide-react";
 import type { AiReviewCriterion } from "@/lib/data/ai-reviews";
 

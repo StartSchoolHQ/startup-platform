@@ -1,5 +1,3 @@
-"use client";
-
 import type { AiReviewAdminRow } from "@/types/ai-review-admin";
 
 export function VerdictSection({ review }: { review: AiReviewAdminRow }) {

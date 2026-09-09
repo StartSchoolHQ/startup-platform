@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   AiReviewAdminResponse,
   AiReviewAdminRow,
+  AiReviewAdminSummary,
 } from "@/types/ai-review-admin";
 
 interface RawReviewRow {
@@ -33,6 +35,61 @@ interface RawReviewRow {
   } | null;
 }
 
+/** page/limit query-param parsing with a NaN-safe fallback + clamp. */
+function parseIntParam(
+  raw: string | null,
+  fallback: number,
+  min: number,
+  max: number
+): number {
+  const parsed = raw ? parseInt(raw, 10) : NaN;
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+}
+
+/**
+ * Strips characters that would break PostgREST filter syntax
+ * (`.or()` / `.ilike()` use `,`, `(`, `)` as structural separators and `%`
+ * as the ilike wildcard) and caps length. Never throws — a search string
+ * that can't be used safely just degrades to "no search".
+ */
+function sanitizeSearch(raw: string): string {
+  return raw
+    .trim()
+    .slice(0, 100)
+    .replace(/[,()%]/g, "");
+}
+
+async function computeSummary(
+  admin: SupabaseClient
+): Promise<AiReviewAdminSummary> {
+  const since = new Date();
+  since.setHours(0, 0, 0, 0);
+
+  const { data: all } = await admin
+    .from("ai_task_reviews")
+    .select("status, reject_reason, cost_usd, created_at")
+    .not("status", "in", "(queued,running)");
+  const finals = all ?? [];
+
+  return {
+    today: finals.filter((r) => r.created_at >= since.toISOString()).length,
+    approval_rate: finals.length
+      ? finals.filter((r) => r.status === "approved").length / finals.length
+      : 0,
+    reject_reasons: finals.reduce<Record<string, number>>((acc, r) => {
+      if (r.reject_reason) {
+        acc[r.reject_reason] = (acc[r.reject_reason] ?? 0) + 1;
+      }
+      return acc;
+    }, {}),
+    failures: finals.filter((r) => r.status === "failed").length,
+    cost_usd: Number(
+      finals.reduce((s, r) => s + Number(r.cost_usd ?? 0), 0).toFixed(2)
+    ),
+  };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -55,28 +112,53 @@ export async function GET(request: NextRequest) {
     }
 
     const url = new URL(request.url);
-    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
-    const limit = Math.min(
-      parseInt(url.searchParams.get("limit") || "25"),
-      100
+    const page = parseIntParam(
+      url.searchParams.get("page"),
+      1,
+      1,
+      Number.MAX_SAFE_INTEGER
     );
+    const limit = parseIntParam(url.searchParams.get("limit"), 25, 1, 100);
     const status = url.searchParams.get("status") || "all";
     const rejectReason = url.searchParams.get("reject_reason") || "all";
-    const search = (url.searchParams.get("search") || "").trim();
+    const search = sanitizeSearch(url.searchParams.get("search") || "");
 
     const admin = createAdminClient();
-    let q = admin
-      .from("ai_task_reviews")
-      .select(
-        `id, progress_id, attempt, status, reject_reason, decision, confidence, feedback, criteria_results,
+
+    // Resolve the search term to task/student ids BEFORE the main query so
+    // pagination + count reflect the search, not just the current page.
+    let taskIds: string[] = [];
+    let userIds: string[] = [];
+    if (search) {
+      const [taskMatches, userMatches] = await Promise.all([
+        admin.from("tasks").select("id").ilike("title", `%${search}%`),
+        admin.from("users").select("id").ilike("name", `%${search}%`),
+      ]);
+      taskIds = (taskMatches.data ?? []).map((t) => t.id as string);
+      userIds = (userMatches.data ?? []).map((u) => u.id as string);
+
+      if (taskIds.length === 0 && userIds.length === 0) {
+        // Nothing matches the search — short-circuit before the main query.
+        const summary = await computeSummary(admin);
+        const body: AiReviewAdminResponse = {
+          data: [],
+          total: 0,
+          page,
+          limit,
+          summary,
+        };
+        return NextResponse.json(body);
+      }
+    }
+
+    let q = admin.from("ai_task_reviews").select(
+      `id, progress_id, attempt, status, reject_reason, decision, confidence, feedback, criteria_results,
        evidence_manifest, submission_snapshot, model, cost_usd, input_tokens, output_tokens, error,
        created_at, finished_at,
        task:tasks!ai_task_reviews_task_id_fkey(id, title),
        student:users!ai_task_reviews_user_id_fkey(id, name, avatar_url)`,
-        { count: "exact" }
-      )
-      .order("created_at", { ascending: false })
-      .range((page - 1) * limit, page * limit - 1);
+      { count: "exact" }
+    );
 
     if (status !== "all") {
       q = q.eq("status", status);
@@ -84,6 +166,18 @@ export async function GET(request: NextRequest) {
     if (rejectReason !== "all") {
       q = q.eq("reject_reason", rejectReason);
     }
+    if (search) {
+      // At least one of taskIds/userIds is non-empty here (empty-both was
+      // handled above) — uuids need no quoting inside `in.(...)`.
+      const orParts: string[] = [];
+      if (taskIds.length) orParts.push(`task_id.in.(${taskIds.join(",")})`);
+      if (userIds.length) orParts.push(`user_id.in.(${userIds.join(",")})`);
+      q = q.or(orParts.join(","));
+    }
+
+    q = q
+      .order("created_at", { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
 
     const { data, count, error } = await q;
 
@@ -95,18 +189,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const rawRows = (data ?? []) as unknown as RawReviewRow[];
+    const rows = (data ?? []) as unknown as RawReviewRow[];
 
-    const rows = rawRows.filter((r) => {
-      if (!search) return true;
-      const s = search.toLowerCase();
-      return (
-        r.task?.title?.toLowerCase().includes(s) ||
-        r.student?.name?.toLowerCase().includes(s)
-      );
-    });
-
-    const progressIds = [...new Set(rawRows.map((r) => r.progress_id))];
+    const progressIds = [...new Set(rows.map((r) => r.progress_id))];
     const { data: attemptRows } = progressIds.length
       ? await admin
           .from("ai_task_reviews")
@@ -119,31 +204,7 @@ export async function GET(request: NextRequest) {
       attempts.set(a.progress_id, (attempts.get(a.progress_id) ?? 0) + 1);
     }
 
-    const since = new Date();
-    since.setHours(0, 0, 0, 0);
-
-    const { data: all } = await admin
-      .from("ai_task_reviews")
-      .select("status, reject_reason, cost_usd, created_at")
-      .not("status", "in", "(queued,running)");
-    const finals = all ?? [];
-
-    const summary = {
-      today: finals.filter((r) => r.created_at >= since.toISOString()).length,
-      approval_rate: finals.length
-        ? finals.filter((r) => r.status === "approved").length / finals.length
-        : 0,
-      reject_reasons: finals.reduce<Record<string, number>>((acc, r) => {
-        if (r.reject_reason) {
-          acc[r.reject_reason] = (acc[r.reject_reason] ?? 0) + 1;
-        }
-        return acc;
-      }, {}),
-      failures: finals.filter((r) => r.status === "failed").length,
-      cost_usd: Number(
-        finals.reduce((s, r) => s + Number(r.cost_usd ?? 0), 0).toFixed(2)
-      ),
-    };
+    const summary = await computeSummary(admin);
 
     const responseRows: AiReviewAdminRow[] = rows.map((r) => ({
       id: r.id,

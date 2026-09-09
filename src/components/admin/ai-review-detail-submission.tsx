@@ -1,5 +1,3 @@
-"use client";
-
 import { Link as LinkIcon } from "lucide-react";
 import type { NormalizedSubmission } from "@/lib/ai-review/types";
 
