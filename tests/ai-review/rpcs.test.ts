@@ -1,8 +1,8 @@
 /**
  * DB round-trip tests for the AI task reviewer RPCs.
- * Creates ONE auth user, three test task templates (reviewed, self-check,
- * recurring) and one task_progress row per test, and deletes all of them
- * (ai_task_reviews cascades from task_progress).
+ * Creates ONE auth user, four test task templates (reviewed, self-check,
+ * recurring, default-false-without-the-phrase) and one task_progress row per
+ * test, and deletes all of them (ai_task_reviews cascades from task_progress).
  * Runs against the production project via service role — cleanup is asserted.
  */
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
@@ -18,8 +18,16 @@ let admin: SupabaseClient;
 let student: SupabaseClient;
 let userId: string;
 let taskId: string;
-/** Second template, `requires_review = false` — the self-check path. */
+/**
+ * Second template: `requires_review = false` AND the literal "Self-Check"
+ * review instruction — the only combination that takes the self-check path.
+ */
 let selfCheckTaskId: string;
+/**
+ * Fourth template: `requires_review = false` but no "Self-Check" phrase — the
+ * accidental default, which must still go through the normal AI review path.
+ */
+let defaultFalseTaskId: string;
 /** Third template, `is_recurring = true` — prior-submission context. */
 let recurringTaskId: string;
 let originalAiReviewSettings: Record<string, unknown> | null = null;
@@ -122,11 +130,33 @@ beforeAll(async () => {
       base_xp_reward: 40,
       base_points_reward: 10,
       requires_review: false,
+      review_instructions: "Self-Check (no peer review)",
     })
     .select("id")
     .single();
   if (selfTaskErr) throw selfTaskErr;
   selfCheckTaskId = selfTask.id;
+
+  const { data: defaultFalseTask, error: defaultFalseErr } = await admin
+    .from("tasks")
+    .insert({
+      template_code: `TEST-AI-DEF-${Date.now()}`,
+      title: "test_ai_review default-false task",
+      activity_type: "individual",
+      base_xp_reward: 15,
+      base_points_reward: 5,
+      // The column default, left untouched by an admin — no "Self-Check" phrase.
+      requires_review: false,
+      review_instructions: "Check the screenshot shows a date.",
+      peer_review_criteria: [
+        { category: "What to evaluate:**", points: ["1. Has a screenshot"] },
+        { category: "Reject if:**", points: ["- No screenshot"] },
+      ],
+    })
+    .select("id")
+    .single();
+  if (defaultFalseErr) throw defaultFalseErr;
+  defaultFalseTaskId = defaultFalseTask.id;
 
   const { data: recurringTask, error: recurringErr } = await admin
     .from("tasks")
@@ -227,7 +257,7 @@ afterAll(async () => {
   const { error: taskErr } = await admin
     .from("tasks")
     .delete()
-    .in("id", [taskId, selfCheckTaskId, recurringTaskId]);
+    .in("id", [taskId, selfCheckTaskId, recurringTaskId, defaultFalseTaskId]);
   if (taskErr) throw taskErr;
   const { error: userErr } = await admin
     .from("users")
@@ -372,7 +402,7 @@ describe("submit_individual_task_v1", () => {
     ]);
   });
 
-  it("self-check task (requires_review = false) completes instantly", async () => {
+  it('self-check task (requires_review = false + "Self-Check" instruction) completes instantly', async () => {
     const progressId = await createProgress("in_progress", selfCheckTaskId);
     const { data, error } = await student.rpc("submit_individual_task_v1", {
       p_progress_id: progressId,
@@ -407,6 +437,37 @@ describe("submit_individual_task_v1", () => {
       decided_by: "self_check",
     });
     expect(review!.feedback).toContain("Self-check task");
+  });
+
+  it("requires_review = false without the phrase still goes to AI review", async () => {
+    const progressId = await createProgress("in_progress", defaultFalseTaskId);
+    const { data, error } = await student.rpc("submit_individual_task_v1", {
+      p_progress_id: progressId,
+      p_submission_data: { description: "accidental default-false task" },
+    });
+    expect(error).toBeNull();
+    expect(data.mode).toBe("ai");
+
+    const { data: tp } = await admin
+      .from("task_progress")
+      .select("status")
+      .eq("id", progressId)
+      .single();
+    expect(tp!.status).toBe("pending_review");
+
+    // No free XP: nothing paid, nothing decided.
+    const { data: tx } = await admin
+      .from("transactions")
+      .select("id")
+      .eq("user_id", userId);
+    expect(tx).toHaveLength(0);
+    const { data: review } = await admin
+      .from("ai_task_reviews")
+      .select("status, decided_by")
+      .eq("id", data.review_id)
+      .single();
+    expect(review!.decided_by).toBeNull();
+    expect(["queued", "running"]).toContain(review!.status);
   });
 
   it("mode auto_approve approves and pays instantly, with no AI call", async () => {

@@ -93,7 +93,7 @@ Don't:
 | Description | `tasks.description` |
 | detailed_description (Requirements / Evidence Required) | `tasks.detailed_instructions` (+ `tasks.deliverables`) |
 | peer_review_instructions / AI_instructions | `tasks.review_instructions` (free text) + `tasks.peer_review_criteria` ("What to evaluate" / "Reject if" blocks, see `ai-review-criteria-guidelines.md`) |
-| "Self-Check (no peer review)" | `tasks.requires_review = false` → `submit_individual_task_v1` records completion instantly (`decided_by = 'self_check'`), the model is never called |
+| "Self-Check (no peer review)" | `tasks.requires_review = false` **and** `tasks.review_instructions ilike '%self-check%'` → `submit_individual_task_v1` records completion instantly (`decided_by = 'self_check'`), the model is never called. Both are required: `requires_review = false` is the column default, so the flag alone would pay out any task an admin created without touching the review toggle |
 | Recurring task reuse check | `tasks.is_recurring = true` → the previous submissions' descriptions are included in the review context |
 | Hard gates | authored as "Reject if" rules in `peer_review_criteria` |
 | Confidential | each review is isolated by design; the model never sees other submissions |

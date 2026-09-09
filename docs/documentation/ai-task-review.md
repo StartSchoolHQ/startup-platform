@@ -21,10 +21,14 @@ Key principles:
   `docs/documentation/ai-reviewer-persona.md` and implemented as `PERSONA_PROMPT`
   (`src/lib/ai-review/prompt-persona.ts`). Keep the two in sync and bump `PROMPT_VERSION` when either
   changes.
-- **Self-check tasks** (`tasks.requires_review = false`) never reach the model at all:
-  `submit_individual_task_v1` records the completion itself (`decided_by = 'self_check'`, mode
-  `self_check`) and pays the reward immediately. Honesty checks are between the founder and
-  themselves.
+- **Self-check tasks** never reach the model at all: `submit_individual_task_v1` records the
+  completion itself (`decided_by = 'self_check'`, mode `self_check`) and pays the reward immediately.
+  Honesty checks are between the founder and themselves. It takes **both** conditions —
+  `tasks.requires_review = false` **and** `tasks.review_instructions` containing the literal phrase
+  "self-check" (case-insensitive; the persona doc's signal is "Self-Check (no peer review)").
+  `requires_review = false` alone is the column's default, and
+  `create_individual_task_and_assign_to_users` also defaults `p_requires_review = false`, so the flag
+  on its own would hand out free XP on any task an admin created without touching the review toggle.
 - Low confidence never approves — it rejects with feedback naming the weak criteria.
 - The review is durable: `pg_net` kicks a Vercel worker route asynchronously, and a `pg_cron` sweeper
   re-kicks or fails stale jobs. Nothing depends on the student's browser staying open.
@@ -169,7 +173,7 @@ All eight are new, `_v1`, SECURITY DEFINER, `search_path = public, pg_temp`, and
 
 | Function | Callable by | Purpose |
 |---|---|---|
-| `submit_individual_task_v1(p_progress_id uuid, p_submission_data jsonb) returns jsonb` | `authenticated` (owner only) | Validates the caller owns the `individual`-context row and it's `in_progress`/`rejected`; archives the prior submission into `submission_history`; sets `pending_review`; computes the next `attempt`; inserts the `ai_task_reviews` row with normalized snapshots; then either finalises a self-check task (`tasks.requires_review = false` → instant `approved`, `decided_by = 'self_check'`), applies `auto_approve_fallback`, or kicks the worker. Returns `{success, review_id, attempt, mode}` with mode `self_check` \| `auto_approve` \| `ai`. |
+| `submit_individual_task_v1(p_progress_id uuid, p_submission_data jsonb) returns jsonb` | `authenticated` (owner only) | Validates the caller owns the `individual`-context row and it's `in_progress`/`rejected`; archives the prior submission into `submission_history`; sets `pending_review`; computes the next `attempt`; inserts the `ai_task_reviews` row with normalized snapshots; then either finalises a self-check task (`tasks.requires_review = false` **and** `review_instructions ilike '%self-check%'` → instant `approved`, `decided_by = 'self_check'`), applies `auto_approve_fallback`, or kicks the worker. Returns `{success, review_id, attempt, mode}` with mode `self_check` \| `auto_approve` \| `ai`. |
 | `get_ai_review_status_v1(p_progress_id uuid) returns jsonb` | `authenticated` (owner only) | Returns the latest attempt's sanitised status for the caller's own individual progress row — no raw model output, no cost/token fields. |
 | `ai_review_claim_v1(p_review_id uuid) returns setof ai_task_reviews` | `service_role` | Atomically flips a `queued` row to `running` (`claimed_at`, `started_at`, `stage = 'fetching_evidence'`); returns nothing if it wasn't claimable. |
 | `ai_review_apply_decision_v1(p_review_id uuid, p_outcome text, p_payload jsonb) returns jsonb` | `service_role` (also called internally by `submit_individual_task_v1` and the sweeper) | Finalises a review: writes the outcome + all result fields, updates `task_progress` (approved/rejected), on approve credits `users` balances + inserts a `transactions` row (`activity_type = 'individual'`, `metadata.completion_type = 'ai_review_approved'`), appends a `peer_review_history`/`add_peer_review_history_entry` entry **before** the `task_progress` status update (so the existing `notify_submitter_on_review_completion` trigger reads this attempt's decision/feedback into `notifications.data`), and patches that notification's route + message to My Journey. Requires `feedback` on approve; raises if the row isn't still `queued`/`running` or the linked `task_progress` isn't `pending_review`. |
@@ -195,8 +199,11 @@ doesn't abort the whole sweep),
 `updated_at` and no longer rewrites `created_at`; history entry moved before the status update;
 new `get_ai_review_admin_summary_v1`), `20260909120400_ai_review_self_check_and_snapshot_v1.sql`
 (`decided_by` CHECK gains `self_check`; `submit_individual_task_v1` gains the self-check branch and
-the three new `criteria_snapshot` fields). The 120300 and 120400 changes are also folded back into
-the 120000, 120100 and 120250 bodies so a fresh environment matches.
+the three new `criteria_snapshot` fields), `20260909120500_ai_review_self_check_requires_phrase_v1.sql`
+(the self-check branch now also requires `review_instructions ilike '%self-check%'`, so an accidental
+default-false task is reviewed normally instead of being paid instantly). The 120300, 120400 and
+120500 changes are also folded back into the 120000, 120100, 120250 and 120400 bodies so a fresh
+environment matches.
 
 ---
 
@@ -284,7 +291,7 @@ claimed/final); on any thrown error, logs and returns 500 **without** finalising
 | Task has zero criteria points in both blocks | `failed` | `technical_failure` | Fails fast, before calling the model at all — student sees "no review criteria yet, please tell your mentor" |
 | Model output unparseable twice, or any other thrown error in the worker | left `running` → sweeper retries 3× → `failed` | `technical_failure` | Student sees "we could not complete the automatic review this time, please resubmit" |
 | `mode = "auto_approve"` or `enabled = false` | `approved` | — | `decided_by = "auto_approve_fallback"`, model is never called |
-| `tasks.requires_review = false` (self-check task) | `approved` | — | `decided_by = "self_check"`, model is never called, checked before the mode switch. Feedback: "Self-check task — recorded as complete…" |
+| `tasks.requires_review = false` **and** `review_instructions ilike '%self-check%'` (self-check task) | `approved` | — | `decided_by = "self_check"`, model is never called, checked before the mode switch. Feedback: "Self-check task — recorded as complete…". `requires_review = false` without the phrase is treated as an accidental default and goes through normal AI review |
 
 Default `confidence_threshold` is **0.75** (admin-editable).
 
@@ -462,6 +469,7 @@ changes.
 | `supabase/migrations/20260909120250_ai_review_requeue_guard_v1.sql` | Sweeper exception-safety fix |
 | `supabase/migrations/20260909120300_ai_review_sweeper_updated_at_and_history_order_v1.sql` | Sweeper `updated_at` predicate, history-before-status, admin summary RPC |
 | `supabase/migrations/20260909120400_ai_review_self_check_and_snapshot_v1.sql` | `decided_by` CHECK + `self_check`, self-check branch, full task bar + recurring context in the snapshot |
+| `supabase/migrations/20260909120500_ai_review_self_check_requires_phrase_v1.sql` | Self-check branch also requires the literal "Self-Check" review instruction (the flag alone is the column default) |
 
 ### Docs
 | File | Purpose |

@@ -27,13 +27,20 @@ it down as an evaluate item or a reject rule; hoping the reviewer will "obviousl
 not work. The same cuts the other way: if the task itself says an incomplete first attempt is
 acceptable, say so in the task text and the reviewer will honour it.
 
-**"Self-Check" tasks need no criteria at all.** Set `requires_review = false` on the task (the admin
-dialog's review toggle) and the submission is recorded as complete the moment the student submits —
-`submit_individual_task_v1` finalises it in SQL with `decided_by = 'self_check'`, pays the reward,
-and the model is never called. That is the right shape for honesty prompts and private reflections
-where the point is the founder being straight with themselves. Any task with
-`requires_review = false` ignores `peer_review_criteria` entirely, so don't spend time writing them;
-conversely, never leave `requires_review = false` on a task you actually want graded.
+**"Self-Check" tasks need no criteria at all.** A self-check task takes **two** things, both
+required: `requires_review = false` (the admin dialog's review toggle) **and** a review-instructions
+field containing the phrase **"Self-Check"** — write `Self-Check (no peer review)`, exactly as the
+persona doc uses it. With both in place the submission is recorded as complete the moment the student
+submits: `submit_individual_task_v1` finalises it in SQL with `decided_by = 'self_check'`, pays the
+reward, and the model is never called. That is the right shape for honesty prompts and private
+reflections where the point is the founder being straight with themselves, and such a task ignores
+`peer_review_criteria` entirely, so don't spend time writing them.
+
+The phrase is a deliberate second lock: `requires_review = false` is the column's **default**, so a
+task created without touching the toggle would otherwise pay out instantly with no review at all. A
+task with `requires_review = false` and no "Self-Check" phrase is treated as that accident and goes
+through normal AI review — which means it does need proper criteria, or it will fail as unverifiable.
+Set the toggle *and* the phrase together, or neither.
 
 ## 2. Format
 

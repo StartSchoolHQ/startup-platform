@@ -1,38 +1,21 @@
--- 20260909120400_ai_review_self_check_and_snapshot_v1.sql
+-- 20260909120500_ai_review_self_check_requires_phrase_v1.sql
 --
--- Task 20 (persona prompt v2). Two additive changes, both folded back into the
--- original migration bodies (20260909120000 / 20260909120100) so a fresh
--- environment ends up in exactly this state.
+-- Tightens the self-check branch added by 20260909120400. That branch fired on
+-- `tasks.requires_review = false` alone — but false is the column's DEFAULT, and
+-- `create_individual_task_and_assign_to_users` also defaults
+-- `p_requires_review = false`, so any task an admin created without touching the
+-- review toggle would have been approved instantly on submit and paid its XP
+-- without ever being reviewed.
 --
--- (a) ai_task_reviews.decided_by gains 'self_check'.
+-- The branch now needs BOTH conditions: `requires_review = false` AND
+-- `review_instructions ilike '%self-check%'` — the persona doc's literal signal
+-- ("Self-Check (no peer review)", docs/documentation/ai-reviewer-persona.md).
+-- Every other task, an accidental default-false one included, goes through the
+-- normal AI review path.
 --
--- (b) submit_individual_task_v1:
---     - criteria_snapshot now carries the task's full bar for the reviewer:
---       `detailed_instructions` (the Requirements / Evidence Required text),
---       `is_recurring`, and `previous_submissions` (up to 3 prior submission
---       descriptions, newest first, `[]` unless the task is recurring) so the
---       prompt can reject a reused entry on a recurring task.
---     - Self-check tasks are recorded as complete immediately, before the mode
---       switch — the model is never called and the review row is finalised with
---       `decided_by = 'self_check'`. Returns mode 'self_check'. The branch needs
---       BOTH `tasks.requires_review = false` AND `review_instructions ilike
---       '%self-check%'` (tightened by 20260909120500 and folded in here: the
---       column defaults to false, so the flag alone would hand out free XP on any
---       task an admin created without touching the toggle).
---
--- Nothing existing is dropped and no other function or trigger is touched.
+-- Folded back into 20260909120400 and 20260909120100 so a fresh environment
+-- ends up in exactly this state. Nothing else in the function changed.
 
--- ---------------------------------------------------------------
--- (a) decided_by CHECK + 'self_check'
--- ---------------------------------------------------------------
-alter table public.ai_task_reviews
-  drop constraint ai_task_reviews_decided_by_check,
-  add constraint ai_task_reviews_decided_by_check
-    check (decided_by is null or decided_by in ('ai','system','auto_approve_fallback','self_check'));
-
--- ---------------------------------------------------------------
--- (b) submit_individual_task_v1 — full task bar in the snapshot + self-check
--- ---------------------------------------------------------------
 create or replace function public.submit_individual_task_v1(p_progress_id uuid, p_submission_data jsonb)
 returns jsonb
 language plpgsql security definer
@@ -141,6 +124,3 @@ begin
 
   return jsonb_build_object('success', true, 'review_id', v_review_id, 'attempt', v_attempt, 'mode', v_mode);
 end $$;
-
-revoke execute on function public.submit_individual_task_v1(uuid, jsonb) from public, anon;
-grant execute on function public.submit_individual_task_v1(uuid, jsonb) to authenticated, service_role;

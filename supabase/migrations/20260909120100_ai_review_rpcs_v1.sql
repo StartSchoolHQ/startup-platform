@@ -176,7 +176,14 @@ begin
   -- Self-check task: an honesty check the founder does with themselves. Recorded
   -- as complete instantly; the model is never called. Checked BEFORE the mode
   -- switch so the kill switch cannot change the outcome either way.
-  if coalesce(t.requires_review, true) = false then
+  -- BOTH conditions are required: `requires_review = false` alone is the column's
+  -- default (and create_individual_task_and_assign_to_users defaults
+  -- p_requires_review = false), so an admin who never touched the toggle would
+  -- otherwise get a free-XP instant approval. The task must also carry the
+  -- persona doc's literal signal in review_instructions ("Self-Check (no peer
+  -- review)"); anything else goes through the normal AI review path.
+  if coalesce(t.requires_review, true) = false
+     and coalesce(t.review_instructions, '') ilike '%self-check%' then
     perform ai_review_apply_decision_v1(v_review_id, 'approved', jsonb_build_object(
       'decided_by', 'self_check',
       'feedback', 'Self-check task — recorded as complete. This one is between you and yourself: be honest in your own notes.'));
