@@ -24,6 +24,7 @@ import { TaskStatusChart } from "./task-status-chart";
 import { AdminCharts } from "./admin-charts";
 import { NeedsAttentionFeed } from "./needs-attention-feed";
 import { ProgrammePhaseCard } from "./programme-phase-card";
+import { AiReviewSettingsCard } from "./ai-review-settings-card";
 
 interface TeamData {
   id: string;
@@ -226,6 +227,7 @@ export function AdminOverview() {
       <div className="space-y-4">
         {/* Phase switch stays reachable even when stats fail to load */}
         <ProgrammePhaseCard />
+        <AiReviewSettingsCard />
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
             <AlertTriangle className="text-muted-foreground h-10 w-10" />
@@ -249,6 +251,7 @@ export function AdminOverview() {
     <div className="space-y-4">
       {/* Programme phase switches (TOP) */}
       <ProgrammePhaseCard />
+      <AiReviewSettingsCard />
 
       {/* Health Snapshot — weekly check-in view (TOP) */}
       {stats.programHealth && (
