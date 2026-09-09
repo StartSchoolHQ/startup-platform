@@ -11,9 +11,13 @@ function asObject(raw: unknown): Record<string, unknown> | string | null {
   if (typeof raw === "string") {
     try {
       const parsed = JSON.parse(raw);
+      // A string that parses to something other than a plain object mirrors
+      // the SQL helper's behaviour: discard it entirely (-> empty result).
+      // Only a genuinely unparseable string falls through to the catch
+      // branch and is kept as the description.
       return parsed && typeof parsed === "object" && !Array.isArray(parsed)
         ? (parsed as Record<string, unknown>)
-        : raw;
+        : null;
     } catch {
       return raw;
     }
@@ -35,8 +39,11 @@ export function normalizeSubmission(raw: unknown): NormalizedSubmission {
 
   const links: NormalizedLink[] = [];
   const seen = new Set<string>();
+  // A non-empty explicit `url` is kept as-is (no URLISH check — mirrors SQL,
+  // which trusts an explicit url field). URLISH only gates the fallback to
+  // `title` when there is no explicit url.
   const pushLink = (url: string | undefined, title = "") => {
-    if (!url || !URLISH.test(url) || seen.has(url)) return;
+    if (!url || seen.has(url)) return;
     seen.add(url);
     links.push({ url, title });
   };

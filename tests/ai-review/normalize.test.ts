@@ -72,4 +72,19 @@ describe("normalizeSubmission", () => {
       files: [],
     });
   });
+
+  it("discards a string that parses to a non-object JSON value (matches SQL)", () => {
+    expect(normalizeSubmission('["https://a.test"]')).toEqual({
+      description: "",
+      links: [],
+      files: [],
+    });
+  });
+
+  it("keeps a non-empty explicit url as-is, without applying URLISH to it", () => {
+    const out = normalizeSubmission({
+      external_urls: [{ url: "ftp://x.com", title: "" }],
+    });
+    expect(out.links).toEqual([{ url: "ftp://x.com", title: "" }]);
+  });
 });

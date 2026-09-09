@@ -37,6 +37,8 @@ export const REVIEW_RESULT_JSON_SCHEMA = {
     },
     confidence: {
       type: "number",
+      minimum: 0,
+      maximum: 1,
       description: "0–1, how sure you are of `decision`",
     },
     criteria: {
@@ -64,6 +66,7 @@ export const REVIEW_RESULT_JSON_SCHEMA = {
     },
     feedback: {
       type: "string",
+      minLength: 1,
       description:
         "second person, concrete, <=120 words, required on pass and fail",
     },
