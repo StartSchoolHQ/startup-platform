@@ -141,6 +141,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             { title: "Users", url: "/dashboard/admin/users" },
             { title: "Teams", url: "/dashboard/admin/teams" },
             { title: "Peer Reviews", url: "/dashboard/admin/peer-reviews" },
+            { title: "AI Reviews", url: "/dashboard/admin/ai-reviews" },
             {
               title: "Weekly Reports",
               url: "/dashboard/admin/weekly-reports",
