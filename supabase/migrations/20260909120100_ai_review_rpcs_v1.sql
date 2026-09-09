@@ -292,7 +292,12 @@ begin
       where id = rec.id;
       perform ai_review_kick_worker_v1(rec.id);
     else
-      perform ai_review_apply_decision_v1(rec.id, 'failed', jsonb_build_object('error', 'worker_timeout after 3 retries'));
+      begin
+        perform ai_review_apply_decision_v1(rec.id, 'failed', jsonb_build_object('error', 'worker_timeout after 3 retries'));
+      exception when others then
+        update ai_task_reviews set status = 'failed', error = 'sweeper: ' || sqlerrm, finished_at = now(), decided_by = 'system'
+        where id = rec.id;
+      end;
     end if;
     n := n + 1;
   end loop;

@@ -27,6 +27,13 @@ export interface RunOutput {
   costUsd: number;
 }
 
+const NO_CRITERIA_FEEDBACK =
+  "This task has no review criteria yet, so it can't be reviewed automatically. Nothing is wrong with your work — please tell your mentor and resubmit once the task is fixed.";
+
+function hasNoCriteria(criteria: CriteriaSnapshot): boolean {
+  return !criteria.criteria.some((b) => b.points.length > 0);
+}
+
 export async function runReviewOnSnapshot(
   snapshot: NormalizedSubmission,
   criteria: CriteriaSnapshot,
@@ -42,6 +49,9 @@ export async function runReviewOnSnapshot(
     raw: unknown;
   }
 > {
+  if (hasNoCriteria(criteria)) {
+    throw new Error("task_has_no_criteria");
+  }
   const bundle = await buildEvidence(snapshot, settings, onStage);
   await onStage?.("reviewing");
   const model = await reviewWithModel(criteria, bundle, settings);
@@ -83,6 +93,25 @@ export async function runReview(
   }
   if (!row) return null;
 
+  const criteria = row.criteria_snapshot as unknown as CriteriaSnapshot;
+  if (hasNoCriteria(criteria)) {
+    if (!opts.dryRun) {
+      await applyDecision(admin, reviewId, "failed", {
+        error: "task_has_no_criteria",
+        feedback: NO_CRITERIA_FEEDBACK,
+        decided_by: "system",
+      });
+    }
+    return {
+      outcome: "failed",
+      rejectReason: "technical_failure",
+      feedback: NO_CRITERIA_FEEDBACK,
+      result: null,
+      manifest: [],
+      costUsd: 0,
+    };
+  }
+
   const setStage = async (stage: string) => {
     if (opts.dryRun) return;
     await admin.from("ai_task_reviews").update({ stage }).eq("id", reviewId);
@@ -90,7 +119,7 @@ export async function runReview(
 
   const out = await runReviewOnSnapshot(
     row.submission_snapshot as unknown as NormalizedSubmission,
-    row.criteria_snapshot as unknown as CriteriaSnapshot,
+    criteria,
     settings,
     setStage
   );

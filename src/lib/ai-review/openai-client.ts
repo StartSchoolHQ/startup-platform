@@ -8,8 +8,8 @@ export function getOpenAI(): OpenAI {
   }
   client ??= new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
-    maxRetries: 2,
-    timeout: 120_000,
+    maxRetries: 1,
+    timeout: 90_000,
   });
   return client;
 }

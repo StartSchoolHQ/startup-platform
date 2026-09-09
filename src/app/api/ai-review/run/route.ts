@@ -28,8 +28,8 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  const admin = createAdminClient();
   try {
+    const admin = createAdminClient();
     const out = await runReview(admin, parsed.data.review_id);
     if (!out) return NextResponse.json({ skipped: "not_claimable" });
     return NextResponse.json({

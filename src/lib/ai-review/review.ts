@@ -55,8 +55,16 @@ export async function reviewWithModel(
     },
   };
 
+  const startedAt = Date.now();
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt > 0 && Date.now() - startedAt >= 150_000) {
+      // Not enough time left in the maxDuration budget for a second model
+      // call (client timeout 90s x up to 2 tries each): fail fast instead.
+      throw new Error(
+        `Model returned unparseable output (retry budget exhausted): ${lastError instanceof Error ? lastError.message : String(lastError)}`
+      );
+    }
     const response = await openai.responses.create(request);
     try {
       const result = parseReviewResult(response.output_text);
@@ -72,6 +80,11 @@ export async function reviewWithModel(
       };
     } catch (e) {
       lastError = e; // malformed output: retry once
+      console.error("[ai-review] unparseable model output", {
+        attempt,
+        message: e instanceof Error ? e.message : String(e),
+        sample: response.output_text.slice(0, 500),
+      });
     }
   }
   throw new Error(
