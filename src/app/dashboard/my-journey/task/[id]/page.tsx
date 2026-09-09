@@ -20,14 +20,17 @@ import {
   CreditCard,
   CheckCircle,
   AlertCircle,
-  Play,
 } from "lucide-react";
-import { getTaskByIdLazy, completeIndividualTask } from "@/lib/tasks";
+import { getTaskByIdLazy } from "@/lib/tasks";
+import { submitIndividualTaskV1 } from "@/lib/database";
+import { uploadTaskFiles } from "@/lib/file-upload";
+import { useAiReviewStatus } from "@/hooks/use-ai-review-status";
+import { TaskActionCard } from "@/components/my-journey/task-action-card";
+import posthog from "posthog-js";
 import { TaskSubmissionModal } from "@/components/tasks/task-submission-modal";
 import { useAppContext } from "@/contexts/app-context";
 import { toast } from "sonner";
 import { StatusBadge, TaskStatus } from "@/components/ui/status-badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TaskDetailSkeleton } from "@/components/ui/task-detail-skeleton";
 import type { TeamTask } from "@/types/team-journey";
 import { SuggestEditsModal } from "@/components/tasks/suggest-edits-modal";
@@ -67,32 +70,65 @@ export default function IndividualTaskDetailPage() {
     }
   }, [taskId, user?.id, loadTask]);
 
+  const reviewActive =
+    task?.status === "pending_review" ||
+    task?.status === "rejected" ||
+    task?.status === "approved";
+  const { data: review } = useAiReviewStatus(task?.progress_id ?? null, {
+    active: !!reviewActive,
+  });
+
+  const handleReviewFinished = useCallback(() => {
+    loadTask();
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    queryClient.invalidateQueries({ queryKey: ["myJourney"] });
+    queryClient.invalidateQueries({ queryKey: ["my-journey-overview"] });
+    queryClient.invalidateQueries({ queryKey: ["notifications"] });
+  }, [loadTask, queryClient]);
+
   const handleSubmission = async (submissionData: Record<string, unknown>) => {
     if (!task || !user?.id || !task.progress_id) return;
-
     setIsSubmitting(true);
     try {
-      await completeIndividualTask(task.progress_id, submissionData);
-
-      // Refresh task data to show completed status
-      await loadTask();
-      setIsSubmissionModalOpen(false);
-
-      // Refresh dashboard overview caches (My Journey stat cards, achievement
-      // progress, etc.) and the My Journey page's own task/achievement lists.
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      queryClient.invalidateQueries({ queryKey: ["myJourney"] });
-
-      // Refresh notifications (handled by React Query)
-      // No manual refresh needed - queries will auto-update
-
-      // Enhanced success feedback for individual tasks
-      toast.success("Task Completed Successfully! 🎉", {
-        description: `${labels.xp} and ${labels.points} awarded! Your task was automatically approved.`,
-        duration: 5000,
+      const rawFiles = Array.isArray(submissionData.files)
+        ? (submissionData.files as File[]).filter((f) => f instanceof File)
+        : [];
+      const uploaded = rawFiles.length
+        ? await uploadTaskFiles(rawFiles, task.progress_id, user.id)
+        : [];
+      const payload = {
+        ...submissionData,
+        files: uploaded.map((u) => ({
+          url: u.url,
+          name: u.name,
+          size: u.size,
+          type: rawFiles.find((f) => f.name === u.name)?.type ?? null,
+        })),
+        completed_by: user.id,
+        completion_date: new Date().toISOString(),
+      };
+      const result = await submitIndividualTaskV1(task.progress_id, payload);
+      posthog.capture("individual_task_submitted", {
+        task_id: task.task_id,
+        attempt: result.attempt,
+        mode: result.mode,
       });
+      setIsSubmissionModalOpen(false);
+      await loadTask();
+      queryClient.invalidateQueries({ queryKey: ["myJourney"] });
+      toast.success(
+        result.mode === "ai" ? "Submitted — reviewing now" : "Task completed",
+        {
+          description:
+            result.mode === "ai"
+              ? "You can stay or leave; we'll notify you when the review is done."
+              : `${labels.xp} and ${labels.points} awarded.`,
+        }
+      );
     } catch (error) {
-      console.error("Error submitting task:", error);
+      posthog.capture("individual_task_submission_failed", {
+        task_id: task.task_id,
+      });
       toast.error("Failed to submit task", {
         description:
           error instanceof Error
@@ -385,83 +421,14 @@ export default function IndividualTaskDetailPage() {
           </Card>
 
           {/* Task Action Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">
-                Task Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {/* User Info */}
-              {user && (
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatar_url || undefined} />
-                    <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold text-white">
-                      {user.name
-                        ?.split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="text-sm font-medium">
-                      {user.name || "Unknown User"}
-                    </div>
-                    <div className="text-muted-foreground text-xs">
-                      {task.started_at
-                        ? new Date(task.started_at).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            }
-                          )
-                        : "Not started yet"}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Action Buttons based on status */}
-              {task.status === "in_progress" ? (
-                <Button
-                  className="w-full gap-2"
-                  onClick={handleCompleteTask}
-                  disabled={isSubmitting}
-                >
-                  <CheckCircle className="h-4 w-4" />
-                  {isSubmitting ? "Submitting..." : "Complete Task"}
-                </Button>
-              ) : task.status === "approved" ? (
-                <Button
-                  className="w-full gap-2 bg-green-600 hover:bg-green-700"
-                  disabled
-                >
-                  <CheckCircle className="h-4 w-4" />
-                  Completed
-                </Button>
-              ) : task.status === "not_started" ? (
-                <Button variant="outline" className="w-full gap-2" disabled>
-                  <Play className="h-4 w-4" />
-                  Task Not Started
-                </Button>
-              ) : (
-                <Button className="w-full" disabled>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Task Status: {task.status}
-                </Button>
-              )}
-
-              {task.status === "approved" && (
-                <div className="mt-2 text-center text-xs text-green-600">
-                  Your {labels.xp} and {labels.points} have been awarded!
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <TaskActionCard
+            task={task}
+            user={user ?? null}
+            review={review}
+            isSubmitting={isSubmitting}
+            onComplete={handleCompleteTask}
+            onReviewFinished={handleReviewFinished}
+          />
         </div>
       </div>
 
