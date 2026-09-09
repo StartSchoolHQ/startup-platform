@@ -7,7 +7,7 @@
 -- ---------------------------------------------------------------
 create or replace function public.ai_review_normalize_submission_v1(p_raw jsonb)
 returns jsonb
-language plpgsql immutable
+language plpgsql immutable security definer
 set search_path = public, pg_temp
 as $$
 declare
@@ -328,6 +328,8 @@ revoke execute on function public.ai_review_kick_worker_v1(uuid) from public, an
 revoke execute on function public.ai_review_claim_v1(uuid) from public, anon, authenticated;
 revoke execute on function public.ai_review_apply_decision_v1(uuid, text, jsonb) from public, anon, authenticated;
 revoke execute on function public.ai_review_requeue_stale_v1() from public, anon, authenticated;
+revoke execute on function public.submit_individual_task_v1(uuid, jsonb) from public, anon;
+revoke execute on function public.get_ai_review_status_v1(uuid) from public, anon;
 grant execute on function public.ai_review_claim_v1(uuid) to service_role;
 grant execute on function public.ai_review_apply_decision_v1(uuid, text, jsonb) to service_role;
 grant execute on function public.ai_review_requeue_stale_v1() to service_role;
