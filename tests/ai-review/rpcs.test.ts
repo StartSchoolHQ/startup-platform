@@ -1,7 +1,8 @@
 /**
  * DB round-trip tests for the AI task reviewer RPCs.
- * Creates ONE auth user, ONE test task template and ONE task_progress row per
- * test, and deletes all of them (ai_task_reviews cascades from task_progress).
+ * Creates ONE auth user, three test task templates (reviewed, self-check,
+ * recurring) and one task_progress row per test, and deletes all of them
+ * (ai_task_reviews cascades from task_progress).
  * Runs against the production project via service role — cleanup is asserted.
  */
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
@@ -17,6 +18,10 @@ let admin: SupabaseClient;
 let student: SupabaseClient;
 let userId: string;
 let taskId: string;
+/** Second template, `requires_review = false` — the self-check path. */
+let selfCheckTaskId: string;
+/** Third template, `is_recurring = true` — prior-submission context. */
+let recurringTaskId: string;
 let originalAiReviewSettings: Record<string, unknown> | null = null;
 const progressIds: string[] = [];
 
@@ -108,6 +113,42 @@ beforeAll(async () => {
   if (taskErr) throw taskErr;
   taskId = task.id;
 
+  const { data: selfTask, error: selfTaskErr } = await admin
+    .from("tasks")
+    .insert({
+      template_code: `TEST-AI-SELF-${Date.now()}`,
+      title: "test_ai_review self-check task",
+      activity_type: "individual",
+      base_xp_reward: 40,
+      base_points_reward: 10,
+      requires_review: false,
+    })
+    .select("id")
+    .single();
+  if (selfTaskErr) throw selfTaskErr;
+  selfCheckTaskId = selfTask.id;
+
+  const { data: recurringTask, error: recurringErr } = await admin
+    .from("tasks")
+    .insert({
+      template_code: `TEST-AI-REC-${Date.now()}`,
+      title: "test_ai_review recurring task",
+      activity_type: "individual",
+      base_xp_reward: 10,
+      base_points_reward: 5,
+      requires_review: true,
+      is_recurring: true,
+      detailed_instructions: "Log this month's retrospective.",
+      peer_review_criteria: [
+        { category: "What to evaluate:**", points: ["1. Has a new entry"] },
+        { category: "Reject if:**", points: ["- Repeats a prior entry"] },
+      ],
+    })
+    .select("id")
+    .single();
+  if (recurringErr) throw recurringErr;
+  recurringTaskId = recurringTask.id;
+
   student = createClient(url, anonKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
@@ -118,11 +159,14 @@ beforeAll(async () => {
   if (signInErr) throw signInErr;
 }, 30000);
 
-async function createProgress(status = "in_progress"): Promise<string> {
+async function createProgress(
+  status = "in_progress",
+  task = taskId
+): Promise<string> {
   const { data, error } = await admin
     .from("task_progress")
     .insert({
-      task_id: taskId,
+      task_id: task,
       user_id: userId,
       context: "individual",
       activity_type: "individual",
@@ -183,7 +227,7 @@ afterAll(async () => {
   const { error: taskErr } = await admin
     .from("tasks")
     .delete()
-    .eq("id", taskId);
+    .in("id", [taskId, selfCheckTaskId, recurringTaskId]);
   if (taskErr) throw taskErr;
   const { error: userErr } = await admin
     .from("users")
@@ -224,6 +268,11 @@ describe("submit_individual_task_v1", () => {
       "https://s.test/a.png"
     );
     expect(review!.criteria_snapshot.criteria).toHaveLength(2);
+    expect(review!.criteria_snapshot).toMatchObject({
+      detailed_instructions: null,
+      is_recurring: false,
+      previous_submissions: [],
+    });
 
     const { data: tp } = await admin
       .from("task_progress")
@@ -279,6 +328,85 @@ describe("submit_individual_task_v1", () => {
       .eq("id", progressId)
       .single();
     expect(tp!.submission_history).toHaveLength(1);
+  });
+
+  it("carries the task's full bar and prior entries for a recurring task", async () => {
+    const progressId = await createProgress("in_progress", recurringTaskId);
+    const first = await student.rpc("submit_individual_task_v1", {
+      p_progress_id: progressId,
+      p_submission_data: { description: "January: shipped the landing page." },
+    });
+    expect(first.error).toBeNull();
+    const { data: firstSnapshot } = await admin
+      .from("ai_task_reviews")
+      .select("criteria_snapshot")
+      .eq("id", first.data.review_id)
+      .single();
+    expect(firstSnapshot!.criteria_snapshot).toMatchObject({
+      detailed_instructions: "Log this month's retrospective.",
+      is_recurring: true,
+      previous_submissions: [],
+    });
+
+    await admin.rpc("ai_review_claim_v1", {
+      p_review_id: first.data.review_id,
+    });
+    await admin.rpc("ai_review_apply_decision_v1", {
+      p_review_id: first.data.review_id,
+      p_outcome: "rejected",
+      p_payload: { feedback: "say what changed", reject_reason: "criteria" },
+    });
+
+    const second = await student.rpc("submit_individual_task_v1", {
+      p_progress_id: progressId,
+      p_submission_data: { description: "February: first paying customer." },
+    });
+    expect(second.error).toBeNull();
+    const { data: secondSnapshot } = await admin
+      .from("ai_task_reviews")
+      .select("criteria_snapshot")
+      .eq("id", second.data.review_id)
+      .single();
+    expect(secondSnapshot!.criteria_snapshot.previous_submissions).toEqual([
+      "January: shipped the landing page.",
+    ]);
+  });
+
+  it("self-check task (requires_review = false) completes instantly", async () => {
+    const progressId = await createProgress("in_progress", selfCheckTaskId);
+    const { data, error } = await student.rpc("submit_individual_task_v1", {
+      p_progress_id: progressId,
+      p_submission_data: { description: "I was honest with myself." },
+    });
+    expect(error).toBeNull();
+    expect(data.mode).toBe("self_check");
+
+    const { data: tp } = await admin
+      .from("task_progress")
+      .select("status")
+      .eq("id", progressId)
+      .single();
+    expect(tp!.status).toBe("approved");
+
+    const { data: tx } = await admin
+      .from("transactions")
+      .select("activity_type, xp_change, metadata")
+      .eq("user_id", userId);
+    expect(tx).toHaveLength(1);
+    expect(tx![0].activity_type).toBe("individual");
+    expect(tx![0].xp_change).toBe(40);
+    expect(tx![0].metadata.decided_by).toBe("self_check");
+
+    const { data: review } = await admin
+      .from("ai_task_reviews")
+      .select("status, decided_by, feedback")
+      .eq("id", data.review_id)
+      .single();
+    expect(review).toMatchObject({
+      status: "approved",
+      decided_by: "self_check",
+    });
+    expect(review!.feedback).toContain("Self-check task");
   });
 
   it("mode auto_approve approves and pays instantly, with no AI call", async () => {

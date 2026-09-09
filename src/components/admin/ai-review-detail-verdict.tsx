@@ -1,3 +1,4 @@
+import { AI_REVIEW_DECIDED_BY_LABELS } from "@/lib/ai-review/admin-ui";
 import type { AiReviewAdminRow } from "@/types/ai-review-admin";
 
 export function VerdictSection({ review }: { review: AiReviewAdminRow }) {
@@ -30,6 +31,15 @@ export function VerdictSection({ review }: { review: AiReviewAdminRow }) {
       <div>
         <span className="text-muted-foreground block text-xs">Model</span>
         <span className="font-medium">{review.model || "—"}</span>
+      </div>
+      <div>
+        <span className="text-muted-foreground block text-xs">Decided by</span>
+        <span className="font-medium">
+          {review.decided_by
+            ? (AI_REVIEW_DECIDED_BY_LABELS[review.decided_by] ??
+              review.decided_by)
+            : "—"}
+        </span>
       </div>
       <div>
         <span className="text-muted-foreground block text-xs">Cost</span>

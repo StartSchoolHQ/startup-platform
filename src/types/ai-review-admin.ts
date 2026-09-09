@@ -11,6 +11,7 @@ export interface AiReviewAdminRow {
   evidence_manifest: unknown;
   submission_snapshot: unknown;
   model: string | null;
+  decided_by: string | null;
   cost_usd: number | null;
   input_tokens: number | null;
   output_tokens: number | null;

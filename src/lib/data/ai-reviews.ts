@@ -25,10 +25,15 @@ export interface SubmitIndividualTaskResult {
   success: boolean;
   review_id: string;
   attempt: number;
-  mode: "ai" | "auto_approve";
+  /**
+   * `ai` — queued for the model. `self_check` — the task has
+   * `requires_review = false`, so it was recorded as complete instantly.
+   * `auto_approve` — the AI-review kill switch is off.
+   */
+  mode: "ai" | "auto_approve" | "self_check";
 }
 
-/** Submits a My Journey task for AI review (or instant approval when the switch is off). */
+/** Submits a My Journey task for AI review (or instant completion for self-check / kill-switch tasks). */
 export async function submitIndividualTaskV1(
   progressId: string,
   submissionData: Record<string, unknown>

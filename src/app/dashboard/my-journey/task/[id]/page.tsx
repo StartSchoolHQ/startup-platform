@@ -157,15 +157,24 @@ export default function IndividualTaskDetailPage() {
       setIsSubmissionModalOpen(false);
       await loadTask();
       invalidateJourneyCaches();
-      toast.success(
-        result.mode === "ai" ? "Submitted — reviewing now" : "Task completed",
-        {
+      const successToast = {
+        ai: {
+          title: "Submitted — reviewing now",
           description:
-            result.mode === "ai"
-              ? "You can stay or leave; we'll notify you when the review is done."
-              : `${labels.xp} and ${labels.points} awarded.`,
-        }
-      );
+            "You can stay or leave; we'll notify you when the review is done.",
+        },
+        self_check: {
+          title: "Recorded — self-check task",
+          description: `This one is between you and yourself. ${labels.xp} and ${labels.points} awarded.`,
+        },
+        auto_approve: {
+          title: "Task completed",
+          description: `${labels.xp} and ${labels.points} awarded.`,
+        },
+      }[result.mode];
+      toast.success(successToast.title, {
+        description: successToast.description,
+      });
     } catch (error) {
       posthog.capture("individual_task_submission_failed", {
         task_id: task.task_id,

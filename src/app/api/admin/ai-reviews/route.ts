@@ -21,6 +21,7 @@ interface RawReviewRow {
   evidence_manifest: unknown;
   submission_snapshot: unknown;
   model: string | null;
+  decided_by: string | null;
   cost_usd: number | null;
   input_tokens: number | null;
   output_tokens: number | null;
@@ -146,7 +147,7 @@ export async function GET(request: NextRequest) {
 
     let q = admin.from("ai_task_reviews").select(
       `id, progress_id, attempt, status, reject_reason, decision, confidence, feedback, criteria_results,
-       evidence_manifest, submission_snapshot, model, cost_usd, input_tokens, output_tokens, error,
+       evidence_manifest, submission_snapshot, model, decided_by, cost_usd, input_tokens, output_tokens, error,
        created_at, finished_at,
        task:tasks!ai_task_reviews_task_id_fkey(id, title),
        student:users!ai_task_reviews_user_id_fkey(id, name, avatar_url)`,
@@ -211,6 +212,7 @@ export async function GET(request: NextRequest) {
       evidence_manifest: r.evidence_manifest,
       submission_snapshot: r.submission_snapshot,
       model: r.model,
+      decided_by: r.decided_by,
       cost_usd: r.cost_usd,
       input_tokens: r.input_tokens,
       output_tokens: r.output_tokens,

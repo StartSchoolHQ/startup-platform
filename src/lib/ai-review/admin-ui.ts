@@ -12,6 +12,14 @@ export const AI_REVIEW_OUTCOME_STYLES: Record<string, string> = {
     "bg-blue-500/10 text-blue-700 border-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400",
 };
 
+/** `ai_task_reviews.decided_by` → admin-facing label. */
+export const AI_REVIEW_DECIDED_BY_LABELS: Record<string, string> = {
+  ai: "AI",
+  system: "System",
+  auto_approve_fallback: "Auto-approved (AI off)",
+  self_check: "Self-check",
+};
+
 export const AI_REVIEW_REJECT_REASONS = [
   { value: "criteria", label: "Criteria not met" },
   { value: "low_confidence", label: "Low confidence" },

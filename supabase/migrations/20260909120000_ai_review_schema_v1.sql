@@ -28,7 +28,7 @@ create table public.ai_task_reviews (
   cost_usd            numeric(8,5),
   error               text,
   decided_by          text
-                      check (decided_by is null or decided_by in ('ai','system','auto_approve_fallback')),
+                      check (decided_by is null or decided_by in ('ai','system','auto_approve_fallback','self_check')),
   retry_count         int  not null default 0,
   claimed_at          timestamptz,
   started_at          timestamptz,
