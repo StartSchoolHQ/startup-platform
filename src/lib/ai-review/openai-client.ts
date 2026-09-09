@@ -1,0 +1,15 @@
+import OpenAI from "openai";
+
+let client: OpenAI | null = null;
+
+export function getOpenAI(): OpenAI {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY is not set");
+  }
+  client ??= new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    maxRetries: 2,
+    timeout: 120_000,
+  });
+  return client;
+}
