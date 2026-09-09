@@ -17,12 +17,56 @@ let admin: SupabaseClient;
 let student: SupabaseClient;
 let userId: string;
 let taskId: string;
+let originalAiReviewSettings: Record<string, unknown> | null = null;
 const progressIds: string[] = [];
+
+/**
+ * Flips only `mode` on the live `ai_review` settings row, keeping every other
+ * field exactly as production has it. Every caller restores it in a `finally`,
+ * and afterAll writes the original row back verbatim as a safety net.
+ */
+async function setAiReviewMode(mode: "ai" | "auto_approve"): Promise<void> {
+  const { error } = await admin
+    .from("platform_settings")
+    .update({ value: { ...(originalAiReviewSettings ?? {}), mode } })
+    .eq("key", "ai_review");
+  if (error) throw error;
+}
+
+/**
+ * A balance update made through the STUDENT session (auto_approve path) writes
+ * `audit_log` rows whose `changed_by_user_id` FK is ON DELETE NO ACTION, which
+ * blocks deleting the auth user. Rows are kept and the reference is nulled -
+ * the same treatment the 2026-07-28 dropout deletion used.
+ */
+async function releaseAuditRefs(id: string): Promise<void> {
+  const { error } = await admin
+    .from("audit_log")
+    .update({ changed_by_user_id: null })
+    .eq("changed_by_user_id", id);
+  if (error) throw error;
+}
+
+/** Safety net for an auth user a previous run's teardown failed to remove. */
+async function purgeOrphanTestAuthUsers(): Promise<void> {
+  const { data, error } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  if (error) throw error;
+  const orphans = data.users.filter((u) =>
+    u.email?.startsWith("test_ai_review_")
+  );
+  for (const orphan of orphans) {
+    await releaseAuditRefs(orphan.id);
+    await admin.from("users").delete().eq("id", orphan.id);
+    const { error: delErr } = await admin.auth.admin.deleteUser(orphan.id);
+    if (delErr) throw delErr;
+  }
+}
 
 beforeAll(async () => {
   admin = createClient(url, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+  await purgeOrphanTestAuthUsers();
   const { data: created, error } = await admin.auth.admin.createUser({
     email: EMAIL,
     password: PASSWORD,
@@ -37,6 +81,14 @@ beforeAll(async () => {
     primary_role: "user",
     status: "active",
   });
+  const { data: settingsRow, error: settingsErr } = await admin
+    .from("platform_settings")
+    .select("value")
+    .eq("key", "ai_review")
+    .single();
+  if (settingsErr) throw settingsErr;
+  originalAiReviewSettings = settingsRow.value as Record<string, unknown>;
+
   const { data: task, error: taskErr } = await admin
     .from("tasks")
     .insert({
@@ -121,6 +173,13 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
+  if (originalAiReviewSettings) {
+    const { error: settingsErr } = await admin
+      .from("platform_settings")
+      .update({ value: originalAiReviewSettings })
+      .eq("key", "ai_review");
+    if (settingsErr) throw settingsErr;
+  }
   const { error: taskErr } = await admin
     .from("tasks")
     .delete()
@@ -131,7 +190,9 @@ afterAll(async () => {
     .delete()
     .eq("id", userId);
   if (userErr) throw userErr;
-  await admin.auth.admin.deleteUser(userId);
+  await releaseAuditRefs(userId);
+  const { error: authErr } = await admin.auth.admin.deleteUser(userId);
+  if (authErr) throw authErr;
 }, 30000);
 
 describe("submit_individual_task_v1", () => {
@@ -218,6 +279,47 @@ describe("submit_individual_task_v1", () => {
       .eq("id", progressId)
       .single();
     expect(tp!.submission_history).toHaveLength(1);
+  });
+
+  it("mode auto_approve approves and pays instantly, with no AI call", async () => {
+    const progressId = await createProgress();
+    try {
+      await setAiReviewMode("auto_approve");
+      const { data, error } = await student.rpc("submit_individual_task_v1", {
+        p_progress_id: progressId,
+        p_submission_data: { description: "instant" },
+      });
+      expect(error).toBeNull();
+      expect(data.mode).toBe("auto_approve");
+
+      const { data: tp } = await admin
+        .from("task_progress")
+        .select("status")
+        .eq("id", progressId)
+        .single();
+      expect(tp!.status).toBe("approved");
+
+      const { data: tx } = await admin
+        .from("transactions")
+        .select("activity_type, metadata")
+        .eq("user_id", userId);
+      expect(tx).toHaveLength(1);
+      expect(tx![0].activity_type).toBe("individual");
+      expect(tx![0].metadata.decided_by).toBe("auto_approve_fallback");
+
+      const { data: review } = await admin
+        .from("ai_task_reviews")
+        .select("status, decided_by, feedback")
+        .eq("id", data.review_id)
+        .single();
+      expect(review).toMatchObject({
+        status: "approved",
+        decided_by: "auto_approve_fallback",
+      });
+      expect(review!.feedback).toBeTruthy();
+    } finally {
+      await setAiReviewMode("ai");
+    }
   });
 });
 
