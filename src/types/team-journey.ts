@@ -164,6 +164,7 @@ export interface TaskTableItem {
     | "In Progress"
     | "Not Accepted"
     | "Peer Review"
+    | "Reviewing"
     | "Not Started"
     | "Cooldown"
     | "Available";

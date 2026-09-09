@@ -26,6 +26,7 @@ export type UITaskStatus =
   | "Not Started"
   | "In Progress"
   | "Peer Review"
+  | "Reviewing"
   | "Finished"
   | "Not Accepted"
   | "Cooldown"
@@ -120,6 +121,8 @@ export function mapUIStatusToBadge(status: UITaskStatus): BadgeStatus {
     case "In Progress":
       return "in_progress";
     case "Peer Review":
+      return "pending_review";
+    case "Reviewing":
       return "pending_review";
     case "Finished":
       return "approved";

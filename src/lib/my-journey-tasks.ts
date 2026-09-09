@@ -28,7 +28,7 @@ function toUIStatus(status: string | null): TaskTableItem["status"] {
     case "revision_required":
       return "Not Accepted";
     case "pending_review":
-      return "Peer Review";
+      return "Reviewing";
     default:
       return "Not Started";
   }

@@ -91,6 +91,16 @@ export {
 } from "./data/tasks";
 
 // ============================================================================
+// AI TASK REVIEW (My Journey)
+// ============================================================================
+export {
+  submitIndividualTaskV1,
+  getAiReviewStatus,
+  type AiReviewStatus,
+  type AiReviewCriterion,
+} from "./data/ai-reviews";
+
+// ============================================================================
 // PEER REVIEW FUNCTIONS
 // ============================================================================
 export {

@@ -44,7 +44,7 @@ const getStatusConfig = (
       };
     case "pending_review":
       return {
-        text: variant === "journey" ? "Peer Review" : "Pending Review",
+        text: variant === "journey" ? "Reviewing" : "Pending Review",
         badgeVariant: "secondary" as const,
         className:
           "bg-purple-500/10 text-purple-700 border-purple-500/20 dark:bg-purple-500/20 dark:text-purple-400",
