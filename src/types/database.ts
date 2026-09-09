@@ -56,6 +56,124 @@ export type Database = {
         };
         Relationships: [];
       };
+      ai_task_reviews: {
+        Row: {
+          attempt: number;
+          claimed_at: string | null;
+          confidence: number | null;
+          cost_usd: number | null;
+          created_at: string;
+          criteria_results: Json | null;
+          criteria_snapshot: Json;
+          decided_by: string | null;
+          decision: boolean | null;
+          error: string | null;
+          evidence_manifest: Json | null;
+          feedback: string | null;
+          finished_at: string | null;
+          id: string;
+          input_tokens: number | null;
+          model: string | null;
+          output_tokens: number | null;
+          progress_id: string;
+          prompt_version: string | null;
+          raw_response: Json | null;
+          reject_reason: string | null;
+          retry_count: number;
+          stage: string | null;
+          started_at: string | null;
+          status: string;
+          submission_snapshot: Json;
+          task_id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          attempt: number;
+          claimed_at?: string | null;
+          confidence?: number | null;
+          cost_usd?: number | null;
+          created_at?: string;
+          criteria_results?: Json | null;
+          criteria_snapshot: Json;
+          decided_by?: string | null;
+          decision?: boolean | null;
+          error?: string | null;
+          evidence_manifest?: Json | null;
+          feedback?: string | null;
+          finished_at?: string | null;
+          id?: string;
+          input_tokens?: number | null;
+          model?: string | null;
+          output_tokens?: number | null;
+          progress_id: string;
+          prompt_version?: string | null;
+          raw_response?: Json | null;
+          reject_reason?: string | null;
+          retry_count?: number;
+          stage?: string | null;
+          started_at?: string | null;
+          status?: string;
+          submission_snapshot: Json;
+          task_id: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          attempt?: number;
+          claimed_at?: string | null;
+          confidence?: number | null;
+          cost_usd?: number | null;
+          created_at?: string;
+          criteria_results?: Json | null;
+          criteria_snapshot?: Json;
+          decided_by?: string | null;
+          decision?: boolean | null;
+          error?: string | null;
+          evidence_manifest?: Json | null;
+          feedback?: string | null;
+          finished_at?: string | null;
+          id?: string;
+          input_tokens?: number | null;
+          model?: string | null;
+          output_tokens?: number | null;
+          progress_id?: string;
+          prompt_version?: string | null;
+          raw_response?: Json | null;
+          reject_reason?: string | null;
+          retry_count?: number;
+          stage?: string | null;
+          started_at?: string | null;
+          status?: string;
+          submission_snapshot?: Json;
+          task_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_task_reviews_progress_id_fkey";
+            columns: ["progress_id"];
+            isOneToOne: false;
+            referencedRelation: "task_progress";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_task_reviews_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "tasks";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_task_reviews_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       audit_log: {
         Row: {
           action: string;
@@ -1744,6 +1862,59 @@ export type Database = {
         };
         Returns: boolean;
       };
+      ai_review_apply_decision_v1: {
+        Args: { p_outcome: string; p_payload?: Json; p_review_id: string };
+        Returns: Json;
+      };
+      ai_review_claim_v1: {
+        Args: { p_review_id: string };
+        Returns: {
+          attempt: number;
+          claimed_at: string | null;
+          confidence: number | null;
+          cost_usd: number | null;
+          created_at: string;
+          criteria_results: Json | null;
+          criteria_snapshot: Json;
+          decided_by: string | null;
+          decision: boolean | null;
+          error: string | null;
+          evidence_manifest: Json | null;
+          feedback: string | null;
+          finished_at: string | null;
+          id: string;
+          input_tokens: number | null;
+          model: string | null;
+          output_tokens: number | null;
+          progress_id: string;
+          prompt_version: string | null;
+          raw_response: Json | null;
+          reject_reason: string | null;
+          retry_count: number;
+          stage: string | null;
+          started_at: string | null;
+          status: string;
+          submission_snapshot: Json;
+          task_id: string;
+          updated_at: string;
+          user_id: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "ai_task_reviews";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
+      ai_review_kick_worker_v1: {
+        Args: { p_review_id: string };
+        Returns: undefined;
+      };
+      ai_review_normalize_submission_v1: {
+        Args: { p_raw: Json };
+        Returns: Json;
+      };
+      ai_review_requeue_stale_v1: { Args: never; Returns: number };
       assert_admin_or_service_v1: { Args: never; Returns: undefined };
       assign_individual_task: {
         Args: { p_task_id: string; p_user_id: string };
@@ -2036,6 +2207,10 @@ export type Database = {
           week_number: number;
           week_year: number;
         }[];
+      };
+      get_ai_review_status_v1: {
+        Args: { p_progress_id: string };
+        Returns: Json;
       };
       get_analytics_economy: { Args: never; Returns: Json };
       get_analytics_meetings: { Args: never; Returns: Json };
@@ -3234,6 +3409,7 @@ export type Database = {
         };
       };
       scholarship_expire_pending: { Args: never; Returns: number };
+      scholarship_expire_pending_backup_v1: { Args: never; Returns: number };
       scholarship_minimize_archived: {
         Args: { p_id: string };
         Returns: {
@@ -3862,6 +4038,10 @@ export type Database = {
           p_is_continuation?: boolean;
           p_progress_id: string;
         };
+        Returns: Json;
+      };
+      submit_individual_task_v1: {
+        Args: { p_progress_id: string; p_submission_data: Json };
         Returns: Json;
       };
       submit_peer_review: {
