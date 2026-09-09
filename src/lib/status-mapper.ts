@@ -198,6 +198,8 @@ export function getTaskAction(
       return "complete";
     case "Peer Review":
       return "done";
+    case "Reviewing":
+      return "done";
     case "Finished":
       return "done";
     case "Not Accepted":

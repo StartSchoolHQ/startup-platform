@@ -302,7 +302,9 @@ export function TasksTable({
                       <div className="flex items-center gap-2">
                         <StatusBadge
                           status={mapUIStatusToBadge(task.status)}
-                          variant="journey"
+                          variant={
+                            economy === "my_journey" ? "my_journey" : "journey"
+                          }
                         />
                         <span className="text-xs font-medium text-blue-600">
                           🔄
@@ -405,13 +407,16 @@ export function TasksTable({
                           ? "approved"
                           : task.status === "Not Accepted"
                             ? "rejected"
-                            : task.status === "Peer Review"
+                            : task.status === "Peer Review" ||
+                                task.status === "Reviewing"
                               ? "pending_review"
                               : task.status === "In Progress"
                                 ? "in_progress"
                                 : "not_started"
                       }
-                      variant="journey"
+                      variant={
+                        economy === "my_journey" ? "my_journey" : "journey"
+                      }
                     />
                   )}
                 </td>

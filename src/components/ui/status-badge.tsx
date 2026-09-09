@@ -14,37 +14,45 @@ export type TaskStatus =
 
 interface StatusBadgeProps {
   status: TaskStatus;
-  variant?: "default" | "journey";
+  variant?: "default" | "journey" | "my_journey";
 }
 
 const getStatusConfig = (
   status: TaskStatus,
-  variant: "default" | "journey" = "default"
+  variant: "default" | "journey" | "my_journey" = "default"
 ) => {
+  const isJourney = variant === "journey" || variant === "my_journey";
   switch (status) {
     case "approved":
       return {
-        text: variant === "journey" ? "Finished" : "Accepted",
+        text: isJourney ? "Finished" : "Accepted",
         badgeVariant: "default" as const,
         className:
           "bg-green-500/10 text-green-700 border-green-500/20 dark:bg-green-500/20 dark:text-green-400",
       };
     case "rejected":
       return {
-        text: variant === "journey" ? "Not Accepted" : "Rejected",
+        text: isJourney ? "Not Accepted" : "Rejected",
         badgeVariant: "destructive" as const,
         className: "",
       };
     case "revision_required":
       return {
-        text: variant === "journey" ? "Not Accepted" : "Revision Required",
+        text: isJourney ? "Not Accepted" : "Revision Required",
         badgeVariant: "outline" as const,
         className:
           "bg-yellow-500/10 text-yellow-700 border-yellow-500/20 dark:bg-yellow-500/20 dark:text-yellow-400",
       };
     case "pending_review":
       return {
-        text: variant === "journey" ? "Reviewing" : "Pending Review",
+        // Team Journey ("journey") still means human peer review; only the
+        // solo AI-reviewed path ("my_journey") calls it "Reviewing".
+        text:
+          variant === "my_journey"
+            ? "Reviewing"
+            : variant === "journey"
+              ? "Peer Review"
+              : "Pending Review",
         badgeVariant: "secondary" as const,
         className:
           "bg-purple-500/10 text-purple-700 border-purple-500/20 dark:bg-purple-500/20 dark:text-purple-400",

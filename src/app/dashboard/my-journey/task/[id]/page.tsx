@@ -78,13 +78,19 @@ export default function IndividualTaskDetailPage() {
     active: !!reviewActive,
   });
 
-  const handleReviewFinished = useCallback(() => {
-    loadTask();
+  /** Refreshes every cache a task's status change can affect — used after
+   * both a settled AI review and an immediate auto-approve submission. */
+  const invalidateJourneyCaches = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     queryClient.invalidateQueries({ queryKey: ["myJourney"] });
     queryClient.invalidateQueries({ queryKey: ["my-journey-overview"] });
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
-  }, [loadTask, queryClient]);
+  }, [queryClient]);
+
+  const handleReviewFinished = useCallback(() => {
+    loadTask();
+    invalidateJourneyCaches();
+  }, [loadTask, invalidateJourneyCaches]);
 
   const handleSubmission = async (submissionData: Record<string, unknown>) => {
     if (!task || !user?.id || !task.progress_id) return;
@@ -96,13 +102,18 @@ export default function IndividualTaskDetailPage() {
       const uploaded = rawFiles.length
         ? await uploadTaskFiles(rawFiles, task.progress_id, user.id)
         : [];
+      if (uploaded.length !== rawFiles.length) {
+        throw new Error(
+          "Some files could not be uploaded. Please try again — nothing was submitted."
+        );
+      }
       const payload = {
         ...submissionData,
-        files: uploaded.map((u) => ({
+        files: uploaded.map((u, i) => ({
           url: u.url,
           name: u.name,
           size: u.size,
-          type: rawFiles.find((f) => f.name === u.name)?.type ?? null,
+          type: rawFiles[i].type || null,
         })),
         completed_by: user.id,
         completion_date: new Date().toISOString(),
@@ -115,7 +126,7 @@ export default function IndividualTaskDetailPage() {
       });
       setIsSubmissionModalOpen(false);
       await loadTask();
-      queryClient.invalidateQueries({ queryKey: ["myJourney"] });
+      invalidateJourneyCaches();
       toast.success(
         result.mode === "ai" ? "Submitted — reviewing now" : "Task completed",
         {
@@ -189,7 +200,10 @@ export default function IndividualTaskDetailPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold">{task.title}</h1>
-            <StatusBadge status={task.status as TaskStatus} variant="journey" />
+            <StatusBadge
+              status={task.status as TaskStatus}
+              variant="my_journey"
+            />
           </div>
           <p className="text-muted-foreground text-lg">
             {task.category && `{{${task.category}}}`}
