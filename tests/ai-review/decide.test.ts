@@ -27,6 +27,9 @@ describe("decide", () => {
     expect(d.outcome).toBe("rejected");
     expect(d.rejectReason).toBe("low_confidence");
     expect(d.feedback).toContain("Date visible");
+    // The model wrote its feedback for a PASS — it must not be appended to a
+    // rejection where it would contradict the verdict.
+    expect(d.feedback).not.toContain("Good.");
   });
   it("rejects a false regardless of confidence", () => {
     expect(

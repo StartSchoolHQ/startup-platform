@@ -68,6 +68,11 @@ export async function buildEvidence(
   let realItemCount = 0;
   const budget = () => realItemCount < MAX_ITEMS;
 
+  // Running TOTAL download budget across every file — one 24 MB file and
+  // ten 24 MB files must not cost the same. Starts at the same number as the
+  // per-file cap (`max_file_mb`).
+  let remainingBytes = maxBytes;
+
   await onStage?.("reading_files");
   for (const [i, f] of files.entries()) {
     if (!budget()) {
@@ -81,13 +86,15 @@ export async function buildEvidence(
       });
       continue;
     }
-    items.push(
-      await loadFileEvidence(f, `file-${i + 1}`, {
-        maxBytes,
-        maxChars: MAX_TEXT_CHARS,
-        timeoutMs: TIMEOUT_MS,
-      })
-    );
+    const item = await loadFileEvidence(f, `file-${i + 1}`, {
+      maxBytes,
+      remainingBytes,
+      maxChars: MAX_TEXT_CHARS,
+      maxPdfPages: settings.maxPdfPages,
+      timeoutMs: TIMEOUT_MS,
+    });
+    remainingBytes -= item.bytes ?? 0;
+    items.push(item);
     realItemCount += 1;
   }
 

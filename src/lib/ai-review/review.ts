@@ -1,6 +1,11 @@
 import type { EvidenceBundle } from "./evidence";
 import { getOpenAI } from "./openai-client";
-import { buildSystemPrompt, buildUserContent, PROMPT_VERSION } from "./prompt";
+import {
+  buildSystemPrompt,
+  buildUserContent,
+  newPromptNonce,
+  PROMPT_VERSION,
+} from "./prompt";
 import {
   parseReviewResult,
   REVIEW_RESULT_JSON_SCHEMA,
@@ -32,18 +37,26 @@ export function estimateCost(
   return Number(((input * p.input + output * p.output) / 1_000_000).toFixed(5));
 }
 
+/** A second model call needs this much of the worker budget left to be safe. */
+const RETRY_COST_MS = 95_000;
+
 export async function reviewWithModel(
   criteria: CriteriaSnapshot,
   bundle: EvidenceBundle,
-  settings: AiReviewSettings
+  settings: AiReviewSettings,
+  deadlineAt?: number
 ): Promise<ModelReview> {
   const openai = getOpenAI();
+  const nonce = newPromptNonce();
   const request = {
     model: settings.model,
     reasoning: { effort: "medium" as const },
     input: [
-      { role: "system" as const, content: buildSystemPrompt() },
-      { role: "user" as const, content: buildUserContent(criteria, bundle) },
+      { role: "system" as const, content: buildSystemPrompt(nonce) },
+      {
+        role: "user" as const,
+        content: buildUserContent(criteria, bundle, nonce),
+      },
     ],
     text: {
       format: {
@@ -58,9 +71,13 @@ export async function reviewWithModel(
   const startedAt = Date.now();
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt++) {
-    if (attempt > 0 && Date.now() - startedAt >= 150_000) {
-      // Not enough time left in the maxDuration budget for a second model
-      // call (client timeout 90s x up to 2 tries each): fail fast instead.
+    const outOfTime =
+      deadlineAt !== undefined
+        ? Date.now() + RETRY_COST_MS > deadlineAt
+        : Date.now() - startedAt >= 150_000;
+    if (attempt > 0 && outOfTime) {
+      // Not enough time left in the worker's maxDuration budget for a second
+      // model call (client timeout 90s x up to 2 tries each): fail fast.
       throw new Error(
         `Model returned unparseable output (retry budget exhausted): ${lastError instanceof Error ? lastError.message : String(lastError)}`
       );

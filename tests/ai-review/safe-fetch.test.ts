@@ -13,6 +13,10 @@ describe("isBlockedAddress", () => {
     "192.168.1.1",
     "169.254.169.254",
     "0.0.0.0",
+    "100.64.0.1",
+    "100.127.255.255",
+    "192.0.0.1",
+    "::",
     "::1",
     "fc00::1",
     "fe80::1",
@@ -21,12 +25,16 @@ describe("isBlockedAddress", () => {
     expect(isBlockedAddress(ip)).toBe(true);
   });
 
-  it.each(["8.8.8.8", "1.1.1.1", "2606:4700::1111", "172.32.0.1"])(
-    "allows %s",
-    (ip) => {
-      expect(isBlockedAddress(ip)).toBe(false);
-    }
-  );
+  it.each([
+    "8.8.8.8",
+    "1.1.1.1",
+    "2606:4700::1111",
+    "172.32.0.1",
+    "100.63.255.255",
+    "192.0.1.1",
+  ])("allows %s", (ip) => {
+    expect(isBlockedAddress(ip)).toBe(false);
+  });
 });
 
 describe("assertPublicHttpUrl", () => {

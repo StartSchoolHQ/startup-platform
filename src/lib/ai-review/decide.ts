@@ -23,8 +23,9 @@ export function decide(result: ReviewResult, threshold: number): Decision {
     return {
       outcome: "rejected",
       rejectReason: "low_confidence",
-      feedback:
-        `The reviewer could not verify your work with enough certainty. Please add clearer evidence for: ${names}. ${result.feedback}`.trim(),
+      // The model's own feedback is written for a PASS here (it decided true)
+      // and would contradict the rejection, so it is deliberately dropped.
+      feedback: `The reviewer could not verify your work with enough certainty. Please add clearer evidence for: ${names}.`,
     };
   }
   return {

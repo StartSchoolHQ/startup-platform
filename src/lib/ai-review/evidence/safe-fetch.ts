@@ -15,12 +15,14 @@ function parseIPv4(ip: string): number[] | null {
 }
 
 function isBlockedIPv4(parts: number[]): boolean {
-  const [a, b] = parts;
+  const [a, b, c] = parts;
   if (a === 0) return true; // 0.0.0.0/8
   if (a === 10) return true; // 10/8
+  if (a === 100 && b >= 64 && b <= 127) return true; // 100.64/10 carrier-grade NAT
   if (a === 127) return true; // 127/8 loopback
   if (a === 169 && b === 254) return true; // 169.254/16 link-local (incl. cloud metadata)
   if (a === 172 && b >= 16 && b <= 31) return true; // 172.16/12
+  if (a === 192 && b === 0 && c === 0) return true; // 192.0.0/24 IETF protocol assignments
   if (a === 192 && b === 168) return true; // 192.168/16
   return false;
 }
@@ -64,6 +66,8 @@ function isBlockedIPv6(ip: string): boolean {
     const d = groups[7] & 0xff;
     return isBlockedIPv4([a, b, c, d]);
   }
+  // :: unspecified (all-zero)
+  if (groups.every((g) => g === 0)) return true;
   // ::1 loopback
   if (groups.slice(0, 7).every((g) => g === 0) && groups[7] === 1) return true;
   // fc00::/7 (unique local)
@@ -157,4 +161,31 @@ export async function readBodyWithCap(
     reader.releaseLock();
   }
   return Buffer.concat(chunks.map((c) => Buffer.from(c)));
+}
+
+/**
+ * Host of our own Supabase project, the only host that may serve submission
+ * files. A path-substring match alone lets
+ * `https://evil.example/storage/v1/object/public/task-files/x.pdf` spoof a
+ * trusted storage link, and an unset env var means no host qualifies.
+ */
+export function ourStorageHost(): string | null {
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!raw) return null;
+  try {
+    return new URL(raw).host;
+  } catch {
+    return null;
+  }
+}
+
+/** True only for URLs served by our own Supabase storage host. */
+export function isOurStorageUrl(url: string): boolean {
+  const host = ourStorageHost();
+  if (!host) return false;
+  try {
+    return new URL(url).host === host;
+  } catch {
+    return false;
+  }
 }

@@ -17,6 +17,16 @@ import type {
 
 export interface RunOptions {
   dryRun?: boolean;
+  /** ms epoch after which the worker's maxDuration budget is spent. */
+  deadlineAt?: number;
+}
+export interface SnapshotOptions {
+  onStage?: (
+    stage: "reading_files" | "checking_links" | "reviewing"
+  ) => Promise<void>;
+  /** Called with the manifest as soon as evidence is built, before the model call. */
+  onEvidence?: (manifest: EvidenceManifestEntry[]) => Promise<void>;
+  deadlineAt?: number;
 }
 export interface RunOutput {
   outcome: ReviewOutcome;
@@ -38,9 +48,7 @@ export async function runReviewOnSnapshot(
   snapshot: NormalizedSubmission,
   criteria: CriteriaSnapshot,
   settings: AiReviewSettings,
-  onStage?: (
-    stage: "reading_files" | "checking_links" | "reviewing"
-  ) => Promise<void>
+  opts: SnapshotOptions = {}
 ): Promise<
   RunOutput & {
     model: string;
@@ -52,9 +60,17 @@ export async function runReviewOnSnapshot(
   if (hasNoCriteria(criteria)) {
     throw new Error("task_has_no_criteria");
   }
-  const bundle = await buildEvidence(snapshot, settings, onStage);
-  await onStage?.("reviewing");
-  const model = await reviewWithModel(criteria, bundle, settings);
+  const bundle = await buildEvidence(snapshot, settings, opts.onStage);
+  // Persist the manifest before the model call: if the model or the worker
+  // dies, the admin audit view still shows what evidence was gathered.
+  await opts.onEvidence?.(bundle.manifest);
+  await opts.onStage?.("reviewing");
+  const model = await reviewWithModel(
+    criteria,
+    bundle,
+    settings,
+    opts.deadlineAt
+  );
   const d = decide(model.result, settings.confidenceThreshold);
   return {
     ...d,
@@ -121,14 +137,20 @@ export async function runReview(
     row.submission_snapshot as unknown as NormalizedSubmission,
     criteria,
     settings,
-    setStage
+    {
+      onStage: setStage,
+      onEvidence: async (manifest) => {
+        if (opts.dryRun) return;
+        await admin
+          .from("ai_task_reviews")
+          .update({ evidence_manifest: manifest as never })
+          .eq("id", reviewId);
+      },
+      deadlineAt: opts.deadlineAt,
+    }
   );
 
   if (!opts.dryRun) {
-    await admin
-      .from("ai_task_reviews")
-      .update({ evidence_manifest: out.manifest as never })
-      .eq("id", reviewId);
     await applyDecision(admin, reviewId, out.outcome, {
       decision: out.result?.decision,
       confidence: out.result?.confidence,

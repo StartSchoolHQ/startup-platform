@@ -30,7 +30,11 @@ export async function POST(request: Request) {
   }
   try {
     const admin = createAdminClient();
-    const out = await runReview(admin, parsed.data.review_id);
+    // 270 s of the 300 s maxDuration, leaving 30 s of headroom — the model
+    // layer uses this to decide whether a parse-retry still fits.
+    const out = await runReview(admin, parsed.data.review_id, {
+      deadlineAt: Date.now() + 270_000,
+    });
     if (!out) return NextResponse.json({ skipped: "not_claimable" });
     return NextResponse.json({
       outcome: out.outcome,

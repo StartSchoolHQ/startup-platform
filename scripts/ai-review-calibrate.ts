@@ -92,7 +92,10 @@ async function main() {
     const snapshot = normalizeSubmission(r.submission_data);
     const started = Date.now();
     try {
-      const out = await runReviewOnSnapshot(snapshot, criteria, settings);
+      const out = await runReviewOnSnapshot(snapshot, criteria, settings, {
+        // Same budget the worker route gives a real review.
+        deadlineAt: Date.now() + 270_000,
+      });
       cost += out.costUsd;
       const ai = out.outcome;
       results.push({

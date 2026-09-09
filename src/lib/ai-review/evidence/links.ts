@@ -1,5 +1,5 @@
 import { parse } from "node-html-parser";
-import { readBodyWithCap, safeFetch } from "./safe-fetch";
+import { ourStorageHost, readBodyWithCap, safeFetch } from "./safe-fetch";
 
 export type LinkClass =
   | "storage_file"
@@ -12,20 +12,9 @@ export type LinkClass =
 const GOOGLE_ID = /\/d\/([a-zA-Z0-9_-]+)/;
 
 // `storage_file` requires both the well-known path shape AND a host that
-// matches our own Supabase project — a path-substring match alone lets
-// `https://evil.example/storage/v1/object/public/task-files/x.pdf` spoof a
-// trusted storage link (allowlist-semantic-escape). No env var configured
-// means no host can ever qualify as storage_file.
-function ourStorageHost(): string | null {
-  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!raw) return null;
-  try {
-    return new URL(raw).host;
-  } catch {
-    return null;
-  }
-}
-
+// matches our own Supabase project (see ourStorageHost in safe-fetch.ts) —
+// a path-substring match alone would let a foreign host spoof a trusted
+// storage link (allowlist-semantic-escape).
 export function classifyLink(url: string): LinkClass {
   const u = url.toLowerCase();
   if (u.includes("/storage/v1/object/public/task-files/")) {

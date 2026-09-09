@@ -2,44 +2,40 @@ import mammoth from "mammoth";
 import ExcelJS from "exceljs";
 import JSZip from "jszip";
 import type { EvidenceItem, NormalizedFile } from "../types";
-import { readBodyWithCap, safeFetch } from "./safe-fetch";
+import { classifyFile, isSvgFile } from "./classify";
+import { isOurStorageUrl, readBodyWithCap, safeFetch } from "./safe-fetch";
 
-export type FileClass =
-  | "image"
-  | "pdf"
-  | "docx"
-  | "xlsx"
-  | "pptx"
-  | "csv"
-  | "text"
-  | "video"
-  | "unsupported";
+export type { FileClass } from "./classify";
+export { classifyFile } from "./classify";
 
-export function classifyFile(name: string, mime: string | null): FileClass {
-  const ext = (name.split(".").pop() || "").toLowerCase();
-  const m = (mime || "").toLowerCase();
-  if (
-    ["png", "jpg", "jpeg", "webp", "gif"].includes(ext) ||
-    m.startsWith("image/")
-  ) {
-    return ext === "heic" || m === "image/heic" ? "unsupported" : "image";
-  }
-  if (ext === "pdf" || m === "application/pdf") return "pdf";
-  if (ext === "docx" || m.includes("wordprocessingml")) return "docx";
-  if (ext === "xlsx" || m.includes("spreadsheetml")) return "xlsx";
-  if (ext === "pptx" || m.includes("presentationml")) return "pptx";
-  if (ext === "csv" || m === "text/csv") return "csv";
-  if (
-    ["txt", "md", "html", "htm", "json"].includes(ext) ||
-    m.startsWith("text/")
-  )
-    return "text";
-  if (
-    ["mp4", "mov", "webm", "avi", "mkv"].includes(ext) ||
-    m.startsWith("video/")
-  )
-    return "video";
-  return "unsupported";
+export interface FileLimits {
+  /** Per-file byte cap (`max_file_mb`). */
+  maxBytes: number;
+  /** Bytes still available in the review's TOTAL download budget. */
+  remainingBytes: number;
+  maxChars: number;
+  maxPdfPages: number;
+  timeoutMs: number;
+}
+
+const NON_STORAGE_IMAGE_NOTE =
+  "Image must be uploaded through the submission form (external image links are not reviewed).";
+const NON_STORAGE_FILE_NOTE =
+  "File must be uploaded through the submission form (external file links are not reviewed).";
+const SVG_NOTE =
+  "SVG files are not reviewed (they are markup, not a rendered picture). Export the design as PNG or JPG and upload that.";
+
+const mb = (bytes: number) => Math.round(bytes / 1e6);
+const totalBudgetNote = (limits: FileLimits) =>
+  `Total attachment size exceeds the ${mb(limits.maxBytes)} MB review limit — remove or shrink files.`;
+
+/**
+ * Page count straight from the raw PDF bytes — no parser dependency.
+ * `/Type /Page` (and not `/Pages`) appears once per page object; latin1
+ * keeps every byte addressable as a character.
+ */
+export function countPdfPages(buf: Buffer): number {
+  return (buf.toString("latin1").match(/\/Type\s*\/Page(?![s])/g) ?? []).length;
 }
 
 async function download(
@@ -100,11 +96,10 @@ async function xlsxText(buf: Buffer, maxRows = 60): Promise<string> {
 export async function loadFileEvidence(
   file: NormalizedFile,
   id: string,
-  limits: { maxBytes: number; maxChars: number; timeoutMs: number }
+  limits: FileLimits
 ): Promise<EvidenceItem> {
   const base = { id, source: "file" as const, url: file.url, label: file.name };
   const cls = classifyFile(file.name, file.type);
-  if (cls === "image") return { ...base, kind: "image", imageUrl: file.url };
   if (cls === "video")
     return {
       ...base,
@@ -115,11 +110,35 @@ export async function loadFileEvidence(
     return {
       ...base,
       kind: "unsupported",
-      note: `File type not readable (${file.type ?? file.name}). Ask for PDF, DOCX, XLSX, PPTX, PNG or JPG.`,
+      note: isSvgFile(file.name, file.type)
+        ? SVG_NOTE
+        : `File type not readable (${file.type ?? file.name}). Ask for PDF, DOCX, XLSX, PPTX, PNG or JPG.`,
     };
+  // Submission files only ever come from uploadTaskFiles, i.e. our own
+  // storage host. Anything else is a URL the student typed: we neither hand
+  // it to the model as an image nor download it.
+  if (!isOurStorageUrl(file.url))
+    return {
+      ...base,
+      kind: "unverifiable",
+      note: cls === "image" ? NON_STORAGE_IMAGE_NOTE : NON_STORAGE_FILE_NOTE,
+    };
+  if (cls === "image") return { ...base, kind: "image", imageUrl: file.url };
+
+  const cap = Math.min(limits.maxBytes, limits.remainingBytes);
+  if (cap <= 0)
+    return { ...base, kind: "too_large", note: totalBudgetNote(limits) };
   try {
-    const buf = await download(file.url, limits.maxBytes, limits.timeoutMs);
-    if (cls === "pdf")
+    const buf = await download(file.url, cap, limits.timeoutMs);
+    if (cls === "pdf") {
+      const pages = countPdfPages(buf);
+      if (pages > limits.maxPdfPages)
+        return {
+          ...base,
+          kind: "too_large",
+          bytes: buf.byteLength,
+          note: `PDF has ~${pages} pages; the reviewer reads at most ${limits.maxPdfPages}.`,
+        };
       return {
         ...base,
         kind: "pdf",
@@ -127,6 +146,7 @@ export async function loadFileEvidence(
         pdfFilename: file.name,
         bytes: buf.byteLength,
       };
+    }
     let text = "";
     if (cls === "docx")
       text = (await mammoth.extractRawText({ buffer: buf })).value;
@@ -138,6 +158,7 @@ export async function loadFileEvidence(
       return {
         ...base,
         kind: "unreachable",
+        bytes: buf.byteLength,
         note: "File downloaded but contained no readable text.",
       };
     return {
@@ -153,7 +174,10 @@ export async function loadFileEvidence(
       return {
         ...base,
         kind: "too_large",
-        note: `File is larger than the ${Math.round(limits.maxBytes / 1e6)} MB limit.`,
+        note:
+          cap < limits.maxBytes
+            ? totalBudgetNote(limits)
+            : `File is larger than the ${mb(limits.maxBytes)} MB limit.`,
       };
     if (msg === "blocked_host" || msg === "bad_scheme")
       return {
