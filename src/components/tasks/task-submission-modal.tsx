@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { X, Upload, Link, FileText } from "lucide-react";
 import { economyLabels } from "@/lib/economy-labels";
 
-interface ExternalUrl {
+export interface ExternalUrl {
   url: string;
   title: string;
   type: string;
@@ -45,6 +45,18 @@ interface SubmissionData {
   [key: string]: unknown;
 }
 
+/**
+ * Values the form opens with — used to prefill a resubmission with what was
+ * submitted last time. Optional everywhere: omitting it keeps the previous
+ * behaviour (an empty form). Files can never be prefilled (a File object
+ * cannot be reconstructed from a stored URL), so only the description and the
+ * external links are carried over.
+ */
+export interface TaskSubmissionInitialData {
+  description?: string;
+  external_urls?: ExternalUrl[];
+}
+
 interface TaskSubmissionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -53,6 +65,7 @@ interface TaskSubmissionModalProps {
   formSchema?: FormSchema;
   isLoading?: boolean;
   isIndividualTask?: boolean;
+  initialData?: TaskSubmissionInitialData;
 }
 
 export function TaskSubmissionModal({
@@ -63,6 +76,7 @@ export function TaskSubmissionModal({
   formSchema,
   isLoading = false,
   isIndividualTask = false,
+  initialData,
 }: TaskSubmissionModalProps) {
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [externalUrls, setExternalUrls] = useState<ExternalUrl[]>([]);
@@ -70,6 +84,22 @@ export function TaskSubmissionModal({
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  // Seed the form each time the modal opens, then leave it alone — keyed on
+  // `isOpen` only, so a caller passing a fresh object literal on every render
+  // cannot re-seed (and wipe) what the student is typing.
+  useEffect(() => {
+    if (!isOpen) return;
+    setFormData(
+      initialData?.description ? { description: initialData.description } : {}
+    );
+    setExternalUrls(initialData?.external_urls ?? []);
+    setUploadedFiles([]);
+    setCurrentUrl("");
+    setUrlError(null);
+    setValidationErrors([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const submissionLabels = economyLabels(
     isIndividualTask ? "my_journey" : "team"

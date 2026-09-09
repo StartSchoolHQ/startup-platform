@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
@@ -25,6 +25,8 @@ import { getTaskByIdLazy } from "@/lib/tasks";
 import { submitIndividualTaskV1 } from "@/lib/database";
 import { uploadTaskFiles } from "@/lib/file-upload";
 import { useAiReviewStatus } from "@/hooks/use-ai-review-status";
+import { normalizeSubmission } from "@/lib/ai-review/normalize";
+import type { AiReviewStatus } from "@/lib/database";
 import { TaskActionCard } from "@/components/my-journey/task-action-card";
 import posthog from "posthog-js";
 import { TaskSubmissionModal } from "@/components/tasks/task-submission-modal";
@@ -87,10 +89,38 @@ export default function IndividualTaskDetailPage() {
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
   }, [queryClient]);
 
-  const handleReviewFinished = useCallback(() => {
-    loadTask();
-    invalidateJourneyCaches();
-  }, [loadTask, invalidateJourneyCaches]);
+  const handleReviewFinished = useCallback(
+    (status?: AiReviewStatus) => {
+      loadTask();
+      invalidateJourneyCaches();
+      if (status && !["queued", "running"].includes(status.status)) {
+        posthog.capture("ai_review_completed", {
+          task_id: taskId,
+          outcome: status.status,
+          attempt: status.attempt,
+        });
+      }
+    },
+    [loadTask, invalidateJourneyCaches, taskId]
+  );
+
+  /**
+   * A rejected task reopens the same form prefilled with what was submitted
+   * last time, so the student edits instead of retyping. Files are not
+   * prefillable (only their URLs were stored) and must be re-attached.
+   */
+  const resubmitInitialData = useMemo(() => {
+    if (task?.status !== "rejected") return undefined;
+    const previous = normalizeSubmission(task.submission_data);
+    return {
+      description: previous.description || undefined,
+      external_urls: previous.links.map((l) => ({
+        url: l.url,
+        title: l.title || l.url,
+        type: "external",
+      })),
+    };
+  }, [task?.status, task?.submission_data]);
 
   const handleSubmission = async (submissionData: Record<string, unknown>) => {
     if (!task || !user?.id || !task.progress_id) return;
@@ -455,6 +485,7 @@ export default function IndividualTaskDetailPage() {
         formSchema={task.submission_form_schema}
         isLoading={isSubmitting}
         isIndividualTask={true}
+        initialData={resubmitInitialData}
       />
       {/* Suggest Edits Modal */}
       <SuggestEditsModal

@@ -28,7 +28,7 @@ export function TaskActionCard({
   review: AiReviewStatus | null | undefined;
   isSubmitting: boolean;
   onComplete: () => void;
-  onReviewFinished: () => void;
+  onReviewFinished: (status: AiReviewStatus) => void;
 }) {
   return (
     <Card>

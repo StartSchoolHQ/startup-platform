@@ -5,6 +5,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useAiReviewStatus } from "@/hooks/use-ai-review-status";
+import type { AiReviewStatus } from "@/lib/database";
 
 const STAGE_COPY: Record<string, string> = {
   fetching_evidence: "Collecting your submission…",
@@ -45,7 +46,8 @@ export function AiReviewProgress({
   onFinished,
 }: {
   progressId: string;
-  onFinished: () => void;
+  /** Called once with the final status the moment the review settles. */
+  onFinished: (status: AiReviewStatus) => void;
 }) {
   const { data, isError } = useAiReviewStatus(progressId, { active: true });
   const [fillerIdx, setFillerIdx] = useState(0);
@@ -59,7 +61,7 @@ export function AiReviewProgress({
   }, []);
 
   useEffect(() => {
-    if (data && !["queued", "running"].includes(data.status)) onFinished();
+    if (data && !["queued", "running"].includes(data.status)) onFinished(data);
   }, [data, onFinished]);
 
   const stage = data?.stage ?? "fetching_evidence";
