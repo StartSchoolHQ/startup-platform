@@ -86,13 +86,32 @@ async function createProgress(status = "in_progress"): Promise<string> {
 
 afterEach(async () => {
   if (progressIds.length === 0) return;
-  await admin.from("transactions").delete().eq("user_id", userId);
-  await admin.from("notifications").delete().eq("user_id", userId);
+  const { error: txErr } = await admin
+    .from("transactions")
+    .delete()
+    .eq("user_id", userId);
+  if (txErr) throw txErr;
+  const { error: notifErr } = await admin
+    .from("notifications")
+    .delete()
+    .eq("user_id", userId);
+  if (notifErr) throw notifErr;
   const { error } = await admin
     .from("task_progress")
     .delete()
     .in("id", progressIds);
   if (error) throw error;
+
+  const { count: txCount } = await admin
+    .from("transactions")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+  expect(txCount).toBe(0);
+  const { count: notifCount } = await admin
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+  expect(notifCount).toBe(0);
   const { count } = await admin
     .from("ai_task_reviews")
     .select("id", { count: "exact", head: true })
@@ -102,8 +121,16 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  await admin.from("tasks").delete().eq("id", taskId);
-  await admin.from("users").delete().eq("id", userId);
+  const { error: taskErr } = await admin
+    .from("tasks")
+    .delete()
+    .eq("id", taskId);
+  if (taskErr) throw taskErr;
+  const { error: userErr } = await admin
+    .from("users")
+    .delete()
+    .eq("id", userId);
+  if (userErr) throw userErr;
   await admin.auth.admin.deleteUser(userId);
 }, 30000);
 
