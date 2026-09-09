@@ -51,6 +51,11 @@ export interface CriteriaSnapshot {
   deliverables: string[];
   title: string;
   description: string | null;
+  /** tasks.detailed_instructions — the task's Requirements / Evidence Required. */
+  detailed_instructions: string | null;
+  is_recurring: boolean;
+  /** Up to 3 prior submission descriptions, newest first; only for recurring tasks. */
+  previous_submissions: string[];
 }
 export interface AiReviewSettings {
   enabled: boolean;

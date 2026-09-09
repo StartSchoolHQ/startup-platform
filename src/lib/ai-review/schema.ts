@@ -68,7 +68,7 @@ export const REVIEW_RESULT_JSON_SCHEMA = {
       type: "string",
       minLength: 1,
       description:
-        "second person, concrete, <=120 words, required on pass and fail",
+        "verdict first, then what works, what is missing, one next move; second person, prose, <=150 words, required on pass and fail",
     },
   },
 } as const;

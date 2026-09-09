@@ -40,7 +40,7 @@ async function main() {
   );
   settings.model = arg("model", settings.model);
 
-  const select = `id, status, submission_data, peer_review_history, tasks!inner(id, title, description, deliverables, peer_review_criteria, review_instructions)`;
+  const select = `id, status, submission_data, peer_review_history, tasks!inner(id, title, description, detailed_instructions, deliverables, peer_review_criteria, review_instructions, is_recurring)`;
   const { data: rejected } = await admin
     .from("task_progress")
     .select(select)
@@ -76,15 +76,22 @@ async function main() {
       id: string;
       title: string;
       description: string | null;
+      detailed_instructions: string | null;
       deliverables: string[] | null;
       peer_review_criteria: unknown;
       review_instructions: string | null;
+      is_recurring: boolean | null;
     };
     const criteria: CriteriaSnapshot = {
       title: t.title,
       description: t.description,
+      detailed_instructions: t.detailed_instructions,
       deliverables: t.deliverables ?? [],
       review_instructions: t.review_instructions,
+      is_recurring: t.is_recurring ?? false,
+      // Historical calibration rows are graded standalone, so there is no
+      // prior-submission context to compare a recurring entry against.
+      previous_submissions: [],
       criteria: Array.isArray(t.peer_review_criteria)
         ? (t.peer_review_criteria as CriteriaSnapshot["criteria"])
         : [],

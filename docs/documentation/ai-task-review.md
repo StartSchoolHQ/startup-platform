@@ -13,8 +13,18 @@ Key principles:
   a rejection returns the task to `rejected`, the student edits their submission and resubmits, and
   a fresh attempt runs.
 - The reviewer judges only what was submitted (description + links + files) against the task's own
-  `peer_review_criteria`. See `docs/documentation/ai-review-criteria-guidelines.md` for how to write
-  criteria it can actually check.
+  `detailed_instructions`, `deliverables`, `review_instructions` and `peer_review_criteria`. See
+  `docs/documentation/ai-review-criteria-guidelines.md` for how to write criteria it can actually
+  check.
+- It reviews **in a persona**: StartSchool's built-in mentor — friendly, motivating, fair, direct.
+  The persona, the frameworks it may cite and the four-move feedback shape are specified in
+  `docs/documentation/ai-reviewer-persona.md` and implemented as `PERSONA_PROMPT`
+  (`src/lib/ai-review/prompt-persona.ts`). Keep the two in sync and bump `PROMPT_VERSION` when either
+  changes.
+- **Self-check tasks** (`tasks.requires_review = false`) never reach the model at all:
+  `submit_individual_task_v1` records the completion itself (`decided_by = 'self_check'`, mode
+  `self_check`) and pays the reward immediately. Honesty checks are between the founder and
+  themselves.
 - Low confidence never approves — it rejects with feedback naming the weak criteria.
 - The review is durable: `pg_net` kicks a Vercel worker route asynchronously, and a `pg_cron` sweeper
   re-kicks or fails stale jobs. Nothing depends on the student's browser staying open.
@@ -62,6 +72,7 @@ Student submits individual task → submit_individual_task_v1(progress_id, submi
 | `src/lib/ai-review/evidence/links.ts` | Link classification + fetch-as-text (incl. Google Docs/Sheets/Slides export) |
 | `src/lib/ai-review/evidence/safe-fetch.ts` | SSRF-safe fetch (DNS-rebinding-safe, manual redirects) |
 | `src/lib/ai-review/prompt.ts` | System prompt + user content builder (`PROMPT_VERSION`, per-review delimiter nonce) |
+| `src/lib/ai-review/prompt-persona.ts` | `PERSONA_PROMPT` — the reviewer's persona, evaluation method and feedback shape (long, nonce-independent half of the system prompt) |
 | `src/lib/ai-review/schema.ts` | `ReviewResultSchema` (Zod) + the strict JSON schema sent to OpenAI |
 | `src/lib/ai-review/openai-client.ts` | Lazily-constructed OpenAI client (90 s timeout, 1 retry) |
 | `src/lib/ai-review/review.ts` | `reviewWithModel` — calls the model, retries once on unparseable output, estimates cost |
@@ -99,7 +110,7 @@ service-role client.
 | `status` | TEXT | `queued` \| `running` \| `approved` \| `rejected` \| `failed` |
 | `stage` | TEXT | `fetching_evidence` \| `reading_files` \| `checking_links` \| `reviewing` \| `finalizing` |
 | `submission_snapshot` | JSONB | Normalised `{description, links:[{url,title}], files:[{url,name,size,type}]}`, frozen at submit time |
-| `criteria_snapshot` | JSONB | `{criteria, review_instructions, deliverables, title, description}` frozen at submit time |
+| `criteria_snapshot` | JSONB | `{criteria, review_instructions, deliverables, title, description, detailed_instructions, is_recurring, previous_submissions}` frozen at submit time. `detailed_instructions` is the task's Requirements / Evidence Required text; `previous_submissions` is up to 3 prior submission descriptions for this progress row, newest first, and is `[]` unless the task `is_recurring` |
 | `evidence_manifest` | JSONB | Per evidence item: `{id, source, url, label, status, chars, bytes, note}` |
 | `model` | TEXT | Model that actually answered (from the API response) |
 | `prompt_version` | TEXT | `PROMPT_VERSION` from `prompt.ts` at review time |
@@ -112,7 +123,7 @@ service-role client.
 | `input_tokens` / `output_tokens` | INT | Token usage |
 | `cost_usd` | NUMERIC(8,5) | Estimated cost of this attempt |
 | `error` | TEXT | Set on `failed` |
-| `decided_by` | TEXT | `ai` \| `system` \| `auto_approve_fallback` |
+| `decided_by` | TEXT | `ai` \| `system` \| `auto_approve_fallback` \| `self_check` |
 | `retry_count` | INT | Incremented by the sweeper, max 3 before finalising as `failed` |
 | `claimed_at` / `started_at` / `finished_at` | TIMESTAMPTZ | Lifecycle timestamps |
 | `created_at` / `updated_at` | TIMESTAMPTZ | Standard, `updated_at` via the shared trigger |
@@ -158,7 +169,7 @@ All eight are new, `_v1`, SECURITY DEFINER, `search_path = public, pg_temp`, and
 
 | Function | Callable by | Purpose |
 |---|---|---|
-| `submit_individual_task_v1(p_progress_id uuid, p_submission_data jsonb) returns jsonb` | `authenticated` (owner only) | Validates the caller owns the `individual`-context row and it's `in_progress`/`rejected`; archives the prior submission into `submission_history`; sets `pending_review`; computes the next `attempt`; inserts the `ai_task_reviews` row with normalized snapshots; either applies `auto_approve_fallback` or kicks the worker. Returns `{success, review_id, attempt, mode}`. |
+| `submit_individual_task_v1(p_progress_id uuid, p_submission_data jsonb) returns jsonb` | `authenticated` (owner only) | Validates the caller owns the `individual`-context row and it's `in_progress`/`rejected`; archives the prior submission into `submission_history`; sets `pending_review`; computes the next `attempt`; inserts the `ai_task_reviews` row with normalized snapshots; then either finalises a self-check task (`tasks.requires_review = false` → instant `approved`, `decided_by = 'self_check'`), applies `auto_approve_fallback`, or kicks the worker. Returns `{success, review_id, attempt, mode}` with mode `self_check` \| `auto_approve` \| `ai`. |
 | `get_ai_review_status_v1(p_progress_id uuid) returns jsonb` | `authenticated` (owner only) | Returns the latest attempt's sanitised status for the caller's own individual progress row — no raw model output, no cost/token fields. |
 | `ai_review_claim_v1(p_review_id uuid) returns setof ai_task_reviews` | `service_role` | Atomically flips a `queued` row to `running` (`claimed_at`, `started_at`, `stage = 'fetching_evidence'`); returns nothing if it wasn't claimable. |
 | `ai_review_apply_decision_v1(p_review_id uuid, p_outcome text, p_payload jsonb) returns jsonb` | `service_role` (also called internally by `submit_individual_task_v1` and the sweeper) | Finalises a review: writes the outcome + all result fields, updates `task_progress` (approved/rejected), on approve credits `users` balances + inserts a `transactions` row (`activity_type = 'individual'`, `metadata.completion_type = 'ai_review_approved'`), appends a `peer_review_history`/`add_peer_review_history_entry` entry **before** the `task_progress` status update (so the existing `notify_submitter_on_review_completion` trigger reads this attempt's decision/feedback into `notifications.data`), and patches that notification's route + message to My Journey. Requires `feedback` on approve; raises if the row isn't still `queued`/`running` or the linked `task_progress` isn't `pending_review`. |
@@ -182,8 +193,10 @@ helper), `20260909120200_ai_review_cron_v1.sql` (the cron job), `20260909120250_
 doesn't abort the whole sweep),
 `20260909120300_ai_review_sweeper_updated_at_and_history_order_v1.sql` (sweeper stales on
 `updated_at` and no longer rewrites `created_at`; history entry moved before the status update;
-new `get_ai_review_admin_summary_v1`). The 120300 changes are also folded back into the 120100 and
-120250 bodies so a fresh environment matches.
+new `get_ai_review_admin_summary_v1`), `20260909120400_ai_review_self_check_and_snapshot_v1.sql`
+(`decided_by` CHECK gains `self_check`; `submit_individual_task_v1` gains the self-check branch and
+the three new `criteria_snapshot` fields). The 120300 and 120400 changes are also folded back into
+the 120000, 120100 and 120250 bodies so a fresh environment matches.
 
 ---
 
@@ -271,6 +284,7 @@ claimed/final); on any thrown error, logs and returns 500 **without** finalising
 | Task has zero criteria points in both blocks | `failed` | `technical_failure` | Fails fast, before calling the model at all — student sees "no review criteria yet, please tell your mentor" |
 | Model output unparseable twice, or any other thrown error in the worker | left `running` → sweeper retries 3× → `failed` | `technical_failure` | Student sees "we could not complete the automatic review this time, please resubmit" |
 | `mode = "auto_approve"` or `enabled = false` | `approved` | — | `decided_by = "auto_approve_fallback"`, model is never called |
+| `tasks.requires_review = false` (self-check task) | `approved` | — | `decided_by = "self_check"`, model is never called, checked before the mode switch. Feedback: "Self-check task — recorded as complete…" |
 
 Default `confidence_threshold` is **0.75** (admin-editable).
 
@@ -280,7 +294,9 @@ Default `confidence_threshold` is **0.75** (admin-editable).
 
 - The individual task detail page (`src/app/dashboard/my-journey/task/[id]/page.tsx`) calls
   `submitIndividualTaskV1` (re-exported from `src/lib/database.ts`, defined in
-  `src/lib/data/ai-reviews.ts`) → `submit_individual_task_v1` on submit.
+  `src/lib/data/ai-reviews.ts`) → `submit_individual_task_v1` on submit. The success toast follows
+  the returned `mode`: `ai` → "Submitted — reviewing now", `self_check` → "Recorded — self-check
+  task", `auto_approve` → "Task completed".
 - While `status` is `queued`/`running`, `AiReviewProgress` (`src/components/my-journey/ai-review-progress.tsx`)
   shows a stage-mapped message (`fetching_evidence` → `reviewing` → `finalizing`), a progress bar,
   and rotating "still working" filler copy that never claims a result. Past 5 minutes it switches to
@@ -352,7 +368,9 @@ toasts and updates the cache directly plus invalidates.
 `SUPABASE_SERVICE_ROLE_KEY`/`NEXT_PUBLIC_SUPABASE_URL` in `.env.local` — the user runs this, not an
 agent). Loads the newest N `rejected` and N `approved`-and-never-rejected **team** task_progress rows
 (team tasks already have a human decision to compare against; the individual path has no production
-history yet), builds a `CriteriaSnapshot` from each row's task, normalizes its `submission_data`, and
+history yet), builds a `CriteriaSnapshot` from each row's task (including `detailed_instructions` and
+`is_recurring`; `previous_submissions` is always `[]` — historical rows are graded standalone),
+normalizes its `submission_data`, and
 calls `runReviewOnSnapshot` directly — no database writes, no `ai_task_reviews` rows created. Per row
 it records whether the AI agreed with the human, whether it was a false approval (human rejected, AI
 approved — the case calibration exists to drive to zero) or false rejection, confidence, reject
@@ -443,10 +461,12 @@ changes.
 | `supabase/migrations/20260909120200_ai_review_cron_v1.sql` | Cron job |
 | `supabase/migrations/20260909120250_ai_review_requeue_guard_v1.sql` | Sweeper exception-safety fix |
 | `supabase/migrations/20260909120300_ai_review_sweeper_updated_at_and_history_order_v1.sql` | Sweeper `updated_at` predicate, history-before-status, admin summary RPC |
+| `supabase/migrations/20260909120400_ai_review_self_check_and_snapshot_v1.sql` | `decided_by` CHECK + `self_check`, self-check branch, full task bar + recurring context in the snapshot |
 
 ### Docs
 | File | Purpose |
 |------|---------|
+| `docs/documentation/ai-reviewer-persona.md` | The reviewer's persona, voice, method and edge cases (source of `PERSONA_PROMPT`) |
 | `docs/documentation/ai-review-criteria-guidelines.md` | How to write AI-checkable criteria |
 | `docs/superpowers/specs/2026-09-09-ai-task-reviewer-design.md` | Original design spec |
 | `docs/superpowers/plans/2026-09-09-ai-task-reviewer.md` | Implementation plan |

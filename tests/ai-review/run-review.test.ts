@@ -51,6 +51,9 @@ const criteria: CriteriaSnapshot = {
   deliverables: [],
   title: "Task",
   description: null,
+  detailed_instructions: null,
+  is_recurring: false,
+  previous_submissions: [],
 };
 
 const REVIEW_ID = "11111111-1111-4111-8111-111111111111";
@@ -143,6 +146,9 @@ describe("runReviewOnSnapshot — zero-criteria guard", () => {
           deliverables: [],
           title: "Task",
           description: null,
+          detailed_instructions: null,
+          is_recurring: false,
+          previous_submissions: [],
         },
         settings
       )
@@ -162,6 +168,9 @@ describe("runReviewOnSnapshot — zero-criteria guard", () => {
           deliverables: [],
           title: "Task",
           description: null,
+          detailed_instructions: null,
+          is_recurring: false,
+          previous_submissions: [],
         },
         settings
       )

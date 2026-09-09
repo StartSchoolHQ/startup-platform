@@ -1,9 +1,10 @@
 # Writing Criteria the AI Reviewer Can Actually Check
 
 > Applies to individual (My Journey) tasks. The AI reviewer (`docs/documentation/ai-task-review.md`)
-> reads `tasks.peer_review_criteria` and nothing else about how to judge a submission — if a check
-> isn't checkable from what's written here, the reviewer will reject it as unverifiable, every time,
-> for every student.
+> grades against `tasks.peer_review_criteria` — the task's `detailed_instructions`, `deliverables`
+> and `review_instructions` are given to it as context, but these two blocks are the only pass/fail
+> rubric. If a check isn't checkable from what's written here, the reviewer will reject it as
+> unverifiable, every time, for every student.
 
 ## 1. Why this matters
 
@@ -13,6 +14,26 @@ It cannot browse a website interactively, log into anything, click through a flo
 "just check" something the way a human reviewer would. A criterion that assumes any of that will
 never pass — not because the student's work is bad, but because the reviewer has nothing to point at.
 Every "What to evaluate" item must name a piece of evidence the reviewer can actually open and read.
+
+**Who is reading your criteria.** The reviewer answers in a persona
+(`docs/documentation/ai-reviewer-persona.md`): StartSchool's built-in mentor — friendly, motivating,
+fair and direct, YC-office-hours blunt rather than form-validator terse. It may cite one relevant
+playbook (The Mom Test, Lean Startup, default alive/dead, …) when it earns its place. That governs
+*how it writes the feedback*, never *how strictly it grades*: the pass/fail bar is only ever what
+you write in the task's own fields (`detailed_instructions`, `deliverables`, `review_instructions`,
+`peer_review_criteria`), and the prompt explicitly forbids inventing a stricter bar than the task
+states — or a looser one because the student sounds earnest. If you want something enforced, write
+it down as an evaluate item or a reject rule; hoping the reviewer will "obviously" expect it does
+not work. The same cuts the other way: if the task itself says an incomplete first attempt is
+acceptable, say so in the task text and the reviewer will honour it.
+
+**"Self-Check" tasks need no criteria at all.** Set `requires_review = false` on the task (the admin
+dialog's review toggle) and the submission is recorded as complete the moment the student submits —
+`submit_individual_task_v1` finalises it in SQL with `decided_by = 'self_check'`, pays the reward,
+and the model is never called. That is the right shape for honesty prompts and private reflections
+where the point is the founder being straight with themselves. Any task with
+`requires_review = false` ignores `peer_review_criteria` entirely, so don't spend time writing them;
+conversely, never leave `requires_review = false` on a task you actually want graded.
 
 ## 2. Format
 
