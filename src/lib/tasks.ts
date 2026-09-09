@@ -324,6 +324,27 @@ export async function startTaskLazy(
       throw new Error("Failed to create task progress entry");
     }
 
+    if (context === "individual") {
+      // Solo tasks have no team: `startTask` → `assign_user_to_task_simple`
+      // requires team membership and always fails for them. RLS ("Users can
+      // update own individual tasks") scopes this update to the caller's row.
+      if (!userId) throw new Error("User ID is required to start a solo task");
+      const supabase = createClient();
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from("task_progress")
+        .update({
+          status: "in_progress",
+          started_at: now,
+          assigned_to_user_id: userId,
+          updated_at: now,
+        })
+        .eq("id", progressId)
+        .eq("user_id", userId);
+      if (error) throw new Error("Failed to start task: " + error.message);
+      return;
+    }
+
     // Now start the task using existing startTask function
     await startTask(progressId, userId || "");
   } catch (error) {
