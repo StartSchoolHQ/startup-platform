@@ -60,33 +60,26 @@ function sanitizeSearch(raw: string): string {
     .replace(/[,()%]/g, "");
 }
 
-async function computeSummary(
+/**
+ * Summary numbers come from get_ai_review_admin_summary_v1 (SQL aggregates)
+ * instead of selecting every finished row into Node on every request. Typed
+ * against the loose SupabaseClient generic because src/types/database.ts is
+ * auto-generated and has not been regenerated for this function yet.
+ */
+async function fetchSummary(
   admin: SupabaseClient
 ): Promise<AiReviewAdminSummary> {
-  const since = new Date();
-  since.setHours(0, 0, 0, 0);
-
-  const { data: all } = await admin
-    .from("ai_task_reviews")
-    .select("status, reject_reason, cost_usd, created_at")
-    .not("status", "in", "(queued,running)");
-  const finals = all ?? [];
-
+  const { data, error } = await admin.rpc("get_ai_review_admin_summary_v1");
+  if (error) {
+    throw new Error(`ai review summary failed: ${error.message}`);
+  }
+  const raw = (data ?? {}) as Partial<AiReviewAdminSummary>;
   return {
-    today: finals.filter((r) => r.created_at >= since.toISOString()).length,
-    approval_rate: finals.length
-      ? finals.filter((r) => r.status === "approved").length / finals.length
-      : 0,
-    reject_reasons: finals.reduce<Record<string, number>>((acc, r) => {
-      if (r.reject_reason) {
-        acc[r.reject_reason] = (acc[r.reject_reason] ?? 0) + 1;
-      }
-      return acc;
-    }, {}),
-    failures: finals.filter((r) => r.status === "failed").length,
-    cost_usd: Number(
-      finals.reduce((s, r) => s + Number(r.cost_usd ?? 0), 0).toFixed(2)
-    ),
+    today: Number(raw.today ?? 0),
+    approval_rate: Number(raw.approval_rate ?? 0),
+    reject_reasons: raw.reject_reasons ?? {},
+    failures: Number(raw.failures ?? 0),
+    cost_usd: Number(raw.cost_usd ?? 0),
   };
 }
 
@@ -139,7 +132,7 @@ export async function GET(request: NextRequest) {
 
       if (taskIds.length === 0 && userIds.length === 0) {
         // Nothing matches the search — short-circuit before the main query.
-        const summary = await computeSummary(admin);
+        const summary = await fetchSummary(admin);
         const body: AiReviewAdminResponse = {
           data: [],
           total: 0,
@@ -204,7 +197,7 @@ export async function GET(request: NextRequest) {
       attempts.set(a.progress_id, (attempts.get(a.progress_id) ?? 0) + 1);
     }
 
-    const summary = await computeSummary(admin);
+    const summary = await fetchSummary(admin);
 
     const responseRows: AiReviewAdminRow[] = rows.map((r) => ({
       id: r.id,

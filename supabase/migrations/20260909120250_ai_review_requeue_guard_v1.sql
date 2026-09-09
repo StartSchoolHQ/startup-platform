@@ -16,12 +16,15 @@ declare
 begin
   for rec in
     select id, retry_count from ai_task_reviews
-    where (status = 'queued'  and created_at  < now() - interval '2 minutes' and claimed_at is null)
-       or (status = 'running' and claimed_at  < now() - interval '6 minutes')
+    where (status = 'queued'  and updated_at < now() - interval '2 minutes' and claimed_at is null)
+       or (status = 'running' and claimed_at < now() - interval '6 minutes')
     for update skip locked
   loop
     if rec.retry_count < 3 then
-      update ai_task_reviews set status = 'queued', claimed_at = null, retry_count = retry_count + 1, created_at = now()
+      -- created_at is the real submit time and is never rewritten; the
+      -- ai_task_reviews_set_updated_at trigger moves updated_at forward, which
+      -- is what makes this row non-stale for the next 2 minutes.
+      update ai_task_reviews set status = 'queued', claimed_at = null, retry_count = retry_count + 1
       where id = rec.id;
       perform ai_review_kick_worker_v1(rec.id);
     else

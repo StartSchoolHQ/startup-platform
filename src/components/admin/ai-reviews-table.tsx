@@ -11,7 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
 import { useAiReviewSettings } from "@/hooks/use-ai-review-settings";
 import { AiReviewsSummary } from "./ai-reviews-summary";
 import { AiReviewsFilters } from "./ai-reviews-filters";
@@ -24,11 +25,13 @@ import type {
 } from "@/types/ai-review-admin";
 
 const SEARCH_DEBOUNCE_MS = 300;
+const LOAD_ERROR = "Couldn't load AI reviews — try again.";
 
 export function AiReviewsTable() {
   const [reviews, setReviews] = useState<AiReviewAdminRow[]>([]);
   const [summary, setSummary] = useState<AiReviewAdminSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -72,17 +75,29 @@ export function AiReviewsTable() {
     });
 
     fetch(`/api/admin/ai-reviews?${params}`, { signal: controller.signal })
-      .then((res) => res.json())
-      .then((data: AiReviewAdminResponse) => {
+      .then(async (res) => {
+        // A 401/403/500 still resolves the promise — without this an error
+        // body would be rendered as "No AI reviews found".
+        if (!res.ok) throw new Error(`request failed (${res.status})`);
+        return (await res.json()) as AiReviewAdminResponse;
+      })
+      .then((data) => {
         if (version === fetchVersion.current) {
           setReviews(data.data || []);
           setTotal(data.total || 0);
           setSummary(data.summary ?? null);
+          setLoadError(null);
           setLoading(false);
         }
       })
-      .catch(() => {
-        if (version === fetchVersion.current) setLoading(false);
+      .catch((e) => {
+        if (e instanceof Error && e.name === "AbortError") return;
+        if (version !== fetchVersion.current) return;
+        setReviews([]);
+        setTotal(0);
+        setLoadError(LOAD_ERROR);
+        setLoading(false);
+        toast.error(LOAD_ERROR);
       });
   };
 
@@ -137,6 +152,15 @@ export function AiReviewsTable() {
                   ))}
                 </TableRow>
               ))
+            ) : loadError ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center">
+                  <span className="text-destructive inline-flex items-center gap-2 text-sm">
+                    <AlertCircle className="h-4 w-4" />
+                    {loadError}
+                  </span>
+                </TableCell>
+              </TableRow>
             ) : reviews.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center">

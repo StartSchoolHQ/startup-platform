@@ -218,6 +218,12 @@ begin
     finished_at      = now()
   where id = p_review_id;
 
+  v_history_decision := case when p_outcome = 'approved' then 'approved' else 'rejected' end;
+
+  -- BEFORE the status update: notify_submitter_on_review_completion reads
+  -- peer_review_history->-1 for the notification's decision/feedback.
+  perform add_peer_review_history_entry(r.progress_id, 'review_completed', null, v_history_decision, v_feedback);
+
   if p_outcome = 'approved' then
     v_xp := coalesce(t.base_xp_reward, 0);
     v_pts := coalesce(t.base_points_reward, 0);
@@ -239,7 +245,6 @@ begin
             jsonb_build_object('review_id', r.id, 'attempt', r.attempt,
                                'completion_type', 'ai_review_approved',
                                'decided_by', coalesce(p_payload->>'decided_by','ai')));
-    v_history_decision := 'approved';
   else
     update task_progress set status = 'rejected', review_feedback = v_feedback, updated_at = now()
     where id = r.progress_id and status = 'pending_review';
@@ -247,10 +252,7 @@ begin
     if v_rows = 0 then
       raise exception 'ai_review_progress_not_pending: task_progress % is not pending_review', r.progress_id using errcode = '55000';
     end if;
-    v_history_decision := 'rejected';
   end if;
-
-  perform add_peer_review_history_entry(r.progress_id, 'review_completed', null, v_history_decision, v_feedback);
 
   -- The existing trigger notify_submitter_on_review_completion has just inserted a
   -- peer_review_* notification with a Team Journey route. Fix it for My Journey.
@@ -283,12 +285,15 @@ declare
 begin
   for rec in
     select id, retry_count from ai_task_reviews
-    where (status = 'queued'  and created_at  < now() - interval '2 minutes' and claimed_at is null)
-       or (status = 'running' and claimed_at  < now() - interval '6 minutes')
+    where (status = 'queued'  and updated_at < now() - interval '2 minutes' and claimed_at is null)
+       or (status = 'running' and claimed_at < now() - interval '6 minutes')
     for update skip locked
   loop
     if rec.retry_count < 3 then
-      update ai_task_reviews set status = 'queued', claimed_at = null, retry_count = retry_count + 1, created_at = now()
+      -- created_at is the real submit time and is never rewritten; the
+      -- ai_task_reviews_set_updated_at trigger moves updated_at forward, which
+      -- is what makes this row non-stale for the next 2 minutes.
+      update ai_task_reviews set status = 'queued', claimed_at = null, retry_count = retry_count + 1
       where id = rec.id;
       perform ai_review_kick_worker_v1(rec.id);
     else
