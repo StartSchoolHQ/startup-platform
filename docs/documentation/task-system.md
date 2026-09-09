@@ -1,6 +1,6 @@
 # Task System
 
-> The task system manages task templates, assignment, submission, and reward distribution. It uses a lazy progress architecture where task_progress records are created on-demand, supports both individual (auto-approved) and team (peer-reviewed) contexts, and includes recurring tasks with cooldown periods.
+> The task system manages task templates, assignment, submission, and reward distribution. It uses a lazy progress architecture where task_progress records are created on-demand, supports both individual (AI-reviewed) and team (peer-reviewed) contexts, and includes recurring tasks with cooldown periods.
 
 ## Overview
 
@@ -11,7 +11,7 @@ The task system has two layers:
 
 Key features:
 - **Lazy progress** — progress records created only on first user interaction
-- **Dual context** — individual tasks (auto-approved) vs team tasks (peer-reviewed)
+- **Dual context** — individual tasks (AI-reviewed) vs team tasks (peer-reviewed)
 - **Recurring tasks** — repeatable with configurable cooldown periods
 - **Dynamic submission forms** — JSON-defined form schemas per task
 - **Achievement linkage** — tasks can unlock achievements on completion
@@ -27,8 +27,8 @@ Task Template (admin creates)
   → task_progress created on first interaction (lazy)
     → "not_started"
       → User clicks "Start" → "in_progress"
-        → User submits → "pending_review" (team) or "approved" (individual)
-          → Peer review (team tasks only)
+        → User submits → "pending_review"
+          → Peer review (team) or AI review (individual, see ai-task-review.md)
             → "approved" → transaction created (XP + points awarded)
             → "rejected" / "revision_required" → user can resubmit
 ```
@@ -38,9 +38,11 @@ Task Template (admin creates)
 | | Individual | Team |
 |---|-----------|------|
 | Progress keyed on | `user_id` | `team_id` |
-| On submission | Auto-approved, instant XP | Goes to peer review |
-| Reviewer | None | External team member |
-| Peer review criteria | N/A | Defined on task template |
+| On submission | AI review (`submit_individual_task_v1` → `ai_task_reviews`) | Goes to peer review |
+| Reviewer | AI (gpt-5.4) | External team member |
+| Peer review criteria | Defined on task template (see `ai-review-criteria-guidelines.md`) | Defined on task template |
+
+See `docs/documentation/ai-task-review.md` for the full individual-task AI review pipeline.
 
 ---
 
@@ -186,11 +188,21 @@ not_started → in_progress → pending_review → approved ✅
 4. `approved` — peer reviewer approves → XP/points awarded
 5. `rejected` — reviewer rejects → user can resubmit
 
-### Individual Tasks (auto-approved)
+### Individual Tasks (AI review)
+
+```
+not_started → in_progress → pending_review → approved | rejected (resubmit)
+```
 
 1. `not_started` — initial state
 2. `in_progress` — user clicks "Start"
-3. `approved` — user submits → immediate approval + instant XP/points
+3. `pending_review` — user submits → `ai_task_reviews` row queued, AI reviewer judges the
+   submission against the task's own criteria (unlimited attempts; see `ai-task-review.md`)
+4. `approved` — AI review passes → XP/points awarded
+5. `rejected` — AI review fails → student edits and resubmits (loop repeats)
+
+When the platform-level AI review switch is off (`platform_settings.ai_review.mode =
+"auto_approve"`), step 3 is skipped and every submission goes straight to `approved`.
 
 ### Recurring Tasks
 
