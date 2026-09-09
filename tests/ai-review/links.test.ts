@@ -29,6 +29,14 @@ describe("classifyLink", () => {
       "generic"
     );
   });
+
+  it("does not trust a storage-shaped path on a foreign host", () => {
+    expect(
+      classifyLink(
+        "https://evil.example/storage/v1/object/public/task-files/x.pdf"
+      )
+    ).toBe("generic");
+  });
 });
 
 describe("toFetchableUrl", () => {

@@ -1,4 +1,5 @@
 import { parse } from "node-html-parser";
+import { readBodyWithCap, safeFetch } from "./safe-fetch";
 
 export type LinkClass =
   | "storage_file"
@@ -10,10 +11,33 @@ export type LinkClass =
 
 const GOOGLE_ID = /\/d\/([a-zA-Z0-9_-]+)/;
 
+// `storage_file` requires both the well-known path shape AND a host that
+// matches our own Supabase project — a path-substring match alone lets
+// `https://evil.example/storage/v1/object/public/task-files/x.pdf` spoof a
+// trusted storage link (allowlist-semantic-escape). No env var configured
+// means no host can ever qualify as storage_file.
+function ourStorageHost(): string | null {
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!raw) return null;
+  try {
+    return new URL(raw).host;
+  } catch {
+    return null;
+  }
+}
+
 export function classifyLink(url: string): LinkClass {
   const u = url.toLowerCase();
-  if (u.includes("/storage/v1/object/public/task-files/"))
-    return "storage_file";
+  if (u.includes("/storage/v1/object/public/task-files/")) {
+    const storageHost = ourStorageHost();
+    try {
+      if (storageHost && new URL(url).host === storageHost) {
+        return "storage_file";
+      }
+    } catch {
+      // malformed URL — fall through to the other classifications below
+    }
+  }
   if (u.includes("docs.google.com/document/")) return "google_doc";
   if (u.includes("docs.google.com/spreadsheets/")) return "google_sheet";
   if (u.includes("docs.google.com/presentation/")) return "google_slides";
@@ -58,6 +82,10 @@ export function htmlToText(html: string): string {
   return lines.join("\n");
 }
 
+// Text pages are small; this is just a sanity cap against something
+// pathological, the real char budget is opts.maxChars applied after decode.
+const MAX_LINK_BYTES = 20_000_000;
+
 export async function fetchLinkAsText(
   url: string,
   opts: { timeoutMs: number; maxChars: number }
@@ -65,12 +93,10 @@ export async function fetchLinkAsText(
   { ok: true; text: string; finalUrl: string } | { ok: false; reason: string }
 > {
   const target = toFetchableUrl(url);
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), opts.timeoutMs);
   try {
-    const res = await fetch(target, {
-      signal: controller.signal,
-      redirect: "follow",
+    const res = await safeFetch(target, {
+      timeoutMs: opts.timeoutMs,
+      maxRedirects: 3,
       headers: {
         "user-agent": "StartSchoolReviewer/1.0 (+https://startschool.org)",
         accept: "text/html,text/plain,text/csv,*/*",
@@ -78,7 +104,8 @@ export async function fetchLinkAsText(
     });
     if (!res.ok) return { ok: false, reason: `http_${res.status}` };
     const ctype = res.headers.get("content-type") ?? "";
-    const raw = await res.text();
+    const buf = await readBodyWithCap(res, MAX_LINK_BYTES);
+    const raw = buf.toString("utf8");
     const text = ctype.includes("html")
       ? htmlToText(raw)
       : raw.replace(/\r/g, "").trim();
@@ -89,6 +116,14 @@ export async function fetchLinkAsText(
       finalUrl: res.url || target,
     };
   } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg === "blocked_host" || msg === "bad_scheme") {
+      return { ok: false, reason: "blocked_host" };
+    }
+    if (msg === "too_large") return { ok: false, reason: "too_large" };
+    if (msg === "too_many_redirects") {
+      return { ok: false, reason: "too_many_redirects" };
+    }
     return {
       ok: false,
       reason:
@@ -96,7 +131,5 @@ export async function fetchLinkAsText(
           ? "timeout"
           : "fetch_error",
     };
-  } finally {
-    clearTimeout(timer);
   }
 }

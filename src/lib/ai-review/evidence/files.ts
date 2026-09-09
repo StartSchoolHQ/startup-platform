@@ -2,6 +2,7 @@ import mammoth from "mammoth";
 import ExcelJS from "exceljs";
 import JSZip from "jszip";
 import type { EvidenceItem, NormalizedFile } from "../types";
+import { readBodyWithCap, safeFetch } from "./safe-fetch";
 
 export type FileClass =
   | "image"
@@ -46,19 +47,14 @@ async function download(
   maxBytes: number,
   timeoutMs: number
 ): Promise<Buffer> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) throw new Error(`http_${res.status}`);
-    const len = Number(res.headers.get("content-length") || 0);
-    if (len > maxBytes) throw new Error("too_large");
-    const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.byteLength > maxBytes) throw new Error("too_large");
-    return buf;
-  } finally {
-    clearTimeout(timer);
-  }
+  const res = await safeFetch(url, { timeoutMs, maxRedirects: 3 });
+  if (!res.ok) throw new Error(`http_${res.status}`);
+  // Early reject on the declared size before touching the body; the
+  // absence (or dishonesty) of content-length is still bounded below by
+  // readBodyWithCap streaming the body with a running byte counter.
+  const len = Number(res.headers.get("content-length") || 0);
+  if (len > maxBytes) throw new Error("too_large");
+  return readBodyWithCap(res, maxBytes);
 }
 
 async function pptxText(buf: Buffer): Promise<string> {
@@ -158,6 +154,12 @@ export async function loadFileEvidence(
         ...base,
         kind: "too_large",
         note: `File is larger than the ${Math.round(limits.maxBytes / 1e6)} MB limit.`,
+      };
+    if (msg === "blocked_host" || msg === "bad_scheme")
+      return {
+        ...base,
+        kind: "unreachable",
+        note: "This address cannot be fetched by the reviewer. Use a public URL or attach the file.",
       };
     return {
       ...base,

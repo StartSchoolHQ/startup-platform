@@ -37,14 +37,15 @@ export async function buildEvidence(
   const items: EvidenceItem[] = [];
   const maxBytes = settings.maxFileMb * 1_000_000;
 
+  const descriptionText = snapshot.description || "(empty)";
   items.push({
     id: "description",
     kind: "text",
     source: "description",
     url: null,
     label: "Student description (a claim, not proof)",
-    text: snapshot.description || "(empty)",
-    chars: snapshot.description.length,
+    text: descriptionText.slice(0, MAX_TEXT_CHARS),
+    chars: descriptionText.length,
   });
 
   // storage URLs pasted as links are files
@@ -60,7 +61,12 @@ export async function buildEvidence(
     return false;
   });
 
-  const budget = () => items.length < MAX_ITEMS + 1;
+  // The description above is a claim, not evidence, and does not count
+  // against the cap — track real (file/link) items with their own counter
+  // instead of items.length so the limit is exactly MAX_ITEMS regardless of
+  // how many non-evidence entries (description, skip placeholders) exist.
+  let realItemCount = 0;
+  const budget = () => realItemCount < MAX_ITEMS;
 
   await onStage?.("reading_files");
   for (const [i, f] of files.entries()) {
@@ -71,7 +77,7 @@ export async function buildEvidence(
         source: "file",
         url: f.url,
         label: f.name,
-        note: "Skipped: more than 12 evidence items.",
+        note: "Skipped: more than 12 pieces of evidence were provided; only the first 12 are reviewed.",
       });
       continue;
     }
@@ -82,6 +88,7 @@ export async function buildEvidence(
         timeoutMs: TIMEOUT_MS,
       })
     );
+    realItemCount += 1;
   }
 
   await onStage?.("checking_links");
@@ -95,7 +102,7 @@ export async function buildEvidence(
         source: "link",
         url: l.url,
         label,
-        note: "Skipped: more than 12 evidence items.",
+        note: "Skipped: more than 12 pieces of evidence were provided; only the first 12 are reviewed.",
       });
       continue;
     }
@@ -108,6 +115,7 @@ export async function buildEvidence(
         label,
         note: "A search-results URL is not evidence: results differ per user and time. Ask for a dated screenshot instead.",
       });
+      realItemCount += 1;
       continue;
     }
     const r = await fetchLinkAsText(l.url, {
@@ -131,9 +139,13 @@ export async function buildEvidence(
             source: "link",
             url: l.url,
             label,
-            note: `Could not read this page (${r.reason}). It may be private, require login, or render only with JavaScript. Ask the student to make it public or attach a PDF/screenshots.`,
+            note:
+              r.reason === "blocked_host"
+                ? "This address cannot be fetched by the reviewer. Use a public URL or attach the file."
+                : `Could not read this page (${r.reason}). It may be private, require login, or render only with JavaScript. Ask the student to make it public or attach a PDF/screenshots.`,
           }
     );
+    realItemCount += 1;
   }
 
   return { items, manifest: items.map(toManifest) };
