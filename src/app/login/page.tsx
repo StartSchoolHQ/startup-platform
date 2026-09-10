@@ -1,12 +1,6 @@
 import Image from "next/image";
 import { LoginForm } from "@/components/auth/login-form";
 
-const PILLARS = [
-  { title: "My Journey", text: "Solo founder tasks, reviewed in minutes." },
-  { title: "Team Journey", text: "Build with your team, ship, report weekly." },
-  { title: "Peer review", text: "Judge other teams' work and earn for it." },
-];
-
 export default function LoginPage() {
   return (
     <div className="bg-background grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
@@ -30,21 +24,13 @@ export default function LoginPage() {
           priority
         />
 
-        <div className="relative max-w-md space-y-8">
+        <div className="relative max-w-md space-y-4">
           <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight xl:text-5xl">
-            Build something real, one task at a time.
+            Good to see you again.
           </h1>
-          <ul className="space-y-4">
-            {PILLARS.map((p) => (
-              <li key={p.title} className="flex items-start gap-3">
-                <span className="bg-primary mt-2 h-1.5 w-1.5 shrink-0 rounded-full" />
-                <div>
-                  <p className="text-sm font-medium">{p.title}</p>
-                  <p className="text-sm text-white/60">{p.text}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <p className="text-lg text-white/60">
+            Your tasks, team and rewards are right where you left them.
+          </p>
         </div>
 
         <p className="relative text-xs text-white/40">

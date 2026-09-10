@@ -125,13 +125,16 @@ export default function Home() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#0000dd]"
+          className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[oklch(0.17_0.035_275)] text-white"
         >
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[size:24px_24px]" />
+          <div
+            aria-hidden
+            className="bg-primary/40 pointer-events-none absolute -top-48 left-1/2 h-[40rem] w-[40rem] -translate-x-1/2 rounded-full blur-[140px]"
+          />
           <div className="relative z-10 text-center">
-            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-[#ff78c8]/30 border-t-[#ff78c8]"></div>
+            <div className="border-primary/30 border-t-primary mx-auto h-10 w-10 animate-spin rounded-full border-2"></div>
             <p className="mt-4 text-sm font-medium text-white/70">
-              Processing invitation...
+              Setting up your invitation…
             </p>
           </div>
         </motion.main>
