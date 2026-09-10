@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DifficultyBadge } from "@/components/ui/difficulty-badge";
 import { StatusBadge, TaskStatus } from "@/components/ui/status-badge";
 import {
@@ -11,7 +11,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatDate } from "@/lib/date-utils";
-import { Medal, Zap, Lock } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { CreditCard, Loader2, Lock, Zap } from "lucide-react";
 
 interface Task {
   id: string;
@@ -41,9 +42,16 @@ interface TaskRowProps {
   actionButtonDisabled?: boolean;
   actionButtonVariant?: "default" | "outline" | "destructive";
   showStatus?: boolean;
-  reviewerReward?: boolean; // Show 10% of XP as reviewer reward
+  /** Show 10% of the task reward — what the reviewer earns. */
+  reviewerReward?: boolean;
 }
 
+function reward(base: number | undefined, tenPercent: boolean) {
+  const value = base || 0;
+  return tenPercent ? Math.max(1, Math.round(value * 0.1)) : value;
+}
+
+/** One row of the peer-review tables (available, my reviews, my tasks). */
 export function TaskRow({
   task,
   variant,
@@ -55,132 +63,102 @@ export function TaskRow({
   showStatus = false,
   reviewerReward = false,
 }: TaskRowProps) {
-  if (!task.tasks || !task.teams) {
-    return null; // Skip tasks with null relations
-  }
-
-  // Determine team dot color based on variant - using theme colors
-  const teamDotColor = variant === "submitted" ? "bg-primary" : "bg-primary/70";
+  if (!task.tasks || !task.teams) return null;
 
   return (
     <tr
-      className={`border-border hover:bg-muted/50 border-b ${
-        task.tasks.is_confidential ? "bg-red-50/50" : ""
-      }`}
+      className={cn(
+        "hover:bg-muted/40 transition-colors",
+        task.tasks.is_confidential && "bg-red-500/[0.04]"
+      )}
     >
-      {/* Task Info */}
-      <td className="px-4 py-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
-            <Medal className="h-4 w-4 text-black dark:text-white" />
+      <td className="px-4 py-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium">{task.tasks.title}</span>
+            {task.tasks.is_confidential && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant="outline"
+                      className="gap-1 border-red-500/30 px-1.5 py-0 text-[11px] font-medium text-red-600 dark:text-red-400"
+                    >
+                      <Lock className="h-2.5 w-2.5" />
+                      Confidential
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>This task can only be reviewed by admin users.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
-          <div className="flex-1">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="text-sm font-medium">{task.tasks.title}</div>
-              {task.tasks.is_confidential && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge
-                        variant="destructive"
-                        className="flex items-center gap-1 px-1.5 py-0.5 text-xs"
-                      >
-                        <Lock className="h-2.5 w-2.5" />
-                        Confidential
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>This task can only be reviewed by admin users</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
-            <div className="text-muted-foreground max-w-xs truncate text-xs">
+          {task.tasks.description && (
+            <p className="text-muted-foreground mt-0.5 line-clamp-1 max-w-md text-xs">
               {task.tasks.description}
-            </div>
-          </div>
+            </p>
+          )}
         </div>
       </td>
 
-      {/* Team */}
-      <td className="px-4 py-4">
-        <div className="flex items-center gap-2">
-          <div className={`h-2 w-2 ${teamDotColor} rounded-full`}></div>
-          <span className="text-sm font-medium">{task.teams.name}</span>
-        </div>
+      <td className="px-4 py-3 whitespace-nowrap">
+        <span className="flex items-center gap-2 text-sm">
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              variant === "submitted" ? "bg-primary" : "bg-primary/60"
+            )}
+          />
+          {task.teams.name}
+        </span>
       </td>
 
-      {/* Difficulty */}
-      <td className="px-4 py-4">
+      <td className="px-4 py-3 whitespace-nowrap">
         <DifficultyBadge level={task.tasks.difficulty_level} />
       </td>
 
-      {/* Status (conditional) */}
-      {showStatus && (
-        <td className="px-4 py-4">
+      {showStatus ? (
+        <td className="px-4 py-3 whitespace-nowrap">
           {task.status && <StatusBadge status={task.status as TaskStatus} />}
         </td>
-      )}
-
-      {/* XP Reward (only show if not showing status) */}
-      {!showStatus && (
-        <td className="px-4 py-4">
-          <div className="flex items-center gap-1">
-            <Zap className="h-4 w-4 text-black dark:text-white" />
-            <span className="text-sm font-medium">
-              {reviewerReward
-                ? Math.max(
-                    1,
-                    Math.round((task.tasks.base_xp_reward || 0) * 0.1)
-                  )
-                : task.tasks.base_xp_reward || 0}
+      ) : (
+        <>
+          <td className="px-4 py-3 whitespace-nowrap">
+            <span className="flex items-center gap-1.5 text-sm">
+              <Zap className="text-primary h-3.5 w-3.5" />
+              <span className="font-medium tabular-nums">
+                {reward(task.tasks.base_xp_reward, reviewerReward)}
+              </span>
             </span>
-          </div>
-        </td>
-      )}
-
-      {/* Points Reward (only show if not showing status) */}
-      {!showStatus && (
-        <td className="px-4 py-4">
-          <div className="flex items-center gap-1">
-            <Medal className="h-4 w-4 text-black dark:text-white" />
-            <span className="text-sm font-medium">
-              {reviewerReward
-                ? Math.max(
-                    1,
-                    Math.round((task.tasks.base_points_reward || 0) * 0.1)
-                  )
-                : task.tasks.base_points_reward || 0}
+          </td>
+          <td className="px-4 py-3 whitespace-nowrap">
+            <span className="flex items-center gap-1.5 text-sm">
+              <CreditCard className="text-primary h-3.5 w-3.5" />
+              <span className="font-medium tabular-nums">
+                {reward(task.tasks.base_points_reward, reviewerReward)}
+              </span>
             </span>
-          </div>
-        </td>
+          </td>
+        </>
       )}
 
-      {/* Submitted Date */}
-      <td className="px-4 py-4">
-        <div className="text-muted-foreground text-sm">
-          {formatDate(task.completed_at)}
-        </div>
+      <td className="text-muted-foreground px-4 py-3 text-sm whitespace-nowrap">
+        {formatDate(task.completed_at)}
       </td>
 
-      {/* Action */}
-      <td className="px-4 py-4">
-        <div className="flex justify-end gap-2">
+      <td className="px-4 py-3 whitespace-nowrap">
+        <div className="flex justify-end">
           <Button
             variant={actionButtonVariant}
             size="sm"
-            className={`px-3 py-2 text-xs ${
-              actionButtonVariant === "default"
-                ? "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
-                : actionButtonVariant === "outline"
-                  ? "border-[#0000ff] text-[#0000ff] hover:bg-[#0000ff] hover:text-white"
-                  : ""
-            }`}
+            className="h-8"
             onClick={() => onAction(task)}
             disabled={actionLoading || actionButtonDisabled}
           >
-            {actionLoading ? "Loading..." : actionButtonText}
+            {actionLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {actionButtonText}
           </Button>
         </div>
       </td>

@@ -22,7 +22,7 @@ export function MyJourneyStatCards({ data }: { data: MyJourneyOverview }) {
       value: balances.my_journey_xp.toLocaleString(),
       subtitle: `${balances.my_journey_credits.toLocaleString()} ${labels.points}`,
       icon: Zap,
-      iconColor: "text-amber-500",
+      iconColor: "text-primary",
       href: "/dashboard/my-journey",
     },
     {
@@ -30,7 +30,7 @@ export function MyJourneyStatCards({ data }: { data: MyJourneyOverview }) {
       value: `${data.tasks.completed}/${data.tasks.total}`,
       subtitle: "Solo tasks you have finished",
       icon: CheckCircle,
-      iconColor: "text-blue-500",
+      iconColor: "text-primary",
       href: "/dashboard/my-journey",
     },
     {
@@ -38,7 +38,7 @@ export function MyJourneyStatCards({ data }: { data: MyJourneyOverview }) {
       value: `${data.achievements.completed}/${data.achievements.total}`,
       subtitle: "Unlocked so far",
       icon: Target,
-      iconColor: "text-purple-500",
+      iconColor: "text-primary",
       href: "/dashboard/my-journey",
     },
   ];
@@ -49,7 +49,7 @@ export function MyJourneyStatCards({ data }: { data: MyJourneyOverview }) {
       value: `#${data.rank.position}`,
       subtitle: `of ${data.rank.total} students`,
       icon: Trophy,
-      iconColor: "text-emerald-500",
+      iconColor: "text-primary",
       href: "/dashboard/leaderboard",
     });
   }

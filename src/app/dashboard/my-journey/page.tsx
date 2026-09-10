@@ -5,16 +5,8 @@ import { AchievementsGrid } from "@/components/journey/achievements-grid";
 import { MyJourneyHeader } from "@/components/journey/my-journey-header";
 import { MyJourneyProgressCards } from "@/components/journey/my-journey-progress-cards";
 import { TasksTable } from "@/components/team-journey/tasks-table";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppContext } from "@/contexts/app-context";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import {
@@ -28,7 +20,6 @@ import { startTaskLazy } from "@/lib/tasks";
 import { StatsCard } from "@/types/dashboard";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, CreditCard, RotateCcw, Trophy, Zap } from "lucide-react";
-import Link from "next/link";
 import { redirect, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -107,6 +98,7 @@ export default function MyJourneyPage() {
           points_reward: ach.points_reward || 0,
           completed_tasks: ach.completed_tasks || 0,
           total_tasks: ach.total_tasks || 0,
+          color_theme: ach.color_theme ?? null,
         })
       ),
     [achievementProgress]
@@ -144,28 +136,28 @@ export default function MyJourneyPage() {
         value: (user?.my_journey_xp ?? 0).toLocaleString(),
         subtitle: "Earned from solo tasks and peer reviews",
         icon: Zap,
-        iconColor: "text-amber-500",
+        iconColor: "text-primary",
       },
       {
         title: labels.points,
         value: (user?.my_journey_credits ?? 0).toLocaleString(),
         subtitle: "Earned from solo activities",
         icon: CreditCard,
-        iconColor: "text-emerald-500",
+        iconColor: "text-primary",
       },
       {
         title: "Tasks Completed",
         value: `${taskStats.completed}/${taskStats.total}`,
         subtitle: `${taskStats.completionRate}% completion rate`,
         icon: CheckCircle,
-        iconColor: "text-blue-500",
+        iconColor: "text-primary",
       },
       {
         title: "Achievements",
         value: `${completedAchievements}/${achievements.length}`,
         subtitle: `${completedAchievements} completed`,
         icon: Trophy,
-        iconColor: "text-purple-500",
+        iconColor: "text-primary",
       },
     ];
   }, [achievements, taskStats, user?.my_journey_xp, user?.my_journey_credits]);
@@ -207,20 +199,6 @@ export default function MyJourneyPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/dashboard">Dashboard</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <span className="font-medium">My Journey</span>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       <MyJourneyHeader
         name={user.name ?? "Student"}
         avatarUrl={user.avatar_url}
@@ -244,62 +222,53 @@ export default function MyJourneyPage() {
         total={taskStats.total}
       />
 
-      <Tabs defaultValue="tasks" className="w-full">
-        <TabsList className="grid w-full grid-cols-1">
-          <TabsTrigger value="tasks" className="flex items-center gap-2">
-            <Trophy className="h-4 w-4 shrink-0" />
-            Tasks
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="tasks" className="mt-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Tasks</h2>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() =>
-                queryClient.invalidateQueries({ queryKey: ["myJourney"] })
-              }
-              disabled={tasksPending}
-            >
-              <RotateCcw
-                className={`h-4 w-4 ${tasksPending ? "animate-spin" : ""}`}
-              />
-              {tasksPending ? "Refreshing..." : "Refresh"}
-            </Button>
-          </div>
-
-          <AchievementsGrid
-            economy="my_journey"
-            achievements={achievements}
-            loading={achievementsPending}
-            selectedId={selectedAchievementId}
-            onSelect={setPickedAchievementId}
-            emptyText="No achievements available yet"
-          />
-
-          {tasksPending ? (
-            <PageSkeleton />
-          ) : filteredTasks.length === 0 ? (
-            <div className="text-muted-foreground py-8 text-center">
-              {selectedAchievementId
-                ? "No tasks found for this achievement"
-                : "No solo tasks assigned yet. Check back later for new challenges!"}
-            </div>
-          ) : (
-            <TasksTable
-              economy="my_journey"
-              tasks={filteredTasks}
-              // Solo tasks are always the student's own to start.
-              isTeamMember
-              currentUserId={user.id}
-              onStartTask={(rowId) => startTaskMutation.mutate(rowId)}
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Tasks</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() =>
+              queryClient.invalidateQueries({ queryKey: ["myJourney"] })
+            }
+            disabled={tasksPending}
+          >
+            <RotateCcw
+              className={`h-4 w-4 ${tasksPending ? "animate-spin" : ""}`}
             />
-          )}
-        </TabsContent>
-      </Tabs>
+            {tasksPending ? "Refreshing..." : "Refresh"}
+          </Button>
+        </div>
+
+        <AchievementsGrid
+          economy="my_journey"
+          achievements={achievements}
+          loading={achievementsPending}
+          selectedId={selectedAchievementId}
+          onSelect={setPickedAchievementId}
+          emptyText="No achievements available yet"
+        />
+
+        {tasksPending ? (
+          <PageSkeleton />
+        ) : filteredTasks.length === 0 ? (
+          <div className="text-muted-foreground py-8 text-center">
+            {selectedAchievementId
+              ? "No tasks found for this achievement"
+              : "No solo tasks assigned yet. Check back later for new challenges!"}
+          </div>
+        ) : (
+          <TasksTable
+            economy="my_journey"
+            tasks={filteredTasks}
+            // Solo tasks are always the student's own to start.
+            isTeamMember
+            currentUserId={user.id}
+            onStartTask={(rowId) => startTaskMutation.mutate(rowId)}
+          />
+        )}
+      </section>
     </div>
   );
 }

@@ -15,6 +15,7 @@ import {
   Trophy,
   X,
   Check,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -38,14 +39,15 @@ export function NotificationCenter() {
     notifications,
     count: notificationCount,
     markAsSeen,
+    markAllAsRead,
+    isMarkingAllRead,
   } = useNotifications(appUser?.id);
   const [isOpen, setIsOpen] = useState(false);
 
   // Get notification icon based on type
   const getNotificationIcon = (notification: UnifiedNotification) => {
-    const notificationIcon =
-      "icon" in notification ? notification.icon : undefined;
-    const type = "type" in notification ? notification.type : undefined;
+    const notificationIcon = notification.icon;
+    const type = notification.type;
 
     // Use type-based icons if no explicit icon
     if (!notificationIcon && type) {
@@ -57,17 +59,17 @@ export function NotificationCenter() {
         case "peer_review_rejected":
           return { Icon: XCircle, color: "text-red-500" };
         case "peer_review_resubmission":
-          return { Icon: RefreshCw, color: "text-blue-500" };
+          return { Icon: RefreshCw, color: "text-primary" };
         case "invitation":
-          return { Icon: Mail, color: "text-blue-500" };
+          return { Icon: Mail, color: "text-primary" };
         case "achievement":
-          return { Icon: Trophy, color: "text-yellow-500" };
+          return { Icon: Trophy, color: "text-amber-500" };
         case "invitations_auto_declined":
           return { Icon: Users, color: "text-orange-500" };
         case "task_assigned":
-          return { Icon: UserCheck, color: "text-blue-500" };
+          return { Icon: UserCheck, color: "text-primary" };
         default:
-          return { Icon: Bell, color: "text-gray-500" };
+          return { Icon: Bell, color: "text-muted-foreground" };
       }
     }
 
@@ -103,28 +105,37 @@ export function NotificationCenter() {
           : notificationIcon === "refresh-cw" ||
               notificationIcon === "users" ||
               notificationIcon === "calendar-clock"
-            ? "text-blue-500"
-            : "text-gray-500";
+            ? "text-primary"
+            : "text-muted-foreground";
 
     return { Icon: IconComponent, color: iconColor };
   };
 
   const handleNotificationClick = async (notification: UnifiedNotification) => {
     // Mark as seen and remove from list
-    await markAsSeen(notification.id, notification.source);
+    await markAsSeen(notification.id);
 
     // Close the modal/popover
     setIsOpen(false);
 
     // Extract routing data from notification
-    const data = "data" in notification ? notification.data : null;
-    const type = "type" in notification ? notification.type : undefined;
+    const data = notification.data;
+    const type = notification.type;
 
     // Custom route override
     if (data?.target_route) {
-      const route = data.target_tab
-        ? `${data.target_route}?tab=${data.target_tab}`
-        : data.target_route;
+      let route = data.target_route;
+      // AI-review notifications store the *task* id in the route, but the
+      // solo task page is keyed by the task_progress id. Swap it in when the
+      // progress id is available so the click lands on the right page.
+      if (
+        data.task_progress_id &&
+        data.task_id &&
+        route === `/dashboard/my-journey/task/${data.task_id}`
+      ) {
+        route = `/dashboard/my-journey/task/${data.task_progress_id}`;
+      }
+      if (data.target_tab) route = `${route}?tab=${data.target_tab}`;
       router.push(route);
       return;
     }
@@ -221,15 +232,6 @@ export function NotificationCenter() {
     }
   };
 
-  const handleMarkAllAsRead = async () => {
-    if (notifications.length > 0 && appUser?.id) {
-      // Mark all notifications as seen using the enhanced function
-      for (const notification of notifications) {
-        await markAsSeen(notification.id, notification.source);
-      }
-    }
-  };
-
   const formatNotificationTime = (createdAt: string) => {
     try {
       return formatDistanceToNow(new Date(createdAt), { addSuffix: true });
@@ -238,15 +240,17 @@ export function NotificationCenter() {
     }
   };
 
-  const NotificationList = () => (
-    <ScrollArea className="h-[400px] w-full">
-      <div className="space-y-1 p-1">
+  const notificationList = (
+    <ScrollArea
+      className={notifications.length === 0 ? "w-full" : "h-[400px] w-full"}
+    >
+      <div className="p-1">
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <Bell className="text-muted-foreground mb-4 h-12 w-12" />
-            <p className="text-muted-foreground text-sm">
-              No new notifications
-            </p>
+            <span className="bg-primary/10 text-primary mb-3 flex h-10 w-10 items-center justify-center rounded-full">
+              <Bell className="h-5 w-5" />
+            </span>
+            <p className="text-sm font-medium">You&apos;re all caught up</p>
             <p className="text-muted-foreground mt-1 text-xs">
               We&apos;ll notify you when something important happens
             </p>
@@ -254,17 +258,22 @@ export function NotificationCenter() {
         ) : (
           <>
             <div className="flex items-center justify-between p-2">
-              <h4 className="text-sm font-medium">
-                Notifications ({notificationCount})
-              </h4>
+              <span className="text-muted-foreground text-xs">
+                {notificationCount} unread
+              </span>
               {notificationCount > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleMarkAllAsRead}
+                  onClick={markAllAsRead}
+                  disabled={isMarkingAllRead}
                   className="text-muted-foreground hover:text-foreground h-auto p-1 text-xs"
                 >
-                  <Check className="mr-1 h-3 w-3" />
+                  {isMarkingAllRead ? (
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  ) : (
+                    <Check className="mr-1 h-3 w-3" />
+                  )}
                   Mark all read
                 </Button>
               )}
@@ -272,24 +281,13 @@ export function NotificationCenter() {
             <Separator />
             {notifications.map((notification, index) => {
               const { Icon, color } = getNotificationIcon(notification);
-              const title =
-                "title" in notification
-                  ? notification.title
-                  : notification.message;
-              const message =
-                "message" in notification ? notification.message : "";
-              const taskTitle: string =
-                "data" in notification
-                  ? ((notification.data?.taskTitle ||
-                      notification.data?.task_title ||
-                      "") as string)
-                  : "";
-              const createdAt: string =
-                "created_at" in notification
-                  ? (notification.created_at as string)
-                  : "createdAt" in notification
-                    ? (notification.createdAt as string)
-                    : "";
+              const title = notification.title;
+              const message = notification.message ?? "";
+              const taskTitle =
+                notification.data?.taskTitle ||
+                notification.data?.task_title ||
+                "";
+              const createdAt = notification.created_at ?? "";
 
               return (
                 <div
@@ -299,12 +297,12 @@ export function NotificationCenter() {
                 >
                   <button
                     onClick={() => handleNotificationClick(notification)}
-                    className="hover:bg-accent hover:text-accent-foreground w-full rounded-lg p-3 text-left transition-colors"
+                    className="hover:bg-muted/60 w-full rounded-lg p-3 text-left transition-colors"
                   >
                     <div className="flex gap-3">
-                      <div className="flex-shrink-0 pt-0.5">
+                      <span className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
                         <Icon className={`h-4 w-4 ${color}`} />
-                      </div>
+                      </span>
                       <div className="min-w-0 flex-1">
                         <div className="mb-1 text-sm leading-tight font-medium">
                           {title}
@@ -327,9 +325,6 @@ export function NotificationCenter() {
                       </div>
                     </div>
                   </button>
-                  {index < notifications.length - 1 && (
-                    <Separator className="my-1" />
-                  )}
                 </div>
               );
             })}
@@ -368,8 +363,11 @@ export function NotificationCenter() {
         alignOffset={-8}
         collisionPadding={16}
       >
-        <div className="flex items-center justify-between p-4 pb-2">
-          <h3 className="font-semibold">Notifications</h3>
+        <div className="flex items-center justify-between border-b px-4 py-3">
+          <h3 className="flex items-center gap-2 text-sm font-semibold">
+            <Bell className="text-primary h-4 w-4" />
+            Notifications
+          </h3>
           <Button
             variant="ghost"
             size="icon"
@@ -379,7 +377,7 @@ export function NotificationCenter() {
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <NotificationList />
+        {notificationList}
       </PopoverContent>
     </Popover>
   );

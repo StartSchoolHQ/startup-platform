@@ -82,7 +82,10 @@ export function usePlatformSettings(): {
     queryKey: JOURNEYS_QUERY_KEY,
     queryFn: fetchJourneySettings,
     enabled: mounted,
-    staleTime: 5 * 60 * 1000,
+    // A phase flip must reach students quickly — at 5 minutes an admin testing
+    // in a second tab saw the old phase long enough to think the switch failed.
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   useEffect(() => {

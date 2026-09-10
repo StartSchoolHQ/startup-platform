@@ -47,7 +47,9 @@ export function ProgrammePhaseCard() {
       <CardHeader>
         <CardTitle>Programme Phase</CardTitle>
         <CardDescription>
-          Controls which economy students see. Admins always see both.
+          Controls which journey shows on the dashboard, sidebar and leaderboard
+          — for admins too. Hidden pages stay reachable by URL and via Admin →
+          Teams.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

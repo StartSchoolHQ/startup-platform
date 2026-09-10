@@ -1,14 +1,19 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Card } from "@/components/ui/card";
+import { SectionLabel } from "@/components/dashboard/my-journey/section-label";
 import { economyLabels } from "@/lib/economy-labels";
-import { Info, Trophy } from "lucide-react";
+import { Info, Sparkles, TrendingUp, Users, Zap } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface MyJourneyProgressCardsProps {
   completed: number;
   total: number;
 }
 
-/** "Progress" + "How My Journey works" cards under the My Journey stats grid. */
+/**
+ * "Progress" + "How My Journey works" under the My Journey stats grid, in the
+ * same visual language as the dashboard's Next up / Continue cards: quiet
+ * label, one big focal number, soft accent glow, small tiles for the steps.
+ */
 export function MyJourneyProgressCards({
   completed,
   total,
@@ -16,60 +21,81 @@ export function MyJourneyProgressCards({
   const solo = economyLabels("my_journey");
   const team = economyLabels("team");
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const remaining = Math.max(total - completed, 0);
+
+  const steps: { icon: LucideIcon; title: string; text: string }[] = [
+    {
+      icon: Zap,
+      title: "Earn as you go",
+      text: `Every solo task you finish pays out ${solo.xp} and ${solo.points}.`,
+    },
+    {
+      icon: TrendingUp,
+      title: "Your pace, your order",
+      text: "Pick any task, finish it, and the phase rings above fill up.",
+    },
+    {
+      icon: Users,
+      title: "Team Journey comes later",
+      text: `It opens later in the programme. The ${team.xp} you earn there counts toward graduation.`,
+    },
+  ];
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800">
-              <Trophy className="h-4 w-4 text-black dark:text-white" />
+      <Card className="gap-0 py-0">
+        <div className="flex h-full flex-col gap-5 p-5">
+          <SectionLabel
+            icon={Sparkles}
+            title="Progress"
+            aside={`${percent}% complete`}
+          />
+
+          <div className="flex flex-1 items-end gap-2">
+            <span className="text-4xl leading-none font-semibold tracking-tight tabular-nums">
+              {completed}
+            </span>
+            <span className="text-muted-foreground pb-0.5 text-sm">
+              of {total} solo tasks finished
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
+              <div
+                className="bg-primary h-full rounded-full transition-all duration-700 ease-out"
+                style={{ width: `${percent}%` }}
+              />
             </div>
-            <CardTitle className="text-lg font-semibold">Progress</CardTitle>
+            <p className="text-muted-foreground text-xs">
+              {remaining === 0 && total > 0
+                ? "Everything finished — nice work."
+                : `${remaining} to go.`}
+            </p>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold">
-              {completed}/{total}
-            </span>
-            <span className="text-muted-foreground text-sm">
-              {percent}% complete
-            </span>
-          </div>
-          <Progress value={percent} />
-          <p className="text-muted-foreground text-xs">
-            Solo tasks completed so far.
-          </p>
-        </CardContent>
+        </div>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800">
-              <Info className="h-4 w-4 text-black dark:text-white" />
-            </div>
-            <CardTitle className="text-lg font-semibold">
-              How My Journey works
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ul className="text-muted-foreground list-disc space-y-2 pl-5 text-sm">
-            <li>
-              Every solo task you finish pays out {solo.xp} and {solo.points}.
-            </li>
-            <li>
-              Team Journey opens later in the programme — the {team.xp} you earn
-              there is what counts toward graduation.
-            </li>
-            <li>
-              Work through the tasks at your own pace — every finished task
-              moves your progress bar above.
-            </li>
-          </ul>
-        </CardContent>
+      <Card className="gap-0 py-0">
+        <div className="flex h-full flex-col gap-4 p-5">
+          <SectionLabel icon={Info} title="How My Journey works" />
+          <ol className="grid flex-1 gap-2 sm:grid-cols-3">
+            {steps.map(({ icon: Icon, title, text }) => (
+              <li
+                key={title}
+                className="bg-muted/40 flex flex-col gap-2 rounded-xl p-3"
+              >
+                <span className="bg-primary/10 text-primary flex h-7 w-7 items-center justify-center rounded-full">
+                  <Icon className="h-3.5 w-3.5" />
+                </span>
+                <p className="text-sm leading-tight font-medium">{title}</p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  {text}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </div>
       </Card>
     </div>
   );

@@ -2,9 +2,9 @@
 
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Eye, ListChecks, Zap } from "lucide-react";
 import { RankIcon } from "@/components/leaderboard/rank-icon";
+import { YouBadge } from "@/components/leaderboard/you-badge";
 import { ChangeIndicator } from "@/components/leaderboard/change-indicator";
 import { ChangeValue } from "@/components/leaderboard/change-value";
 import { StreakBadge } from "@/components/leaderboard/streak-badge";
@@ -25,8 +25,6 @@ export function MemberRow({
   const animatedXP = useCountUp(entry.xp.current, 800);
   const animatedTasks = useCountUp(entry.tasks.current, 800);
 
-  const isTop3 = entry.rank <= 3;
-
   return (
     <motion.div
       layout
@@ -45,7 +43,6 @@ export function MemberRow({
       })}
       style={{
         gridTemplateColumns: MEMBER_GRID_COLUMNS,
-        boxShadow: isTop3 ? "0 0 20px -10px rgba(0,0,0,0.1)" : "none",
       }}
     >
       {/* Rank */}
@@ -67,14 +64,7 @@ export function MemberRow({
         <div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">{entry.user.name}</span>
-            {entry.user.isCurrentUser && (
-              <Badge
-                variant="secondary"
-                className="bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-              >
-                You
-              </Badge>
-            )}
+            {entry.user.isCurrentUser && <YouBadge />}
           </div>
           <span className="text-muted-foreground text-xs">
             {entry.user.teams}
@@ -85,27 +75,31 @@ export function MemberRow({
       {/* Team XP */}
       <div>
         <div className="flex items-center gap-1">
-          <Zap className="h-3.5 w-3.5 text-green-600" />
-          <span className="text-sm font-semibold">
+          <Zap className="text-primary h-3.5 w-3.5" />
+          <span className="text-sm font-semibold tabular-nums">
             {animatedXP.toLocaleString()}
           </span>
         </div>
-        <ChangeValue value={entry.xp.change} color="green" />
+        <ChangeValue value={entry.xp.change} />
       </div>
 
       {/* Tasks */}
       <div>
         <div className="flex items-center gap-1">
-          <ListChecks className="h-3.5 w-3.5 text-emerald-600" />
-          <span className="text-sm font-semibold">{animatedTasks}</span>
+          <ListChecks className="text-muted-foreground h-3.5 w-3.5" />
+          <span className="text-sm font-semibold tabular-nums">
+            {animatedTasks}
+          </span>
         </div>
       </div>
 
       {/* Peer Reviews */}
       <div>
         <div className="flex items-center gap-1">
-          <Eye className="h-3.5 w-3.5 text-purple-600" />
-          <span className="text-sm font-semibold">{entry.peerReviews}</span>
+          <Eye className="text-muted-foreground h-3.5 w-3.5" />
+          <span className="text-sm font-semibold tabular-nums">
+            {entry.peerReviews}
+          </span>
         </div>
       </div>
 
@@ -117,12 +111,9 @@ export function MemberRow({
       {/* Change */}
       <div className="flex justify-center">
         {entry.change.isNew ? (
-          <Badge
-            variant="secondary"
-            className="bg-green-100 text-xs text-green-700 dark:bg-green-900 dark:text-green-300"
-          >
-            NEW
-          </Badge>
+          <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:text-green-400">
+            New
+          </span>
         ) : (
           <ChangeIndicator
             direction={entry.change.direction}

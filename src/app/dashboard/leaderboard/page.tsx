@@ -19,22 +19,11 @@ export default async function LeaderboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [journeys, profile] = await Promise.all([
-    getJourneySettings(),
-    user?.id
-      ? supabase
-          .from("users")
-          .select("primary_role")
-          .eq("id", user.id)
-          .single()
-          .then(({ data }) => data)
-      : Promise.resolve(null),
-  ]);
+  const journeys = await getJourneySettings();
 
-  // Admins get both economies prefetched regardless of the current phase.
-  const isAdmin = profile?.primary_role === "admin";
-  const prefetchMyJourney = isAdmin || journeys.myJourney;
-  const prefetchTeamJourney = isAdmin || journeys.teamJourney;
+  // Boards follow the programme phase for everyone, admins included.
+  const prefetchMyJourney = journeys.myJourney;
+  const prefetchTeamJourney = journeys.teamJourney;
 
   const [
     initialMyJourneyData,
@@ -64,7 +53,6 @@ export default async function LeaderboardPage() {
       currentUserId={user?.id}
       userTeamIds={userTeamIds}
       initialJourneys={journeys}
-      isAdmin={isAdmin}
     />
   );
 }

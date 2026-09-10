@@ -105,13 +105,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   // Memoize navigation items to prevent flickering
   const navigationItems = React.useMemo(() => {
-    // Admins see every item regardless of the current programme phase.
+    // Journey items follow the programme phase for everyone, admins included
+    // — the admin section below is how admins reach team management while
+    // Team Journey is off.
     const baseItems: NavMainItem[] = navMainItems.filter(
-      (item) => isAdmin || !item.journey || journeys[item.journey]
+      (item) => !item.journey || journeys[item.journey]
     );
 
     // Insert dynamic team link after Leaderboard
-    if (userTeam && (isAdmin || journeys.teamJourney)) {
+    if (userTeam && journeys.teamJourney) {
       const leaderboardIndex = baseItems.findIndex(
         (item) => item.url === "/dashboard/leaderboard"
       );
@@ -193,7 +195,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             user={{
               name: user.name || "User",
               email: user.email,
-              avatar: user.avatar_url || "/avatars/shadcn.jpg",
+              avatar: user.avatar_url || "",
             }}
           />
         )}

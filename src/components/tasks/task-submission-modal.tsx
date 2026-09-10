@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -13,15 +13,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { X, Upload, Link, FileText } from "lucide-react";
-import { economyLabels } from "@/lib/economy-labels";
+import {
+  FieldShell,
+  FileListField,
+  UrlListField,
+  type ExternalUrl,
+} from "@/components/tasks/submission-fields";
 
-export interface ExternalUrl {
-  url: string;
-  title: string;
-  type: string;
-}
+export type { ExternalUrl } from "@/components/tasks/submission-fields";
 
 interface FormField {
   name: string;
@@ -47,10 +46,8 @@ interface SubmissionData {
 
 /**
  * Values the form opens with — used to prefill a resubmission with what was
- * submitted last time. Optional everywhere: omitting it keeps the previous
- * behaviour (an empty form). Files can never be prefilled (a File object
- * cannot be reconstructed from a stored URL), so only the description and the
- * external links are carried over.
+ * submitted last time. Files can never be prefilled (a File object cannot be
+ * rebuilt from a stored URL), so only the description and links carry over.
  */
 export interface TaskSubmissionInitialData {
   description?: string;
@@ -68,6 +65,34 @@ interface TaskSubmissionModalProps {
   initialData?: TaskSubmissionInitialData;
 }
 
+const DEFAULT_SCHEMA: FormSchema = {
+  fields: [
+    {
+      name: "description",
+      type: "textarea",
+      label: "What did you do?",
+      required: true,
+      placeholder:
+        "Write the actual result here — the pitch, the answers, the reflection. Not a summary of the task.",
+    },
+    {
+      name: "external_urls",
+      type: "url_list",
+      label: "Links",
+      placeholder: "https://docs.google.com/…",
+      required: false,
+    },
+    {
+      name: "screenshots",
+      type: "file",
+      label: "Files",
+      accept: "image/*,.pdf,.docx,.txt",
+      required: false,
+      multiple: true,
+    },
+  ],
+};
+
 export function TaskSubmissionModal({
   isOpen,
   onClose,
@@ -80,10 +105,8 @@ export function TaskSubmissionModal({
 }: TaskSubmissionModalProps) {
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [externalUrls, setExternalUrls] = useState<ExternalUrl[]>([]);
-  const [currentUrl, setCurrentUrl] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [urlError, setUrlError] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Seed the form each time the modal opens, then leave it alone — keyed on
   // `isOpen` only, so a caller passing a fresh object literal on every render
@@ -95,330 +118,159 @@ export function TaskSubmissionModal({
     );
     setExternalUrls(initialData?.external_urls ?? []);
     setUploadedFiles([]);
-    setCurrentUrl("");
-    setUrlError(null);
-    setValidationErrors([]);
+    setErrors({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  const submissionLabels = economyLabels(
-    isIndividualTask ? "my_journey" : "team"
-  );
+  const schema = formSchema?.fields?.length ? formSchema : DEFAULT_SCHEMA;
+  const isResubmission = !!initialData?.description;
 
-  // Default form schema if none provided
-  const defaultSchema: FormSchema = {
-    fields: [
-      {
-        name: "description",
-        type: "textarea",
-        label: "Describe what you accomplished",
-        required: true,
-        placeholder:
-          "Explain how you completed this task and what deliverables you've created...",
-      },
-      {
-        name: "external_urls",
-        type: "url_list",
-        label: "Public resources (Google Sheets, GitHub, demos, etc.)",
-        placeholder: "https://docs.google.com/spreadsheets/...",
-        required: false,
-      },
-      {
-        name: "screenshots",
-        type: "file",
-        label: "Upload screenshots or documents",
-        accept: "image/*,.pdf,.docx,.txt",
-        required: false,
-        multiple: true,
-      },
-    ],
-  };
-
-  // Ensure we have a valid schema with fields array
-  const schema = formSchema?.fields?.length ? formSchema : defaultSchema;
-
-  const detectUrlType = (url: string): string => {
-    if (url.includes("docs.google.com/spreadsheets")) return "google_sheets";
-    if (url.includes("docs.google.com/document")) return "google_docs";
-    if (url.includes("github.com")) return "github";
-    if (url.includes("figma.com")) return "figma";
-    if (url.includes("notion.so")) return "notion";
-    return "external";
-  };
-
-  const addExternalUrl = () => {
-    if (!currentUrl.trim()) return;
-
-    try {
-      new URL(currentUrl); // Validate URL
-      const urlType = detectUrlType(currentUrl);
-      const title = currentUrl.split("/").pop() || "External Resource";
-
-      setExternalUrls([
-        ...externalUrls,
-        {
-          url: currentUrl,
-          title,
-          type: urlType,
-        },
-      ]);
-      setCurrentUrl("");
-      setUrlError(null);
-    } catch {
-      setUrlError("Please enter a valid URL");
-    }
-  };
-
-  const removeExternalUrl = (index: number) => {
-    setExternalUrls(externalUrls.filter((_, i) => i !== index));
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setUploadedFiles([...uploadedFiles, ...Array.from(e.target.files)]);
-    }
-  };
-
-  const removeFile = (index: number) => {
-    setUploadedFiles(uploadedFiles.filter((_, i) => i !== index));
+  const setValue = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validate required fields
-    const errors: string[] = [];
-    (schema?.fields || []).forEach((field) => {
-      if (field.required) {
-        if (field.name === "external_urls" && externalUrls.length === 0) {
-          errors.push(`${field.label} is required`);
-        } else if (field.name === "screenshots" && uploadedFiles.length === 0) {
-          errors.push(`${field.label} is required`);
-        } else if (
-          !formData[field.name] &&
-          field.type !== "url_list" &&
-          field.type !== "file"
-        ) {
-          errors.push(`${field.label} is required`);
-        }
+    const next: Record<string, string> = {};
+    for (const field of schema.fields) {
+      if (!field.required) continue;
+      const missing =
+        field.type === "url_list"
+          ? externalUrls.length === 0
+          : field.type === "file"
+            ? uploadedFiles.length === 0
+            : !String(formData[field.name] ?? "").trim();
+      if (missing) {
+        next[field.name] =
+          field.type === "url_list"
+            ? "Add at least one link."
+            : field.type === "file"
+              ? "Attach at least one file."
+              : "This can't be empty.";
       }
-    });
-
-    if (errors.length > 0) {
-      setValidationErrors(errors);
+    }
+    if (Object.keys(next).length > 0) {
+      setErrors(next);
       return;
     }
-
-    setValidationErrors([]);
-
-    // Prepare submission data
-    const submissionData = {
+    setErrors({});
+    await onSubmit({
       ...formData,
       external_urls: externalUrls,
-      files: uploadedFiles, // Will be processed for upload
+      files: uploadedFiles,
       submitted_at: new Date().toISOString(),
-    };
-
-    await onSubmit(submissionData);
+    });
   };
 
   const renderField = (field: FormField) => {
     switch (field.type) {
       case "text":
         return (
-          <div key={field.name}>
-            <Label htmlFor={field.name}>
-              {field.label}{" "}
-              {field.required && <span className="text-destructive">*</span>}
-            </Label>
+          <FieldShell
+            key={field.name}
+            id={field.name}
+            label={field.label}
+            required={field.required}
+            error={errors[field.name]}
+          >
             <Input
               id={field.name}
               placeholder={field.placeholder}
               value={(formData[field.name] as string) || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, [field.name]: e.target.value })
-              }
-              required={field.required}
+              onChange={(e) => setValue(field.name, e.target.value)}
+              disabled={isLoading}
             />
-          </div>
+          </FieldShell>
         );
-
       case "textarea":
         return (
-          <div key={field.name}>
-            <Label htmlFor={field.name}>
-              {field.label}{" "}
-              {field.required && <span className="text-destructive">*</span>}
-            </Label>
+          <FieldShell
+            key={field.name}
+            id={field.name}
+            label={field.label}
+            required={field.required}
+            error={errors[field.name]}
+          >
             <Textarea
               id={field.name}
               placeholder={field.placeholder}
               value={(formData[field.name] as string) || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, [field.name]: e.target.value })
-              }
-              rows={4}
-              required={field.required}
+              onChange={(e) => setValue(field.name, e.target.value)}
+              className="min-h-[160px] resize-y"
+              disabled={isLoading}
             />
-          </div>
+          </FieldShell>
         );
-
       case "url_list":
         return (
-          <div key={field.name}>
-            <Label>
-              {field.label}{" "}
-              {field.required && <span className="text-destructive">*</span>}
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                placeholder={field.placeholder}
-                value={currentUrl}
-                onChange={(e) => {
-                  setCurrentUrl(e.target.value);
-                  if (urlError) setUrlError(null);
-                }}
-                onKeyPress={(e) =>
-                  e.key === "Enter" && (e.preventDefault(), addExternalUrl())
-                }
-                className={urlError ? "border-destructive" : ""}
-              />
-              <Button
-                type="button"
-                onClick={addExternalUrl}
-                variant="outline"
-                size="sm"
-              >
-                <Link className="h-4 w-4" />
-              </Button>
-            </div>
-            {urlError && (
-              <p className="text-destructive mt-1 text-sm">{urlError}</p>
-            )}
-            {externalUrls.length > 0 && (
-              <div className="mt-2 space-y-2">
-                {externalUrls.map((url, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 rounded border p-2"
-                  >
-                    <Badge variant="outline" className="text-xs">
-                      {url.type.replace("_", " ")}
-                    </Badge>
-                    <span className="flex-1 truncate text-sm">{url.url}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeExternalUrl(index)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <UrlListField
+            key={field.name}
+            label={field.label}
+            placeholder={field.placeholder}
+            required={field.required}
+            urls={externalUrls}
+            onChange={(urls) => {
+              setExternalUrls(urls);
+              if (errors[field.name])
+                setErrors((prev) => ({ ...prev, [field.name]: "" }));
+            }}
+            error={errors[field.name]}
+            disabled={isLoading}
+          />
         );
-
       case "file":
         return (
-          <div key={field.name}>
-            <Label>
-              {field.label}{" "}
-              {field.required && <span className="text-destructive">*</span>}
-            </Label>
-            <div className="border-border rounded-lg border-2 border-dashed p-4">
-              <input
-                type="file"
-                accept={field.accept}
-                multiple={field.multiple}
-                onChange={handleFileChange}
-                className="hidden"
-                id={`file-${field.name}`}
-              />
-              <Label
-                htmlFor={`file-${field.name}`}
-                className="flex cursor-pointer flex-col items-center gap-2"
-              >
-                <Upload className="text-muted-foreground h-8 w-8" />
-                <span className="text-foreground text-sm">
-                  Click to upload files or drag and drop
-                </span>
-                <span className="text-muted-foreground text-xs">
-                  {field.accept || "Any file type"}
-                </span>
-              </Label>
-            </div>
-            {uploadedFiles.length > 0 && (
-              <div className="mt-2 space-y-2">
-                {uploadedFiles.map((file, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 rounded border p-2"
-                  >
-                    <FileText className="text-muted-foreground h-4 w-4" />
-                    <span className="flex-1 text-sm">{file.name}</span>
-                    <span className="text-muted-foreground text-xs">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB
-                    </span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFile(index)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <FileListField
+            key={field.name}
+            id={`file-${field.name}`}
+            label={field.label}
+            accept={field.accept}
+            multiple={field.multiple}
+            required={field.required}
+            files={uploadedFiles}
+            onChange={(files) => {
+              setUploadedFiles(files);
+              if (errors[field.name])
+                setErrors((prev) => ({ ...prev, [field.name]: "" }));
+            }}
+            error={errors[field.name]}
+            disabled={isLoading}
+          />
         );
-
       default:
         return null;
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {isIndividualTask ? "Submit Task" : "Submit Task for Review"}
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[640px]">
+        <DialogHeader className="space-y-1.5 px-6 pt-6 pb-5 text-left">
+          <p className="text-primary text-xs font-medium">
+            {isResubmission ? "Resubmit task" : "Submit task"}
+          </p>
+          <DialogTitle className="pr-6 text-xl leading-snug font-semibold tracking-tight">
+            {taskTitle}
           </DialogTitle>
-          <DialogDescription>
-            Complete your submission for <strong>{taskTitle}</strong>.{" "}
+          <DialogDescription className="text-sm">
             {isIndividualTask
-              ? `This will be automatically approved and you'll receive ${submissionLabels.xp} and ${submissionLabels.points} immediately.`
-              : "This will be sent to peer reviewers who will provide feedback within 2-3 days. You'll be notified when the review is complete."}
+              ? "Goes straight to review. You'll see the result on this page and get a notification."
+              : "Goes to peer reviewers, who usually reply within 2–3 days. You'll be notified when it's done."}
+            {isResubmission &&
+              " Your previous answer is prefilled — edit it, then send again. Files need re-attaching."}
           </DialogDescription>
         </DialogHeader>
 
-        {validationErrors.length > 0 && (
-          <div className="bg-destructive/10 border-destructive/20 rounded-lg border p-3">
-            <p className="text-destructive mb-2 text-sm font-medium">
-              Please fix the following errors:
-            </p>
-            <ul className="list-inside list-disc space-y-1">
-              {validationErrors.map((error, idx) => (
-                <li key={idx} className="text-destructive text-sm">
-                  {error}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {schema?.fields?.map(renderField) || (
-            <div>No form fields defined</div>
-          )}
+        <form
+          id="task-submission-form"
+          onSubmit={handleSubmit}
+          className="min-h-0 flex-1 space-y-5 overflow-y-auto border-t px-6 py-5"
+        >
+          {schema.fields.map(renderField)}
         </form>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 border-t px-6 py-4 sm:gap-2">
           <Button
             type="button"
             variant="outline"
@@ -427,12 +279,21 @@ export function TaskSubmissionModal({
           >
             Cancel
           </Button>
-          <Button type="submit" onClick={handleSubmit} disabled={isLoading}>
+          <Button
+            type="submit"
+            form="task-submission-form"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
             {isLoading
-              ? "Submitting..."
+              ? "Sending…"
               : isIndividualTask
-                ? "Submit Task"
-                : "Submit for Review"}
+                ? "Send for review"
+                : "Send to peer review"}
           </Button>
         </DialogFooter>
       </DialogContent>

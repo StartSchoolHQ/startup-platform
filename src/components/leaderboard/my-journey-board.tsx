@@ -4,12 +4,12 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Coins, ListChecks, Zap } from "lucide-react";
 import { RankIcon } from "@/components/leaderboard/rank-icon";
 import { LeaderboardSkeleton } from "@/components/leaderboard/leaderboard-skeleton";
+import { LEADERBOARD_HEADER_CLASS } from "@/components/leaderboard/leaderboard-board-shell";
+import { YouBadge } from "@/components/leaderboard/you-badge";
 import { convertToMyJourneyEntry } from "@/components/leaderboard/mappers";
 import { MyJourneyLeaderboardEntry } from "@/types/leaderboard";
 import { type MyJourneyLeaderboardRow as DBMyJourneyEntry } from "@/lib/leaderboard-server";
@@ -25,7 +25,7 @@ function StudentCell({ entry }: { entry: MyJourneyLeaderboardEntry }) {
     <div className="flex min-w-0 items-center gap-3">
       <Avatar className="h-8 w-8 shrink-0">
         <AvatarImage src={entry.user.avatar} alt={entry.user.name} />
-        <AvatarFallback>
+        <AvatarFallback className="text-xs">
           {entry.user.name
             .split(" ")
             .map((n) => n[0])
@@ -34,20 +34,36 @@ function StudentCell({ entry }: { entry: MyJourneyLeaderboardEntry }) {
       </Avatar>
       <div className="flex min-w-0 items-center gap-2">
         <span className="truncate text-sm font-medium">{entry.user.name}</span>
-        {entry.user.isCurrentUser && (
-          <Badge
-            variant="secondary"
-            className="bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-          >
-            You
-          </Badge>
-        )}
+        {entry.user.isCurrentUser && <YouBadge />}
       </div>
     </div>
   );
 }
 
+function Metric({
+  icon: Icon,
+  value,
+  muted,
+}: {
+  icon: typeof Zap;
+  value: number | string;
+  muted?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <Icon
+        className={cn(
+          "h-3.5 w-3.5",
+          muted ? "text-muted-foreground" : "text-primary"
+        )}
+      />
+      <span className="text-sm font-semibold tabular-nums">{value}</span>
+    </div>
+  );
+}
+
 function MyJourneyRow({ entry }: { entry: MyJourneyLeaderboardEntry }) {
+  const labels = economyLabels("my_journey");
   return (
     <>
       {/* Desktop row (sm+) */}
@@ -64,30 +80,17 @@ function MyJourneyRow({ entry }: { entry: MyJourneyLeaderboardEntry }) {
             <RankIcon type={entry.rankIcon || "none"} rank={entry.rank} />
           </div>
           <StudentCell entry={entry} />
-          <div className="flex items-center gap-1">
-            <Zap className="h-3.5 w-3.5 text-green-600" />
-            <span className="text-sm font-semibold">
-              {entry.xp.toLocaleString()}
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Coins className="h-3.5 w-3.5 text-amber-600" />
-            <span className="text-sm font-semibold">
-              {entry.credits.toLocaleString()}
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <ListChecks className="h-3.5 w-3.5 text-emerald-600" />
-            <span className="text-sm font-semibold">{entry.tasks}</span>
-          </div>
+          <Metric icon={Zap} value={entry.xp.toLocaleString()} />
+          <Metric icon={Coins} value={entry.credits.toLocaleString()} />
+          <Metric icon={ListChecks} value={entry.tasks} muted />
         </div>
       </div>
 
       {/* Mobile card (<sm) */}
       <div
         className={cn(
-          "border-border flex items-center gap-3 border-b p-3 sm:hidden",
-          entry.user.isCurrentUser && "bg-blue-50 dark:bg-blue-950/50"
+          "border-border flex items-center gap-3 border-b border-l-2 border-l-transparent p-3 sm:hidden",
+          entry.user.isCurrentUser && "bg-primary/5 border-l-primary"
         )}
       >
         <div className="flex min-w-[40px] items-center gap-2">
@@ -96,18 +99,17 @@ function MyJourneyRow({ entry }: { entry: MyJourneyLeaderboardEntry }) {
         <div className="min-w-0 flex-1">
           <StudentCell entry={entry} />
           <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-2 text-xs">
-            <span className="flex items-center gap-0.5">
-              <Zap className="h-3 w-3 text-green-600" />{" "}
-              {entry.xp.toLocaleString()} {economyLabels("my_journey").xp}
+            <span className="flex items-center gap-1">
+              <Zap className="text-primary h-3 w-3" />
+              {entry.xp.toLocaleString()} {labels.xp}
             </span>
-            <span className="flex items-center gap-0.5">
-              <Coins className="h-3 w-3 text-amber-600" />{" "}
-              {entry.credits.toLocaleString()}{" "}
-              {economyLabels("my_journey").points}
+            <span className="flex items-center gap-1">
+              <Coins className="text-primary h-3 w-3" />
+              {entry.credits.toLocaleString()} {labels.points}
             </span>
-            <span className="flex items-center gap-0.5">
-              <ListChecks className="h-3 w-3 text-emerald-600" /> {entry.tasks}{" "}
-              tasks
+            <span className="flex items-center gap-1">
+              <ListChecks className="h-3 w-3" />
+              {entry.tasks} tasks
             </span>
           </div>
         </div>
@@ -150,62 +152,60 @@ export function MyJourneyBoard({
   );
 
   return (
-    <Card className="border-none shadow-none">
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <div
-            className="border-border text-muted-foreground hidden min-w-[640px] gap-4 border-b p-4 text-sm font-medium sm:grid"
-            style={{ gridTemplateColumns: GRID_COLUMNS }}
-          >
-            <div>Rank</div>
-            <div>Student</div>
-            <div>{labels.xp}</div>
-            <div>{labels.points}</div>
-            <div>Tasks done</div>
-          </div>
-
-          <AnimatePresence mode="wait">
-            {loading ? (
-              <motion.div
-                key="my-journey-skeleton"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="p-6"
-              >
-                <LeaderboardSkeleton />
-              </motion.div>
-            ) : entries.length > 0 ? (
-              <motion.div
-                key="my-journey-data"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {entries.map((item) => (
-                  <MyJourneyRow key={item.user.userId} entry={item} />
-                ))}
-              </motion.div>
-            ) : (
-              <motion.div
-                key="my-journey-empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-muted-foreground p-8 text-center"
-              >
-                <p>No {labels.xp} earned yet.</p>
-                <p className="mt-1 text-sm">
-                  The board fills up as students complete their solo tasks.
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+    <div className="bg-card overflow-hidden rounded-xl border">
+      <div className="overflow-x-auto">
+        <div
+          className={`${LEADERBOARD_HEADER_CLASS} hidden min-w-[640px] sm:grid`}
+          style={{ gridTemplateColumns: GRID_COLUMNS }}
+        >
+          <div>Rank</div>
+          <div>Student</div>
+          <div>{labels.xp}</div>
+          <div>{labels.points}</div>
+          <div>Tasks done</div>
         </div>
-      </CardContent>
-    </Card>
+
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div
+              key="my-journey-skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="p-6"
+            >
+              <LeaderboardSkeleton />
+            </motion.div>
+          ) : entries.length > 0 ? (
+            <motion.div
+              key="my-journey-data"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {entries.map((item) => (
+                <MyJourneyRow key={item.user.userId} entry={item} />
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="my-journey-empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="text-muted-foreground p-8 text-center"
+            >
+              <p>No {labels.xp} earned yet.</p>
+              <p className="mt-1 text-sm">
+                The board fills up as students complete their solo tasks.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
   );
 }

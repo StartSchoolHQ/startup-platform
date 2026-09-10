@@ -311,7 +311,7 @@ begin
   -- peer_review_* notification with a Team Journey route. Fix it for My Journey.
   update notifications set
     data = coalesce(data,'{}'::jsonb) || jsonb_build_object(
-      'target_route', '/dashboard/my-journey/task/' || r.task_id::text,
+      'target_route', '/dashboard/my-journey/task/' || r.progress_id::text,
       'target_tab', null, 'reviewer', 'ai', 'review_id', r.id),
     message = case when v_history_decision = 'approved'
       then 'Your task "' || t.title || '" passed the AI review. ' || left(v_feedback, 140)

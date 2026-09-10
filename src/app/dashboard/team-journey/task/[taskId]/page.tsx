@@ -3,13 +3,6 @@
 import { SuggestEditsModal } from "@/components/tasks/suggest-edits-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -52,7 +45,6 @@ import {
   User,
   Zap,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { use, useEffect, useState } from "react";
@@ -470,43 +462,6 @@ export default function TaskDetailPage(props: TaskDetailPageProps) {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb Navigation */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/dashboard">Dashboard</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/dashboard/team-journey">Products</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link
-                href={`/dashboard/team-journey/${
-                  task.team_id || task.teams?.id
-                }`}
-              >
-                {teamName || task.teams?.name || "Product"}
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <span
-              className="max-w-[200px] truncate font-medium"
-              title={task.title}
-            >
-              {task.title}
-            </span>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
       {/* Task Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-2">

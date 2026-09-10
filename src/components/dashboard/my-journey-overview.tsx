@@ -7,11 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { OverviewSkeleton } from "@/components/dashboard/overview-skeleton";
-import { AchievementProgressStrip } from "@/components/dashboard/my-journey/achievement-progress-strip";
-import { ContinueCard } from "@/components/dashboard/my-journey/continue-card";
+// V2 cards (2026-09-10 redesign). Revert = point these three imports back at
+// achievement-progress-strip / continue-card / next-up-card.
+import { AchievementProgressV2 } from "@/components/dashboard/my-journey/achievement-progress-v2";
+import { ContinueCardV2 } from "@/components/dashboard/my-journey/continue-card-v2";
 import { MyJourneySectionHeader } from "@/components/dashboard/my-journey/section-header";
 import { MyJourneyStatCards } from "@/components/dashboard/my-journey/stat-cards";
-import { NextUpCard } from "@/components/dashboard/my-journey/next-up-card";
+import { NextUpCardV2 } from "@/components/dashboard/my-journey/next-up-card-v2";
 import { RecentActivityCard } from "@/components/dashboard/my-journey/recent-activity-card";
 import { useMyJourneyOverview } from "@/hooks/use-my-journey-overview";
 
@@ -59,12 +61,12 @@ export function MyJourneyOverview({
     <div className="space-y-6">
       <MyJourneyStatCards data={data} />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <ContinueCard tasks={data.in_progress} />
-        <NextUpCard task={data.next_up} totalTasks={data.tasks.total} />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+        <NextUpCardV2 task={data.next_up} totalTasks={data.tasks.total} />
+        <ContinueCardV2 tasks={data.in_progress} />
       </div>
 
-      <AchievementProgressStrip achievements={data.achievement_progress} />
+      <AchievementProgressV2 achievements={data.achievement_progress} />
 
       <RecentActivityCard entries={data.recent_activity} />
     </div>

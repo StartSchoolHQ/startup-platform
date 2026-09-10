@@ -2,9 +2,9 @@
 
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Gem, Handshake, ListChecks, Zap } from "lucide-react";
 import { RankIcon } from "@/components/leaderboard/rank-icon";
+import { YouBadge } from "@/components/leaderboard/you-badge";
 import { ChangeIndicator } from "@/components/leaderboard/change-indicator";
 import { ChangeValue } from "@/components/leaderboard/change-value";
 import { TeamLeaderboardEntry } from "@/types/leaderboard";
@@ -27,8 +27,6 @@ export function TeamRow({
   const animatedTasks = useCountUp(entry.tasks.current, 800);
   const animatedMeetings = useCountUp(entry.meetings.current, 800);
 
-  const isTop3 = entry.rank <= 3;
-
   return (
     <motion.div
       layout
@@ -47,7 +45,6 @@ export function TeamRow({
       })}
       style={{
         gridTemplateColumns: TEAM_GRID_COLUMNS,
-        boxShadow: isTop3 ? "0 0 20px -10px rgba(0,0,0,0.1)" : "none",
       }}
     >
       {/* Rank */}
@@ -74,14 +71,7 @@ export function TeamRow({
             <span className="max-w-[140px] truncate text-sm font-medium">
               {entry.team.name}
             </span>
-            {entry.team.isCurrentUserTeam && (
-              <Badge
-                variant="secondary"
-                className="bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-              >
-                Your Team
-              </Badge>
-            )}
+            {entry.team.isCurrentUserTeam && <YouBadge label="Your team" />}
           </div>
           <span className="text-muted-foreground text-xs">
             {entry.team.memberCount}{" "}
@@ -97,52 +87,53 @@ export function TeamRow({
       {/* Team XP */}
       <div>
         <div className="flex items-center gap-1">
-          <Zap className="h-3.5 w-3.5 text-green-600" />
-          <span className="text-sm font-semibold">
+          <Zap className="text-primary h-3.5 w-3.5" />
+          <span className="text-sm font-semibold tabular-nums">
             {animatedXP.toLocaleString()}
           </span>
         </div>
-        <ChangeValue value={entry.xp.change} color="green" />
+        <ChangeValue value={entry.xp.change} />
       </div>
 
       {/* Team Points */}
       <div>
         <div className="flex items-center gap-1">
-          <Gem className="h-3.5 w-3.5 text-blue-600" />
-          <span className="text-sm font-semibold">
+          <Gem className="text-primary h-3.5 w-3.5" />
+          <span className="text-sm font-semibold tabular-nums">
             {animatedPts.toLocaleString()}
           </span>
         </div>
-        <ChangeValue value={entry.points.change} color="blue" />
+        <ChangeValue value={entry.points.change} />
       </div>
 
       {/* Tasks */}
       <div>
         <div className="flex items-center gap-1">
-          <ListChecks className="h-3.5 w-3.5 text-emerald-600" />
-          <span className="text-sm font-semibold">{animatedTasks}</span>
+          <ListChecks className="text-muted-foreground h-3.5 w-3.5" />
+          <span className="text-sm font-semibold tabular-nums">
+            {animatedTasks}
+          </span>
         </div>
-        <ChangeValue value={entry.tasks.change} color="green" />
+        <ChangeValue value={entry.tasks.change} />
       </div>
 
       {/* Meetings */}
       <div>
         <div className="flex items-center gap-1">
-          <Handshake className="h-3.5 w-3.5 text-purple-600" />
-          <span className="text-sm font-semibold">{animatedMeetings}</span>
+          <Handshake className="text-muted-foreground h-3.5 w-3.5" />
+          <span className="text-sm font-semibold tabular-nums">
+            {animatedMeetings}
+          </span>
         </div>
-        <ChangeValue value={entry.meetings.change} color="purple" />
+        <ChangeValue value={entry.meetings.change} />
       </div>
 
       {/* Change */}
       <div className="flex justify-center">
         {entry.change.isNew ? (
-          <Badge
-            variant="secondary"
-            className="bg-green-100 text-xs text-green-700 dark:bg-green-900 dark:text-green-300"
-          >
-            NEW
-          </Badge>
+          <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:text-green-400">
+            New
+          </span>
         ) : (
           <ChangeIndicator
             direction={entry.change.direction}

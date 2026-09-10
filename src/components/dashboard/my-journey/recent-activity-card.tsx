@@ -1,27 +1,33 @@
 import { History } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { formatRelativeTime } from "@/lib/date-utils";
 import { economyLabels } from "@/lib/economy-labels";
 import { MyJourneyActivityEntry } from "@/types/dashboard";
+import { SectionLabel } from "@/components/dashboard/my-journey/section-label";
 
 const labels = economyLabels("my_journey");
 
-function signed(amount: number): string {
-  return amount > 0 ? `+${amount}` : `${amount}`;
+function Amount({ value, unit }: { value: number; unit: string }) {
+  if (value === 0) return null;
+  const positive = value > 0;
+  return (
+    <span
+      className={cn(
+        "text-sm font-semibold tabular-nums",
+        positive
+          ? "text-green-600 dark:text-green-400"
+          : "text-red-600 dark:text-red-400"
+      )}
+    >
+      {positive ? "+" : ""}
+      {value.toLocaleString()}{" "}
+      <span className="text-muted-foreground text-xs font-normal">{unit}</span>
+    </span>
+  );
 }
 
-/** Signed amount per unit, joined with a dot, skipping the zero halves. */
-function amountText(entry: MyJourneyActivityEntry): string {
-  const parts: string[] = [];
-  const xp = entry.xp_change ?? 0;
-  const points = entry.points_change ?? 0;
-
-  if (xp !== 0) parts.push(`${signed(xp)} ${labels.xp}`);
-  if (points !== 0) parts.push(`${signed(points)} ${labels.points}`);
-
-  return parts.join(" · ");
-}
-
+/** Last few solo-economy transactions, same row language as the Transactions page. */
 export function RecentActivityCard({
   entries,
 }: {
@@ -30,48 +36,31 @@ export function RecentActivityCard({
   if (entries.length === 0) return null;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center gap-2 space-y-0">
-        <History className="text-primary h-5 w-5" />
-        <CardTitle className="text-lg">Recent activity</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ul className="space-y-2">
-          {entries.map((entry, index) => {
-            const amount = amountText(entry);
-            const isNegative =
-              (entry.xp_change ?? 0) < 0 || (entry.points_change ?? 0) < 0;
-
-            return (
-              <li
-                key={`${entry.created_at}-${index}`}
-                className="flex flex-wrap items-baseline gap-x-2 text-sm"
-              >
-                {amount && (
-                  <span
-                    className={
-                      isNegative
-                        ? "text-muted-foreground font-medium"
-                        : "font-medium text-emerald-600 dark:text-emerald-400"
-                    }
-                  >
-                    {amount}
-                  </span>
-                )}
-                {entry.description && (
-                  <span className="text-muted-foreground">
-                    {amount && "· "}
-                    {entry.description}
-                  </span>
-                )}
-                <span className="text-muted-foreground text-xs">
-                  · {formatRelativeTime(entry.created_at)}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      </CardContent>
+    <Card className="gap-0 overflow-hidden py-0">
+      <div className="border-b px-5 py-3">
+        <SectionLabel icon={History} title="Recent activity" />
+      </div>
+      <ul className="divide-y">
+        {entries.map((entry, index) => (
+          <li
+            key={`${entry.created_at}-${index}`}
+            className="flex items-center gap-4 px-5 py-3"
+          >
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm">
+                {entry.description || entry.type.replace(/_/g, " ")}
+              </p>
+              <p className="text-muted-foreground mt-0.5 text-xs">
+                {formatRelativeTime(entry.created_at)}
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-0.5 sm:flex-row sm:items-center sm:gap-4">
+              <Amount value={entry.xp_change ?? 0} unit={labels.xp} />
+              <Amount value={entry.points_change ?? 0} unit={labels.points} />
+            </div>
+          </li>
+        ))}
+      </ul>
     </Card>
   );
 }

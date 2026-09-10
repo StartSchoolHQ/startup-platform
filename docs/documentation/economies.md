@@ -6,7 +6,9 @@ Spec: `docs/superpowers/specs/2026-08-27-two-economies-design.md`
 
 The programme has two phases, each with its own economy. Phases are
 switched **manually by an admin** — no threshold, no automation. Both can
-be on at once (and are, for admins).
+be on at once. A journey that is off is hidden for **everyone, admins
+included** (dashboard section, sidebar item, leaderboard board); admins can
+still open the hidden pages directly by URL or via Admin → Teams.
 
 | Phase            | What it is         | Units earned              | Weekly reports / strikes |
 | ---------------- | ------------------ | ------------------------- | ------------------------ |
@@ -93,16 +95,17 @@ no write policy — writes go through the RPC.
 | ----------------------------------------------------------- | ------------------------------------------------- |
 | `usePlatformSettings()` (`src/hooks/use-platform-settings.ts`) | client hook → `{ myJourney, teamJourney }`, 5-min stale |
 | `getJourneySettings()` (`src/lib/platform-settings.ts`)      | server pages / SSR                                 |
-| `src/components/app-sidebar.tsx`                             | nav item hidden                                    |
+| `src/components/app-sidebar.tsx`                             | nav item hidden (admins too)                       |
 | `my-journey/page.tsx`, `team-journey/page.tsx`, `team-journey/[id]/page.tsx` | redirect to `/dashboard` (admins exempt)  |
-| Leaderboard boards                                           | that board is not rendered                         |
-| Dashboard home cards                                         | that card is not rendered                          |
+| Leaderboard boards                                           | that board is not rendered (admins too)            |
+| Dashboard home cards                                         | that section is not rendered (admins too)          |
 | `WeeklyReportBanner`                                         | renders nothing when Team Journey is off           |
 | `check_missed_weekly_reports_team_context`                   | returns 0 rows → Monday edge function creates no strikes |
 | `send_weekly_report_reminders`, `send_weekly_report_reminders_sunday` | return 0                                  |
 
 Guards never redirect while settings are loading or after a failed read —
-a settings outage must not lock students out. Admins always see both.
+a settings outage must not lock students out. Admins are exempt only from
+the page redirects, not from the dashboard/sidebar/leaderboard hiding.
 
 The three weekly-report functions also had their 8,000 exemption switched
 from `total_xp` to `u.team_xp`. Pre-edit copies: `*_backup_v2`.
@@ -136,8 +139,8 @@ cron.alter_job(6, command := 'SELECT generate_weekly_leaderboard_snapshots_v2(NU
 `/dashboard/leaderboard` now has a **My Journey** board (students by My
 Journey XP, live only — no week selector) and a **Team Journey** board with
 **Teams | Members** sub-tabs, both ranked by the Team economy and both
-keeping the week selector. Each board renders only if its journey is on;
-admins see both, and when only one is on there are no top-level tabs. Shell
+keeping the week selector. Each board renders only if its journey is on
+(admins too), and when only one is on there are no top-level tabs. Shell
 and rows live in `src/components/leaderboard/` (`my-journey-board`,
 `team-journey-board`, `teams-board`, `members-board`, `member-row`,
 `team-row`, `leaderboard-board-shell`, `row-styles`, `mappers`). Full
@@ -171,17 +174,21 @@ section owns its own data fetch; the shell owns only the greeting and the
 gating.
 
 ```
-showMyJourney   = journeys.myJourney || isAdmin
-showTeamJourney = journeys.teamJourney || isAdmin
+showMyJourney   = journeys.myJourney
+showTeamJourney = journeys.teamJourney
 ```
+
+(Until 2026-09-10 both lines had `|| isAdmin`; admins now see exactly what
+students see, so "hide Team Journey" hides it for them as well. Hidden
+pages stay reachable by URL — the page-level redirects still exempt admins.)
 
 | Reader sees              | myJourney | teamJourney | Rendered                                   |
 | ------------------------- | :-------: | :---------: | ------------------------------------------- |
 | Student, MJ-only           | on        | off          | `MyJourneyOverview` only                     |
 | Student, TJ-only           | off       | on           | `TeamJourneyOverview` only                   |
 | Student, both on           | on        | on           | Both, stacked — see collapse rule below      |
-| Student, neither on        | off       | off          | Card: "Your dashboard will fill up once the programme starts." |
-| Admin                      | any       | any          | Both sections, always                        |
+| Anyone, neither on         | off       | off          | Card: "Your dashboard will fill up once the programme starts." (admins also get a pointer to Admin → Programme Phase) |
+| Admin                      | any       | any          | Same as a student                            |
 
 A skeleton (`OverviewSkeleton`) renders until **both** the settings read and
 the profile (`useApp()`) resolve — `isAdmin` reads `user.primary_role`,

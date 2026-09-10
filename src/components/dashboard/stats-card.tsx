@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { StatsCard } from "@/types/dashboard";
 import { useCountUp } from "@/hooks/use-count-up";
 
@@ -51,31 +51,41 @@ export function StatsCardComponent({
 
   const card = (
     <Card
-      className={`h-full ${
-        href ? "cursor-pointer transition-shadow hover:shadow-md" : ""
+      className={`h-full gap-0 py-0 transition-all ${
+        href ? "hover:border-primary/40 cursor-pointer hover:shadow-md" : ""
       }`}
     >
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-bold">{title}</CardTitle>
-        <Icon className={`h-8 w-8 ${iconColor}`} />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{displayValue}</div>
-        <p className="text-muted-foreground mt-1 text-xs">{subtitle}</p>
+      <div className="flex h-full flex-col gap-4 p-5">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-muted-foreground text-sm font-medium">
+            {title}
+          </span>
+          <span className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
+            <Icon className={`h-4 w-4 ${iconColor}`} />
+          </span>
+        </div>
+
+        <div>
+          <div className="text-3xl font-semibold tracking-tight tabular-nums">
+            {displayValue}
+          </div>
+          <p className="text-muted-foreground mt-1 text-xs">{subtitle}</p>
+        </div>
+
         {progressPercent !== null && (
-          <div className="mt-3">
-            <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
+          <div className="mt-auto flex items-center gap-3">
+            <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
               <div
                 className={`h-full rounded-full transition-all duration-700 ${barColor}`}
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <p className="text-muted-foreground mt-1 text-right text-[10px]">
+            <span className="text-muted-foreground text-xs tabular-nums">
               {progressPercent}%
-            </p>
+            </span>
           </div>
         )}
-      </CardContent>
+      </div>
     </Card>
   );
 

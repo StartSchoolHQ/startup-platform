@@ -21,6 +21,8 @@ export interface AchievementsGridItem {
   xp_reward: number;
   completed_tasks?: number;
   total_tasks?: number;
+  /** `achievements.color_theme` — tints the card's icon tile. */
+  color_theme?: string | null;
 }
 
 /** Per-card copy/status tweaks a page needs (Team Journey's "Recurring Tasks"). */
@@ -138,10 +140,10 @@ export function AchievementsGrid({
                       }
                     }
               }
-              className={`rounded-xl transition-all duration-200 ${
+              className={`rounded-xl transition-transform duration-200 ${
                 locked
                   ? "cursor-not-allowed opacity-60"
-                  : "hover:ring-primary/30 focus-visible:ring-primary cursor-pointer hover:scale-[1.02] hover:ring-2 focus-visible:ring-2 focus-visible:outline-none"
+                  : "focus-visible:ring-primary cursor-pointer hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               }`}
             >
               <AchievementCard
@@ -150,10 +152,14 @@ export function AchievementsGrid({
                 description={
                   locked
                     ? (lockedDescription ?? "Locked")
-                    : (override?.description ??
-                      (isSelected
-                        ? "Click to show all tasks"
-                        : "Click to filter tasks"))
+                    : override?.description
+                }
+                actionLabel={
+                  locked
+                    ? undefined
+                    : isSelected
+                      ? "Showing these tasks"
+                      : "Show tasks"
                 }
                 status={
                   locked
@@ -164,6 +170,7 @@ export function AchievementsGrid({
                 xp={achievement.xp_reward}
                 completedTasks={achievement.completed_tasks}
                 totalTasks={achievement.total_tasks}
+                colorTheme={achievement.color_theme}
                 selected={isSelected}
               />
             </div>

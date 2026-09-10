@@ -3,24 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import {
-  FileText,
-  Zap,
-  CreditCard,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
 import { getTaskByIdLazy } from "@/lib/tasks";
 import { submitIndividualTaskV1 } from "@/lib/database";
 import { uploadTaskFiles } from "@/lib/file-upload";
@@ -28,6 +10,7 @@ import { useAiReviewStatus } from "@/hooks/use-ai-review-status";
 import { normalizeSubmission } from "@/lib/ai-review/normalize";
 import type { AiReviewStatus } from "@/lib/database";
 import { TaskActionCard } from "@/components/my-journey/task-action-card";
+import { TaskDetailTabs } from "@/components/my-journey/task-detail-tabs";
 import posthog from "posthog-js";
 import { TaskSubmissionModal } from "@/components/tasks/task-submission-modal";
 import { useAppContext } from "@/contexts/app-context";
@@ -37,6 +20,7 @@ import { TaskDetailSkeleton } from "@/components/ui/task-detail-skeleton";
 import type { TeamTask } from "@/types/team-journey";
 import { SuggestEditsModal } from "@/components/tasks/suggest-edits-modal";
 import { economyLabels } from "@/lib/economy-labels";
+import { formatTaskCategory } from "@/lib/task-category-labels";
 
 const labels = economyLabels("my_journey");
 
@@ -208,272 +192,36 @@ export default function IndividualTaskDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb Navigation */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/dashboard">Dashboard</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/dashboard/my-journey">My Journey</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <span
-              className="max-w-[200px] truncate font-medium"
-              title={task.title}
-            >
-              {task.title}
-            </span>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       {/* Task Header */}
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">{task.title}</h1>
-            <StatusBadge
-              status={task.status as TaskStatus}
-              variant="my_journey"
-            />
-          </div>
-          <p className="text-muted-foreground text-lg">
-            {task.category && `{{${task.category}}}`}
-          </p>
+      <div className="space-y-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-primary text-xs font-medium">
+            {formatTaskCategory(task.category) ?? "No category assigned"}
+          </span>
+          <StatusBadge
+            status={task.status as TaskStatus}
+            variant="my_journey"
+          />
         </div>
+        <h1 className="text-2xl leading-tight font-semibold tracking-tight sm:text-3xl">
+          {task.title}
+        </h1>
+        {task.description && (
+          <p className="text-muted-foreground max-w-3xl text-sm">
+            {task.description}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-        {/* Main Content */}
         <div className="lg:col-span-3">
-          <Tabs defaultValue="task" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="task" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Task
-              </TabsTrigger>
-              <TabsTrigger value="tips" className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                Tips
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="task" className="mt-6 space-y-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                  <CardTitle className="text-lg font-semibold">
-                    Task Information
-                  </CardTitle>
-                  <Button
-                    variant="link"
-                    className="h-auto p-0 text-blue-500"
-                    onClick={() => setShowSuggestEditsModal(true)}
-                  >
-                    Suggest Edits
-                  </Button>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {task.detailed_instructions ? (
-                    <div className="prose max-w-none">
-                      <div
-                        className="leading-relaxed whitespace-pre-wrap text-gray-700"
-                        dangerouslySetInnerHTML={{
-                          __html: task.detailed_instructions.replace(
-                            /\n/g,
-                            "<br/>"
-                          ),
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <div>
-                      <h3 className="mb-3 text-lg font-semibold">
-                        Task Description
-                      </h3>
-                      <p className="leading-relaxed text-gray-700">
-                        {task.description ||
-                          "No detailed instructions available for this task yet."}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Learning Objectives */}
-                  {task.learning_objectives &&
-                    Array.isArray(task.learning_objectives) &&
-                    task.learning_objectives.length > 0 && (
-                      <div>
-                        <h3 className="mb-3 text-lg font-semibold">
-                          Learning Objectives
-                        </h3>
-                        <ul className="space-y-2 text-gray-700">
-                          {task.learning_objectives.map((objective, index) => (
-                            <li key={index} className="flex items-start gap-2">
-                              <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-500"></span>
-                              <span className="break-words">{objective}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                  {/* Deliverables */}
-                  {task.deliverables &&
-                    Array.isArray(task.deliverables) &&
-                    task.deliverables.length > 0 && (
-                      <div>
-                        <h3 className="mb-3 text-lg font-semibold">
-                          Expected Deliverables
-                        </h3>
-                        <ul className="space-y-2 text-gray-700">
-                          {task.deliverables.map((deliverable, index) => (
-                            <li key={index} className="flex items-start gap-2">
-                              <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
-                              <span className="break-words">{deliverable}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="tips" className="mt-6 space-y-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                  <CardTitle className="text-lg font-semibold">
-                    Tips for task
-                  </CardTitle>
-                  <Button
-                    variant="link"
-                    className="h-auto p-0 text-blue-500"
-                    onClick={() => setShowSuggestEditsModal(true)}
-                  >
-                    Suggest Edits
-                  </Button>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {task.tips_content &&
-                  Array.isArray(task.tips_content) &&
-                  task.tips_content.length > 0 ? (
-                    task.tips_content.map((tip, index) => (
-                      <div
-                        key={index}
-                        className="border-l-4 border-blue-500 pl-4"
-                      >
-                        <h3 className="mb-3 text-lg font-semibold text-blue-900">
-                          {tip.title}
-                        </h3>
-                        <p className="leading-relaxed text-gray-700">
-                          {tip.content}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <div>
-                      <h3 className="mb-3 text-lg font-semibold">
-                        No tips available
-                      </h3>
-                      <p className="leading-relaxed text-gray-700">
-                        {typeof task.tips_content === "string"
-                          ? task.tips_content ||
-                            "Tips and best practices for this task haven't been added yet. Check back later or reach out to your mentor for guidance."
-                          : "Tips and best practices for this task haven't been added yet. Check back later or reach out to your mentor for guidance."}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Resources */}
-                  {task.resources &&
-                    Array.isArray(task.resources) &&
-                    task.resources.length > 0 && (
-                      <div className="border-t pt-6">
-                        <h3 className="mb-3 text-lg font-semibold">
-                          Helpful Resources
-                        </h3>
-                        <div className="grid gap-3">
-                          {task.resources.map(
-                            (
-                              resource: {
-                                url: string;
-                                title?: string;
-                                description?: string;
-                                type?: string;
-                              },
-                              index
-                            ) => (
-                              <a
-                                key={index}
-                                href={resource.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:border-blue-300 hover:bg-gray-50"
-                              >
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 group-hover:bg-blue-200">
-                                  <FileText className="h-4 w-4 text-blue-600" />
-                                </div>
-                                <div className="flex-1">
-                                  <div className="font-medium text-blue-700 group-hover:text-blue-800">
-                                    {resource.title || "External Resource"}
-                                  </div>
-                                  {resource.description && (
-                                    <div className="text-sm text-gray-600">
-                                      {resource.description}
-                                    </div>
-                                  )}
-                                  <div className="text-xs text-blue-600 capitalize">
-                                    {resource.type || "external"} • Click to
-                                    open
-                                  </div>
-                                  <div className="mt-1 truncate text-xs text-gray-400">
-                                    {resource.url}
-                                  </div>
-                                </div>
-                              </a>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          <TaskDetailTabs
+            task={task}
+            onSuggestEdits={() => setShowSuggestEditsModal(true)}
+          />
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-6">
-          {/* Reward Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Reward</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm text-gray-600">{labels.points}</span>
-                </div>
-                <span className="font-semibold">{task.base_points_reward}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-600">{labels.xp}</span>
-                </div>
-                <span className="font-semibold">{task.base_xp_reward}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Task Action Card */}
           <TaskActionCard
             task={task}
             user={user ?? null}

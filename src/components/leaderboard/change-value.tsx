@@ -1,20 +1,7 @@
 import { Minus, TrendingDown, TrendingUp } from "lucide-react";
 
-const changeColorMap = {
-  green: "text-green-500",
-  blue: "text-blue-500",
-  yellow: "text-yellow-500",
-  purple: "text-purple-500",
-} as const;
-
 /** Small "+12 / -3 / 0" delta shown under a leaderboard metric. */
-export function ChangeValue({
-  value,
-  color,
-}: {
-  value: number;
-  color: "green" | "blue" | "yellow" | "purple";
-}) {
+export function ChangeValue({ value }: { value: number }) {
   if (value === 0) {
     return (
       <div className="text-muted-foreground flex items-center gap-1 text-xs">
@@ -25,18 +12,16 @@ export function ChangeValue({
   }
   if (value > 0) {
     return (
-      <div
-        className={`flex items-center gap-1 text-xs ${changeColorMap[color]}`}
-      >
+      <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
         <TrendingUp className="h-3 w-3" />
-        <span>+{value}</span>
+        <span className="tabular-nums">+{value}</span>
       </div>
     );
   }
   return (
-    <div className="flex items-center gap-1 text-xs text-red-500">
+    <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
       <TrendingDown className="h-3 w-3" />
-      <span>{value}</span>
+      <span className="tabular-nums">{value}</span>
     </div>
   );
 }

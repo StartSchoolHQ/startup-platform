@@ -20,13 +20,13 @@ export default function OverviewPage() {
   const { data: journeys, isLoading: isLoadingSettings } =
     usePlatformSettings();
 
+  // The phase switch is the single source of truth — a journey that is off
+  // is hidden for admins too, so what an admin sees here is what students
+  // see. Admins can still open the hidden pages directly by URL.
   const isAdmin = user?.primary_role === "admin";
-  const showMyJourney = journeys.myJourney || isAdmin;
-  const showTeamJourney = journeys.teamJourney || isAdmin;
+  const showMyJourney = journeys.myJourney;
+  const showTeamJourney = journeys.teamJourney;
 
-  // `isAdmin` reads `user.primary_role`, which is falsy until the profile
-  // resolves — choosing sections before then would flash the wrong one at
-  // admins. Wait for both reads.
   if (isLoadingSettings || isLoadingProfile) {
     return (
       <div className="space-y-6">
@@ -62,6 +62,12 @@ export default function OverviewPage() {
             <p className="text-muted-foreground text-sm">
               Your dashboard will fill up once the programme starts.
             </p>
+            {isAdmin && (
+              <p className="text-muted-foreground mt-2 text-xs">
+                Both journeys are switched off. Turn one on under Admin →
+                Programme Phase.
+              </p>
+            )}
           </CardContent>
         </Card>
       )}

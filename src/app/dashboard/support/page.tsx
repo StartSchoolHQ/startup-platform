@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useAppContext } from "@/contexts/app-context";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -15,42 +16,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import {
-  HelpCircle,
-  Send,
-  Upload,
   AlertCircle,
-  CheckCircle,
-  X,
+  Camera,
+  ListOrdered,
+  MessageSquare,
+  Send,
 } from "lucide-react";
+import {
+  PriorityPicker,
+  type TicketPriority,
+} from "@/components/support/priority-picker";
+import {
+  AttachmentsField,
+  validateAttachments,
+} from "@/components/support/attachments-field";
+import { SectionLabel } from "@/components/dashboard/my-journey/section-label";
 
 interface SupportTicket {
-  priority: "low" | "medium" | "high" | "critical";
+  priority: TicketPriority;
   category: string;
   title: string;
   description: string;
-  attachments?: File[];
+  attachments: File[];
 }
-
-const PRIORITY_COLORS = {
-  low: "text-gray-600",
-  medium: "text-yellow-600",
-  high: "text-orange-600",
-  critical: "text-red-600",
-};
-
-const PRIORITY_LABELS = {
-  low: "🟢 Low",
-  medium: "🟡 Medium",
-  high: "🟠 High",
-  critical: "🔴 Critical",
-};
 
 const CATEGORIES = [
   "Bug Report",
@@ -62,132 +50,85 @@ const CATEGORIES = [
   "Other",
 ];
 
-const ALLOWED_FILE_TYPES = [
-  // Images
-  "image/png",
-  "image/jpeg",
-  "image/jpg",
-  "image/gif",
-  "image/webp",
-  "image/svg+xml",
-  // Text files
-  "text/plain",
-  "text/csv",
-  // Office documents
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  // Logs
-  "application/x-log",
-  "application/octet-stream", // Sometimes used for .log files
-];
+const EMPTY_TICKET: SupportTicket = {
+  priority: "medium",
+  category: "",
+  title: "",
+  description: "",
+  attachments: [],
+};
 
-const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB (Discord limit)
-const MAX_FILES = 3;
+const RATE_LIMIT_MS = 15 * 60 * 1000; // one ticket per 15 minutes
+
+const TIPS = [
+  {
+    icon: ListOrdered,
+    text: "Steps to reproduce: what you clicked, in order.",
+  },
+  {
+    icon: Camera,
+    text: "A screenshot of the problem, or the error text.",
+  },
+  {
+    icon: MessageSquare,
+    text: "What you expected to happen instead.",
+  },
+];
 
 export default function SupportPage() {
   const { user } = useAppContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<
-    "idle" | "success" | "error"
-  >("idle");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [formError, setFormError] = useState("");
   const [lastSubmissionTime, setLastSubmissionTime] = useState(0);
+  const [ticket, setTicket] = useState<SupportTicket>(EMPTY_TICKET);
 
-  const [ticket, setTicket] = useState<SupportTicket>({
-    priority: "medium",
-    category: "",
-    title: "",
-    description: "",
-    attachments: [],
-  });
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-
-    // Validate file count
-    if (files.length + (ticket.attachments?.length || 0) > MAX_FILES) {
-      setErrorMessage(`Maximum ${MAX_FILES} files allowed`);
-      return;
-    }
-
-    // Validate each file
-    const validFiles: File[] = [];
-    for (const file of files) {
-      // Check file type
-      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-        setErrorMessage(
-          `File "${file.name}" type not supported. Allowed: Images (PNG, JPG, GIF, WebP, SVG), Documents (PDF, Word, Excel), Text files (TXT, CSV, LOG)`
-        );
-        return;
-      }
-
-      // Check file size
-      if (file.size > MAX_FILE_SIZE) {
-        setErrorMessage(
-          `File "${file.name}" exceeds 8MB limit (${(file.size / 1024 / 1024).toFixed(1)}MB)`
-        );
-        return;
-      }
-
-      validFiles.push(file);
-    }
-
-    setTicket((prev) => ({
-      ...prev,
-      attachments: [...(prev.attachments || []), ...validFiles],
-    }));
-    setErrorMessage("");
+  const update = <K extends keyof SupportTicket>(
+    key: K,
+    value: SupportTicket[K]
+  ) => {
+    setTicket((prev) => ({ ...prev, [key]: value }));
+    if (formError) setFormError("");
   };
 
-  const removeFile = (index: number) => {
-    setTicket((prev) => ({
-      ...prev,
-      attachments: prev.attachments?.filter((_, i) => i !== index) || [],
-    }));
+  const addFiles = (incoming: File[]) => {
+    const result = validateAttachments(incoming, ticket.attachments);
+    if ("error" in result) {
+      setFormError(result.error);
+      return;
+    }
+    update("attachments", [...ticket.attachments, ...result.files]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Rate limiting: 1 ticket per 15 minutes
     const now = Date.now();
-    if (now - lastSubmissionTime < 15 * 60 * 1000) {
+    if (now - lastSubmissionTime < RATE_LIMIT_MS) {
       const remaining = Math.ceil(
-        (15 * 60 * 1000 - (now - lastSubmissionTime)) / 60000
+        (RATE_LIMIT_MS - (now - lastSubmissionTime)) / 60000
       );
-      setErrorMessage(
-        `Please wait ${remaining} minutes before submitting another ticket.`
+      setFormError(
+        `You sent a ticket a moment ago. Please wait ${remaining} more minute${remaining === 1 ? "" : "s"}.`
       );
       return;
     }
-
-    // Validation
     if (
       !ticket.category ||
       !ticket.title.trim() ||
       !ticket.description.trim()
     ) {
-      setErrorMessage("Please fill in all required fields.");
+      setFormError("Category, title and description are required.");
       return;
     }
-
-    if (ticket.title.length > 100) {
-      setErrorMessage("Title must be 100 characters or less.");
-      return;
-    }
-
     if (ticket.description.length > 1000) {
-      setErrorMessage("Description must be 1000 characters or less.");
+      setFormError(
+        "Description is too long — keep it under 1000 characters and attach the rest as a file."
+      );
       return;
     }
 
     setIsSubmitting(true);
-    setErrorMessage("");
-    setSubmitStatus("idle");
-
+    setFormError("");
     try {
       const formData = new FormData();
       formData.append("priority", ticket.priority);
@@ -202,9 +143,7 @@ export default function SupportPage() {
           email: user?.email || "No email",
         })
       );
-
-      // Add files if any
-      ticket.attachments?.forEach((file, index) => {
+      ticket.attachments.forEach((file, index) => {
         formData.append(`attachment_${index}`, file);
       });
 
@@ -212,327 +151,184 @@ export default function SupportPage() {
         method: "POST",
         body: formData,
       });
-
       if (!response.ok) {
-        const error = await response.json();
-
-        // Handle specific error cases
-        if (response.status === 429) {
-          throw new Error(
-            error.error ||
-              "Too many requests. Please wait before submitting another ticket."
-          );
-        } else if (response.status === 503) {
-          throw new Error(
-            error.error ||
-              "Support system is temporarily unavailable. Please try again later."
-          );
-        } else {
-          throw new Error(
-            error.error || error.message || "Failed to submit ticket"
-          );
-        }
+        const error = await response.json().catch(() => ({}));
+        const fallback =
+          response.status === 429
+            ? "Too many requests. Please wait before sending another ticket."
+            : response.status === 503
+              ? "Support is temporarily unavailable. Please try again later."
+              : "Failed to send the ticket.";
+        throw new Error(error.error || error.message || fallback);
       }
 
-      await response.json(); // Success response (no need to store)
-
-      setSubmitStatus("success");
       setLastSubmissionTime(now);
-
-      // Reset form
-      setTicket({
-        priority: "medium",
-        category: "",
-        title: "",
-        description: "",
-        attachments: [],
+      setTicket(EMPTY_TICKET);
+      toast.success("Ticket sent", {
+        description: "The team has it and will reply to your email.",
       });
-
-      // Clear file input
-      const fileInput = document.getElementById(
-        "file-upload"
-      ) as HTMLInputElement;
-      if (fileInput) fileInput.value = "";
     } catch (error) {
-      console.error("Error submitting ticket:", error);
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "Failed to submit ticket. Please try again."
-      );
-      setSubmitStatus("error");
+      toast.error("Ticket not sent", {
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex-1 space-y-8 p-4 pt-6 md:p-8">
-      {/* Breadcrumb */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>Support</BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      {/* Header */}
-      <div className="mb-8 flex items-center gap-4">
-        <HelpCircle className="h-10 w-10 text-blue-600" />
-        <div>
-          <h1 className="mb-2 text-3xl font-bold tracking-tight">
-            Support & Bug Reports
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Report issues, bugs, or request help from our support team
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          Support
+        </h1>
+        <p className="text-muted-foreground max-w-2xl text-sm">
+          Found a bug, something looks wrong, or you&apos;re stuck? Tell us here
+          and the team will get back to you by email.
+        </p>
       </div>
 
-      {/* Success Alert */}
-      {submitStatus === "success" && (
-        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <div className="text-green-800">
-            <strong>Ticket submitted successfully!</strong> Our team has been
-            notified and will respond soon.
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="relative gap-0 self-start overflow-hidden py-0">
+          <div
+            aria-hidden
+            className="bg-primary/15 pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full blur-3xl"
+          />
+          <div className="relative flex flex-col gap-4 p-5">
+            <SectionLabel
+              icon={MessageSquare}
+              title="What helps us fix it fast"
+            />
+            <ul className="space-y-3">
+              {TIPS.map(({ icon: Icon, text }) => (
+                <li key={text} className="flex items-start gap-3 text-sm">
+                  <span className="bg-primary/10 text-primary mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
+                    <Icon className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="text-muted-foreground leading-relaxed">
+                    {text}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-muted-foreground border-t pt-4 text-xs">
+              Sending as{" "}
+              <span className="text-foreground font-medium">
+                {user?.name ?? "…"}
+              </span>
+              {user?.email && ` · ${user.email}`}
+            </p>
           </div>
-        </div>
-      )}
+        </Card>
 
-      {/* Error Alert */}
-      {errorMessage && (
-        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-4">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <div className="text-red-800">{errorMessage}</div>
-        </div>
-      )}
-
-      {/* Support Form */}
-      <div className="flex justify-center">
-        <Card className="w-full max-w-4xl shadow-lg">
-          <CardHeader className="pb-6">
-            <CardTitle className="text-xl">Submit Support Ticket</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* User Info (Read-only) */}
-              <div className="rounded-lg bg-gray-50 p-6">
-                <h3 className="mb-4 text-sm font-medium text-gray-700">
-                  User Information
-                </h3>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div>
-                    <Label className="text-sm font-medium">Your Name</Label>
-                    <Input
-                      value={user?.name || "Loading..."}
-                      disabled
-                      className="mt-2 bg-white"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Your Email</Label>
-                    <Input
-                      value={user?.email || "Loading..."}
-                      disabled
-                      className="mt-2 bg-white"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Priority and Category */}
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="priority" className="text-sm font-medium">
-                    Priority *
-                  </Label>
-                  <div className="mt-2">
-                    <Select
-                      value={ticket.priority}
-                      onValueChange={(value: SupportTicket["priority"]) =>
-                        setTicket((prev) => ({ ...prev, priority: value }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select priority" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low" className={PRIORITY_COLORS.low}>
-                          {PRIORITY_LABELS.low}
-                        </SelectItem>
-                        <SelectItem
-                          value="medium"
-                          className={PRIORITY_COLORS.medium}
-                        >
-                          {PRIORITY_LABELS.medium}
-                        </SelectItem>
-                        <SelectItem
-                          value="high"
-                          className={PRIORITY_COLORS.high}
-                        >
-                          {PRIORITY_LABELS.high}
-                        </SelectItem>
-                        <SelectItem
-                          value="critical"
-                          className={PRIORITY_COLORS.critical}
-                        >
-                          {PRIORITY_LABELS.critical}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="category" className="text-sm font-medium">
-                    Category *
-                  </Label>
-                  <div className="mt-2">
-                    <Select
-                      value={ticket.category}
-                      onValueChange={(value) =>
-                        setTicket((prev) => ({ ...prev, category: value }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CATEGORIES.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Title */}
-              <div>
-                <Label htmlFor="title" className="text-sm font-medium">
-                  Title *
-                </Label>
-                <Input
-                  className="mt-2"
-                  id="title"
-                  value={ticket.title}
-                  onChange={(e) =>
-                    setTicket((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  placeholder="Brief description of the issue"
-                  maxLength={100}
-                  required
-                />
-                <div className="text-muted-foreground mt-1 text-xs">
-                  {ticket.title.length}/100 characters
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <Label htmlFor="description" className="text-sm font-medium">
-                  Description *
-                </Label>
-                <Textarea
-                  id="description"
-                  value={ticket.description}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value.length <= 2000) {
-                      setTicket((prev) => ({
-                        ...prev,
-                        description: value,
-                      }));
-                    }
-                  }}
-                  placeholder="Please provide detailed information about the issue, including steps to reproduce if applicable."
-                  className="mt-2 min-h-[140px]"
-                  required
-                />
-                <div className="text-muted-foreground mt-1 text-xs">
-                  {ticket.description.length}/2000 characters
-                </div>
-              </div>
-
-              {/* File Upload */}
-              <div className="rounded-lg border-2 border-dashed border-gray-200 p-6">
-                <Label htmlFor="file-upload" className="text-sm font-medium">
-                  Attachments (Optional)
-                </Label>
-                <div className="mt-4">
-                  <Input
-                    id="file-upload"
-                    type="file"
-                    onChange={handleFileUpload}
-                    multiple
-                    accept="image/*,.txt,.csv,.log,.pdf,.doc,.docx,.xls,.xlsx"
-                    className="cursor-pointer"
-                  />
-                  <div className="text-muted-foreground mt-3 text-sm">
-                    Max {MAX_FILES} files, 8MB each. Supported: Images (PNG,
-                    JPG, GIF, WebP, SVG), Documents (PDF, Word, Excel), Text
-                    (TXT, CSV, LOG)
-                  </div>
-                </div>
-
-                {/* File List */}
-                {ticket.attachments && ticket.attachments.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {ticket.attachments.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between rounded-md bg-gray-50 p-2"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Upload className="h-4 w-4 text-gray-500" />
-                          <span className="truncate text-sm">{file.name}</span>
-                          <span className="text-xs text-gray-500">
-                            ({(file.size / 1024 / 1024).toFixed(1)}MB)
-                          </span>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFile(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Submit Button */}
-              <div className="border-t pt-4">
-                <Button
-                  type="submit"
+        <Card className="gap-0 py-0 lg:col-span-2">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-6 p-5 sm:p-6"
+          >
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Priority</Label>
+                <PriorityPicker
+                  value={ticket.priority}
+                  onChange={(v) => update("priority", v)}
                   disabled={isSubmitting}
-                  className="h-12 w-full text-base font-medium"
-                  size="lg"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="mr-2 h-4 w-4" />
-                      Submit Support Ticket
-                    </>
-                  )}
-                </Button>
+                />
               </div>
-            </form>
-          </CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={ticket.category}
+                  onValueChange={(v) => update("category", v)}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger id="category" className="w-full">
+                    <SelectValue placeholder="Pick one" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="title">Title</Label>
+                <span className="text-muted-foreground text-xs tabular-nums">
+                  {ticket.title.length}/100
+                </span>
+              </div>
+              <Input
+                id="title"
+                value={ticket.title}
+                onChange={(e) => update("title", e.target.value)}
+                placeholder="One line: what's wrong?"
+                maxLength={100}
+                disabled={isSubmitting}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="description">Description</Label>
+                <span className="text-muted-foreground text-xs tabular-nums">
+                  {ticket.description.length}/1000
+                </span>
+              </div>
+              <Textarea
+                id="description"
+                value={ticket.description}
+                onChange={(e) => {
+                  if (e.target.value.length <= 1000) {
+                    update("description", e.target.value);
+                  }
+                }}
+                placeholder="What happened, where, and what you expected instead."
+                className="min-h-[160px] resize-y"
+                disabled={isSubmitting}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Attachments</Label>
+              <AttachmentsField
+                files={ticket.attachments}
+                onAdd={addFiles}
+                onRemove={(i) =>
+                  update(
+                    "attachments",
+                    ticket.attachments.filter((_, idx) => idx !== i)
+                  )
+                }
+                disabled={isSubmitting}
+              />
+            </div>
+
+            {formError && (
+              <p
+                role="alert"
+                className="flex items-start gap-2 rounded-lg bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-400"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                {formError}
+              </p>
+            )}
+
+            <div className="flex items-center justify-end gap-3 border-t pt-5">
+              <Button type="submit" disabled={isSubmitting}>
+                <Send className="h-4 w-4" />
+                {isSubmitting ? "Sending…" : "Send ticket"}
+              </Button>
+            </div>
+          </form>
         </Card>
       </div>
     </div>

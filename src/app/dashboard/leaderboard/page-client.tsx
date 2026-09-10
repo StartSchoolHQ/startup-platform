@@ -11,7 +11,6 @@ import {
   usePlatformSettings,
   type JourneySettings,
 } from "@/hooks/use-platform-settings";
-import { useApp } from "@/contexts/app-context";
 import {
   type LeaderboardEntry as DBLeaderboardEntry,
   type MyJourneyLeaderboardRow as DBMyJourneyEntry,
@@ -30,8 +29,6 @@ interface LeaderboardPageClientProps {
   userTeamIds?: string[];
   /** Journey flags read on the server — drive the first (SSR) render. */
   initialJourneys?: JourneySettings;
-  /** Caller's admin flag read on the server — drive the first (SSR) render. */
-  isAdmin?: boolean;
 }
 
 export default function LeaderboardPageClient({
@@ -43,9 +40,7 @@ export default function LeaderboardPageClient({
   currentUserId,
   userTeamIds,
   initialJourneys,
-  isAdmin: initialIsAdmin = false,
 }: LeaderboardPageClientProps) {
-  const { user } = useApp();
   const {
     data: journeys,
     isLoading: journeysLoading,
@@ -57,12 +52,9 @@ export default function LeaderboardPageClient({
   const journeysSettled = !journeysLoading && !journeysError;
   const effectiveJourneys = journeysSettled ? journeys : initialJourneys;
 
-  const isAdmin = initialIsAdmin || user?.primary_role === "admin";
-  // Admins always see both boards, whatever phase the platform is in.
-  const showMyJourney =
-    !!effectiveJourneys && (isAdmin || effectiveJourneys.myJourney);
-  const showTeamJourney =
-    !!effectiveJourneys && (isAdmin || effectiveJourneys.teamJourney);
+  // Boards follow the programme phase for everyone, admins included.
+  const showMyJourney = !!effectiveJourneys && effectiveJourneys.myJourney;
+  const showTeamJourney = !!effectiveJourneys && effectiveJourneys.teamJourney;
   const showTabs = showMyJourney && showTeamJourney;
 
   const defaultTab: TopTab = showTeamJourney ? "team_journey" : "my_journey";
@@ -114,7 +106,7 @@ export default function LeaderboardPageClient({
     }
 
     return (
-      <Card className="border-none shadow-none">
+      <Card className="gap-0 py-0">
         <CardContent className="text-muted-foreground p-8 text-center">
           <p>No leaderboard is available right now.</p>
           <p className="mt-1 text-sm">
@@ -127,10 +119,12 @@ export default function LeaderboardPageClient({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">{title}</h1>
-        <p className="text-muted-foreground">
-          Compete with others and track your progress
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          {title}
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          See where you stand and what moved this week.
         </p>
       </div>
 

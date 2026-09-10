@@ -1,81 +1,39 @@
 "use client";
 
 import { useApp } from "@/contexts/app-context";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Trophy,
-  Star,
-  Users,
-  DollarSign,
-  CheckCircle,
-  AlertTriangle,
-  RefreshCw,
-  Rocket,
-} from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { StatsCardComponent } from "@/components/dashboard/stats-card";
+import { SectionLabel } from "@/components/dashboard/my-journey/section-label";
+import { TransactionRow } from "@/components/transactions/transaction-row";
 import { useQuery } from "@tanstack/react-query";
 import { getUserTransactions } from "@/lib/database";
-import { motion } from "framer-motion";
+import { economyLabels } from "@/lib/economy-labels";
 import Link from "next/link";
-import { economyFromActivityType, economyLabels } from "@/lib/economy-labels";
+import {
+  AlertTriangle,
+  CreditCard,
+  History,
+  RefreshCw,
+  Zap,
+} from "lucide-react";
 
-interface Transaction {
-  id: string;
-  type: string;
-  activity_type: string;
-  xp_change: number;
-  points_change: number;
-  description: string | null;
-  created_at: string | null;
-  team?: { name: string } | null;
-  achievement?: { name: string } | null;
-  revenue_stream?: { product_name: string } | null;
+const solo = economyLabels("my_journey");
+const team = economyLabels("team");
+
+function Header() {
+  return (
+    <div className="space-y-1">
+      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+        Transactions
+      </h1>
+      <p className="text-muted-foreground text-sm">
+        Every reward and cost across My Journey and Team Journey.
+      </p>
+    </div>
+  );
 }
-
-const getTransactionIcon = (type: string) => {
-  switch (type) {
-    case "task":
-      return CheckCircle;
-    case "revenue":
-      return DollarSign;
-    case "validation":
-      return Trophy;
-    case "team_cost":
-      return Users;
-    default:
-      return Star;
-  }
-};
-
-const getTransactionColor = () => {
-  // Return consistent black theme for all transaction types
-  return "text-black dark:text-white";
-};
-
-const formatTransactionDescription = (transaction: Transaction) => {
-  if (transaction.description) {
-    return transaction.description;
-  }
-
-  switch (transaction.type) {
-    case "task":
-      return "Task completed";
-    case "revenue":
-      return transaction.revenue_stream?.product_name
-        ? `Revenue from: ${transaction.revenue_stream.product_name}`
-        : "Revenue earned";
-    case "validation":
-      return "Peer validation reward";
-    case "team_cost":
-      return transaction.team?.name
-        ? `Team cost for: ${transaction.team.name}`
-        : "Team maintenance cost";
-    default:
-      return "Transaction";
-  }
-};
 
 export default function TransactionHistoryPage() {
   const { user } = useApp();
@@ -91,216 +49,107 @@ export default function TransactionHistoryPage() {
     enabled: !!user?.id,
   });
 
-  const balanceCards = [
+  const balances = [
     {
-      title: "My Journey XP",
-      value: user?.my_journey_xp ?? 0,
-      subtitle: "Solo-phase experience earned",
-      icon: Trophy,
+      title: solo.xp,
+      value: (user?.my_journey_xp ?? 0).toLocaleString(),
+      subtitle: "Earned in the solo phase",
+      icon: Zap,
+      iconColor: "text-primary",
     },
     {
-      title: "My Journey Credits",
-      value: user?.my_journey_credits ?? 0,
-      subtitle: "Solo-phase credits available",
-      icon: Star,
+      title: solo.points,
+      value: (user?.my_journey_credits ?? 0).toLocaleString(),
+      subtitle: "Available to spend",
+      icon: CreditCard,
+      iconColor: "text-primary",
     },
     {
-      title: "Team XP",
-      value: user?.team_xp ?? 0,
-      subtitle: "Startup-phase experience earned",
-      icon: Trophy,
+      title: team.xp,
+      value: (user?.team_xp ?? 0).toLocaleString(),
+      subtitle: "Earned with your team",
+      icon: Zap,
+      iconColor: "text-muted-foreground",
     },
     {
-      title: "Team Points",
-      value: user?.team_points ?? 0,
-      subtitle: "Available startup capital",
-      icon: Star,
+      title: team.points,
+      value: (user?.team_points ?? 0).toLocaleString(),
+      subtitle: "Startup capital available",
+      icon: CreditCard,
+      iconColor: "text-muted-foreground",
     },
   ];
 
-  if (isPending) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Transaction History</h1>
-          <p className="text-muted-foreground">
-            Loading your transaction history...
-          </p>
-        </div>
-        <TableSkeleton rows={10} columns={6} showHeader={false} />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Transaction History</h1>
-          <p className="text-muted-foreground">
-            Your complete My Journey and Team Journey transaction history
-          </p>
-        </div>
-        <Card>
-          <CardContent className="flex flex-col items-center gap-4 py-12">
-            <AlertTriangle className="text-muted-foreground h-10 w-10" />
-            <div className="text-center">
-              <p className="font-medium">Failed to load transactions</p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                This is usually temporary. Please try again.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => refetch()}
-              className="gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Transaction History</h1>
-        <p className="text-muted-foreground">
-          Your complete My Journey and Team Journey transaction history
-        </p>
-      </div>
+      <Header />
 
-      {/* Summary Cards — one balance per economy */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {balanceCards.map((card) => (
-          <Card key={card.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {card.title}
-              </CardTitle>
-              <card.icon className="h-4 w-4 text-black dark:text-white" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{card.value}</div>
-              <p className="text-muted-foreground text-xs">{card.subtitle}</p>
-            </CardContent>
-          </Card>
+        {balances.map((card) => (
+          <StatsCardComponent key={card.title} {...card} />
         ))}
       </div>
 
-      {/* Transactions List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {transactions.length === 0 ? (
-            <div className="flex flex-col items-center gap-4 py-12">
-              <Rocket className="text-muted-foreground h-10 w-10" />
-              <div className="text-center">
-                <p className="font-medium">No transactions yet</p>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  Complete tasks or join teams to start earning rewards.
-                </p>
-              </div>
-              <Button variant="outline" asChild className="gap-2">
-                <Link href="/dashboard/my-journey">
-                  <CheckCircle className="h-4 w-4" />
-                  View My Tasks
-                </Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {transactions.map((transaction, index) => {
-                const Icon = getTransactionIcon(transaction.type);
-                const iconColor = getTransactionColor();
-                const labels = economyLabels(
-                  economyFromActivityType(transaction.activity_type)
-                );
+      <Card className="gap-0 overflow-hidden py-0">
+        <div className="flex items-center justify-between border-b px-4 py-3">
+          <SectionLabel
+            icon={History}
+            title="Recent activity"
+            aside={
+              transactions.length > 0
+                ? `Last ${transactions.length}`
+                : undefined
+            }
+          />
+        </div>
 
-                return (
-                  <motion.div
-                    key={transaction.id}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.2,
-                      delay: index * 0.03,
-                    }}
-                    className="flex items-center justify-between rounded-lg border p-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="bg-muted rounded-full p-2">
-                        <Icon className={`h-4 w-4 ${iconColor}`} />
-                      </div>
-                      <div>
-                        <p className="font-medium">
-                          {formatTransactionDescription(transaction)}
-                        </p>
-                        <p className="text-muted-foreground text-sm">
-                          {new Date(
-                            transaction.created_at || ""
-                          ).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {transaction.xp_change !== 0 && (
-                        <Badge
-                          variant={
-                            transaction.xp_change > 0
-                              ? "default"
-                              : "destructive"
-                          }
-                          className={
-                            transaction.xp_change > 0
-                              ? "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
-                              : ""
-                          }
-                        >
-                          {transaction.xp_change > 0 ? "+" : ""}
-                          {transaction.xp_change} {labels.xp}
-                        </Badge>
-                      )}
-                      {transaction.points_change !== 0 && (
-                        <Badge
-                          variant={
-                            transaction.points_change > 0
-                              ? "default"
-                              : "destructive"
-                          }
-                          className={
-                            transaction.points_change > 0
-                              ? "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
-                              : ""
-                          }
-                        >
-                          {transaction.points_change > 0 ? "+" : ""}
-                          {transaction.points_change} {labels.points}
-                        </Badge>
-                      )}
-                      <Badge variant="outline" className="capitalize">
-                        {transaction.type.replace("_", " ")}
-                      </Badge>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
+        {isPending ? (
+          <ul className="divide-y">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <li key={i} className="flex items-center gap-4 px-4 py-3">
+                <Skeleton className="h-9 w-9 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-56" />
+                  <Skeleton className="h-3 w-40" />
+                </div>
+                <Skeleton className="h-4 w-20" />
+              </li>
+            ))}
+          </ul>
+        ) : isError ? (
+          <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
+            <AlertTriangle className="text-muted-foreground h-8 w-8" />
+            <p className="text-sm font-medium">
+              Couldn&apos;t load transactions
+            </p>
+            <p className="text-muted-foreground text-sm">
+              Usually temporary. Try again in a moment.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RefreshCw className="h-4 w-4" />
+              Try again
+            </Button>
+          </div>
+        ) : transactions.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
+            <span className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-full">
+              <History className="h-5 w-5" />
+            </span>
+            <p className="text-sm font-medium">Nothing here yet</p>
+            <p className="text-muted-foreground max-w-sm text-sm">
+              Finish a task and its reward will be the first line.
+            </p>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/dashboard/my-journey">Go to My Journey</Link>
+            </Button>
+          </div>
+        ) : (
+          <ul className="divide-y">
+            {transactions.map((transaction) => (
+              <TransactionRow key={transaction.id} transaction={transaction} />
+            ))}
+          </ul>
+        )}
       </Card>
     </div>
   );

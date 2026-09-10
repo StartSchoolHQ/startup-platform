@@ -4,6 +4,7 @@ import * as React from "react";
 import { ChevronRight, type LucideIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 import {
@@ -46,19 +47,16 @@ function NavMainItem({ item }: { item: NavItem }) {
   return (
     <Collapsible asChild open={open} onOpenChange={setOpen}>
       <SidebarMenuItem className="relative">
-        <SidebarMenuButton asChild tooltip={item.title} isActive={isActive}>
+        <SidebarMenuButton
+          asChild
+          tooltip={item.title}
+          className={cn(
+            "relative",
+            isActive &&
+              "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary before:bg-primary font-medium before:absolute before:top-1.5 before:bottom-1.5 before:left-0 before:w-0.5 before:rounded-full"
+          )}
+        >
           <Link href={item.url} className="relative flex items-center gap-2">
-            {isActive && (
-              <motion.div
-                layoutId="sidebar-active-indicator"
-                className="bg-primary/10 absolute inset-0 -z-10 rounded-md"
-                transition={{
-                  type: "spring",
-                  stiffness: 380,
-                  damping: 30,
-                }}
-              />
-            )}
             <motion.span
               className="inline-flex"
               whileHover={{ scale: 1.1 }}
