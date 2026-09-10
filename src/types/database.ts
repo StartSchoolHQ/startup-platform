@@ -2208,6 +2208,7 @@ export type Database = {
           week_year: number;
         }[];
       };
+      get_ai_review_admin_summary_v1: { Args: never; Returns: Json };
       get_ai_review_status_v1: {
         Args: { p_progress_id: string };
         Returns: Json;
@@ -4207,7 +4208,12 @@ export type Database = {
         | "repeatable-tasks"
         | "team-growth"
         | "legal-finance"
-        | "pitch";
+        | "pitch"
+        | "founder-mindset"
+        | "reading"
+        | "customer-discovery"
+        | "building"
+        | "business-fundamentals";
       task_context_type: "individual" | "team";
       task_history_action_type:
         | "created"
@@ -4432,6 +4438,11 @@ export const Constants = {
         "team-growth",
         "legal-finance",
         "pitch",
+        "founder-mindset",
+        "reading",
+        "customer-discovery",
+        "building",
+        "business-fundamentals",
       ],
       task_context_type: ["individual", "team"],
       task_history_action_type: [

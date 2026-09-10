@@ -55,7 +55,7 @@ export const STARTUP_CATEGORIES: StartupCategoryContent[] = [
 
 /** Verbatim programme facts printed on every diploma (from diploma.png). */
 export const PROGRAMME_STATIC = {
-  supplementLabel: "SUPPLEMENT TO DIPLOMA No.",
+  supplementLabel: "Supplement to Diploma No.",
   titleConferred: "Certificate in Technology and Business Skills",
   programmeType: "Professional education programme",
   programmeLength: "48 weeks",
@@ -66,16 +66,17 @@ export const PROGRAMME_STATIC = {
   professionalStatus:
     "Qualifies graduates for entry-level or upskilled positions in tech and business roles",
   establishmentNote:
-    "Not a university – StartSchool is a full-time tech business education program, designed to train future startup founders and tech leaders.",
+    "Not a university — StartSchool is a full-time tech business education program, designed to train future startup founders and tech leaders.",
   entranceRequirements:
-    "English proficiency, Logic test, Coding challenges completed, One day hackathon participation.",
-  programmeRequirements: "Completion of all required subjects",
+    "English proficiency; logic test; coding challenges completed; one-day hackathon participation.",
+  programmeRequirements: "Completion of all required subjects.",
   languageOfInstruction: "English",
-  workload: "1 credit = 40 working hours, Equal to 1.5 ECTS credits",
+  workload: "1 credit = 40 working hours = 1.5 ECTS credits",
   examinationSystem:
-    "Automated testing, Peer-to-peer code reviews, Mentor evaluation",
+    "Automated testing; peer-to-peer code reviews; mentor evaluation.",
   ceoName: "Anna Andersone",
-  ceoTitle: "StartSchool CEO",
+  ceoTitle: "Chief Executive Officer, StartSchool",
+  issuePlace: "Riga, Latvia",
 } as const;
 
 /**

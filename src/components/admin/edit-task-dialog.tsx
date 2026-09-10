@@ -471,6 +471,21 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                             Legal & Finance
                           </SelectItem>
                           <SelectItem value="pitch">Pitch</SelectItem>
+                          <SelectItem value="founder-mindset">
+                            Founder Mindset (My Journey)
+                          </SelectItem>
+                          <SelectItem value="reading">
+                            Reading (My Journey)
+                          </SelectItem>
+                          <SelectItem value="customer-discovery">
+                            Customer Discovery (My Journey)
+                          </SelectItem>
+                          <SelectItem value="building">
+                            Building (My Journey)
+                          </SelectItem>
+                          <SelectItem value="business-fundamentals">
+                            Business Fundamentals (My Journey)
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -768,8 +783,8 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                     ))}
                     {peerReviewCriteria.length === 0 && (
                       <p className="text-muted-foreground text-sm italic">
-                        No peer review criteria defined. Click "Add Category" to
-                        create one.
+                        No peer review criteria defined. Click &quot;Add
+                        Category&quot; to create one.
                       </p>
                     )}
                   </div>

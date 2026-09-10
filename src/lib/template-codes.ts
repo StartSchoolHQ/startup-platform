@@ -33,6 +33,12 @@ export async function generateNextTemplateCode(
       "team-growth": { individual: "GROWTH", team: "TEAM-GROW" },
       "legal-finance": { individual: "LEGAL-FIN", team: "TEAM-LEGAL" },
       pitch: { individual: "PITCH", team: "TEAM-PITCH" },
+      // My Journey (individual) categories
+      "founder-mindset": { individual: "MJ-MIND", team: "TEAM-TASK" },
+      reading: { individual: "MJ-READ", team: "TEAM-TASK" },
+      "customer-discovery": { individual: "MJ-CUST", team: "TEAM-TASK" },
+      building: { individual: "MJ-BUILD", team: "TEAM-TASK" },
+      "business-fundamentals": { individual: "MJ-BIZ", team: "TEAM-TASK" },
     };
 
     const prefix =

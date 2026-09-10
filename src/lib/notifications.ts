@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/client";
-import { getUserNotifications, markNotificationSeen } from "./database";
 
 export interface NotificationData {
   // Task-related routing
@@ -46,7 +45,10 @@ export interface NotificationData {
   context?: string;
 }
 
-export interface PersistentNotification {
+// All notifications live in the `notifications` table (written by DB
+// triggers). The legacy task_progress-metadata notification system was
+// removed — it had been disabled and always returned an empty list.
+export interface UnifiedNotification {
   id: string;
   type: string;
   title: string;
@@ -54,19 +56,8 @@ export interface PersistentNotification {
   data: NotificationData | null;
   read_at: string | null;
   created_at: string | null;
-  source: "persistent";
-  icon?: string;
+  icon: string;
 }
-
-export interface MetadataNotification {
-  type: "peer_review" | "team_invitation";
-  id: string;
-  message: string;
-  created_at?: string | null;
-  source: "metadata";
-}
-
-export type UnifiedNotification = PersistentNotification | MetadataNotification;
 
 // Enhanced icon mapping
 function getNotificationIcon(type: string): string {
@@ -97,138 +88,86 @@ function getNotificationIcon(type: string): string {
   }
 }
 
-// Create a new persistent notification (placeholder until types are properly resolved)
-export async function createNotification(
-  userId: string,
-  type: string,
-  title: string,
-  message?: string,
-  data?: NotificationData
-): Promise<string> {
-  // Database triggers are working to create notifications automatically
-  // This function is a placeholder until Supabase client types include the RPC functions
-  console.log("Creating notification:", { userId, type, title, message, data });
-  return "placeholder-id";
+// Get unread notifications for a user (newest first)
+export async function getNotifications(
+  userId: string
+): Promise<UnifiedNotification[]> {
+  const supabase = createClient();
+
+  const { data: notifications, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", userId)
+    .is("read_at", null)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error("Error fetching notifications:", error);
+    return [];
+  }
+
+  return (notifications ?? []).map(
+    (notif): UnifiedNotification => ({
+      id: notif.id,
+      type: notif.type,
+      title: notif.title,
+      message: notif.message,
+      data: notif.data as NotificationData | null,
+      read_at: notif.read_at,
+      created_at: notif.created_at,
+      icon: getNotificationIcon(notif.type),
+    })
+  );
 }
 
-// Mark a persistent notification as read
-export async function markPersistentNotificationRead(
+// Count unread notifications without fetching the rows
+export async function getNotificationCount(userId: string): Promise<number> {
+  const supabase = createClient();
+
+  const { count, error } = await supabase
+    .from("notifications")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .is("read_at", null);
+
+  if (error) {
+    console.error("Error counting notifications:", error);
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
+// Mark a single notification as read
+export async function markNotificationRead(
   notificationId: string
 ): Promise<void> {
   const supabase = createClient();
 
-  try {
-    // Use direct update since the RPC function might not be in generated types
-    const { error } = await supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from("notifications" as any)
-      .update({ read_at: new Date().toISOString() })
-      .eq("id", notificationId);
+  const { error } = await supabase
+    .from("notifications")
+    .update({ read_at: new Date().toISOString() })
+    .eq("id", notificationId);
 
-    if (error) {
-      throw new Error("Failed to mark notification as read: " + error.message);
-    }
-  } catch (error) {
-    if (error instanceof Error) throw error;
-    throw new Error("Failed to mark notification as read");
+  if (error) {
+    throw new Error("Failed to mark notification as read: " + error.message);
   }
 }
 
-// Get persistent notifications from the database
-async function getPersistentNotifications(
-  userId: string
-): Promise<PersistentNotification[]> {
+// Mark all of a user's unread notifications as read in one query
+export async function markAllNotificationsRead(userId: string): Promise<void> {
   const supabase = createClient();
 
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: notifications, error } = (await (supabase as any)
-      .from("notifications")
-      .select("*")
-      .eq("user_id", userId)
-      .is("read_at", null)
-      .order("created_at", { ascending: false })
-      .limit(50)) as {
-      data: Array<{
-        id: string;
-        user_id: string;
-        type: string;
-        title: string;
-        message: string | null;
-        data: unknown;
-        read_at: string | null;
-        created_at: string | null;
-      }> | null;
-      error: unknown;
-    };
+  const { error } = await supabase
+    .from("notifications")
+    .update({ read_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .is("read_at", null);
 
-    if (error) {
-      console.error("Error fetching persistent notifications:", error);
-      return [];
-    }
-
-    return (notifications || []).map(
-      (notif): PersistentNotification => ({
-        id: notif.id as string,
-        type: notif.type as string,
-        title: notif.title as string,
-        message: notif.message as string,
-        data: notif.data as NotificationData | null,
-        read_at: notif.read_at as string | null,
-        created_at: notif.created_at as string,
-        source: "persistent",
-        // Add icon based on notification type
-        icon: getNotificationIcon(notif.type),
-      })
+  if (error) {
+    throw new Error(
+      "Failed to mark all notifications as read: " + error.message
     );
-  } catch (error) {
-    console.error("Error in getPersistentNotifications:", error);
-    return [];
   }
 }
-
-// Main unified notification interface
-export async function getNotifications(
-  userId: string
-): Promise<UnifiedNotification[]> {
-  try {
-    // Get both persistent and metadata notifications
-    const [persistentNotifications, metadataNotifications] = await Promise.all([
-      getPersistentNotifications(userId),
-      getUserNotifications(),
-    ]);
-
-    // Convert metadata notifications to unified format
-    const unifiedMetadataNotifications: UnifiedNotification[] =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      metadataNotifications.map((notif: any) => ({
-        ...notif,
-        created_at: notif.timestamp || notif.created_at,
-        source: "metadata" as const,
-      }));
-
-    // Combine all notifications
-    const allNotifications: UnifiedNotification[] = [
-      ...persistentNotifications,
-      ...unifiedMetadataNotifications,
-    ];
-
-    // Sort by creation date (newest first)
-    return allNotifications.sort((a, b) => {
-      const dateA = new Date(a.created_at || 0);
-      const dateB = new Date(b.created_at || 0);
-      return dateB.getTime() - dateA.getTime();
-    });
-  } catch (error) {
-    console.error("Error fetching notifications:", error);
-    return [];
-  }
-}
-
-export async function getNotificationCount(userId: string): Promise<number> {
-  const notifications = await getNotifications(userId);
-  return notifications.length;
-}
-
-// Export legacy functions for backward compatibility
-export { markNotificationSeen };

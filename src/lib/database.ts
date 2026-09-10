@@ -136,16 +136,6 @@ export {
 } from "./data/invitations";
 
 // ============================================================================
-// NOTIFICATION FUNCTIONS
-// ============================================================================
-export {
-  getUserNotifications,
-  getNotificationCount,
-  markNotificationSeen,
-  type Notification,
-} from "./data/notifications";
-
-// ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 export {

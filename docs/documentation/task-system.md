@@ -125,7 +125,9 @@ See `docs/documentation/ai-task-review.md` for the full individual-task AI revie
 `not_started` | `in_progress` | `completed` | `cancelled` | `pending_review` | `approved` | `rejected` | `revision_required`
 
 **`task_category_type`:**
-`onboarding` | `development` | `design` | `marketing` | `business` | `testing` | `deployment` | `milestone` | `customer-acquisition` | `product-foundation` | `idea-validation` | `repeatable-tasks` | `team-growth` | `legal-finance` | `pitch`
+`onboarding` | `development` | `design` | `marketing` | `business` | `testing` | `deployment` | `milestone` | `customer-acquisition` | `product-foundation` | `idea-validation` | `repeatable-tasks` | `team-growth` | `legal-finance` | `pitch` | `founder-mindset` | `reading` | `customer-discovery` | `building` | `business-fundamentals`
+
+The last five are the My Journey (individual) categories added 2026-09-10 with the `MJ-*` task seed. Individual tasks carry their finer CSV category, track and phase in `tags` (e.g. `willingness-to-pay`, `track-universal`, `phase-p2`) and roll up into six individual achievements, one per phase.
 
 **`task_priority_type`:**
 `low` | `medium` | `high` | `urgent`

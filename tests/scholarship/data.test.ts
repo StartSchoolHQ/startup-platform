@@ -59,11 +59,21 @@ async function createTestDraft() {
 
 afterEach(async () => {
   if (createdIds.length === 0) return;
-  // Event rows cascade on delete.
-  await adminClient
-    .from("scholarship_agreements")
-    .delete()
-    .in("id", createdIds);
+  // A direct delete is blocked by the append-only guard on
+  // scholarship_agreement_events (even via cascade). The RPC sets a
+  // transaction-local flag the guard honors and deletes only
+  // test_data_%@test.local rows. service_role only.
+  const { data: deleted, error } = await adminClient.rpc(
+    "cleanup_test_scholarship_agreements"
+  );
+  if (error) {
+    throw new Error(`Test cleanup failed: ${error.message}`);
+  }
+  if ((deleted ?? 0) < createdIds.length) {
+    throw new Error(
+      `Test cleanup deleted ${deleted ?? 0} rows but ${createdIds.length} were created — test data may be left in the database`
+    );
+  }
   createdIds.length = 0;
 });
 
@@ -168,7 +178,9 @@ describe("scholarship/data — read paths", () => {
   it("listAwaitingSchool excludes drafts", async () => {
     const { row } = await createTestDraft();
     const queue = await listAwaitingSchool();
-    expect(queue.every((r) => r.status === "student_signed")).toBe(true);
+    expect(queue.every((r) => r.status === "awaiting_school_signature")).toBe(
+      true
+    );
     expect(queue.some((r) => r.id === row.id)).toBe(false);
   });
 });

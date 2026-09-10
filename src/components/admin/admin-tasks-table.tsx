@@ -157,6 +157,16 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
         return "bg-slate-100 text-slate-800";
       case "pitch":
         return "bg-pink-100 text-pink-800";
+      case "founder-mindset":
+        return "bg-violet-100 text-violet-800";
+      case "reading":
+        return "bg-indigo-100 text-indigo-800";
+      case "customer-discovery":
+        return "bg-orange-100 text-orange-800";
+      case "building":
+        return "bg-green-100 text-green-800";
+      case "business-fundamentals":
+        return "bg-rose-100 text-rose-800";
       default:
         return "bg-gray-100 text-gray-800";
     }

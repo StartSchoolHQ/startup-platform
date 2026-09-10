@@ -1,4 +1,4 @@
-﻿import { csvParse } from "d3-dsv";
+import { csvParse } from "d3-dsv";
 
 export interface TaskExcelRow {
   template_code?: string;
@@ -33,6 +33,11 @@ export interface TaskExcelRow {
   is_confidential?: boolean | string;
 }
 
+// C1 control characters (U+0080-U+009F) never appear in legitimate text —
+// their presence means the file was double-encoded (UTF-8 read as Latin-1),
+// which mangles characters like →, €, and curly quotes into invisible garbage.
+const MOJIBAKE_PATTERN = /[\u0080-\u009f]/;
+
 const excelToBool = (value: string | boolean): boolean => {
   if (typeof value === "boolean") return value;
   return (
@@ -47,6 +52,11 @@ export function parseTasksFromExcel(file: File): Promise<TaskExcelRow[]> {
     reader.onload = (e) => {
       try {
         const text = e.target?.result as string;
+        if (MOJIBAKE_PATTERN.test(text)) {
+          throw new Error(
+            "File has encoding corruption — special characters (arrows, €, quotes) were mangled by a non-UTF-8 export. Re-export the CSV as UTF-8 and try again."
+          );
+        }
         const jsonData = csvParse(text);
         const tasks: TaskExcelRow[] = (
           jsonData as Record<string, unknown>[]
