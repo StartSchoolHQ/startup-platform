@@ -48,8 +48,8 @@ export function ProgrammePhaseCard() {
         <CardTitle>Programme Phase</CardTitle>
         <CardDescription>
           Controls which journey shows on the dashboard, sidebar and leaderboard
-          — for admins too. Hidden pages stay reachable by URL and via Admin →
-          Teams.
+          — for admins too. Hidden student pages stay reachable to admins under
+          Admin → Team Journey.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
