@@ -37,9 +37,10 @@ export async function GET() {
     }
 
     const adminClient = createAdminClient();
-    // The new RPCs are not in the generated types yet.
+    // The new RPCs are not in the generated types yet. Wrapped in a closure
+    // so `rpc` keeps its `this` binding (a bare method reference would not).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rpc = adminClient.rpc as any;
+    const rpc = (fn: string) => (adminClient as any).rpc(fn);
 
     const [programHealth, taskPipeline, aiReview, teamXp, weeklyTrends] =
       await Promise.all([
