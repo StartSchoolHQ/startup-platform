@@ -271,7 +271,7 @@ All admin pages verify `user.primary_role === "admin"` and redirect non-admins t
 | User Management | `/dashboard/admin/users` | All users table, bulk invite, roles |
 | Team Management | `/dashboard/admin/teams` | Teams table, members, strikes |
 | Peer Reviews | `/dashboard/admin/peer-reviews` | Review oversight and decisions |
-| Student Progress | `/dashboard/admin/progress` | Team health monitoring |
+| Settings | `/dashboard/admin/settings` | Programme phase, AI reviewer |
 | Audit Logs | `/dashboard/admin/audit-logs` | Database change timeline |
 
 ### Admin Users (`/dashboard/admin/users`)
@@ -296,14 +296,6 @@ All admin pages verify `user.primary_role === "admin"` and redirect non-admins t
 
 - `AdminPeerReviewsTable` — Task, reviewer, date, status, feedback
 - Modal detail view for full review + decision history
-
-### Admin Student Progress (`/dashboard/admin/progress`)
-
-- `StudentProgressAlerts` — Team health monitoring
-- **Health Status:** Green (Active), Yellow (Slow), Red (Needs Help)
-- **Columns:** Team, members, XP, task breakdown, reports, days since activity, health badge
-- Click row → `TeamDetailModal` with member stats, recent tasks, report history
-- Uses `get_student_progress_overview()` RPC function
 
 ### Admin Audit Logs (`/dashboard/admin/audit-logs`)
 
@@ -333,7 +325,7 @@ All admin pages verify `user.primary_role === "admin"` and redirect non-admins t
 | `/dashboard/admin/tasks` | Admin only | Client | Task management |
 | `/dashboard/admin/teams` | Admin only | Client | Team management |
 | `/dashboard/admin/peer-reviews` | Admin only | Client | Review oversight |
-| `/dashboard/admin/progress` | Admin only | Client | Student health |
+| `/dashboard/admin/settings` | Admin only | Client | Phase + AI reviewer settings |
 | `/dashboard/admin/audit-logs` | Admin only | Client | Change history |
 
 ---

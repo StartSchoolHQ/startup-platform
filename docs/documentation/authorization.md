@@ -278,7 +278,7 @@ All require `primary_role === "admin"`, redirect non-admins to `/dashboard`:
 | `/dashboard/admin/tasks` | Task management |
 | `/dashboard/admin/peer-reviews` | Peer review oversight |
 | `/dashboard/admin/audit-logs` | Audit log viewer |
-| `/dashboard/admin/progress` | Student progress dashboard |
+| `/dashboard/admin/settings` | Programme phase + AI reviewer settings |
 | `/dashboard/admin/pending-invites` | Pending invitations |
 
 ### Protection Pattern

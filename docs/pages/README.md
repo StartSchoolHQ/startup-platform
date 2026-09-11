@@ -66,10 +66,10 @@ Operational surfaces: home, users, teams, tasks. Admins observe and manage.
 Visibility, accountability, audit.
 
 - [Peer Reviews](./admin/peer-reviews.md) — `/dashboard/admin/peer-reviews`
-- [Progress](./admin/progress.md) — `/dashboard/admin/progress`
 - [Weekly Reports](./admin/weekly-reports.md) — `/dashboard/admin/weekly-reports`
 - [Audit Logs](./admin/audit-logs.md) — `/dashboard/admin/audit-logs`
-- [Scholarship Agreements](./admin/agreements.md) — `/dashboard/admin/agreements`
+- [Agreements](./admin/agreements.md) — `/dashboard/admin/agreements` (Scholarships / Equipment tabs)
+- Admin panel structure and data sources: [admin-panel.md](../documentation/admin-panel.md)
 
 ---
 
