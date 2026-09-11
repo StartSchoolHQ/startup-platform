@@ -25,7 +25,10 @@ import {
   type RewardActivity,
 } from "@/lib/audit-log-formatter-v2";
 import { createClient } from "@/lib/supabase/client";
+import { useApp } from "@/contexts/app-context";
+import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import { Calendar, ChevronDown, Filter, RefreshCw } from "lucide-react";
+import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface UserOption {
@@ -35,6 +38,7 @@ interface UserOption {
 }
 
 export default function AuditLogsPage() {
+  const { user, loading: appLoading } = useApp();
   const [logs, setLogs] = useState<AuditLogV2[]>([]);
   const [rewards, setRewards] = useState<RewardActivity[]>([]);
   const [users, setUsers] = useState<UserOption[]>([]);
@@ -173,12 +177,18 @@ export default function AuditLogsPage() {
     });
   };
 
+  // Client-side admin guard; the RPCs enforce admin server-side as well.
+  if (!appLoading && (!user || user.primary_role !== "admin")) {
+    redirect("/dashboard");
+  }
+  if (appLoading) return <AdminSkeleton />;
+
   return (
-    <div className="space-y-6 p-6">
+    <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
       <div>
-        <h1 className="text-3xl font-bold">Activity Log</h1>
-        <p className="text-muted-foreground">
-          Track all platform activity and rewards
+        <h2 className="text-3xl font-bold tracking-tight">Activity Log</h2>
+        <p className="text-muted-foreground text-sm">
+          Every platform change and reward, newest first.
         </p>
       </div>
 
