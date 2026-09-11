@@ -1384,3 +1384,23 @@ git commit -m "docs(admin): admin panel sections, data sources and 2026-09-11 re
 - [ ] **Step 6: Update memory** — rewrite `memory/project_dashboard_v2_cards.md` is NOT needed; instead create `project_admin_panel_restructure.md` (state: on `feature/admin-panel-restructure`, not pushed; what was deleted; migration applied; user's "not bloated" directive) and add its line to `MEMORY.md`.
 
 Do **not** push. Report to the user with the branch name and the list of commits.
+
+---
+
+## Addendum (same day): batch scope for Team Journey pages
+
+After the restructure the user asked that archived teams and students never
+count anywhere. Analytics (12 RPCs), Weekly Reports, Peer Reviews and the
+overview trends had no status filter at all. Hard-excluding archived rows
+would have emptied those pages (Batch 3 has no platform accounts yet) and
+erased the Batch 2 retrospective, so the chosen design is a **batch scope**:
+
+- Migration `20260911130000_admin_batch_scope_v1.sql`: `_admin_scope_users`,
+  `_admin_scope_teams`, ten `get_analytics_*_v2(p_batch_id)` functions and
+  `get_admin_weekly_trends_v2`. NULL = current cohort (active only).
+- `src/lib/admin/batch-scope.ts` (`parseBatchParam`, `resolveScopeIds`),
+  `src/hooks/use-batch-scope.ts`, `components/admin/batch-scope-select.tsx`.
+- Analytics routes call the `_v2` RPCs through `rpcScoped` in `_guard.ts`;
+  every tab takes `batchId`; Weekly Reports and Peer Reviews routes filter by
+  the resolved id lists; both tables render the selector.
+- Tests: `tests/analytics/analytics-rpcs.test.ts` "batch-scoped analytics v2".

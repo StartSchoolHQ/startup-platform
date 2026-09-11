@@ -37,6 +37,28 @@ section changes.
    pipeline, `AdminCharts`.
 4. `PausedCard` when both are off.
 
+## Batch scope (Team Journey pages)
+
+Analytics, Weekly Reports and Peer Reviews carry a **Current cohort / batch**
+selector (`BatchScopeSelect`, state in `?batch=` via `useBatchScope`).
+
+- **Current cohort** (default): users and teams with `status = 'active'`.
+  Archived rows never count unless asked for.
+- **A batch** (e.g. Mercury-Redstone · closed): rows whose `users.batch_id` /
+  `teams.batch_id` match. This is how the Batch 2 retrospective stays reachable.
+
+Server side the scope is `p_batch_id uuid` (NULL = current) on the `_v2` RPCs
+`get_analytics_{overview,teams,students,tasks,meetings,retention,strikes,economy,task_friction}_v2`,
+`get_analytics_week_detail_v2(date, uuid)` and `get_admin_weekly_trends_v2`,
+all built on `_admin_scope_users(uuid)` / `_admin_scope_teams(uuid)`. Routes
+that filter tables directly (weekly reports, peer reviews) resolve the same
+id lists with `resolveScopeIds` in `src/lib/admin/batch-scope.ts`. The
+per-entity detail RPCs (team, student, report) are unchanged: they are
+already scoped by id. The overview always uses the current cohort.
+
+Users and Teams keep their own batch/status filters; Diplomas deliberately
+includes archived students because graduates are archived by definition.
+
 ## Where the numbers come from
 
 | Field on `AdminStats` | Source | Note |
@@ -45,7 +67,7 @@ section changes.
 | `taskPipeline` | `get_admin_task_pipeline_v1()` | Grouped in SQL by `tasks.activity_type` + status; excludes archived users/teams. Replaces a client-side select that hit the 1000-row cap |
 | `aiReview` | `get_ai_review_admin_summary_v1()` | Same numbers as the AI Reviews page header |
 | `teamXp` | `get_top_teams_with_xp(10)` | |
-| `weeklyTrends` | `get_admin_weekly_trends()` | |
+| `weeklyTrends` | `get_admin_weekly_trends_v2(NULL)` | Current cohort only |
 
 All five are called with the service-role client inside the route after the
 admin check. New read RPCs get a new name (`_v3`, `_v1`); existing ones are
