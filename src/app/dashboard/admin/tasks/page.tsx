@@ -3,8 +3,6 @@
 import { useCallback } from "react";
 import { useApp } from "@/contexts/app-context";
 import { redirect, useSearchParams, useRouter } from "next/navigation";
-import { Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -18,33 +16,42 @@ import { ImportTasksDialog } from "@/components/admin/import-tasks-dialog";
 import { AdminTasksTable } from "@/components/admin/admin-tasks-table";
 import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import { AdminSuggestionsTable } from "@/components/admin/admin-suggestions-table";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
 
 export default function AdminTasksPage() {
   const { user, loading } = useApp();
+  const { data: journeys } = usePlatformSettings();
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const validTabs = ["team-tasks", "individual-tasks", "suggestions"];
+  // Open on the journey that is currently running.
+  const defaultTab = journeys.teamJourney ? "team-tasks" : "individual-tasks";
   const tabFromUrl = searchParams.get("tab");
-  const activeTab = validTabs.includes(tabFromUrl ?? "") ? tabFromUrl! : "team-tasks";
+  const activeTab = validTabs.includes(tabFromUrl ?? "")
+    ? tabFromUrl!
+    : defaultTab;
 
-  const setActiveTab = useCallback((tab: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (tab === "team-tasks") {
-      params.delete("tab");
-    } else {
-      params.set("tab", tab);
-    }
-    const query = params.toString();
-    router.replace(query ? `?${query}` : window.location.pathname, { scroll: false });
-  }, [searchParams, router]);
+  const setActiveTab = useCallback(
+    (tab: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === defaultTab) {
+        params.delete("tab");
+      } else {
+        params.set("tab", tab);
+      }
+      const query = params.toString();
+      router.replace(query ? `?${query}` : window.location.pathname, {
+        scroll: false,
+      });
+    },
+    [searchParams, router, defaultTab]
+  );
 
-  // Redirect if not admin
   if (!loading && (!user || user.primary_role !== "admin")) {
     redirect("/dashboard");
   }
 
-  // Show loading state
   if (loading) {
     return <AdminSkeleton />;
   }
@@ -52,67 +59,31 @@ export default function AdminTasksPage() {
   return (
     <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Task Management</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Tasks</h2>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <TabsList>
-          <TabsTrigger value="team-tasks">Team Tasks</TabsTrigger>
-          <TabsTrigger value="individual-tasks">Individual Tasks</TabsTrigger>
+          <TabsTrigger value="individual-tasks">Solo tasks</TabsTrigger>
+          <TabsTrigger value="team-tasks">Team tasks</TabsTrigger>
           <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
         </TabsList>
 
-        {/* Team Tasks Tab */}
-        <TabsContent value="team-tasks" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Team Task Templates</CardTitle>
-                  <CardDescription>
-                    Manage collaborative tasks assigned to teams
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    disabled
-                    title="Template generation coming soon"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Template
-                  </Button>
-                  <ImportTasksDialog />
-                  <CreateTaskDialog defaultTaskType="team" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <AdminTasksTable activityType="team" />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Individual Tasks Tab */}
         <TabsContent value="individual-tasks" className="space-y-4">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Individual Task Templates</CardTitle>
+                  <CardTitle>Solo tasks</CardTitle>
                   <CardDescription>
-                    Manage personal learning and skill-building tasks
+                    My Journey tasks each student completes alone.
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    disabled
-                    title="Template generation coming soon"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Template
-                  </Button>
                   <ImportTasksDialog />
                   <CreateTaskDialog defaultTaskType="individual" />
                 </div>
@@ -124,14 +95,35 @@ export default function AdminTasksPage() {
           </Card>
         </TabsContent>
 
-        {/* Suggestions Tab */}
+        <TabsContent value="team-tasks" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Team tasks</CardTitle>
+                  <CardDescription>
+                    Collaborative tasks assigned to teams.
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <ImportTasksDialog />
+                  <CreateTaskDialog defaultTaskType="team" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <AdminTasksTable activityType="team" />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="suggestions" className="space-y-4">
           <Card>
             <CardHeader>
               <div>
-                <CardTitle>Task Edit Suggestions</CardTitle>
+                <CardTitle>Task edit suggestions</CardTitle>
                 <CardDescription>
-                  Review suggestions from users to improve task content
+                  Review suggestions from students to improve task content.
                 </CardDescription>
               </div>
             </CardHeader>
