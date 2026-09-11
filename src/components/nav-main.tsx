@@ -24,7 +24,7 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
-type NavItem = {
+export type NavItem = {
   title: string;
   url: string;
   icon: LucideIcon;
@@ -32,6 +32,8 @@ type NavItem = {
   items?: {
     title: string;
     url: string;
+    /** Muted group label rendered above the first item of a new section. */
+    section?: string;
   }[];
 };
 
@@ -83,18 +85,30 @@ function NavMainItem({ item }: { item: NavItem }) {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <SidebarMenuSub>
-                {item.items?.map((subItem) => (
-                  <SidebarMenuSubItem key={subItem.title}>
-                    <SidebarMenuSubButton
-                      asChild
-                      isActive={pathname === subItem.url}
-                    >
-                      <Link href={subItem.url}>
-                        <span>{subItem.title}</span>
-                      </Link>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                ))}
+                {item.items?.map((subItem, index) => {
+                  const prev = item.items?.[index - 1];
+                  const showSection =
+                    !!subItem.section && subItem.section !== prev?.section;
+                  return (
+                    <React.Fragment key={subItem.url}>
+                      {showSection && (
+                        <li className="text-muted-foreground px-2 pt-2 pb-1 text-[10px] font-medium tracking-wider uppercase select-none">
+                          {subItem.section}
+                        </li>
+                      )}
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname === subItem.url}
+                        >
+                          <Link href={subItem.url}>
+                            <span>{subItem.title}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </React.Fragment>
+                  );
+                })}
               </SidebarMenuSub>
             </CollapsibleContent>
           </>

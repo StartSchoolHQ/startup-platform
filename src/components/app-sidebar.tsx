@@ -127,6 +127,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
     // Add admin section if user is admin (show whenever role is available)
     if (isAdmin) {
+      const teamSection = journeys.teamJourney
+        ? "Team Journey"
+        : "Team Journey · paused";
       return [
         ...baseItems,
         {
@@ -134,22 +137,61 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           url: "/dashboard/admin",
           icon: Settings,
           items: [
-            { title: "Analytics", url: "/dashboard/admin/analytics" },
-            { title: "Agreements", url: "/dashboard/admin/agreements" },
             {
-              title: "Laptops & Keycards",
-              url: "/dashboard/admin/laptops-keycards",
+              section: "Curriculum",
+              title: "Tasks",
+              url: "/dashboard/admin/tasks",
             },
-            { title: "Users", url: "/dashboard/admin/users" },
-            { title: "Teams", url: "/dashboard/admin/teams" },
-            { title: "Peer Reviews", url: "/dashboard/admin/peer-reviews" },
-            { title: "AI Reviews", url: "/dashboard/admin/ai-reviews" },
             {
+              section: "Curriculum",
+              title: "AI Reviews",
+              url: "/dashboard/admin/ai-reviews",
+            },
+            {
+              section: "Curriculum",
+              title: "Peer Reviews",
+              url: "/dashboard/admin/peer-reviews",
+            },
+            {
+              section: "People",
+              title: "Users",
+              url: "/dashboard/admin/users",
+            },
+            {
+              section: "People",
+              title: "Agreements",
+              url: "/dashboard/admin/agreements",
+            },
+            {
+              section: "People",
+              title: "Diplomas",
+              url: "/dashboard/admin/diplomas",
+            },
+            {
+              section: teamSection,
+              title: "Teams",
+              url: "/dashboard/admin/teams",
+            },
+            {
+              section: teamSection,
               title: "Weekly Reports",
               url: "/dashboard/admin/weekly-reports",
             },
-            { title: "Progress", url: "/dashboard/admin/progress" },
-            { title: "Diplomas", url: "/dashboard/admin/diplomas" },
+            {
+              section: teamSection,
+              title: "Analytics",
+              url: "/dashboard/admin/analytics",
+            },
+            {
+              section: "System",
+              title: "Activity Log",
+              url: "/dashboard/admin/audit-logs",
+            },
+            {
+              section: "System",
+              title: "Settings",
+              url: "/dashboard/admin/settings",
+            },
           ],
         },
       ];
