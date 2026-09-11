@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * Shared admin queue for agreement rows — the whole page body used by
- * /dashboard/admin/agreements (scholarship types) and
- * /dashboard/admin/laptops-keycards (equipment types):
+ * Shared admin queue for agreement rows — one instance per tab of
+ * /dashboard/admin/agreements (Scholarships: full / partial / part-time,
+ * Equipment: laptop / key card):
  *   - Lists rows of the given types, filterable by status/type/search
  *   - Multi-select student-signed rows for batch countersign
  *   - Detail modal with realtime updates + per-row actions
@@ -84,6 +84,8 @@ export interface AgreementsQueueProps {
   types: readonly AgreementType[];
   /** Shown when there are no rows and no filters are active. */
   emptyMessage: string;
+  /** Render inside a parent page that owns the H2 and page padding. */
+  embedded?: boolean;
 }
 
 export function AgreementsQueue({
@@ -91,6 +93,7 @@ export function AgreementsQueue({
   description,
   types,
   emptyMessage,
+  embedded = false,
 }: AgreementsQueueProps) {
   const { user, loading } = useApp();
   const [rows, setRows] = useState<Row[]>([]);
@@ -207,10 +210,16 @@ export function AgreementsQueue({
   ];
 
   return (
-    <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
+    <div
+      className={embedded ? "space-y-4" : "flex-1 space-y-4 p-4 pt-6 md:p-8"}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
+          {embedded ? (
+            <h3 className="text-lg font-semibold">{title}</h3>
+          ) : (
+            <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
+          )}
           <p className="mt-1 text-sm text-zinc-500">{description}</p>
         </div>
         <Button
