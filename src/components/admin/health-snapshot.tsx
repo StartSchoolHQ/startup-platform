@@ -10,7 +10,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface HealthBuckets {
   active: number;
@@ -21,12 +21,13 @@ interface HealthBuckets {
 }
 
 interface HealthSnapshotProps {
-  students: HealthBuckets;
-  teams: HealthBuckets;
+  /** Renders the Students card when provided. */
+  students?: HealthBuckets;
+  /** Renders the Teams card when provided. */
+  teams?: HealthBuckets;
 }
 
 type Tier = "active" | "slowing" | "at_risk";
-type Scope = "students" | "teams";
 
 const STUDENT_LABELS: Record<Tier, string> = {
   active: "Active",
@@ -85,7 +86,7 @@ function Delta({ value, invert = false }: { value: number; invert?: boolean }) {
 function HealthCard({
   title,
   icon: Icon,
-  scope,
+  href,
   buckets,
   labels,
   unitSingular,
@@ -93,20 +94,13 @@ function HealthCard({
 }: {
   title: string;
   icon: typeof Users;
-  scope: Scope;
+  href: string;
   buckets: HealthBuckets;
   labels: Record<Tier, string>;
   unitSingular: string;
   unitPlural: string;
 }) {
-  const router = useRouter();
-
-  const go = (tier: Tier) => {
-    router.push(`/dashboard/admin/progress?filter=${tier}&type=${scope}`);
-  };
-
   const unit = (n: number) => (n === 1 ? unitSingular : unitPlural);
-
   const rows: Tier[] = ["active", "slowing", "at_risk"];
 
   return (
@@ -116,21 +110,20 @@ function HealthCard({
           <Icon className="text-muted-foreground h-4 w-4" />
           {title}
         </CardTitle>
-        <button
-          onClick={() => router.push(`/dashboard/admin/progress?type=${scope}`)}
+        <Link
+          href={href}
           className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs font-medium"
         >
           View all <ArrowRight className="h-3 w-3" />
-        </button>
+        </Link>
       </CardHeader>
       <CardContent className="space-y-1 pt-0">
         {rows.map((tier) => {
           const count = buckets[tier];
           return (
-            <button
+            <div
               key={tier}
-              onClick={() => go(tier)}
-              className="hover:bg-muted/60 group flex w-full items-center justify-between rounded-md px-2 py-2 text-left transition-colors"
+              className="flex w-full items-center justify-between rounded-md px-2 py-2"
             >
               <div className="flex items-center gap-3">
                 <span
@@ -151,9 +144,8 @@ function HealthCard({
                 <span className="text-muted-foreground hidden text-xs sm:inline">
                   {unit(count)}
                 </span>
-                <ArrowRight className="text-muted-foreground/40 group-hover:text-foreground h-3.5 w-3.5 transition-colors" />
               </div>
-            </button>
+            </div>
           );
         })}
 
@@ -177,25 +169,29 @@ function HealthCard({
 
 export function HealthSnapshot({ students, teams }: HealthSnapshotProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <HealthCard
-        title="Student Health"
-        icon={Users}
-        scope="students"
-        buckets={students}
-        labels={STUDENT_LABELS}
-        unitSingular="student"
-        unitPlural="students"
-      />
-      <HealthCard
-        title="Team Health"
-        icon={Rocket}
-        scope="teams"
-        buckets={teams}
-        labels={TEAM_LABELS}
-        unitSingular="team"
-        unitPlural="teams"
-      />
+    <div className={cn("grid gap-4", students && teams && "md:grid-cols-2")}>
+      {students && (
+        <HealthCard
+          title="Students"
+          icon={Users}
+          href="/dashboard/admin/users"
+          buckets={students}
+          labels={STUDENT_LABELS}
+          unitSingular="student"
+          unitPlural="students"
+        />
+      )}
+      {teams && (
+        <HealthCard
+          title="Team Health"
+          icon={Rocket}
+          href="/dashboard/admin/teams"
+          buckets={teams}
+          labels={TEAM_LABELS}
+          unitSingular="team"
+          unitPlural="teams"
+        />
+      )}
     </div>
   );
 }
