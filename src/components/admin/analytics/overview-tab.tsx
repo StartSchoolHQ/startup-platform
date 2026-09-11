@@ -11,7 +11,7 @@ import {
 import { useAnalyticsOverview } from "./use-analytics";
 import { SentimentChart } from "./sentiment-chart";
 import { WeekDetailSheet } from "./week-detail-sheet";
-import { AiPlaceholderCard, TabError, TabSkeleton, TrendIcon } from "./shared";
+import { TabError, TabSkeleton, TrendIcon } from "./shared";
 import { toNum } from "./types";
 
 function KpiCard({
@@ -126,8 +126,6 @@ export function OverviewTab({ active }: { active: boolean }) {
           <SentimentChart weeks={stats.weeks} onWeekClick={setWeekStart} />
         </CardContent>
       </Card>
-
-      <AiPlaceholderCard />
 
       <WeekDetailSheet
         weekStart={weekStart}

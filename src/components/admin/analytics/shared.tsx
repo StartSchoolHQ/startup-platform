@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Sparkles, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { AdminWeeklyReportViewModal } from "@/components/admin/admin-weekly-report-view-modal";
 import { useFullReport } from "./use-analytics";
 import { scoreColor } from "./types";
@@ -29,25 +29,6 @@ export function TrendIcon({ delta }: { delta: number | null }) {
     <TrendingUp className="h-4 w-4 text-emerald-500" />
   ) : (
     <TrendingDown className="h-4 w-4 text-red-500" />
-  );
-}
-
-export function AiPlaceholderCard() {
-  return (
-    <Card className="border-dashed">
-      <CardContent className="flex items-center gap-3 py-4">
-        <Sparkles className="text-muted-foreground h-5 w-5" />
-        <div>
-          <p className="text-sm font-medium">AI Analysis</p>
-          <p className="text-muted-foreground text-xs">
-            Automatic summaries of why ratings moved will appear here.
-          </p>
-        </div>
-        <Badge variant="secondary" className="ml-auto">
-          Coming soon
-        </Badge>
-      </CardContent>
-    </Card>
   );
 }
 

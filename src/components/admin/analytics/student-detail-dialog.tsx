@@ -21,7 +21,7 @@ import {
 } from "recharts";
 import { useAnalyticsStudentDetail } from "./use-analytics";
 import { ChartTooltip } from "./chart-tooltip";
-import { ReportModalLoader, ScoreBadge, AiPlaceholderCard } from "./shared";
+import { ReportModalLoader, ScoreBadge } from "./shared";
 import { CHART_COLORS, formatWeek } from "./types";
 import type { StudentRow } from "./types";
 
@@ -87,10 +87,6 @@ export function StudentDetailDialog({ student, onClose }: Props) {
                   />
                 </LineChart>
               </ResponsiveContainer>
-
-              <div className="my-4">
-                <AiPlaceholderCard />
-              </div>
 
               <div className="space-y-2 pb-4">
                 {feed.map((row) => (

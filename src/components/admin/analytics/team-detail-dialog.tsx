@@ -22,7 +22,7 @@ import {
 } from "recharts";
 import { useAnalyticsTeamDetail } from "./use-analytics";
 import { ChartTooltip } from "./chart-tooltip";
-import { ReportModalLoader, ScoreBadge, AiPlaceholderCard } from "./shared";
+import { ReportModalLoader, ScoreBadge } from "./shared";
 import { SERIES_COLORS, formatWeek } from "./types";
 import type { TeamSummary } from "./teams-tab";
 
@@ -100,10 +100,6 @@ export function TeamDetailDialog({ team, onClose }: Props) {
                   ))}
                 </LineChart>
               </ResponsiveContainer>
-
-              <div className="my-4">
-                <AiPlaceholderCard />
-              </div>
 
               <div className="space-y-2 pb-4">
                 {feed.map((row) => (
