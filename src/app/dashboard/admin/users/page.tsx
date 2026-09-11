@@ -20,27 +20,32 @@ export default function AdminUsersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const validTabs = ["all-users", "invitations", "roles"];
+  const validTabs = ["all-users", "invitations"];
   const tabFromUrl = searchParams.get("tab");
-  const activeTab = validTabs.includes(tabFromUrl ?? "") ? tabFromUrl! : "all-users";
+  const activeTab = validTabs.includes(tabFromUrl ?? "")
+    ? tabFromUrl!
+    : "all-users";
 
-  const setActiveTab = useCallback((tab: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (tab === "all-users") {
-      params.delete("tab");
-    } else {
-      params.set("tab", tab);
-    }
-    const query = params.toString();
-    router.replace(query ? `?${query}` : window.location.pathname, { scroll: false });
-  }, [searchParams, router]);
+  const setActiveTab = useCallback(
+    (tab: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === "all-users") {
+        params.delete("tab");
+      } else {
+        params.set("tab", tab);
+      }
+      const query = params.toString();
+      router.replace(query ? `?${query}` : window.location.pathname, {
+        scroll: false,
+      });
+    },
+    [searchParams, router]
+  );
 
-  // Redirect if not admin
   if (!loading && (!user || user.primary_role !== "admin")) {
     redirect("/dashboard");
   }
 
-  // Show loading state
   if (loading) {
     return <AdminSkeleton />;
   }
@@ -48,23 +53,25 @@ export default function AdminUsersPage() {
   return (
     <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">User Management</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Users</h2>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <TabsList>
-          <TabsTrigger value="all-users">All Users</TabsTrigger>
-          <TabsTrigger value="invitations">Bulk Invitations</TabsTrigger>
-          <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>
+          <TabsTrigger value="all-users">Users</TabsTrigger>
+          <TabsTrigger value="invitations">Invitations</TabsTrigger>
         </TabsList>
 
-        {/* All Users Tab */}
         <TabsContent value="all-users" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>All Users</CardTitle>
+              <CardTitle>All users</CardTitle>
               <CardDescription>
-                View and manage all platform users
+                Search, filter by batch or status, open a profile.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -73,28 +80,8 @@ export default function AdminUsersPage() {
           </Card>
         </TabsContent>
 
-        {/* Invitations Tab */}
         <TabsContent value="invitations" className="space-y-4">
           <BulkInviteTab />
-        </TabsContent>
-
-        {/* Roles Tab */}
-        <TabsContent value="roles" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Roles & Permissions</CardTitle>
-              <CardDescription>
-                Manage user roles and permissions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border p-4">
-                <p className="text-muted-foreground text-center text-sm">
-                  Roles & Permissions functionality coming soon
-                </p>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>

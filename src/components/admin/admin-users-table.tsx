@@ -112,7 +112,7 @@ export function AdminUsersTable() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState("active");
   const [selectedUser, setSelectedUser] = useState<{
     id: string;
     name: string;
