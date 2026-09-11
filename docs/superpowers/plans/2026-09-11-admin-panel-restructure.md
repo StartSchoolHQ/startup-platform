@@ -95,7 +95,7 @@ Gets the standard admin guard and page shell (`p-4 pt-6 md:p-8`, `h2.text-3xl`).
 ### Task 1: Branch, backup, migration for the two new RPCs
 
 **Files:**
-- Create: `supabase/migrations/20260911120000_admin_overview_rpcs_v1.sql`
+- Create: `supabase/migrations/20260911072311_admin_overview_rpcs_v1.sql`
 - Test: `tests/admin/overview-rpcs.test.ts`
 - Modify: `CLAUDE.md` (Rollback Reference section — add an entry)
 
@@ -182,7 +182,7 @@ Expected: FAIL — `error` is not null (function `get_admin_program_health_v3` d
 
 - [ ] **Step 6: Write the migration file**
 
-`supabase/migrations/20260911120000_admin_overview_rpcs_v1.sql`:
+`supabase/migrations/20260911072311_admin_overview_rpcs_v1.sql`:
 
 ```sql
 -- Admin overview RPCs (2026-09-11). Purely additive.
@@ -376,7 +376,7 @@ Expected: PASS (2 tests).
 - [ ] **Step 10: Add rollback entry to `CLAUDE.md`** under "Rollback Reference", above the 2026-09-10 entry:
 
 ```markdown
-### 2026-09-11 — Admin overview RPCs (migration: `admin_overview_rpcs_v1`; repo file `20260911120000_admin_overview_rpcs_v1.sql`)
+### 2026-09-11 — Admin overview RPCs (migration: `admin_overview_rpcs_v1`; repo file `20260911072311_admin_overview_rpcs_v1.sql`)
 
 **What it added:** `get_admin_program_health_v3()` (v2 + `users.status = 'active'` on every student aggregate — v2 counted the 69 archived Batch 2 students as "At Risk" / "missing reports") and `get_admin_task_pipeline_v1()` (task_progress counts by `tasks.activity_type` + status, excluding archived users/teams — replaces a route query that hit the 1000-row cap). Both SECURITY DEFINER, EXECUTE service_role only. Purely additive; v2 untouched. Consumer: `/api/admin/stats`.
 
@@ -386,7 +386,7 @@ Expected: PASS (2 tests).
 - [ ] **Step 11: Commit**
 
 ```bash
-git add supabase/migrations/20260911120000_admin_overview_rpcs_v1.sql tests/admin/overview-rpcs.test.ts CLAUDE.md
+git add supabase/migrations/20260911072311_admin_overview_rpcs_v1.sql tests/admin/overview-rpcs.test.ts CLAUDE.md
 git commit -m "feat(admin): program health v3 (active students only) + task pipeline RPC"
 ```
 
@@ -1395,7 +1395,7 @@ overview trends had no status filter at all. Hard-excluding archived rows
 would have emptied those pages (Batch 3 has no platform accounts yet) and
 erased the Batch 2 retrospective, so the chosen design is a **batch scope**:
 
-- Migration `20260911130000_admin_batch_scope_v1.sql`: `_admin_scope_users`,
+- Migration `20260911090259_admin_batch_scope_v1.sql`: `_admin_scope_users`,
   `_admin_scope_teams`, ten `get_analytics_*_v2(p_batch_id)` functions and
   `get_admin_weekly_trends_v2`. NULL = current cohort (active only).
 - `src/lib/admin/batch-scope.ts` (`parseBatchParam`, `resolveScopeIds`),
