@@ -26,9 +26,15 @@ import { useAnalyticsEconomy, useAnalyticsStrikes } from "./use-analytics";
 import { ChartTooltip } from "./chart-tooltip";
 import { CHART_COLORS, formatWeek } from "./types";
 
-export function ProgramAccountability({ active }: { active: boolean }) {
-  const strikes = useAnalyticsStrikes(active);
-  const economy = useAnalyticsEconomy(active);
+export function ProgramAccountability({
+  active,
+  batchId,
+}: {
+  active: boolean;
+  batchId: string | null;
+}) {
+  const strikes = useAnalyticsStrikes(active, batchId);
+  const economy = useAnalyticsEconomy(active, batchId);
 
   if (strikes.isLoading || economy.isLoading) {
     return <Skeleton className="h-72 w-full" />;

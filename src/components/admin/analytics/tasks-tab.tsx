@@ -32,8 +32,17 @@ const STATUS_META: Record<string, { label: string; color: string }> = {
   rejected: { label: "Rejected", color: CHART_COLORS.negative },
 };
 
-export function TasksTab({ active }: { active: boolean }) {
-  const { data, isLoading, isError, refetch } = useAnalyticsTasks(active);
+export function TasksTab({
+  active,
+  batchId,
+}: {
+  active: boolean;
+  batchId: string | null;
+}) {
+  const { data, isLoading, isError, refetch } = useAnalyticsTasks(
+    active,
+    batchId
+  );
 
   if (isLoading) return <TabSkeleton />;
   if (isError || !data) {
@@ -158,7 +167,7 @@ export function TasksTab({ active }: { active: boolean }) {
           </Card>
         </div>
       </div>
-      <TaskFrictionSection active={active} />
+      <TaskFrictionSection active={active} batchId={batchId} />
     </div>
   );
 }

@@ -26,8 +26,17 @@ import { ScoreBadge, TabError, TabSkeleton } from "./shared";
 import { CHART_COLORS, formatWeek } from "./types";
 import { ProgramAccountability } from "./program-accountability";
 
-export function ProgramTab({ active }: { active: boolean }) {
-  const { data, isLoading, isError, refetch } = useAnalyticsRetention(active);
+export function ProgramTab({
+  active,
+  batchId,
+}: {
+  active: boolean;
+  batchId: string | null;
+}) {
+  const { data, isLoading, isError, refetch } = useAnalyticsRetention(
+    active,
+    batchId
+  );
 
   const chartData = useMemo(() => {
     if (!data) return [];
@@ -155,7 +164,7 @@ export function ProgramTab({ active }: { active: boolean }) {
         </CardContent>
       </Card>
 
-      <ProgramAccountability active={active} />
+      <ProgramAccountability active={active} batchId={batchId} />
     </div>
   );
 }

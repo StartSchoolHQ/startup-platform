@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseBatchParam, resolveScopeIds } from "@/lib/admin/batch-scope";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const {
@@ -26,13 +27,22 @@ export async function GET() {
     // Admin role verified above — use admin client to bypass RLS.
     const adminClient = createAdminClient();
 
-    // Distinct users who have submitted a weekly report
+    const { userIds } = await resolveScopeIds(
+      adminClient,
+      parseBatchParam(request.nextUrl.searchParams)
+    );
+
+    // Distinct users who have submitted a weekly report (within the scope)
     const { data: reports } = await adminClient
       .from("weekly_reports")
       .select(
         `user_id, team_id, week_number, week_year, week_start_date, week_end_date,
          user:user_id(id, name, email),
          team:team_id(id, name)`
+      )
+      .in(
+        "user_id",
+        userIds.length ? userIds : ["00000000-0000-0000-0000-000000000000"]
       )
       .order("week_year", { ascending: false })
       .order("week_number", { ascending: false });

@@ -41,8 +41,17 @@ function KpiCard({
   );
 }
 
-export function OverviewTab({ active }: { active: boolean }) {
-  const { data, isLoading, isError, refetch } = useAnalyticsOverview(active);
+export function OverviewTab({
+  active,
+  batchId,
+}: {
+  active: boolean;
+  batchId: string | null;
+}) {
+  const { data, isLoading, isError, refetch } = useAnalyticsOverview(
+    active,
+    batchId
+  );
   const [weekStart, setWeekStart] = useState<string | null>(null);
 
   const stats = useMemo(() => {
@@ -129,6 +138,7 @@ export function OverviewTab({ active }: { active: boolean }) {
 
       <WeekDetailSheet
         weekStart={weekStart}
+        batchId={batchId}
         onClose={() => setWeekStart(null)}
       />
     </div>

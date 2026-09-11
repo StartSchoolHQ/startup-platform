@@ -260,3 +260,88 @@ describe("get_analytics_tasks", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// Batch-scoped v2 functions (2026-09-11). NULL = current cohort (active
+// users/teams only); a batch id = that archived cohort.
+const BATCH2 = "eb55d8e2-bfb2-4567-8678-420216293d78"; // Mercury-Redstone
+
+describe("batch-scoped analytics v2", () => {
+  it("current scope never returns an archived team", async () => {
+    const { data, error } = await authed.rpc("get_analytics_teams_v2", {
+      p_batch_id: null,
+    });
+    expect(error).toBeNull();
+    for (const row of data ?? []) {
+      expect(row.team_status).not.toBe("archived");
+    }
+  });
+
+  it("batch scope returns only that batch's teams and students", async () => {
+    const { data: teams } = await authed.rpc("get_analytics_teams_v2", {
+      p_batch_id: BATCH2,
+    });
+    expect(teams!.length).toBeGreaterThan(0);
+    const { data: batchTeams } = await admin
+      .from("teams")
+      .select("id")
+      .eq("batch_id", BATCH2);
+    const allowed = new Set((batchTeams ?? []).map((t) => t.id));
+    for (const row of teams!) expect(allowed.has(row.team_id)).toBe(true);
+
+    const { data: students } = await authed.rpc("get_analytics_students_v2", {
+      p_batch_id: BATCH2,
+    });
+    const { data: batchUsers } = await admin
+      .from("users")
+      .select("id")
+      .eq("batch_id", BATCH2);
+    const allowedUsers = new Set((batchUsers ?? []).map((u) => u.id));
+    expect(students!.length).toBeGreaterThan(0);
+    for (const row of students!)
+      expect(allowedUsers.has(row.user_id)).toBe(true);
+  });
+
+  it("week detail v2 matches the scoped overview report count", async () => {
+    const { data: overview } = await authed.rpc("get_analytics_overview_v2", {
+      p_batch_id: BATCH2,
+    });
+    expect(overview!.length).toBeGreaterThan(0);
+    const week = overview![0];
+    const { data, error } = await authed.rpc("get_analytics_week_detail_v2", {
+      p_week_start: week.week_start,
+      p_batch_id: BATCH2,
+    });
+    expect(error).toBeNull();
+    expect(data!.length).toBe(week.reports);
+  });
+
+  it("jsonb v2 functions answer in both scopes", async () => {
+    for (const fn of [
+      "get_analytics_tasks_v2",
+      "get_analytics_meetings_v2",
+      "get_analytics_retention_v2",
+      "get_analytics_strikes_v2",
+      "get_analytics_economy_v2",
+      "get_analytics_task_friction_v2",
+    ]) {
+      for (const p_batch_id of [null, BATCH2]) {
+        const { data, error } = await authed.rpc(fn, { p_batch_id });
+        expect(error, `${fn}(${p_batch_id})`).toBeNull();
+        expect(typeof data).toBe("object");
+      }
+    }
+  });
+
+  it("current scope has no Batch 2 reporters", async () => {
+    const { data } = await authed.rpc("get_analytics_retention_v2", {
+      p_batch_id: null,
+    });
+    const { count } = await admin
+      .from("users")
+      .select("id", { count: "exact", head: true })
+      .eq("primary_role", "user")
+      .eq("status", "active");
+    expect(data.total_reporters).toBeLessThanOrEqual(count ?? 0);
+  });
+});

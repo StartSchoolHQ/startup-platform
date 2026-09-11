@@ -11,8 +11,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAnalyticsTaskFriction } from "./use-analytics";
 import { CHART_COLORS } from "./types";
 
-export function TaskFrictionSection({ active }: { active: boolean }) {
-  const { data, isLoading } = useAnalyticsTaskFriction(active);
+export function TaskFrictionSection({
+  active,
+  batchId,
+}: {
+  active: boolean;
+  batchId: string | null;
+}) {
+  const { data, isLoading } = useAnalyticsTaskFriction(active, batchId);
 
   if (isLoading) return <Skeleton className="h-72 w-full" />;
   if (!data) return null;

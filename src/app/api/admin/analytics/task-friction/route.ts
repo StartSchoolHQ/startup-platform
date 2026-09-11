@@ -1,13 +1,16 @@
-import { NextResponse } from "next/server";
-import { requireAdmin } from "../_guard";
+import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin, rpcScoped } from "../_guard";
 
-export async function GET() {
+/** `?batch=<uuid>` scopes to a diploma batch; absent = current cohort. */
+export async function GET(request: NextRequest) {
   try {
     const guard = await requireAdmin();
     if (!guard.ok) return guard.response;
 
-    const { data, error } = await guard.supabase.rpc(
-      "get_analytics_task_friction"
+    const { data, error } = await rpcScoped(
+      guard.supabase,
+      "get_analytics_task_friction_v2",
+      request
     );
     if (error) throw error;
 

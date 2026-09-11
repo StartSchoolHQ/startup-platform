@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireAdmin } from "../_guard";
+import { requireAdmin, rpcScoped } from "../_guard";
 
 const paramsSchema = z.object({
   weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD"),
@@ -21,8 +21,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data, error } = await guard.supabase.rpc(
-      "get_analytics_week_detail",
+    const { data, error } = await rpcScoped(
+      guard.supabase,
+      "get_analytics_week_detail_v2",
+      request,
       { p_week_start: parsed.data.weekStart }
     );
     if (error) throw error;

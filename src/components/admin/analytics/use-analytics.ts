@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { withBatch } from "@/hooks/use-batch-scope";
 import type {
   EconomyAnalytics,
   MeetingsAnalytics,
@@ -28,20 +29,30 @@ async function fetchJson<T>(url: string): Promise<T> {
   return res.json();
 }
 
-export function useAnalyticsOverview(enabled: boolean) {
-  return useQuery({
-    queryKey: ["admin-analytics", "overview"],
-    queryFn: () => fetchJson<OverviewWeek[]>("/api/admin/analytics/overview"),
+/**
+ * Every aggregate hook takes the batch scope (`null` = current cohort) and
+ * forwards it as `?batch=`; the routes pass it to the `_v2` RPCs. The
+ * per-entity detail hooks (team, student, report) are already scoped by id.
+ */
+function scoped<T>(key: string, path: string, batchId: string | null) {
+  return {
+    queryKey: ["admin-analytics", key, batchId ?? "current"],
+    queryFn: () =>
+      fetchJson<T>(withBatch(`/api/admin/analytics/${path}`, batchId)),
     staleTime: STALE_TIME,
+  };
+}
+
+export function useAnalyticsOverview(enabled: boolean, batchId: string | null) {
+  return useQuery({
+    ...scoped<OverviewWeek[]>("overview", "overview", batchId),
     enabled,
   });
 }
 
-export function useAnalyticsTeams(enabled: boolean) {
+export function useAnalyticsTeams(enabled: boolean, batchId: string | null) {
   return useQuery({
-    queryKey: ["admin-analytics", "teams"],
-    queryFn: () => fetchJson<TeamWeekRow[]>("/api/admin/analytics/teams"),
-    staleTime: STALE_TIME,
+    ...scoped<TeamWeekRow[]>("teams", "teams", batchId),
     enabled,
   });
 }
@@ -58,11 +69,9 @@ export function useAnalyticsTeamDetail(teamId: string | null) {
   });
 }
 
-export function useAnalyticsStudents(enabled: boolean) {
+export function useAnalyticsStudents(enabled: boolean, batchId: string | null) {
   return useQuery({
-    queryKey: ["admin-analytics", "students"],
-    queryFn: () => fetchJson<StudentRow[]>("/api/admin/analytics/students"),
-    staleTime: STALE_TIME,
+    ...scoped<StudentRow[]>("students", "students", batchId),
     enabled,
   });
 }
@@ -79,71 +88,73 @@ export function useAnalyticsStudentDetail(userId: string | null) {
   });
 }
 
-export function useAnalyticsWeekDetail(weekStart: string | null) {
+export function useAnalyticsWeekDetail(
+  weekStart: string | null,
+  batchId: string | null
+) {
   return useQuery({
-    queryKey: ["admin-analytics", "week-detail", weekStart],
+    queryKey: [
+      "admin-analytics",
+      "week-detail",
+      weekStart,
+      batchId ?? "current",
+    ],
     queryFn: () =>
       fetchJson<WeekDetailRow[]>(
-        `/api/admin/analytics/week-detail?weekStart=${weekStart}`
+        withBatch(
+          `/api/admin/analytics/week-detail?weekStart=${weekStart}`,
+          batchId
+        )
       ),
     staleTime: STALE_TIME,
     enabled: !!weekStart,
   });
 }
 
-export function useAnalyticsTasks(enabled: boolean) {
+export function useAnalyticsTasks(enabled: boolean, batchId: string | null) {
   return useQuery({
-    queryKey: ["admin-analytics", "tasks"],
-    queryFn: () => fetchJson<TasksAnalytics>("/api/admin/analytics/tasks"),
-    staleTime: STALE_TIME,
+    ...scoped<TasksAnalytics>("tasks", "tasks", batchId),
     enabled,
   });
 }
 
-export function useAnalyticsMeetings(enabled: boolean) {
+export function useAnalyticsMeetings(enabled: boolean, batchId: string | null) {
   return useQuery({
-    queryKey: ["admin-analytics", "meetings"],
-    queryFn: () =>
-      fetchJson<MeetingsAnalytics>("/api/admin/analytics/meetings"),
-    staleTime: STALE_TIME,
+    ...scoped<MeetingsAnalytics>("meetings", "meetings", batchId),
     enabled,
   });
 }
 
-export function useAnalyticsRetention(enabled: boolean) {
+export function useAnalyticsRetention(
+  enabled: boolean,
+  batchId: string | null
+) {
   return useQuery({
-    queryKey: ["admin-analytics", "retention"],
-    queryFn: () =>
-      fetchJson<RetentionAnalytics>("/api/admin/analytics/retention"),
-    staleTime: STALE_TIME,
+    ...scoped<RetentionAnalytics>("retention", "retention", batchId),
     enabled,
   });
 }
 
-export function useAnalyticsStrikes(enabled: boolean) {
+export function useAnalyticsStrikes(enabled: boolean, batchId: string | null) {
   return useQuery({
-    queryKey: ["admin-analytics", "strikes"],
-    queryFn: () => fetchJson<StrikesAnalytics>("/api/admin/analytics/strikes"),
-    staleTime: STALE_TIME,
+    ...scoped<StrikesAnalytics>("strikes", "strikes", batchId),
     enabled,
   });
 }
 
-export function useAnalyticsTaskFriction(enabled: boolean) {
+export function useAnalyticsTaskFriction(
+  enabled: boolean,
+  batchId: string | null
+) {
   return useQuery({
-    queryKey: ["admin-analytics", "task-friction"],
-    queryFn: () =>
-      fetchJson<TaskFrictionAnalytics>("/api/admin/analytics/task-friction"),
-    staleTime: STALE_TIME,
+    ...scoped<TaskFrictionAnalytics>("task-friction", "task-friction", batchId),
     enabled,
   });
 }
 
-export function useAnalyticsEconomy(enabled: boolean) {
+export function useAnalyticsEconomy(enabled: boolean, batchId: string | null) {
   return useQuery({
-    queryKey: ["admin-analytics", "economy"],
-    queryFn: () => fetchJson<EconomyAnalytics>("/api/admin/analytics/economy"),
-    staleTime: STALE_TIME,
+    ...scoped<EconomyAnalytics>("economy", "economy", batchId),
     enabled,
   });
 }

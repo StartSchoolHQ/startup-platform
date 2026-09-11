@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useBatchScope, withBatch } from "@/hooks/use-batch-scope";
+import { BatchScopeSelect } from "@/components/admin/batch-scope-select";
 import {
   AdminWeeklyReportViewModal,
   type AdminWeeklyReportRow,
@@ -84,11 +86,12 @@ export function AdminWeeklyReportsTable() {
   const [selectedReport, setSelectedReport] =
     useState<AdminWeeklyReportRow | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const { batchId } = useBatchScope();
 
-  // Load filter options once
+  // Load filter options (per batch scope)
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/weekly-reports/filters")
+    fetch(withBatch("/api/admin/weekly-reports/filters", batchId))
       .then((res) => res.json())
       .then((data) => {
         if (cancelled) return;
@@ -114,7 +117,7 @@ export function AdminWeeklyReportsTable() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [batchId]);
 
   // Load reports when filters/page change
   useEffect(() => {
@@ -129,6 +132,7 @@ export function AdminWeeklyReportsTable() {
     if (teamId !== "all") params.set("team_id", teamId);
     if (week !== "all") params.set("week", week);
     if (status !== "all") params.set("status", status);
+    if (batchId) params.set("batch", batchId);
 
     fetch(`/api/admin/weekly-reports?${params}`)
       .then((res) => res.json())
@@ -145,7 +149,7 @@ export function AdminWeeklyReportsTable() {
     return () => {
       cancelled = true;
     };
-  }, [page, userId, teamId, week, status]);
+  }, [page, userId, teamId, week, status, batchId]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -178,6 +182,7 @@ export function AdminWeeklyReportsTable() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
+        <BatchScopeSelect className="w-[200px]" />
         <Select value={userId} onValueChange={setUserId}>
           <SelectTrigger className="w-[220px]">
             <SelectValue placeholder="User" />

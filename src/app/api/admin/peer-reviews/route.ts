@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { parseBatchParam, resolveScopeIds } from "@/lib/admin/batch-scope";
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,6 +33,21 @@ export async function GET(request: NextRequest) {
     const search = url.searchParams.get("search") || "";
     const status = url.searchParams.get("status") || "all";
 
+    // Batch scope: current cohort by default, archived batches on request.
+    const { userIds, teamIds } = await resolveScopeIds(
+      createAdminClient(),
+      parseBatchParam(url.searchParams)
+    );
+    if (userIds.length === 0 && teamIds.length === 0) {
+      return NextResponse.json({ data: [], total: 0, page, limit });
+    }
+    const scopeFilter = [
+      teamIds.length ? `team_id.in.(${teamIds.join(",")})` : null,
+      userIds.length ? `user_id.in.(${userIds.join(",")})` : null,
+    ]
+      .filter(Boolean)
+      .join(",");
+
     // Build query — join tasks, teams, reviewer via FK
     let query = supabase
       .from("task_progress")
@@ -56,6 +73,7 @@ export async function GET(request: NextRequest) {
         "rejected",
         "revision_required",
       ])
+      .or(scopeFilter)
       .order("updated_at", { ascending: false });
 
     // Status filter

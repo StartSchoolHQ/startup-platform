@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useBatchScope } from "@/hooks/use-batch-scope";
+import { BatchScopeSelect } from "@/components/admin/batch-scope-select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -88,6 +90,7 @@ export function AdminPeerReviewsTable() {
   );
   const [removingId, setRemovingId] = useState<string | null>(null);
   const limit = 25;
+  const { batchId } = useBatchScope();
   const abortRef = useRef<AbortController | null>(null);
   const fetchVersion = useRef(0);
 
@@ -103,6 +106,7 @@ export function AdminPeerReviewsTable() {
       search,
       status: statusFilter,
     });
+    if (batchId) params.set("batch", batchId);
 
     fetch(`/api/admin/peer-reviews?${params}`, { signal: controller.signal })
       .then((res) => res.json())
@@ -121,7 +125,7 @@ export function AdminPeerReviewsTable() {
   useEffect(() => {
     fetchReviews();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, statusFilter]);
+  }, [page, search, statusFilter, batchId]);
 
   const handleRemoveReviewer = async (
     e: React.MouseEvent,
@@ -195,6 +199,7 @@ export function AdminPeerReviewsTable() {
 
       {/* Filters */}
       <div className="flex gap-2">
+        <BatchScopeSelect className="w-[200px]" />
         <div className="relative flex-1">
           <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
           <Input

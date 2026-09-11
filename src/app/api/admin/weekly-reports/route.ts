@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseBatchParam, resolveScopeIds } from "@/lib/admin/batch-scope";
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,6 +39,15 @@ export async function GET(request: NextRequest) {
     // so admins can read reports across all teams.
     const adminClient = createAdminClient();
 
+    // Batch scope: current cohort by default, archived batches on request.
+    const { userIds } = await resolveScopeIds(
+      adminClient,
+      parseBatchParam(url.searchParams)
+    );
+    if (userIds.length === 0) {
+      return NextResponse.json({ reports: [], total: 0, page, limit });
+    }
+
     let query = adminClient.from("weekly_reports").select(
       `id, user_id, team_id, week_start_date, week_end_date, week_number, week_year, submitted_at, created_at, status, context, submission_data,
          user:user_id(id, name, email),
@@ -45,6 +55,7 @@ export async function GET(request: NextRequest) {
       { count: "exact" }
     );
 
+    query = query.in("user_id", userIds);
     if (userId) query = query.eq("user_id", userId);
     if (teamId) query = query.eq("team_id", teamId);
     if (status && status !== "all") query = query.eq("status", status);

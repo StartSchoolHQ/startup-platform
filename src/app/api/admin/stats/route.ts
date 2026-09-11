@@ -39,8 +39,9 @@ export async function GET() {
     const adminClient = createAdminClient();
     // The new RPCs are not in the generated types yet. Wrapped in a closure
     // so `rpc` keeps its `this` binding (a bare method reference would not).
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rpc = (fn: string) => (adminClient as any).rpc(fn);
+    const rpc = (fn: string, args: Record<string, unknown> = {}) =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (adminClient as any).rpc(fn, args);
 
     const [programHealth, taskPipeline, aiReview, teamXp, weeklyTrends] =
       await Promise.all([
@@ -66,7 +67,8 @@ export async function GET() {
         adminClient
           .rpc("get_top_teams_with_xp", { team_limit: 10 })
           .then((res) => (res.data ?? []) as TeamRanking[]),
-        rpc("get_admin_weekly_trends").then(
+        // Current cohort only; archived batches never feed the overview.
+        rpc("get_admin_weekly_trends_v2", { p_batch_id: null }).then(
           (res: { data: WeeklyTrend[] | null }) => res.data ?? []
         ),
       ]);

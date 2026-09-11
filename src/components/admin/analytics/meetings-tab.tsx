@@ -32,8 +32,17 @@ const INTEREST_META: Record<string, { label: string; color: string }> = {
   unknown: { label: "Not recorded", color: CHART_COLORS.neutral },
 };
 
-export function MeetingsTab({ active }: { active: boolean }) {
-  const { data, isLoading, isError, refetch } = useAnalyticsMeetings(active);
+export function MeetingsTab({
+  active,
+  batchId,
+}: {
+  active: boolean;
+  batchId: string | null;
+}) {
+  const { data, isLoading, isError, refetch } = useAnalyticsMeetings(
+    active,
+    batchId
+  );
 
   if (isLoading) return <TabSkeleton />;
   if (isError || !data) {

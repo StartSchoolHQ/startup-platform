@@ -16,6 +16,7 @@ import { formatWeek } from "./types";
 
 interface Props {
   weekStart: string | null;
+  batchId: string | null;
   onClose: () => void;
 }
 
@@ -23,8 +24,8 @@ interface Props {
  * All reports of one week, lowest scores first, with the student's own
  * words. Clicking an entry opens the full weekly report.
  */
-export function WeekDetailSheet({ weekStart, onClose }: Props) {
-  const { data, isLoading } = useAnalyticsWeekDetail(weekStart);
+export function WeekDetailSheet({ weekStart, batchId, onClose }: Props) {
+  const { data, isLoading } = useAnalyticsWeekDetail(weekStart, batchId);
   const [reportId, setReportId] = useState<string | null>(null);
 
   return (

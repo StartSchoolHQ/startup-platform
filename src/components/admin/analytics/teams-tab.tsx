@@ -18,8 +18,17 @@ export interface TeamSummary {
   trend: number | null;
 }
 
-export function TeamsTab({ active }: { active: boolean }) {
-  const { data, isLoading, isError, refetch } = useAnalyticsTeams(active);
+export function TeamsTab({
+  active,
+  batchId,
+}: {
+  active: boolean;
+  batchId: string | null;
+}) {
+  const { data, isLoading, isError, refetch } = useAnalyticsTeams(
+    active,
+    batchId
+  );
   const [selected, setSelected] = useState<TeamSummary | null>(null);
 
   const teams = useMemo(() => {

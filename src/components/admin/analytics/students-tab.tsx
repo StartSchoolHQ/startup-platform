@@ -20,8 +20,17 @@ import type { StudentRow } from "./types";
 
 type SortKey = "name" | "latest" | "avg" | "trend" | "weeks";
 
-export function StudentsTab({ active }: { active: boolean }) {
-  const { data, isLoading, isError, refetch } = useAnalyticsStudents(active);
+export function StudentsTab({
+  active,
+  batchId,
+}: {
+  active: boolean;
+  batchId: string | null;
+}) {
+  const { data, isLoading, isError, refetch } = useAnalyticsStudents(
+    active,
+    batchId
+  );
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("trend");
   const [selected, setSelected] = useState<StudentRow | null>(null);
