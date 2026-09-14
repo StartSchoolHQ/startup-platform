@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback } from "react";
 import { useApp } from "@/contexts/app-context";
-import { redirect, useSearchParams, useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -10,37 +9,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import { AdminUsersTable } from "@/components/admin/admin-users-table";
-import { BulkInviteTab } from "@/components/admin/bulk-invite-tab";
 
+/**
+ * Admin → Users. The Invitations tab was removed on 2026-09-14: accounts are
+ * created by Google sign-in with an @startschool.org address (see
+ * docs/GoogleSSO). A stale `?tab=invitations` URL simply shows the users list.
+ */
 export default function AdminUsersPage() {
   const { user, loading } = useApp();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const validTabs = ["all-users", "invitations"];
-  const tabFromUrl = searchParams.get("tab");
-  const activeTab = validTabs.includes(tabFromUrl ?? "")
-    ? tabFromUrl!
-    : "all-users";
-
-  const setActiveTab = useCallback(
-    (tab: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (tab === "all-users") {
-        params.delete("tab");
-      } else {
-        params.set("tab", tab);
-      }
-      const query = params.toString();
-      router.replace(query ? `?${query}` : window.location.pathname, {
-        scroll: false,
-      });
-    },
-    [searchParams, router]
-  );
 
   if (!loading && (!user || user.primary_role !== "admin")) {
     redirect("/dashboard");
@@ -56,34 +34,22 @@ export default function AdminUsersPage() {
         <h2 className="text-3xl font-bold tracking-tight">Users</h2>
       </div>
 
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="space-y-4"
-      >
-        <TabsList>
-          <TabsTrigger value="all-users">Users</TabsTrigger>
-          <TabsTrigger value="invitations">Invitations</TabsTrigger>
-        </TabsList>
+      <p className="text-muted-foreground text-sm">
+        New students sign in with their @startschool.org Google account — no
+        invitation needed. Their account appears here after the first sign-in.
+      </p>
 
-        <TabsContent value="all-users" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>All users</CardTitle>
-              <CardDescription>
-                Search, filter by batch or status, open a profile.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AdminUsersTable />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="invitations" className="space-y-4">
-          <BulkInviteTab />
-        </TabsContent>
-      </Tabs>
+      <Card>
+        <CardHeader>
+          <CardTitle>All users</CardTitle>
+          <CardDescription>
+            Search, filter by batch or status, open a profile.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AdminUsersTable />
+        </CardContent>
+      </Card>
     </div>
   );
 }
