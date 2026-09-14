@@ -158,8 +158,9 @@ Full detail on the phase-aware split, the gating matrix and the
 2. The shell reads `usePlatformSettings()` + `useApp()` and renders skeleton
    (`OverviewSkeleton`) until both resolve, then zero, one or two sections:
    - **`MyJourneyOverview`** (`src/components/dashboard/my-journey-overview.tsx`)
-     — solo-economy stat cards, Continue / Next up, achievement-progress
-     strip, recent activity. One consolidated RPC via
+     — solo-economy stat cards, weekly-report card (`WeeklyReportCard`, solo
+     form: 4 questions, DB drafts, past-reports dialog), Continue / Next up,
+     achievement-progress strip, recent activity. One consolidated RPC via
      `src/hooks/use-my-journey-overview.ts`. Collapses by default (behind a
      summary header) when both sections are showing and the student has an
      active team.
@@ -170,9 +171,11 @@ Full detail on the phase-aware split, the gating matrix and the
    - Neither on (student, both phases off) → a single Card: "Your dashboard
      will fill up once the programme starts."
    - Admins always see both sections regardless of the phase switches.
-3. **Weekly Report Banner** — rendered by the dashboard layout above the
-   page content, not by this page; shows for teams with unsubmitted reports
-   (Friday–Monday 10:00 Riga time) and only while Team Journey is on.
+3. **Weekly Report Banners** — rendered by the dashboard layout above the
+   page content, not by this page. `WeeklyReportBanner` (team): unsubmitted
+   teams, Friday–Monday 10:00 Riga, only while Team Journey is on.
+   `IndividualWeeklyReportBanner` (solo): same window, only while My Journey
+   is on and the student resolves to the solo form; opens the modal in place.
 
 ---
 

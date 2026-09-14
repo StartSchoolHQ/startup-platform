@@ -124,7 +124,7 @@ The following notifications are created automatically by Postgres triggers (not 
 | Invitation state change trigger | `team_invitations` update | `invitation_accepted` / `invitation_declined` |
 | Auto-decline trigger | `team_members` insert | `invitations_auto_declined` |
 | Achievement trigger | RPC `check_and_award_achievement` | `achievement` |
-| Weekly report reminder | Postgres cron/scheduled job | `weekly_report_reminder_2day` / `weekly_report_reminder_1day` |
+| Weekly report reminder | pg_cron jobs 5/7 (team: `send_weekly_report_reminders[_sunday]`) and `weekly-report-reminder-{friday,sunday}-individual` (solo: `send_individual_weekly_report_reminders_v1`) | `weekly_report_reminder_2day` / `weekly_report_reminder_1day`; `data.context` is `team` or `individual` |
 
 ---
 
@@ -325,7 +325,7 @@ await supabase
   week_number?: number;
   week_year?: number;
   points_refunded?: number;
-  context?: string;          // "team" or "individual"
+  context?: string;          // "team" (deep-links to the team page) or "individual" (deep-links to /dashboard)
 
   // Other
   role?: string;

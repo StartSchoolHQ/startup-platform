@@ -12,8 +12,14 @@ still open the hidden pages directly by URL or via Admin → Teams.
 
 | Phase            | What it is         | Units earned              | Weekly reports / strikes |
 | ---------------- | ------------------ | ------------------------- | ------------------------ |
-| **My Journey**   | Solo preparation   | My Journey XP · My Journey Credits | No              |
+| **My Journey**   | Solo preparation   | My Journey XP · My Journey Credits | Solo weekly report (4 questions, reminders only — no strikes/penalty) |
 | **Team Journey** | The startup phase  | Team XP · Team Points     | Yes                      |
+
+**Which weekly report form a student gets:** Team Journey on **and** active
+team membership → the team form on the Team Journey page. Otherwise, My
+Journey on → the solo form (dashboard card + banner). One report per week,
+never both. Same rule in SQL: `send_individual_weekly_report_reminders_v1`.
+Feature doc: `docs/superpowers/specs/2026-09-14-individual-weekly-reports-design.md`.
 
 Four balances live on `users`, one pair per economy. Graduation (8,000) is
 **Team XP**.
@@ -100,6 +106,7 @@ no write policy — writes go through the RPC.
 | Leaderboard boards                                           | that board is not rendered (admins too)            |
 | Dashboard home cards                                         | that section is not rendered (admins too)          |
 | `WeeklyReportBanner`                                         | renders nothing when Team Journey is off           |
+| `WeeklyReportCard`, `IndividualWeeklyReportBanner`            | hidden unless My Journey on and the student is not in an active team while Team Journey is on |
 | `check_missed_weekly_reports_team_context`                   | returns 0 rows → Monday edge function creates no strikes |
 | `send_weekly_report_reminders`, `send_weekly_report_reminders_sunday` | return 0                                  |
 

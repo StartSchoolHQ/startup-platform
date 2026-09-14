@@ -9,11 +9,12 @@ Weekly reports are how students reflect on what they shipped, what blocked them,
 ## What it does
 
 - Lists every weekly report across all teams (admin client bypasses RLS), most recent week first, then most recent submission within the week.
-- Four filters at the top of the table:
+- Five filters at the top of the table:
   - `User` — populated from distinct authors who have ever submitted a report.
   - `Team` — distinct teams across all reports.
   - `Week` — formatted as `Week 17 · May 5–May 11 (2025)`, sorted newest first.
   - `Status` — All / Submitted / Draft.
+  - `Context` — All / Team / Solo (`weekly_reports.context`). Solo rows show a "Solo" badge in the Team column and "Solo · My Journey" in the modal header.
 - A `Clear` button appears once any filter is non-default.
 - Live count display: `42 reports` or `1 report` in the filter row.
 - Pagination at 50 per page; only renders pagination controls when there's more than one page.
@@ -44,7 +45,7 @@ The recent shipping of this page (commit `bc85c54`) replaced an older approach w
   - [`src/components/admin/admin-weekly-report-view-modal.tsx`](../../../src/components/admin/admin-weekly-report-view-modal.tsx) — read-only structured viewer
 - **Hooks:** local `useState` + `useEffect`; one effect loads filter options once on mount, another refetches reports when any filter or page changes; a third resets `page` to 1 whenever a filter changes.
 - **API routes:**
-  - `GET /api/admin/weekly-reports` — [`src/app/api/admin/weekly-reports/route.ts`](../../../src/app/api/admin/weekly-reports/route.ts) — paginated query with `user_id`, `team_id`, `week` (`YYYY-WW`), and `status` filters. Verifies admin role with the server client, then uses the admin client to bypass RLS.
+  - `GET /api/admin/weekly-reports` — [`src/app/api/admin/weekly-reports/route.ts`](../../../src/app/api/admin/weekly-reports/route.ts) — paginated query with `user_id`, `team_id`, `week` (`YYYY-WW`), `status`, and `context` (`team` / `individual` / `all`) filters. Verifies admin role with the server client, then uses the admin client to bypass RLS.
   - `GET /api/admin/weekly-reports/filters` — [`src/app/api/admin/weekly-reports/filters/route.ts`](../../../src/app/api/admin/weekly-reports/filters/route.ts) — returns distinct users, teams, and weeks derived from the `weekly_reports` table.
 - **Auth requirement:** admin only. Page-level redirect; both routes return 403 for non-admins.
 - **Notable types:** `AdminWeeklyReportRow` (exported by the modal) — full row including `submission_data: SubmissionData` with the structured report fields (commitments, blockers, alignmentScore, nextWeekCommitments, etc.).
