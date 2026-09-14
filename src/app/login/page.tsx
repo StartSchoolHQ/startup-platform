@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { LoginForm } from "@/components/auth/login-form";
 
 export default function LoginPage() {
@@ -34,7 +35,14 @@ export default function LoginPage() {
         </div>
 
         <p className="relative text-xs text-white/40">
-          StartSchool · Tech Education Foundation
+          StartSchool · Tech Education Foundation ·{" "}
+          <Link href="/policy" className="hover:text-white/70">
+            Privacy
+          </Link>{" "}
+          ·{" "}
+          <Link href="/terms" className="hover:text-white/70">
+            Terms
+          </Link>
         </p>
       </section>
 

@@ -47,6 +47,8 @@ export async function updateSession(request: NextRequest) {
     "/auth/reset-password",
     "/profile/setup",
     "/invite",
+    "/policy",
+    "/terms",
     "/full-scholarship-agreement",
     "/partial-scholarship-agreement",
     "/part-time-agreement",
