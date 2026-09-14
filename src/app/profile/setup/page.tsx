@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { createClient } from "../../../lib/supabase/client";
+import { isProfileComplete } from "../../../lib/profile-utils";
 import {
   Avatar,
   AvatarImage,
@@ -19,15 +20,12 @@ import {
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import { PasswordInput } from "../../../components/ui/password-input";
 import { AlertCircle, Loader2, X } from "lucide-react";
 import posthog from "posthog-js";
 
 export default function ProfileSetupPage() {
   const [name, setName] = useState("");
   const [isNamePrefilled, setIsNamePrefilled] = useState(false);
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -40,37 +38,36 @@ export default function ProfileSetupPage() {
     const validateAccess = async () => {
       const supabase = createClient();
 
-      // If there's a hash token in URL (password reset/recovery), let Supabase process it first
-      if (
-        typeof window !== "undefined" &&
-        window.location.hash.includes("access_token")
-      ) {
-        // Wait for Supabase client to process the hash token
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-
-      // Check if user is authenticated
       const {
         data: { user },
         error: userError,
       } = await supabase.auth.getUser();
 
       if (userError || !user) {
-        // Only redirect if there's no hash token (otherwise Supabase is still processing it)
-        if (
-          typeof window === "undefined" ||
-          !window.location.hash.includes("access_token")
-        ) {
-          router.push("/login");
-        }
+        router.push("/login");
         return;
       }
 
-      // Check if user has pre-filled name from invitation
+      // A complete profile has no business here — straight to the dashboard.
+      const { data: profile } = await supabase
+        .from("users")
+        .select("name, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (isProfileComplete(profile)) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      // Pre-fill the name: legacy invite metadata first, then Google's.
       const metadata = user.user_metadata || {};
-      if (metadata.first_name && metadata.last_name) {
-        const fullName = `${metadata.first_name} ${metadata.last_name}`;
-        setName(fullName);
+      const prefilled =
+        [metadata.first_name, metadata.last_name].filter(Boolean).join(" ") ||
+        metadata.full_name ||
+        metadata.name ||
+        "";
+      if (prefilled) {
+        setName(prefilled);
         setIsNamePrefilled(true);
       }
 
@@ -116,21 +113,6 @@ export default function ProfileSetupPage() {
       return;
     }
 
-    if (!password.trim()) {
-      setError("Password is required");
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters long");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -171,18 +153,6 @@ export default function ProfileSetupPage() {
       const {
         data: { publicUrl },
       } = supabase.storage.from("avatars").getPublicUrl(uploadData.path);
-
-      // Update user password in Supabase Auth
-      const { error: passwordError } = await supabase.auth.updateUser({
-        password: password,
-      });
-
-      if (passwordError) {
-        setError(
-          passwordError.message || "Failed to set password. Please try again."
-        );
-        return;
-      }
 
       // Create or update user profile via API route
       const response = await fetch("/api/profile/setup", {
@@ -256,7 +226,7 @@ export default function ProfileSetupPage() {
                 Complete Your Profile
               </CardTitle>
               <CardDescription className="mt-2 text-zinc-400">
-                Please provide your details to get started
+                Add a profile photo so your team can recognise you
               </CardDescription>
             </motion.div>
           </CardHeader>
@@ -348,31 +318,14 @@ export default function ProfileSetupPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter your full name"
-                  disabled={loading || isNamePrefilled}
-                  className={`border-zinc-600 bg-zinc-800 text-zinc-100 transition-all duration-200 placeholder:text-zinc-400 focus:border-[#ff78c8] focus:bg-zinc-700/50 focus:ring-[#ff78c8]/30 ${
-                    isNamePrefilled ? "cursor-not-allowed opacity-60" : ""
-                  }`}
+                  disabled={loading}
+                  className="border-zinc-600 bg-zinc-800 text-zinc-100 transition-all duration-200 placeholder:text-zinc-400 focus:border-[#ff78c8] focus:bg-zinc-700/50 focus:ring-[#ff78c8]/30"
                 />
                 {isNamePrefilled && (
                   <p className="text-xs text-zinc-500">
-                    Name pre-filled from invitation
+                    Pre-filled from your account — you can edit it
                   </p>
                 )}
-              </motion.div>
-
-              {/* Password */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: 0.25 }}
-              >
-                <PasswordInput
-                  password={password}
-                  confirmPassword={confirmPassword}
-                  onPasswordChange={setPassword}
-                  onConfirmPasswordChange={setConfirmPassword}
-                  disabled={loading}
-                />
               </motion.div>
 
               <motion.div

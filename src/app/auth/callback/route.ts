@@ -13,6 +13,16 @@ export async function GET(request: Request) {
     next = "/dashboard";
   }
 
+  // OAuth / hook failures come back as query params on the redirectTo URL.
+  const oauthError = searchParams.get("error");
+  if (oauthError) {
+    const description = searchParams.get("error_description") ?? oauthError;
+    console.error("OAuth callback error:", oauthError, description);
+    return NextResponse.redirect(
+      `${origin}/auth/auth-code-error?error=${encodeURIComponent(description)}`
+    );
+  }
+
   const supabase = await createClient();
 
   if (code) {
@@ -31,7 +41,7 @@ export async function GET(request: Request) {
           event: "user_authenticated",
           properties: {
             email: user.email,
-            auth_method: "email_invite",
+            auth_method: user.app_metadata?.provider ?? "unknown",
           },
         });
         await posthog.shutdown();

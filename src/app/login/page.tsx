@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { LoginForm } from "@/components/auth/login-form";
+import { LoginMethods } from "@/components/auth/login-methods";
 
 export default function LoginPage() {
   return (
@@ -60,15 +60,15 @@ export default function LoginPage() {
           <div className="space-y-1">
             <h2 className="text-2xl font-semibold tracking-tight">Sign in</h2>
             <p className="text-muted-foreground text-sm">
-              Use the email you were invited with.
+              Use your @startschool.org Google account.
             </p>
           </div>
 
-          <LoginForm />
+          <LoginMethods />
 
           <p className="text-muted-foreground text-xs">
-            No account? Invitations come from your programme lead. Ask them to
-            send yours.
+            First time here? Your account is created automatically when you sign
+            in with Google.
           </p>
         </div>
       </section>

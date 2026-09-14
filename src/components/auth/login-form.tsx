@@ -61,7 +61,7 @@ export function LoginForm() {
         } else if (error.message.includes("Invalid login credentials")) {
           setNotice({
             kind: "error",
-            text: "Wrong email or password. If you were invited but never finished setup, ask an admin to resend your invitation.",
+            text: 'Wrong email or password. New here? Use "Continue with Google" above.',
           });
         } else {
           setNotice({ kind: "error", text: error.message });
