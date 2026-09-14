@@ -477,3 +477,29 @@ export const CloseBatchSchema = z.object({
   teamIds: z.array(z.string().uuid()).max(500),
 });
 export type CloseBatchInput = z.infer<typeof CloseBatchSchema>;
+
+// ============================================================================
+// Founder card (profile setup step 2 → public.founder_profiles)
+// ============================================================================
+
+export const BACKGROUND_LEANS = ["tech", "business", "both"] as const;
+export type BackgroundLean = (typeof BACKGROUND_LEANS)[number];
+
+const cardText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .min(20, "A bit more, please — at least 20 characters.")
+    .max(max, `Keep it under ${max} characters.`);
+
+export const FounderCardSchema = z.object({
+  background_lean: z.enum(BACKGROUND_LEANS, {
+    message: "Pick tech, business or both.",
+  }),
+  background_reason: cardText(600),
+  bio_energizes: cardText(800),
+  bio_skills: cardText(800),
+  bio_gaps: cardText(800),
+});
+
+export type FounderCardInput = z.infer<typeof FounderCardSchema>;

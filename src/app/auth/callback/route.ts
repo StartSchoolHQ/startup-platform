@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
-import { waitForProfile, isProfileComplete } from "../../../lib/profile-utils";
+import { waitForProfile, isSetupComplete } from "../../../lib/profile-utils";
 import PostHogClient from "../../../lib/posthog-server";
 
 export async function GET(request: Request) {
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
           return NextResponse.redirect(`${origin}/auth/auth-code-error`);
         }
 
-        if (!isProfileComplete(userProfile)) {
+        if (!(await isSetupComplete(supabase, user.id, userProfile))) {
           // Profile exists but is incomplete (no name or avatar)
           return NextResponse.redirect(`${origin}/profile/setup`);
         }
@@ -85,10 +85,16 @@ export async function GET(request: Request) {
         // User has session but code failed - they clicked the link again
         const userProfile = await waitForProfile(supabase, user.id);
 
-        if (userProfile && !isProfileComplete(userProfile)) {
+        if (
+          userProfile &&
+          !(await isSetupComplete(supabase, user.id, userProfile))
+        ) {
           // Incomplete profile - let them finish setup
           return NextResponse.redirect(`${origin}/profile/setup`);
-        } else if (userProfile && isProfileComplete(userProfile)) {
+        } else if (
+          userProfile &&
+          (await isSetupComplete(supabase, user.id, userProfile))
+        ) {
           // Profile complete - go to dashboard
           return NextResponse.redirect(`${origin}/dashboard`);
         }
@@ -115,7 +121,7 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/auth/auth-code-error`);
       }
 
-      if (!isProfileComplete(userProfile)) {
+      if (!(await isSetupComplete(supabase, user.id, userProfile))) {
         // Profile exists but is incomplete
         return NextResponse.redirect(`${origin}/profile/setup`);
       } else {

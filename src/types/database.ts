@@ -324,6 +324,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      deleted_elias_admin_backup_20260914: {
+        Row: {
+          ref_column: string | null;
+          row_data: Json | null;
+          tbl: string | null;
+        };
+        Insert: {
+          ref_column?: string | null;
+          row_data?: Json | null;
+          tbl?: string | null;
+        };
+        Update: {
+          ref_column?: string | null;
+          row_data?: Json | null;
+          tbl?: string | null;
+        };
+        Relationships: [];
+      };
+      deleted_mj_p0_tasks_backup_20260914: {
+        Row: {
+          row_data: Json | null;
+          tbl: string | null;
+        };
+        Insert: {
+          row_data?: Json | null;
+          tbl?: string | null;
+        };
+        Update: {
+          row_data?: Json | null;
+          tbl?: string | null;
+        };
+        Relationships: [];
+      };
       diploma_batches: {
         Row: {
           admission_date: string | null;
@@ -413,6 +446,47 @@ export type Database = {
             foreignKeyName: "diplomas_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      founder_profiles: {
+        Row: {
+          background_lean: string;
+          background_reason: string;
+          bio_energizes: string;
+          bio_gaps: string;
+          bio_skills: string;
+          created_at: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          background_lean: string;
+          background_reason: string;
+          bio_energizes: string;
+          bio_gaps: string;
+          bio_skills: string;
+          created_at?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          background_lean?: string;
+          background_reason?: string;
+          bio_energizes?: string;
+          bio_gaps?: string;
+          bio_skills?: string;
+          created_at?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "founder_profiles_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
             referencedRelation: "users";
             referencedColumns: ["id"];
           },
@@ -3393,6 +3467,7 @@ export type Database = {
         Args: { p_team_id: string; p_user_id: string };
         Returns: boolean;
       };
+      hook_restrict_signup: { Args: { event: Json }; Returns: Json };
       increment_team_member_count: {
         Args: { team_id: string };
         Returns: undefined;

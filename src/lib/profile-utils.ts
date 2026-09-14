@@ -70,3 +70,29 @@ export function isProfileComplete(
 ): boolean {
   return !!profile?.name?.trim() && !!profile?.avatar_url?.trim();
 }
+
+/** True when the user has saved a founder card (profile setup step 2). */
+export async function hasFounderCard(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("founder_profiles")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return !!data;
+}
+
+/**
+ * Full setup gate: name + avatar on public.users AND a founder card.
+ * Used by /auth/callback, dashboard/layout.tsx and /profile/setup.
+ */
+export async function isSetupComplete(
+  supabase: SupabaseClient,
+  userId: string,
+  profile: Pick<UserProfile, "name" | "avatar_url"> | null
+): Promise<boolean> {
+  if (!isProfileComplete(profile)) return false;
+  return hasFounderCard(supabase, userId);
+}
