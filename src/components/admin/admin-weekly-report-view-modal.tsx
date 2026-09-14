@@ -182,7 +182,7 @@ export function AdminWeeklyReportViewModal({
           <DialogTitle className="flex flex-wrap items-center gap-2 text-lg">
             <span>{userName}</span>
             <Badge variant="outline" className="font-normal">
-              {teamName}
+              {report.context === "individual" ? "Solo · My Journey" : teamName}
             </Badge>
             <Badge variant="secondary" className="font-normal">
               {weekLabel} · {report.week_year}

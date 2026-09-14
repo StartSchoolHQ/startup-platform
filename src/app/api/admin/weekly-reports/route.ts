@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     const teamId = url.searchParams.get("team_id");
     const weekParam = url.searchParams.get("week"); // format: "YYYY-WW"
     const status = url.searchParams.get("status"); // submitted | draft | all
+    const context = url.searchParams.get("context"); // team | individual | all
 
     // Admin role verified above — use admin client to bypass RLS
     // so admins can read reports across all teams.
@@ -59,6 +60,9 @@ export async function GET(request: NextRequest) {
     if (userId) query = query.eq("user_id", userId);
     if (teamId) query = query.eq("team_id", teamId);
     if (status && status !== "all") query = query.eq("status", status);
+    if (context === "team" || context === "individual") {
+      query = query.eq("context", context);
+    }
     if (weekParam) {
       const [yearStr, weekStr] = weekParam.split("-");
       const year = parseInt(yearStr);

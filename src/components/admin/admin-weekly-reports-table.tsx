@@ -82,6 +82,7 @@ export function AdminWeeklyReportsTable() {
   const [teamId, setTeamId] = useState<string>("all");
   const [week, setWeek] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
+  const [context, setContext] = useState<string>("all");
 
   const [selectedReport, setSelectedReport] =
     useState<AdminWeeklyReportRow | null>(null);
@@ -132,6 +133,7 @@ export function AdminWeeklyReportsTable() {
     if (teamId !== "all") params.set("team_id", teamId);
     if (week !== "all") params.set("week", week);
     if (status !== "all") params.set("status", status);
+    if (context !== "all") params.set("context", context);
     if (batchId) params.set("batch", batchId);
 
     fetch(`/api/admin/weekly-reports?${params}`)
@@ -149,17 +151,21 @@ export function AdminWeeklyReportsTable() {
     return () => {
       cancelled = true;
     };
-  }, [page, userId, teamId, week, status, batchId]);
+  }, [page, userId, teamId, week, status, context, batchId]);
 
   // Reset page when filters change
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
-  }, [userId, teamId, week, status]);
+  }, [userId, teamId, week, status, context]);
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const hasFilters =
-    userId !== "all" || teamId !== "all" || week !== "all" || status !== "all";
+    userId !== "all" ||
+    teamId !== "all" ||
+    week !== "all" ||
+    status !== "all" ||
+    context !== "all";
 
   const weekByKey = useMemo(() => {
     const m = new Map<string, WeekOption>();
@@ -172,6 +178,7 @@ export function AdminWeeklyReportsTable() {
     setTeamId("all");
     setWeek("all");
     setStatus("all");
+    setContext("all");
   };
 
   const openReport = (r: AdminWeeklyReportRow) => {
@@ -235,6 +242,17 @@ export function AdminWeeklyReportsTable() {
                 {s.label}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={context} onValueChange={setContext}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Context" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All contexts</SelectItem>
+            <SelectItem value="team">Team</SelectItem>
+            <SelectItem value="individual">Solo</SelectItem>
           </SelectContent>
         </Select>
 
@@ -330,7 +348,11 @@ export function AdminWeeklyReportsTable() {
                       )}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {r.team?.name || (
+                      {r.team?.name ? (
+                        r.team.name
+                      ) : r.context === "individual" ? (
+                        <Badge variant="outline">Solo</Badge>
+                      ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
