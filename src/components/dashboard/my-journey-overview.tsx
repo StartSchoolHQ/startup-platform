@@ -15,6 +15,7 @@ import { MyJourneySectionHeader } from "@/components/dashboard/my-journey/sectio
 import { MyJourneyStatCards } from "@/components/dashboard/my-journey/stat-cards";
 import { NextUpCardV2 } from "@/components/dashboard/my-journey/next-up-card-v2";
 import { RecentActivityCard } from "@/components/dashboard/my-journey/recent-activity-card";
+import { WeeklyReportCard } from "@/components/dashboard/my-journey/weekly-report-card";
 import { useMyJourneyOverview } from "@/hooks/use-my-journey-overview";
 
 /**
@@ -60,6 +61,8 @@ export function MyJourneyOverview({
   const content = (
     <div className="space-y-6">
       <MyJourneyStatCards data={data} />
+
+      <WeeklyReportCard hasActiveTeam={data.has_active_team} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
         <NextUpCardV2 task={data.next_up} totalTasks={data.tasks.total} />
