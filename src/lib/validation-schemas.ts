@@ -138,6 +138,42 @@ export const WeeklyReportSchema = z
 export type WeeklyReportFormData = z.infer<typeof WeeklyReportSchema>;
 
 /**
+ * Individual (My Journey) weekly report — the four questions kept from the
+ * team form (#1, #2, #6, #8). Callers strip blank rows with
+ * `normalizeIndividualReport` before parsing; the RPC re-validates with the
+ * same rules and messages.
+ */
+export const IndividualWeeklyReportSchema = z.object({
+  commitments: z
+    .array(
+      z.object({
+        text: z.string().min(5, "Commitment must be at least 5 characters"),
+        status: z.enum(["completed", "in_progress", "not_done"]),
+        explanation: z.string().optional(),
+      })
+    )
+    .min(1, "At least one commitment is required"),
+  blockers: z.string().optional(),
+  nextWeekCommitments: z
+    .array(
+      z.string().min(5, "Next week commitment must be at least 5 characters")
+    )
+    .min(1, "At least one commitment for next week is required"),
+  alignmentScore: z
+    .number()
+    .int()
+    .min(1, "Alignment score must be a whole number between 1 and 10")
+    .max(10, "Alignment score must be a whole number between 1 and 10"),
+  alignmentReason: z
+    .string()
+    .min(5, "Alignment reason must be at least 5 characters"),
+});
+
+export type IndividualWeeklyReportFormData = z.infer<
+  typeof IndividualWeeklyReportSchema
+>;
+
+/**
  * Client meeting validation schema
  * Updated 2026-01-20:
  * - Min chars reduced to 5 (3 for role)

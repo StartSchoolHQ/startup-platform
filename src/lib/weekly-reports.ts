@@ -91,6 +91,21 @@ export function formatWeekPeriod(weekBoundaries: WeekBoundaries): string {
   return `Week ${weekBoundaries.week_number}: ${startDate} - ${endDate}`;
 }
 
+/**
+ * Banner window: Friday 00:00 through Monday 10:00 Riga. `week_start` is
+ * always a Monday, so Friday = week_start + 4 days. After Monday 10:00
+ * `get_riga_week_boundaries` flips to the new week, whose Friday is ahead,
+ * so the banner closes by itself.
+ */
+export function isWeeklyReportBannerWindow(
+  week: WeekBoundaries,
+  now: Date = new Date()
+): boolean {
+  const friday = new Date(week.week_start);
+  friday.setDate(friday.getDate() + 4);
+  return now >= friday;
+}
+
 // Individual context functions
 export async function hasUserSubmittedThisWeekIndividual(
   userId: string
