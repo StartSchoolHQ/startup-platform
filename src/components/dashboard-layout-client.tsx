@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WeeklyReportBanner } from "@/components/dashboard/weekly-report-banner";
+import { IndividualWeeklyReportBanner } from "@/components/dashboard/individual-weekly-report-banner";
 
 const pageNames: Record<string, string> = {
   admin: "Admin",
@@ -98,6 +99,7 @@ export function DashboardLayoutClient({
         ) : (
           <>
             <WeeklyReportBanner />
+            <IndividualWeeklyReportBanner />
             <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
               {children}
             </div>

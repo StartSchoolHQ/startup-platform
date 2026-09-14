@@ -184,7 +184,8 @@ export function NotificationCenter() {
             router.push("/dashboard/team-journey");
           }
         } else {
-          router.push("/dashboard/my-journey?tab=weekly-reports");
+          // Solo reminder — the card on the dashboard opens the form.
+          router.push("/dashboard");
         }
         break;
 
