@@ -62,8 +62,11 @@ export async function waitForProfile(
 }
 
 /**
- * Checks if a user profile is complete (has name, avatar is optional)
+ * A profile is complete when the user has a display name AND an avatar.
+ * Both are collected on /profile/setup.
  */
-export function isProfileComplete(profile: UserProfile | null): boolean {
-  return !!profile?.name;
+export function isProfileComplete(
+  profile: Pick<UserProfile, "name" | "avatar_url"> | null
+): boolean {
+  return !!profile?.name?.trim() && !!profile?.avatar_url?.trim();
 }

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isProfileComplete } from "@/lib/profile-utils";
 import { DashboardLayoutWrapper } from "./dashboard-layout-wrapper";
 
 export default async function DashboardLayout({
@@ -17,6 +18,19 @@ export default async function DashboardLayout({
   // If no user, redirect to login
   if (!user) {
     redirect("/login");
+  }
+
+  // Profile setup gate: name + avatar are required before the dashboard.
+  // The /auth/callback redirect alone is not enough — a user who abandons
+  // setup and later signs in from /login would otherwise land here.
+  const { data: profile } = await supabase
+    .from("users")
+    .select("name, avatar_url")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!isProfileComplete(profile)) {
+    redirect("/profile/setup");
   }
 
   return <DashboardLayoutWrapper>{children}</DashboardLayoutWrapper>;

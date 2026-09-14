@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { Database } from "../../types/database";
+import { classifyRoute } from "./route-classification";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -38,44 +39,13 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Define routes that should be excluded from auth checks
-  const publicRoutes = [
-    "/",
-    "/login",
-    "/auth/callback",
-    "/auth/confirm",
-    "/auth/reset-password",
-    "/profile/setup",
-    "/invite",
-    "/policy",
-    "/terms",
-    "/full-scholarship-agreement",
-    "/partial-scholarship-agreement",
-    "/part-time-agreement",
-    "/laptop-agreement",
-    "/keycard-agreement",
-    "/agreement/",
-    "/privacy/scholarship-agreement",
-  ];
-  const isPublicRoute = publicRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
+  const { isPublic, isProtected, isScholarshipPublic } = classifyRoute(
+    request.nextUrl.pathname
   );
 
   // Hidden public scholarship pages + the privacy notice: noindex +
   // no-referrer so the URLs don't leak into search engines or
   // third-party Referer headers.
-  const scholarshipNoIndexPrefixes = [
-    "/full-scholarship-agreement",
-    "/partial-scholarship-agreement",
-    "/part-time-agreement",
-    "/laptop-agreement",
-    "/keycard-agreement",
-    "/agreement/",
-    "/privacy/scholarship-agreement",
-  ];
-  const isScholarshipPublic = scholarshipNoIndexPrefixes.some((p) =>
-    request.nextUrl.pathname.startsWith(p)
-  );
   if (isScholarshipPublic) {
     supabaseResponse.headers.set(
       "X-Robots-Tag",
@@ -84,28 +54,15 @@ export async function updateSession(request: NextRequest) {
     supabaseResponse.headers.set("Referrer-Policy", "no-referrer");
   }
 
-  // Skip auth checks for public routes
-  if (isPublicRoute) {
+  // Public routes need no auth check. /login stays reachable for signed-in
+  // users so a legacy password user can link their Google account.
+  if (isPublic) {
     return supabaseResponse;
   }
 
-  // Define protected routes that require authentication
-  const protectedRoutes = ["/dashboard"];
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
-  );
-
-  // If user is not authenticated and trying to access a protected route
-  if (!user && isProtectedRoute) {
+  if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-
-  // If user is authenticated and trying to access login page, redirect to dashboard
-  if (user && request.nextUrl.pathname.startsWith("/login")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
