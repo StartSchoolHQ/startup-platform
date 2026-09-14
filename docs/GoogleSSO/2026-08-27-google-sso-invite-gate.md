@@ -23,7 +23,7 @@
 - Do **not** set `hd` on the Google button.
 - E2E needs a throwaway @startschool.org Google account that has never logged in (Elias creates it).
 - Decisions 2026-09-14 (Elias): **strict Workspace-only** (no admin create-account route/tab — Task 8 rewritten); **Google button + hidden legacy password form**; **setup = Google name pre-filled/editable + mandatory avatar**; data fixes in Task 9 each need an explicit OK at execution time.
-- Status 2026-09-14: Task 3 applied to prod (`google_sso_signup_gate_v1`, version 20260914135244, backup waived by Elias); 10/10 tests green. Follow-up `google_sso_signup_gate_v1_revoke_trigger_exec` (20260914135439) revoked PUBLIC/anon/authenticated EXECUTE on both trigger functions (linter hygiene). Hook NOT yet enabled in the dashboard.
+- Status 2026-09-14 (later): Tasks 1, 2, 5, 6, 7, 8, 10 implemented on branch `feature/google-sso` (one commit each pending); Task 4 (enable hook) and Task 11 (E2E on preview) wait on Elias's Supabase provider + hook steps. Task 3 applied to prod (`google_sso_signup_gate_v1`, version 20260914135244, backup waived by Elias); 10/10 tests green. Follow-up `google_sso_signup_gate_v1_revoke_trigger_exec` (20260914135439) revoked PUBLIC/anon/authenticated EXECUTE on both trigger functions (linter hygiene). Hook NOT yet enabled in the dashboard.
 - Decisions 2026-08-27 (Elias): **no approval gate** — @startschool.org Google users land in the dashboard immediately; **auto-assign batch** — `handle_new_auth_user` sets `users.batch_id` to the single open `diploma_batches` row (`closed_at IS NULL`); if 0 or >1 batches are open it leaves NULL.
 
 ---
@@ -52,7 +52,7 @@
 **Interfaces:**
 - Produces: `classifyRoute(pathname: string): { isPublic: boolean; isProtected: boolean; isScholarshipPublic: boolean }`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/auth/route-classification.test.ts
@@ -96,12 +96,12 @@ describe("classifyRoute", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/auth/route-classification.test.ts`
 Expected: FAIL — cannot resolve `@/lib/supabase/route-classification`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // src/lib/supabase/route-classification.ts
@@ -148,7 +148,7 @@ export function classifyRoute(pathname: string): RouteClass {
 }
 ```
 
-- [ ] **Step 4: Wire it into the middleware**
+- [x] **Step 4: Wire it into the middleware**
 
 Replace lines 41–101 of `src/lib/supabase/middleware.ts` (from `// Define routes that should be excluded` through the `/login` redirect) with:
 
@@ -183,7 +183,7 @@ Add the import at the top: `import { classifyRoute } from "./route-classificatio
 
 Note: the old `user && /login → /dashboard` redirect is intentionally dropped — `/login` is public and returns early anyway (that redirect was dead code before, and `/login` needs to stay reachable so a logged-in legacy user can still see the Google button and link their account).
 
-- [ ] **Step 5: Run tests + lint**
+- [x] **Step 5: Run tests + lint**
 
 Run: `npx vitest run tests/auth/route-classification.test.ts && npx eslint src/lib/supabase`
 Expected: PASS, no lint errors.
@@ -206,7 +206,7 @@ git commit -m "fix(auth): exact-match / in middleware public routes"
 **Interfaces:**
 - Produces: `isProfileComplete(profile: UserProfile | null): boolean` — true only when `name` and `avatar_url` are both non-empty.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/auth/profile-utils.test.ts
@@ -237,12 +237,12 @@ describe("isProfileComplete", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/auth/profile-utils.test.ts`
 Expected: FAIL on "is false without avatar".
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Replace lines 64–69 of `src/lib/profile-utils.ts`:
 
@@ -256,7 +256,7 @@ export function isProfileComplete(profile: UserProfile | null): boolean {
 }
 ```
 
-- [ ] **Step 4: Run test**
+- [x] **Step 4: Run test**
 
 Run: `npx vitest run tests/auth/profile-utils.test.ts`
 Expected: PASS.
@@ -564,7 +564,7 @@ Expected: 3 functions, trigger still `O` (enabled).
 Run: `npx vitest run tests/auth/signup-gate.test.ts`
 Expected: PASS (10 tests). Then confirm no leftovers: `select count(*) from auth.users where email like 'test_%@test.local'` → 0.
 
-- [ ] **Step 6: Run advisors**
+- [x] **Step 6: Run advisors**
 
 Use `mcp__supabase__get_advisors` type `security`; confirm no new lint about `hook_restrict_signup` (it has `search_path` set and no `SECURITY DEFINER`).
 
@@ -648,7 +648,7 @@ git commit -m "test(auth): live check that signup gate hook is enabled"
 **Interfaces:**
 - Consumes: `?error=<human message>` query param.
 
-- [ ] **Step 1: Create the page** — restyle to the current login page tokens (`bg-background`, `text-muted-foreground`, ShadCN `Card`), not the old blue grid below; the structure/copy is what matters.
+- [x] **Step 1: Create the page** — restyle to the current login page tokens (`bg-background`, `text-muted-foreground`, ShadCN `Card`), not the old blue grid below; the structure/copy is what matters.
 
 ```tsx
 // src/app/auth/auth-code-error/page.tsx
@@ -717,7 +717,7 @@ export default function AuthCodeErrorPage() {
 }
 ```
 
-- [ ] **Step 2: Handle OAuth error params in the callback**
+- [x] **Step 2: Handle OAuth error params in the callback**
 
 In `src/app/auth/callback/route.ts`, after line 14 (`next` sanitised) and before `const supabase = await createClient();`, insert:
 
@@ -734,7 +734,7 @@ In `src/app/auth/callback/route.ts`, after line 14 (`next` sanitised) and before
   }
 ```
 
-- [ ] **Step 3: Type-check + lint**
+- [x] **Step 3: Type-check + lint**
 
 Run: `npx tsc --noEmit -p tsconfig.json && npx eslint src/app/auth`
 Expected: clean.
@@ -761,7 +761,7 @@ git commit -m "feat(auth): real error page + OAuth error handling in callback"
 **Interfaces:**
 - Produces: `<GoogleSignInButton next?: string />`
 
-- [ ] **Step 1: Create the button component**
+- [x] **Step 1: Create the button component**
 
 ```tsx
 // src/components/auth/google-sign-in-button.tsx
@@ -838,13 +838,13 @@ export function GoogleSignInButton({ next = "/dashboard" }: GoogleSignInButtonPr
 }
 ```
 
-- [ ] **Step 2: Restructure the login page** (current code, post 2026-09 redesign: `src/app/login/page.tsx` is a server component with a brand panel + form panel and renders `<LoginForm />` from `src/components/auth/login-form.tsx`)
+- [x] **Step 2: Restructure the login page** (current code, post 2026-09 redesign: `src/app/login/page.tsx` is a server component with a brand panel + form panel and renders `<LoginForm />` from `src/components/auth/login-form.tsx`)
 
 1. Create `src/components/auth/login-methods.tsx` (client): renders `<GoogleSignInButton />`, then a ShadCN `Collapsible` whose trigger reads `Use password instead` (text button, `text-muted-foreground`), with `<LoginForm />` inside `CollapsibleContent`. Keep it under 60 lines.
 2. In `src/app/login/page.tsx`: replace `<LoginForm />` with `<LoginMethods />`; change the sub-heading `Use the email you were invited with.` → `Use your @startschool.org Google account.`; replace the footer paragraph (`No account? Invitations come from your programme lead…`) with `First time here? Your account is created automatically when you sign in with Google.`
 3. In `src/components/auth/login-form.tsx`: change the "Invalid login credentials" copy to `Wrong email or password. New here? Use "Continue with Google" above.` Nothing else changes in the form.
 
-- [ ] **Step 3: Verify file size + lint**
+- [x] **Step 3: Verify file size + lint**
 
 Run: `npx eslint src/app/login src/components/auth`
 
@@ -867,7 +867,7 @@ git commit -m "feat(auth): Google sign-in button, password login demoted to lega
 - Modify: `src/app/profile/setup/page.tsx`
 - Modify: `src/app/dashboard/layout.tsx`
 
-- [ ] **Step 1: Remove password handling**
+- [x] **Step 1: Remove password handling**
 
 In `src/app/profile/setup/page.tsx`:
 1. Delete state `password`, `confirmPassword` (lines 29–30) and the `PasswordInput` import (line 22).
@@ -892,7 +892,7 @@ In `src/app/profile/setup/page.tsx`:
 8. Delete the `window.location.hash.includes("access_token")` waits (lines 43–50 and 59–66) — hash tokens never reach this page anymore; keep the plain `getUser()` → `/login` redirect.
 9. After `getUser()` succeeds, fetch `name, avatar_url` from `users` for `user.id`; if `isProfileComplete` → `router.replace("/dashboard")` (a complete user has no business on this page).
 
-- [ ] **Step 1b: Enforce the gate in the dashboard layout**
+- [x] **Step 1b: Enforce the gate in the dashboard layout**
 
 In `src/app/dashboard/layout.tsx`, after the `if (!user) redirect("/login")` block:
 
@@ -910,7 +910,7 @@ In `src/app/dashboard/layout.tsx`, after the `if (!user) redirect("/login")` blo
 
 Import `isProfileComplete` from `@/lib/profile-utils`. `UserProfile` there must accept the two-column shape — widen the parameter type to `Pick<UserProfile, "name" | "avatar_url"> | null` if it doesn't. Reason: today the setup redirect lives only in `/auth/callback`, so a user who abandons setup and later signs in from `/login` reaches `/dashboard` with no name/avatar.
 
-- [ ] **Step 2: Type-check + lint**
+- [x] **Step 2: Type-check + lint**
 
 Run: `npx tsc --noEmit -p tsconfig.json && npx eslint src/app/profile`
 Expected: clean (no unused imports).
@@ -934,9 +934,9 @@ git commit -m "feat(auth): profile setup collects name + avatar only; dashboard 
 - Modify: `src/app/dashboard/admin/users/page.tsx` (`validTabs`, `TabsList`, `TabsContent`, `BulkInviteTab` import)
 - Leave on disk (Phase 2 deletes them): `bulk-invite-tab.tsx`, `manual-invite-form.tsx`, `csv-invite-uploader.tsx`, `pending-invitations-table.tsx`, `/api/admin/bulk-invite`, `/api/admin/resend-invite`, `/api/admin/pending-invites`.
 
-- [ ] **Step 1:** In `src/app/dashboard/admin/users/page.tsx` drop `"invitations"` from `validTabs`, remove the `Invitations` `TabsTrigger` and its `TabsContent`, and remove the `BulkInviteTab` import. If only one tab remains, drop the `Tabs` wrapper and render `AdminUsersTable` directly (keep the `?tab=` URL param handling tolerant: unknown → users).
-- [ ] **Step 2:** Add a one-line hint above the users table (`text-muted-foreground text-sm`): `New students sign in with their @startschool.org Google account — no invitation needed.`
-- [ ] **Step 3:** `npx eslint src/app/dashboard/admin/users && npx tsc --noEmit -p tsconfig.json`. Dev check: admin → Users shows no Invitations tab; `?tab=invitations` falls back to the users list.
+- [x] **Step 1:** In `src/app/dashboard/admin/users/page.tsx` drop `"invitations"` from `validTabs`, remove the `Invitations` `TabsTrigger` and its `TabsContent`, and remove the `BulkInviteTab` import. If only one tab remains, drop the `Tabs` wrapper and render `AdminUsersTable` directly (keep the `?tab=` URL param handling tolerant: unknown → users).
+- [x] **Step 2:** Add a one-line hint above the users table (`text-muted-foreground text-sm`): `New students sign in with their @startschool.org Google account — no invitation needed.`
+- [x] **Step 3:** `npx eslint src/app/dashboard/admin/users && npx tsc --noEmit -p tsconfig.json`. Dev check: admin → Users shows no Invitations tab; `?tab=invitations` falls back to the users list.
 - [ ] **Step 4: Commit**
 
 ```bash
@@ -996,10 +996,10 @@ Append under "Rollback Reference": date, Liga confirmed, the 5 removals + `delet
 - Modify: `docs/pages/public/profile-setup.md` (remove password bullets)
 - Modify: `.claude/rules/auth-and-middleware.md` (route classification note)
 
-- [ ] **Step 1:** In `invitations.md`, replace the "Admin Bulk Invitations" section with: how the hook works (rule table from the spec), "there is no invitation — an @startschool.org Google account is the invitation", legacy routes marked *deprecated — Phase 2 removal*. Update `docs/pages/admin/users.md` (no Invitations tab).
-- [ ] **Step 2:** In `login.md`, tagline → "Google sign-in (primary) with legacy email/password behind a collapsible"; add the `GoogleSignInButton` and `/auth/auth-code-error` to Wired-up bits.
-- [ ] **Step 3:** In `profile-setup.md`, remove every password mention; note the name is editable.
-- [ ] **Step 4:** In `auth-and-middleware.md`, add: "Route classification lives in `src/lib/supabase/route-classification.ts` — `/` is exact-match, everything else is prefix."
+- [x] **Step 1:** In `invitations.md`, replace the "Admin Bulk Invitations" section with: how the hook works (rule table from the spec), "there is no invitation — an @startschool.org Google account is the invitation", legacy routes marked *deprecated — Phase 2 removal*. Update `docs/pages/admin/users.md` (no Invitations tab).
+- [x] **Step 2:** In `login.md`, tagline → "Google sign-in (primary) with legacy email/password behind a collapsible"; add the `GoogleSignInButton` and `/auth/auth-code-error` to Wired-up bits.
+- [x] **Step 3:** In `profile-setup.md`, remove every password mention; note the name is editable.
+- [x] **Step 4:** In `auth-and-middleware.md`, add: "Route classification lives in `src/lib/supabase/route-classification.ts` — `/` is exact-match, everything else is prefix."
 - [ ] **Step 5: Commit**
 
 ```bash

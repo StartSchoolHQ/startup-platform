@@ -6,7 +6,7 @@
 
 Two separate invitation systems exist:
 
-1. **Admin Bulk Invitations** — Admins send signup emails via Supabase Auth `inviteUserByEmail`. Creates accounts in "invited" state. Users click magic link → profile setup → dashboard.
+1. **Account creation (Google SSO, since 2026-09-14)** — there is no admin invitation any more. A person signs in with their `@startschool.org` Google account; Supabase creates the auth user, the `before_user_created` hook (`public.hook_restrict_signup`) rejects anything that is not Google + `@startschool.org`, the `on_auth_user_created` trigger (`handle_new_auth_user` v2) creates the `public.users` row with the Google name and the single open batch, and `/auth/callback` sends them to `/profile/setup` (name + avatar) before the dashboard. Existing accounts (including gmail ones) link their Google identity automatically on first Google sign-in. Spec: `docs/GoogleSSO/`. The legacy email-invite routes below are **deprecated** and removed in Phase 2.
 2. **Team Invitations** — Team members invite existing platform users to join their team. Stored in `team_invitations` table. Users accept/decline from `/dashboard/invitations`.
 
 **Key constraint:** Users can only belong to ONE team at a time. Accepting a team invitation auto-declines all other pending invitations.
@@ -112,7 +112,9 @@ Team member sends invitation
 
 ---
 
-## Admin Bulk Invitations
+## Admin Bulk Invitations (deprecated — Phase 2 removal)
+
+> Not reachable from the UI since 2026-09-14 (the admin Invitations tab was removed). Routes and components stay on disk as rollback until Phase 2 of the Google SSO plan deletes them. New accounts come from Google sign-in only.
 
 ### `POST /api/admin/bulk-invite`
 
