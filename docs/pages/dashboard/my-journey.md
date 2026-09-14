@@ -18,7 +18,7 @@ Most of the platform's surface (Team Journey, leaderboard, peer review) frames t
   - Action button states: **Start** (Not Started — fires `startTaskLazy` with optimistic cache update), **Continue** (In Progress — navigates to detail page), **Waiting** (Peer Review — disabled), **Retry** (Not Accepted), **Cooldown**, **Done** + **View Info** (Finished). Rejected tasks expand a feedback row showing `reviewer_notes`.
 - Weekly Reports tab: embeds `IndividualWeeklyReportsTable` listing the user's past individual weekly reports.
 - Strikes tab: a strikes table (currently fed by `myJourneyData.strikes` static data) with status badges, XP/Points penalties, and an Explain/Done action button.
-- Submitting a weekly report opens `IndividualWeeklyReportModal`; on success it invalidates the entire `myJourney` query family to refresh stats and report status.
+- Weekly reports do not live on this page: the solo report is the `WeeklyReportCard` on `/dashboard` (My Journey section), which opens `IndividualWeeklyReportModal` from `src/components/weekly-reports/individual/`.
 
 ## How it looks
 
@@ -46,8 +46,7 @@ Strikes get their own tab rather than inline alerts so the page doesn't feel lik
   - [`src/components/dashboard/stats-card.tsx`](src/components/dashboard/stats-card.tsx) — `StatsCardComponent` for the 4 KPI cards.
   - [`src/components/ui/status-badge.tsx`](src/components/ui/status-badge.tsx) — `journey` variant badge.
   - [`src/components/ui/difficulty-badge.tsx`](src/components/ui/difficulty-badge.tsx) — Easy/Medium/Hard pill from level.
-  - [`src/components/weekly-reports/individual-weekly-reports-table.tsx`](src/components/weekly-reports/individual-weekly-reports-table.tsx) — past reports list.
-  - [`src/components/weekly-reports/individual-weekly-report-modal.tsx`](src/components/weekly-reports/individual-weekly-report-modal.tsx) — submit-report dialog.
+  - [`src/components/weekly-reports/individual/`](../../../src/components/weekly-reports/individual/) — solo weekly report modal + past-reports dialog (mounted from the dashboard card, not this page).
 - **Hooks / context:**
   - [`useAppContext`](src/contexts/app-context.tsx) — current user.
   - TanStack Query (`useQuery`, `useMutation`, `useQueryClient`) directly inside the page (no custom hook wrapper) under the `["myJourney", ...]` key family.

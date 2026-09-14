@@ -50,7 +50,7 @@ cannot act on it. Founders, co-founders, and leaders see extra controls
 - A manual "Refresh" button on the tasks tab with a 3-second cooldown
   countdown to discourage hammering.
 - Modals: [`TeamManagementModal`](../../../src/components/team-journey/team-management-modal.tsx),
-  [`WeeklyReportModal`](../../../src/components/weekly-reports/weekly-report-modal.tsx),
+  [`WeeklyReportModal`](../../../src/components/weekly-reports/team/weekly-report-modal-v2.tsx),
   [`AddClientMeetingModal`](../../../src/components/team-journey/add-client-meeting-modal.tsx),
   [`ExplainStrikeModal`](../../../src/components/team-journey/explain-strike-modal.tsx).
 
@@ -107,7 +107,7 @@ a new `progress_id` we need to learn. The temp-id swap pattern in
   - [`ClientMeetingsTable`](../../../src/components/team-journey/client-meetings-table.tsx)
   - [`StrikesTable`](../../../src/components/team-journey/strikes-table.tsx)
   - [`TeamManagementModal`](../../../src/components/team-journey/team-management-modal.tsx)
-  - [`WeeklyReportModal`](../../../src/components/weekly-reports/weekly-report-modal.tsx)
+  - [`WeeklyReportModal`](../../../src/components/weekly-reports/team/weekly-report-modal-v2.tsx)
   - [`AddClientMeetingModal`](../../../src/components/team-journey/add-client-meeting-modal.tsx)
   - [`ExplainStrikeModal`](../../../src/components/team-journey/explain-strike-modal.tsx)
   - [`TeamDetailSkeleton`](../../../src/components/ui/team-detail-skeleton.tsx)

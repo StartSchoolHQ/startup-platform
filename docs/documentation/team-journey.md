@@ -371,9 +371,8 @@ Returns:
 |----------|---------|
 | `getCurrentWeekBoundaries()` | Get current week via RPC |
 | `hasUserSubmittedThisWeek(userId, teamId)` | Check submission status |
-| `hasUserSubmittedThisWeekIndividual(userId)` | Individual context check |
-| `getUserIndividualWeeklyReports(userId)` | Fetch all individual reports |
 | `formatWeekPeriod(boundaries)` | Format for display |
+| `isWeeklyReportBannerWindow(boundaries, now?)` | Friday → Monday 10:00 banner window (shared by both banners) |
 
 ### Weekly Report Banner
 
@@ -388,8 +387,12 @@ Returns:
 
 | Component | File | Purpose |
 |-----------|------|---------|
+| Team report modal (V2, 2026-09-14 look) | `src/components/weekly-reports/team/weekly-report-modal-v2.tsx` + `team-report-questions.tsx` + `use-team-report-form.ts` / `use-team-report-draft.ts` | 8 questions, inline errors; same data path as V1. **V1 kept** at `src/components/weekly-reports/weekly-report-modal.tsx` — rollback = swap the import in `team-journey/[id]/page.tsx` |
+| Shared form pieces | `src/components/weekly-reports/shared/` (`report-dialog-shell`, `question-shell`, `pickers`, `commitments-field`, `next-week-field`) | Used by both the team and the solo (My Journey) forms |
+| Solo report modal / history | `src/components/weekly-reports/individual/` | 4-question My Journey form (see spec 2026-09-14) |
 | Reports Table | `src/components/team-journey/weekly-reports-table.tsx` | Submission history |
-| Report Banner | `src/components/dashboard/weekly-report-banner.tsx` | Deadline warning |
+| Report Banner | `src/components/dashboard/weekly-report-banner.tsx` | Deadline warning (team) |
+| Solo Report Banner | `src/components/dashboard/individual-weekly-report-banner.tsx` | Deadline warning (My Journey) |
 
 ---
 

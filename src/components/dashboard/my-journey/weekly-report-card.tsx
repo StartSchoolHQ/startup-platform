@@ -1,18 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, CheckCircle2, History } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import {
+  ArrowRight,
+  CalendarClock,
+  CheckCircle2,
+  History,
+  PenLine,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApp } from "@/contexts/app-context";
 import { useIndividualWeeklyReportStatus } from "@/hooks/use-individual-weekly-report";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
+import { cn } from "@/lib/utils";
 import { formatWeekPeriod } from "@/lib/weekly-reports";
 import { SectionLabel } from "@/components/dashboard/my-journey/section-label";
 import { IndividualWeeklyReportModal } from "@/components/weekly-reports/individual/individual-weekly-report-modal";
 import { IndividualWeeklyReportHistory } from "@/components/weekly-reports/individual/individual-weekly-report-history";
+
+function formatSubmitted(date: string | null) {
+  if (!date) return "";
+  return new Date(date).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
 
 /**
  * This week's solo report at a glance. Mode rule: a student in an active
@@ -36,64 +51,90 @@ export function WeeklyReportCard({
 
   if (!soloMode) return null;
 
+  const state = !data
+    ? null
+    : data.submitted
+      ? "submitted"
+      : data.draft
+        ? "draft"
+        : "open";
+
   return (
     <Card className="gap-0 py-0">
-      <div className="flex flex-col gap-4 p-5">
+      <div className="flex flex-col gap-5 p-5">
         <SectionLabel
           icon={CalendarClock}
           title="Weekly report"
           aside={data ? formatWeekPeriod(data.week) : undefined}
         />
 
-        {isLoading && <Skeleton className="h-10 w-full" />}
+        {isLoading && <Skeleton className="h-9 w-2/3" />}
 
         {isError && (
-          <div className="flex items-center justify-between gap-3 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground">
-              Couldn&apos;t load your weekly report status.
+              Couldn&apos;t load your weekly report.
             </span>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
-              Retry
+              Try again
             </Button>
           </div>
         )}
 
-        {data && (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-sm">
-              {data.submitted ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <span>Submitted this week</span>
-                </>
-              ) : data.draft ? (
-                <>
-                  <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">
-                    Draft saved
-                  </Badge>
-                  <span className="text-muted-foreground">
-                    Finish before Monday 10:00 Riga time.
-                  </span>
-                </>
-              ) : (
-                <span className="text-muted-foreground">
-                  Not submitted yet. Deadline: Monday 10:00 Riga time.
-                </span>
-              )}
+        {data && state && (
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span
+                className={cn(
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+                  state === "submitted"
+                    ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                    : state === "draft"
+                      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      : "bg-primary/10 text-primary"
+                )}
+              >
+                {state === "submitted" ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <PenLine className="h-4 w-4" />
+                )}
+              </span>
+              <div className="leading-tight">
+                <p className="text-sm font-medium">
+                  {state === "submitted"
+                    ? "Submitted"
+                    : state === "draft"
+                      ? "Draft saved"
+                      : "Not submitted yet"}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {state === "submitted"
+                    ? formatSubmitted(data.submitted_at)
+                    : "Due Monday 10:00 Riga time"}
+                </p>
+              </div>
             </div>
+
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setHistoryOpen(true)}
                 disabled={data.history.length === 0}
+                className="text-muted-foreground"
               >
-                <History className="mr-1 h-4 w-4" />
+                <History className="h-4 w-4" />
                 Past reports
               </Button>
-              {!data.submitted && (
-                <Button size="sm" onClick={() => setModalOpen(true)}>
-                  {data.draft ? "Continue draft" : "Submit weekly report"}
+              {state !== "submitted" && (
+                <Button
+                  size="sm"
+                  className="group"
+                  onClick={() => setModalOpen(true)}
+                >
+                  {state === "draft" ? "Continue draft" : "Write this week's"}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </Button>
               )}
             </div>

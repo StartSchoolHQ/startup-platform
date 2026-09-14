@@ -29,7 +29,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TeamDetailSkeleton } from "@/components/ui/team-detail-skeleton";
-import { WeeklyReportModal } from "@/components/weekly-reports/weekly-report-modal";
+// V2 look (2026-09-14); V1 kept at weekly-reports/weekly-report-modal.tsx for rollback.
+import { WeeklyReportModal } from "@/components/weekly-reports/team/weekly-report-modal-v2";
 import { useAppContext } from "@/contexts/app-context";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import {

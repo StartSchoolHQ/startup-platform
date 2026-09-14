@@ -13,7 +13,7 @@ This is the first screen a member sees after logging in. It exists to answer thr
   - Achievements — `completed_achievements / total_achievements`, links to team journey.
   - Tasks — `completed_tasks / total_tasks`, links to team journey.
 - Renders a Teams Progress card per team the user belongs to (members, tasks completed, team points, team XP). When the user is on more than one team, an aggregate row appears above with totals across all teams. Empty state offers a "Browse Teams" CTA when the user has no team yet.
-- Hidden but scaffolded in code: `WhatsNextCard` (pending tasks/reviews), `IndividualWeeklyReportModal`, and the Onborda product tour. Personal Progress card exists as commented-out source for the next batch.
+- Live since 2026-09-14: `WeeklyReportCard` (solo weekly report, My Journey section) and `IndividualWeeklyReportBanner`. Hidden but scaffolded in code: `WhatsNextCard` (pending tasks/reviews) and the Onborda product tour. Personal Progress card exists as commented-out source for the next batch.
 - Error state offers a Retry button that invalidates the entire `["dashboard"]` query branch.
 
 ## How it looks

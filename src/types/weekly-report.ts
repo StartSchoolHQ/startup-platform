@@ -45,3 +45,19 @@ export interface IndividualWeeklyReportStatus {
   draft: Partial<IndividualWeeklyReportData> | null;
   history: IndividualWeeklyReportHistoryEntry[];
 }
+
+/** Team (8-question) form state — mirrors the V1 modal's FormData. */
+export interface TeamWeeklyReportForm {
+  commitments: ReportCommitment[];
+  blockers: string;
+  meetingsHeld: number;
+  keyInsight: string;
+  mostImportantOutcome: string;
+  measurableProgress: string;
+  biggestAchievement: string;
+  achievementImpact: string;
+  nextWeekCommitments: string[];
+  teamRecognition: string;
+  alignmentScore: number;
+  alignmentReason: string;
+}

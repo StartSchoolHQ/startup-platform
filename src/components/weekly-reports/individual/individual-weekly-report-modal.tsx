@@ -2,17 +2,8 @@
 
 import { useEffect, useState } from "react";
 import posthog from "posthog-js";
-import { Save, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { Loader2, Save, Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useApp } from "@/contexts/app-context";
 import {
   useIndividualWeeklyReportStatus,
@@ -25,53 +16,83 @@ import {
   normalizeIndividualReport,
 } from "@/lib/individual-weekly-report";
 import { IndividualWeeklyReportSchema } from "@/lib/validation-schemas";
+import {
+  fieldErrorsFromIssues,
+  firstErrorKey,
+  type FieldErrors,
+} from "@/lib/weekly-report-form-errors";
 import { formatWeekPeriod } from "@/lib/weekly-reports";
-import { IndividualReportQuestions } from "@/components/weekly-reports/individual/individual-report-questions";
+import type { IndividualWeeklyReportForm } from "@/types/weekly-report";
+import {
+  IndividualReportQuestions,
+  SOLO_QUESTION_ORDER,
+  soloQuestionAnchor,
+} from "@/components/weekly-reports/individual/individual-report-questions";
+import {
+  HeaderChip,
+  ReportDialogShell,
+} from "@/components/weekly-reports/shared/report-dialog-shell";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+/** Drop the error of every question whose value the student just changed. */
+function withoutChanged(
+  errors: FieldErrors,
+  prev: IndividualWeeklyReportForm,
+  next: IndividualWeeklyReportForm
+): FieldErrors {
+  const kept = { ...errors };
+  for (const key of Object.keys(next) as (keyof IndividualWeeklyReportForm)[]) {
+    if (prev[key] !== next[key]) delete kept[key];
+  }
+  return kept;
+}
+
 /**
  * Solo (My Journey) weekly report. Drafts live in the DB row for the current
  * week (no localStorage): when the dialog opens with a saved draft, the form
- * is prefilled from it.
+ * is prefilled from it. Validation shows inline under the failing question.
  */
 export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
   const { user } = useApp();
   const { data: status } = useIndividualWeeklyReportStatus(user?.id);
   const submit = useSubmitIndividualWeeklyReport(user?.id);
   const [form, setForm] = useState(emptyIndividualReportForm());
+  const [errors, setErrors] = useState<FieldErrors>({});
   const [restoredDraft, setRestoredDraft] = useState(false);
 
-  // Prefill ONLY when the dialog opens. Depending on `status.draft` here
-  // would reset the form mid-typing whenever the status query refetches
-  // (window focus), so the draft is read once per open on purpose.
+  // Prefill ONLY when the dialog opens — depending on `status.draft` would
+  // reset the form mid-typing whenever the status query refetches.
   useEffect(() => {
     if (!open) return;
-    if (status?.draft) {
-      setForm(draftToForm(status.draft));
-      setRestoredDraft(true);
-    } else {
-      setForm(emptyIndividualReportForm());
-      setRestoredDraft(false);
-    }
+    setForm(
+      status?.draft ? draftToForm(status.draft) : emptyIndividualReportForm()
+    );
+    setRestoredDraft(Boolean(status?.draft));
+    setErrors({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const hasContent = hasIndividualReportContent(form);
-  const weekLabel = status ? formatWeekPeriod(status.week) : "";
+  const weekLabel = status ? formatWeekPeriod(status.week) : null;
+
+  const handleChange = (next: IndividualWeeklyReportForm) => {
+    setErrors((prev) => withoutChanged(prev, form, next));
+    setForm(next);
+  };
 
   const close = () => {
     onOpenChange(false);
     setForm(emptyIndividualReportForm());
+    setErrors({});
   };
 
   const handleSaveDraft = () => {
-    const data = normalizeIndividualReport(form);
     submit.mutate(
-      { data, asDraft: true },
+      { data: normalizeIndividualReport(form), asDraft: true },
       {
         onSuccess: (result) => {
           posthog.capture("individual_weekly_report_draft_saved", {
@@ -89,7 +110,14 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
     const data = normalizeIndividualReport(form);
     const parsed = IndividualWeeklyReportSchema.safeParse(data);
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
+      const next = fieldErrorsFromIssues(parsed.error.issues);
+      setErrors(next);
+      const first = firstErrorKey(next, SOLO_QUESTION_ORDER);
+      if (first) {
+        document
+          .getElementById(soloQuestionAnchor(first))
+          ?.scrollIntoView({ block: "center" });
+      }
       return;
     }
     submit.mutate(
@@ -114,41 +142,40 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
     );
   };
 
+  const savingDraft = submit.isPending && submit.variables?.asDraft === true;
+  const submitting = submit.isPending && submit.variables?.asDraft === false;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[650px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            Submit My Journey weekly report
-            {restoredDraft && (
-              <span className="text-muted-foreground bg-muted rounded px-2 py-0.5 text-xs font-normal">
-                Draft restored
-              </span>
-            )}
-          </DialogTitle>
-          <DialogDescription>
-            {weekLabel
-              ? `${weekLabel}. Deadline: Monday 10:00 Riga time.`
-              : "Deadline: Monday 10:00 Riga time."}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <IndividualReportQuestions value={form} onChange={setForm} />
-
-          <DialogFooter className="flex-col gap-2 sm:flex-row">
+    <ReportDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      eyebrow="My Journey"
+      title="Weekly report"
+      description={`${weekLabel ? `${weekLabel}. ` : ""}Four quick questions. Due Monday 10:00 Riga time.`}
+      chip={restoredDraft ? <HeaderChip>Draft restored</HeaderChip> : undefined}
+      formId="solo-weekly-report-form"
+      onSubmit={handleSubmit}
+      footer={
+        <>
+          <div>
             {hasContent && (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => setForm(emptyIndividualReportForm())}
-                className="text-muted-foreground hover:text-destructive mr-auto"
+                onClick={() => {
+                  setForm(emptyIndividualReportForm());
+                  setErrors({});
+                }}
+                disabled={submit.isPending}
+                className="text-muted-foreground hover:text-destructive"
               >
-                <Trash2 className="mr-1 h-4 w-4" />
-                Clear form
+                <Trash2 className="h-4 w-4" />
+                Clear
               </Button>
             )}
+          </div>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
             <Button type="button" variant="outline" onClick={close}>
               Cancel
             </Button>
@@ -157,21 +184,36 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
               variant="outline"
               onClick={handleSaveDraft}
               disabled={submit.isPending || !hasContent}
-              className="border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
             >
-              <Save className="mr-1 h-4 w-4" />
-              {submit.isPending && submit.variables?.asDraft
-                ? "Saving..."
-                : "Save as Draft"}
+              {savingDraft ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {savingDraft ? "Saving…" : "Save draft"}
             </Button>
-            <Button type="submit" disabled={submit.isPending}>
-              {submit.isPending && !submit.variables?.asDraft
-                ? "Submitting..."
-                : "Submit Report"}
+            <Button
+              type="submit"
+              form="solo-weekly-report-form"
+              disabled={submit.isPending}
+            >
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              {submitting ? "Submitting…" : "Submit report"}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </>
+      }
+    >
+      <IndividualReportQuestions
+        value={form}
+        onChange={handleChange}
+        errors={errors}
+        disabled={submit.isPending}
+      />
+    </ReportDialogShell>
   );
 }
