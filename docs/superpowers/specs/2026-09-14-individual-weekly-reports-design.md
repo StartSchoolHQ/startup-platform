@@ -89,7 +89,7 @@ Team rows are not covered → zero behavioural change for the team form.
 
 ### 5.2 `submit_individual_weekly_report_v1(p_submission_data jsonb, p_as_draft boolean default false) returns jsonb`
 
-SECURITY DEFINER, `set search_path = public, pg_temp`, EXECUTE → `authenticated`
+SECURITY DEFINER, `set search_path = public, pg_temp`, EXECUTE → `authenticated` + `service_role`
 (revoke from `anon`, `public`).
 
 1. `auth.uid()` NULL → raise `28000` "Not authenticated".
@@ -122,7 +122,7 @@ Unique-index violation (race) is caught and re-raised as `ALREADY_SUBMITTED`.
 
 ### 5.3 `get_individual_weekly_report_status_v1() returns jsonb`
 
-STABLE, SECURITY DEFINER, EXECUTE → `authenticated`. Uses `auth.uid()` only
+STABLE, SECURITY DEFINER, EXECUTE → `authenticated` + `service_role`. Uses `auth.uid()` only
 (no `p_user_id`, so it cannot read another user).
 
 ```json

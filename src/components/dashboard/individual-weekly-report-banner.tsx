@@ -22,12 +22,13 @@ export function IndividualWeeklyReportBanner() {
   const { user } = useAppContext();
   const { data: journeys } = usePlatformSettings();
   const { data: overview } = useMyJourneyOverview(
-    journeys.myJourney ? user?.id : undefined
+    journeys.myJourney && journeys.teamJourney ? user?.id : undefined
   );
+  // has_active_team only matters while Team Journey is on; when it is off
+  // the banner must not depend on the (heavier) overview RPC at all.
   const soloMode =
     journeys.myJourney &&
-    overview !== undefined &&
-    !(journeys.teamJourney && overview.has_active_team);
+    (!journeys.teamJourney || overview?.has_active_team === false);
   const { data: status } = useIndividualWeeklyReportStatus(
     soloMode ? user?.id : undefined
   );

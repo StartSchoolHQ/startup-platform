@@ -156,6 +156,29 @@ describe("submit_individual_weekly_report_v1", () => {
     expect(error?.message).toContain("between 1 and 10");
   });
 
+  it("rejects a commitment shorter than 5 characters", async (ctx) => {
+    if (!myJourneyOn) ctx.skip();
+    const { error } = await student.rpc("submit_individual_weekly_report_v1", {
+      p_submission_data: {
+        ...validReport,
+        commitments: [{ text: "abcd", status: "completed", explanation: "" }],
+      },
+    });
+    expect(error?.message).toContain(
+      "Commitment must be at least 5 characters"
+    );
+  });
+
+  it("rejects a next-week commitment shorter than 5 characters", async (ctx) => {
+    if (!myJourneyOn) ctx.skip();
+    const { error } = await student.rpc("submit_individual_weekly_report_v1", {
+      p_submission_data: { ...validReport, nextWeekCommitments: ["abcd"] },
+    });
+    expect(error?.message).toContain(
+      "Next week commitment must be at least 5 characters"
+    );
+  });
+
   it("submits over the draft, normalises the payload, then refuses a second submit", async (ctx) => {
     if (!myJourneyOn) ctx.skip();
     const { data, error } = await student.rpc(
