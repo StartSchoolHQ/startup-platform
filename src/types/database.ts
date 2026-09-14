@@ -1847,6 +1847,8 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      _admin_scope_teams: { Args: { p_batch_id: string }; Returns: string[] };
+      _admin_scope_users: { Args: { p_batch_id: string }; Returns: string[] };
       _analytics_assert_admin: { Args: never; Returns: undefined };
       accept_external_task_for_review: {
         Args: { p_progress_id: string };
@@ -1863,6 +1865,10 @@ export type Database = {
         Returns: boolean;
       };
       ai_review_apply_decision_v1: {
+        Args: { p_outcome: string; p_payload?: Json; p_review_id: string };
+        Returns: Json;
+      };
+      ai_review_apply_decision_v1_backup_v2: {
         Args: { p_outcome: string; p_payload?: Json; p_review_id: string };
         Returns: Json;
       };
@@ -1974,6 +1980,10 @@ export type Database = {
         Returns: Json;
       };
       check_and_award_achievement_backup_v1: {
+        Args: { p_achievement_id: string; p_user_id: string };
+        Returns: Json;
+      };
+      check_and_award_achievement_v2: {
         Args: { p_achievement_id: string; p_user_id: string };
         Returns: Json;
       };
@@ -2197,8 +2207,54 @@ export type Database = {
           total_students: number;
         }[];
       };
+      get_admin_program_health_v3: {
+        Args: never;
+        Returns: {
+          active_14d: number;
+          active_7d: number;
+          at_risk_students: number;
+          avg_xp_per_student: number;
+          pending_reviews: number;
+          pending_strikes: number;
+          reports_last_week: number;
+          reports_this_week: number;
+          students_active: number;
+          students_active_wow_delta: number;
+          students_at_risk: number;
+          students_at_risk_wow_delta: number;
+          students_slowing: number;
+          tasks_last_week: number;
+          tasks_this_week: number;
+          teams_active: number;
+          teams_active_wow_delta: number;
+          teams_at_risk: number;
+          teams_at_risk_wow_delta: number;
+          teams_slowing: number;
+          total_active_teams: number;
+          total_students: number;
+        }[];
+      };
+      get_admin_task_pipeline_v1: {
+        Args: never;
+        Returns: {
+          activity_type: string;
+          count: number;
+          status: string;
+        }[];
+      };
       get_admin_weekly_trends: {
         Args: never;
+        Returns: {
+          active_students: number;
+          report_submissions: number;
+          tasks_completed: number;
+          week_label: string;
+          week_number: number;
+          week_year: number;
+        }[];
+      };
+      get_admin_weekly_trends_v2: {
+        Args: { p_batch_id: string };
         Returns: {
           active_students: number;
           report_submissions: number;
@@ -2214,7 +2270,12 @@ export type Database = {
         Returns: Json;
       };
       get_analytics_economy: { Args: never; Returns: Json };
+      get_analytics_economy_v2: { Args: { p_batch_id: string }; Returns: Json };
       get_analytics_meetings: { Args: never; Returns: Json };
+      get_analytics_meetings_v2: {
+        Args: { p_batch_id: string };
+        Returns: Json;
+      };
       get_analytics_overview: {
         Args: never;
         Returns: {
@@ -2232,8 +2293,30 @@ export type Database = {
           week_start: string;
         }[];
       };
+      get_analytics_overview_v2: {
+        Args: { p_batch_id: string };
+        Returns: {
+          active_teams: number;
+          avg_score: number;
+          commitments_completed: number;
+          commitments_total: number;
+          expected_reporters: number;
+          high_scores: number;
+          low_scores: number;
+          max_score: number;
+          min_score: number;
+          real_blockers: number;
+          reports: number;
+          week_start: string;
+        }[];
+      };
       get_analytics_retention: { Args: never; Returns: Json };
+      get_analytics_retention_v2: {
+        Args: { p_batch_id: string };
+        Returns: Json;
+      };
       get_analytics_strikes: { Args: never; Returns: Json };
+      get_analytics_strikes_v2: { Args: { p_batch_id: string }; Returns: Json };
       get_analytics_student_detail: {
         Args: { p_user_id: string };
         Returns: {
@@ -2266,8 +2349,29 @@ export type Database = {
           weeks_submitted: number;
         }[];
       };
+      get_analytics_students_v2: {
+        Args: { p_batch_id: string };
+        Returns: {
+          avg_score: number;
+          last_submitted: string;
+          latest_score: number;
+          latest_week: string;
+          prior_avg: number;
+          recent_avg: number;
+          scores: Json;
+          team_name: string;
+          user_id: string;
+          user_name: string;
+          weeks_submitted: number;
+        }[];
+      };
       get_analytics_task_friction: { Args: never; Returns: Json };
+      get_analytics_task_friction_v2: {
+        Args: { p_batch_id: string };
+        Returns: Json;
+      };
       get_analytics_tasks: { Args: never; Returns: Json };
+      get_analytics_tasks_v2: { Args: { p_batch_id: string }; Returns: Json };
       get_analytics_team_detail: {
         Args: { p_team_id: string };
         Returns: {
@@ -2294,8 +2398,33 @@ export type Database = {
           week_start: string;
         }[];
       };
+      get_analytics_teams_v2: {
+        Args: { p_batch_id: string };
+        Returns: {
+          avg_score: number;
+          reports: number;
+          team_id: string;
+          team_name: string;
+          team_status: string;
+          week_start: string;
+        }[];
+      };
       get_analytics_week_detail: {
         Args: { p_week_start: string };
+        Returns: {
+          alignment_reason: string;
+          blockers: string;
+          report_id: string;
+          score: number;
+          submitted_at: string;
+          team_id: string;
+          team_name: string;
+          user_id: string;
+          user_name: string;
+        }[];
+      };
+      get_analytics_week_detail_v2: {
+        Args: { p_batch_id: string; p_week_start: string };
         Returns: {
           alignment_reason: string;
           blockers: string;
@@ -2478,6 +2607,7 @@ export type Database = {
           xp_reward: number;
         }[];
       };
+      get_individual_weekly_report_status_v1: { Args: never; Returns: Json };
       get_invitation_status: {
         Args: never;
         Returns: {
@@ -3122,6 +3252,23 @@ export type Database = {
         }[];
       };
       get_user_achievement_progress: {
+        Args: { p_user_id: string };
+        Returns: {
+          achievement_description: string;
+          achievement_icon: string;
+          achievement_id: string;
+          achievement_name: string;
+          color_theme: string;
+          completed_tasks: number;
+          is_completed: boolean;
+          points_reward: number;
+          sort_order: number;
+          status: string;
+          total_tasks: number;
+          xp_reward: number;
+        }[];
+      };
+      get_user_achievement_progress_backup_v1: {
         Args: { p_user_id: string };
         Returns: {
           achievement_description: string;
@@ -3972,6 +4119,10 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      send_individual_weekly_report_reminders_v1: {
+        Args: { p_kind: string };
+        Returns: number;
+      };
       send_weekly_report_reminders: { Args: never; Returns: number };
       send_weekly_report_reminders_backup_v1: { Args: never; Returns: number };
       send_weekly_report_reminders_backup_v2: { Args: never; Returns: number };
@@ -4043,6 +4194,10 @@ export type Database = {
       };
       submit_individual_task_v1: {
         Args: { p_progress_id: string; p_submission_data: Json };
+        Returns: Json;
+      };
+      submit_individual_weekly_report_v1: {
+        Args: { p_as_draft?: boolean; p_submission_data: Json };
         Returns: Json;
       };
       submit_peer_review: {
