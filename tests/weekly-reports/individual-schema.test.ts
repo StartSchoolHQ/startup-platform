@@ -53,7 +53,7 @@ describe("IndividualWeeklyReportSchema", () => {
     ).toBe(false);
   });
   it("blockers are optional", () => {
-    const { blockers: _b, ...noBlockers } = valid;
+    const noBlockers = { ...valid, blockers: undefined };
     expect(IndividualWeeklyReportSchema.safeParse(noBlockers).success).toBe(
       true
     );
