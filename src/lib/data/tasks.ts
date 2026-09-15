@@ -107,32 +107,6 @@ export async function startIndividualTask(progressId: string) {
 }
 
 /**
- * Complete an individual task and award points
- */
-export async function completeIndividualTask(
-  progressId: string,
-  submissionData?: Record<string, unknown>,
-  submissionNotes?: string
-) {
-  const supabase = createClient();
-
-  const { data, error } = await (supabase as any).rpc(
-    "complete_individual_task",
-    {
-      p_progress_id: progressId,
-      p_submission_data: submissionData as Json | undefined,
-      p_submission_notes: submissionNotes,
-    }
-  );
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
-}
-
-/**
  * Get team tasks from task_progress table
  */
 export async function getTeamTasksFromProgress(teamId: string) {

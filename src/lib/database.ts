@@ -74,7 +74,6 @@ export {
   getUserIndividualTasks,
   assignIndividualTask,
   startIndividualTask,
-  completeIndividualTask,
   getTeamTasksFromProgress,
   assignTeamTaskToProgress,
   getTeamTasksVisible,
@@ -116,7 +115,6 @@ export {
 export {
   getUserAchievementProgress,
   getTasksByAchievement,
-  checkAndAwardAchievement,
   getTeamAchievementDashboard,
   getTeamAchievements,
 } from "./data/achievements";

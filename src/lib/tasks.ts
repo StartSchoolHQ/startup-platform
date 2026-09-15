@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
 import { peerReviewHistorySchema } from "@/lib/validation-schemas";
-import type { Json } from "@/types/database";
 import {
   AdminTaskItem,
   TaskCategory,
@@ -1206,38 +1205,6 @@ export async function retryTask(
   } catch (error) {
     if (error instanceof Error) throw error;
     throw new Error("Failed to retry task");
-  }
-}
-
-// Individual task completion - auto-approve without peer review
-export async function completeIndividualTask(
-  progressId: string,
-  submissionData: Record<string, unknown>
-): Promise<void> {
-  try {
-    const supabase = createClient();
-
-    // Use existing complete_individual_task RPC function
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.rpc as any)(
-      "complete_individual_task",
-      {
-        p_progress_id: progressId,
-        p_submission_data: submissionData as Json,
-        p_submission_notes: (submissionData.notes as string) || undefined,
-      }
-    );
-
-    if (error) {
-      throw new Error("Failed to complete individual task: " + error.message);
-    }
-
-    if (!data?.[0]?.success) {
-      throw new Error("Failed to complete individual task");
-    }
-  } catch (error) {
-    if (error instanceof Error) throw error;
-    throw new Error("Failed to complete task");
   }
 }
 

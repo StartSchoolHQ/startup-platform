@@ -21,10 +21,6 @@ interface SupabaseRpcClient {
     params: { p_achievement_id: string | null; p_team_id: string | null }
   ): Promise<{ data: unknown; error: unknown }>;
   rpc(
-    fn: "check_and_award_achievement",
-    params: { p_user_id: string; p_achievement_id: string }
-  ): Promise<{ data: unknown; error: unknown }>;
-  rpc(
     fn: "get_team_achievement_dashboard",
     params: { p_team_id: string; p_user_id: string }
   ): Promise<{ data: unknown; error: unknown }>;
@@ -71,30 +67,6 @@ export async function getTasksByAchievement(
   }
 
   return data || [];
-}
-
-/**
- * Check and award achievement to user
- */
-export async function checkAndAwardAchievement(
-  userId: string,
-  achievementId: string
-) {
-  const supabase = createClient();
-
-  const { data, error } = await (supabase as unknown as SupabaseRpcClient).rpc(
-    "check_and_award_achievement",
-    {
-      p_user_id: userId,
-      p_achievement_id: achievementId,
-    }
-  );
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
 }
 
 /**
@@ -145,7 +117,7 @@ export async function getTeamAchievementDashboard(
   };
 
   // Fetch recurring task metadata separately
-   
+
   const { data: recurringData, error: recurringError } = await (
     supabase as any
   ).rpc("get_recurring_task_status", {
