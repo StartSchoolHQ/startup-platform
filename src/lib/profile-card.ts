@@ -11,7 +11,7 @@ export const FOUNDER_CARD_SECTIONS: {
   key: FounderCardSectionKey;
   label: string;
 }[] = [
-  { key: "background_reason", label: "Why they lean that way" },
+  { key: "background_reason", label: "In their own words" },
   { key: "bio_energizes", label: "What energizes them" },
   { key: "bio_skills", label: "Skills they bring" },
   { key: "bio_gaps", label: "What a co-founder should cover" },

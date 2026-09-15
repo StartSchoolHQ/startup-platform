@@ -9,7 +9,7 @@ The route is public in middleware, but the page checks auth client-side, bounces
 
 ## What it does
 - **Step 1 — Complete Your Profile** (`BasicProfileForm`): name pre-filled from `user_metadata` (legacy `first_name + last_name`, else Google's `full_name` / `name`), editable. Avatar upload required (image only, max 5 MB, preview). Upload to the `avatars` bucket → `POST /api/profile/setup` (`update_user_profile` RPC) → `user_profile_setup_completed`.
-- **Step 2 — Your Founder Card** (`FounderCardForm`): pick a background lean (Tech / Business / Both), then four short text areas: why that lean, what energizes you, skills you already bring, what a co-founder should cover. Validated with `FounderCardSchema` (Zod, 20–600/800 chars per field), upserted into `public.founder_profiles` under RLS → `founder_card_completed` → `/dashboard`.
+- **Step 2 — Make your profile** (`FounderCardForm`, copy in `founder-card-copy.ts`): two sections lifted verbatim in spirit from the former Phase 0 tasks MJ-P0-01/02. **Name your current background** — pick a lean (Tech / Business / Both) and say why in one or two sentences ("be honest about where your energy and confidence actually sit today"). **Write a short founder bio** — what energizes you, skills you already bring, what a complementary co-founder would bring ("specific beats generic", "name at least one real gap", "a working document for team matching, not a pitch"). Validated with `FounderCardSchema` (Zod, 20–600/800 chars per field), upserted into `public.founder_profiles` under RLS → `founder_card_completed` → `/dashboard`.
 - The card replaces the two deleted My Journey tasks MJ-P0-01 and MJ-P0-02 (2026-09-14) and is the data source for the public profile cards planned later.
 
 ## How it looks

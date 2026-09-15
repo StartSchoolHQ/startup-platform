@@ -13,50 +13,25 @@ import {
   type BackgroundLean,
   type FounderCardInput,
 } from "@/lib/validation-schemas";
+import {
+  BACKGROUND_FIELD,
+  BACKGROUND_SECTION,
+  BIO_FIELDS,
+  BIO_SECTION,
+  LEANS,
+  type FounderCardField as Field,
+} from "./founder-card-copy";
 import { SETUP_INPUT_CLASS, SETUP_SUBMIT_CLASS } from "./setup-shell";
 
-const LEANS: { value: BackgroundLean; label: string; hint: string }[] = [
-  { value: "tech", label: "Tech", hint: "Building, engineering, product" },
-  { value: "business", label: "Business", hint: "Market, sales, operations" },
-  { value: "both", label: "Both", hint: "Genuinely split — say why" },
-];
-
-type Field = Exclude<keyof FounderCardInput, "background_lean">;
-
-const FIELDS: {
-  key: Field;
-  label: string;
-  placeholder: string;
-  rows: number;
-}[] = [
-  {
-    key: "background_reason",
-    label: "Why that lean? *",
-    placeholder:
-      "One or two honest sentences on where your energy and confidence sit today — not where you think they should be.",
-    rows: 3,
-  },
-  {
-    key: "bio_energizes",
-    label: "What energizes you *",
-    placeholder: "The kind of work you'd do on a Sunday without being asked.",
-    rows: 3,
-  },
-  {
-    key: "bio_skills",
-    label: "Skills you already bring *",
-    placeholder:
-      'Specific beats generic: "built two Shopify stores" beats "good with people".',
-    rows: 3,
-  },
-  {
-    key: "bio_gaps",
-    label: "What a co-founder should cover *",
-    placeholder:
-      "At least one real gap. This is for team matching, not a pitch.",
-    rows: 3,
-  },
-];
+/** Section heading + one-line intro, copied from the former Phase 0 tasks. */
+function SectionIntro({ title, intro }: { title: string; intro: string }) {
+  return (
+    <div className="space-y-1 border-t border-zinc-800 pt-5 first:border-t-0 first:pt-0">
+      <h3 className="text-base font-semibold text-zinc-50">{title}</h3>
+      <p className="text-sm text-zinc-400">{intro}</p>
+    </div>
+  );
+}
 
 /** Step 2 of profile setup: the founder card (background lean + short bio). */
 export function FounderCardForm({
@@ -134,11 +109,39 @@ export function FounderCardForm({
     }
   };
 
+  const renderField = (f: typeof BACKGROUND_FIELD) => (
+    <div key={f.key} className="space-y-2">
+      <Label htmlFor={f.key} className="text-sm font-medium text-zinc-100">
+        {f.label}
+      </Label>
+      <Textarea
+        id={f.key}
+        rows={f.rows}
+        value={values[f.key]}
+        onChange={(e) => setValue(f.key, e.target.value)}
+        placeholder={f.placeholder}
+        disabled={loading}
+        className={cn(
+          SETUP_INPUT_CLASS,
+          fieldErrors[f.key] && "border-red-500"
+        )}
+      />
+      {fieldErrors[f.key] && (
+        <p className="text-xs text-red-400">{fieldErrors[f.key]}</p>
+      )}
+    </div>
+  );
+
   return (
     <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+      <SectionIntro
+        title={BACKGROUND_SECTION.title}
+        intro={BACKGROUND_SECTION.intro}
+      />
+
       <div className="space-y-2">
         <Label className="text-sm font-medium text-zinc-100">
-          Where do you lean today? *
+          {BACKGROUND_SECTION.leanLabel}
         </Label>
         <div className="grid grid-cols-3 gap-2">
           {LEANS.map((opt) => (
@@ -162,34 +165,15 @@ export function FounderCardForm({
             </button>
           ))}
         </div>
-        <p className="text-xs text-zinc-500">
-          There is no wrong answer and it is expected to change. A team needs
-          both.
-        </p>
+        <p className="text-xs text-zinc-500">{BACKGROUND_SECTION.leanHint}</p>
       </div>
 
-      {FIELDS.map((f) => (
-        <div key={f.key} className="space-y-2">
-          <Label htmlFor={f.key} className="text-sm font-medium text-zinc-100">
-            {f.label}
-          </Label>
-          <Textarea
-            id={f.key}
-            rows={f.rows}
-            value={values[f.key]}
-            onChange={(e) => setValue(f.key, e.target.value)}
-            placeholder={f.placeholder}
-            disabled={loading}
-            className={cn(
-              SETUP_INPUT_CLASS,
-              fieldErrors[f.key] && "border-red-500"
-            )}
-          />
-          {fieldErrors[f.key] && (
-            <p className="text-xs text-red-400">{fieldErrors[f.key]}</p>
-          )}
-        </div>
-      ))}
+      {renderField(BACKGROUND_FIELD)}
+
+      <SectionIntro title={BIO_SECTION.title} intro={BIO_SECTION.intro} />
+
+      {BIO_FIELDS.map(renderField)}
+      <p className="text-xs text-zinc-500">{BIO_SECTION.footer}</p>
 
       <Button type="submit" disabled={loading} className={SETUP_SUBMIT_CLASS}>
         <span className="relative z-10 flex items-center justify-center gap-2">

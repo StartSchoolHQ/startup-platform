@@ -95,8 +95,8 @@ export default function ProfileSetupPage() {
   return (
     <SetupShell
       step={2}
-      title="Your Founder Card"
-      description="An honest snapshot to help you find teammates who complement you"
+      title="Make your profile"
+      description="Two honest check-ins — your background and a short founder bio — so you can find teammates who complement you"
       error={error}
       onDismissError={() => setError(null)}
     >
