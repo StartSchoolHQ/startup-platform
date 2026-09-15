@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CreditCard, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { StatusBadge, type TaskStatus } from "@/components/ui/status-badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { DifficultyBadge } from "@/components/ui/difficulty-badge";
 import { TaskTableItem } from "@/types/team-journey";
 import { economyLabels, type Economy } from "@/lib/economy-labels";
@@ -16,6 +16,12 @@ import {
 } from "./tasks-table/responsible-cell";
 import { TaskCooldownStatus } from "./tasks-table/cooldown-status";
 import { TaskRowActions } from "./tasks-table/row-actions";
+import { MobileTaskCard } from "./tasks-table/mobile-task-card";
+import {
+  DIFFICULTY_LEVEL,
+  isCoolingDown,
+  toBadgeStatus,
+} from "./tasks-table/status";
 
 interface TasksTableProps {
   tasks: TaskTableItem[];
@@ -26,30 +32,6 @@ interface TasksTableProps {
   currentUserId?: string;
   onAssignTask?: (taskId: string, userId: string) => void;
   onStartTask?: (taskId: string) => void;
-}
-
-const DIFFICULTY_LEVEL: Record<TaskTableItem["difficulty"], number> = {
-  Easy: 1,
-  Medium: 2,
-  Hard: 3,
-};
-
-function toBadgeStatus(status: TaskTableItem["status"]): TaskStatus {
-  switch (status) {
-    case "Finished":
-      return "approved";
-    case "Not Accepted":
-      return "rejected";
-    case "Peer Review":
-    case "Reviewing":
-      return "pending_review";
-    case "In Progress":
-      return "in_progress";
-    case "Cooldown":
-      return "cooldown";
-    default:
-      return "not_started";
-  }
 }
 
 const TH =
@@ -89,8 +71,35 @@ export function TasksTable({
         canStart={isTeamMember && !!currentUserId && !!onStartTask}
       />
 
-      <div className="bg-card overflow-hidden rounded-xl border">
-        <div className="overflow-x-auto">
+      <div className="bg-card @container overflow-hidden rounded-xl border">
+        {/* Narrow containers: stacked cards. The switch is on the list's own
+            width (sidebar included), not the viewport — solo needs ~48rem,
+            team ~56rem for its extra Responsible column. */}
+        <div className={cn("divide-y", isSolo ? "@3xl:hidden" : "@4xl:hidden")}>
+          {tasks.map((task) => (
+            <MobileTaskCard
+              key={task.id}
+              task={task}
+              labels={labels}
+              isSolo={isSolo}
+              badgeVariant={badgeVariant}
+              isTeamMember={isTeamMember}
+              teamMembers={teamMembers}
+              currentUserId={currentUserId}
+              onAssignTask={onAssignTask}
+              onStartTask={onStartTask}
+              onPreview={setPreviewTask}
+              onOpen={(id) => router.push(`${taskDetailBase}/${id}`)}
+            />
+          ))}
+        </div>
+
+        <div
+          className={cn(
+            "hidden overflow-x-auto",
+            isSolo ? "@3xl:block" : "@4xl:block"
+          )}
+        >
           <table className="w-full">
             <thead className="bg-muted/40">
               <tr className="border-b">
@@ -105,10 +114,7 @@ export function TasksTable({
             </thead>
             <tbody className="divide-y">
               {tasks.map((task) => {
-                const coolingDown =
-                  task.status === "Cooldown" &&
-                  task.isRecurring &&
-                  !!task.nextAvailableAt;
+                const coolingDown = isCoolingDown(task);
 
                 return (
                   <tr
