@@ -18,9 +18,11 @@ export const MEMBER_GRID_COLUMNS = "80px 200px 1fr 1fr 1fr 1fr 100px";
 export function MemberRow({
   entry,
   index,
+  onOpenProfile,
 }: {
   entry: LeaderboardEntry;
   index: number;
+  onOpenProfile?: (userId: string) => void;
 }) {
   const animatedXP = useCountUp(entry.xp.current, 800);
   const animatedTasks = useCountUp(entry.tasks.current, 800);
@@ -51,7 +53,12 @@ export function MemberRow({
       </div>
 
       {/* User */}
-      <div className="flex items-center gap-3">
+      <button
+        type="button"
+        onClick={() => onOpenProfile?.(entry.user.userId)}
+        aria-label={`View ${entry.user.name}'s profile`}
+        className="hover:bg-muted/60 -mx-1.5 -my-1 flex min-w-0 items-center gap-3 rounded-md px-1.5 py-1 text-left"
+      >
         <Avatar className="h-8 w-8">
           <AvatarImage src={entry.user.avatar} alt={entry.user.name} />
           <AvatarFallback>
@@ -70,7 +77,7 @@ export function MemberRow({
             {entry.user.teams}
           </span>
         </div>
-      </div>
+      </button>
 
       {/* Team XP */}
       <div>

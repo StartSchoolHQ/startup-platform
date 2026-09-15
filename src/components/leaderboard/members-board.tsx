@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LeaderboardBoardShell } from "@/components/leaderboard/leaderboard-board-shell";
@@ -18,6 +18,7 @@ import { LeaderboardEntry } from "@/types/leaderboard";
 import { type LeaderboardEntry as DBLeaderboardEntry } from "@/lib/leaderboard-server";
 import { createClient } from "@/lib/supabase/client";
 import { economyLabels } from "@/lib/economy-labels";
+import { ProfileCardDialog } from "@/components/profile/profile-card-dialog";
 
 interface MembersBoardProps {
   initialData: DBLeaderboardEntry[];
@@ -36,6 +37,7 @@ export function MembersBoard({
 }: MembersBoardProps) {
   const supabase = createClient();
   const labels = economyLabels("team");
+  const [profileUserId, setProfileUserId] = useState<string | null>(null);
 
   const { data: rawDbData = initialData, isPending: loading } = useQuery({
     queryKey: ["leaderboard", "members", selectedWeek],
@@ -104,57 +106,65 @@ export function MembersBoard({
   );
 
   return (
-    <LeaderboardBoardShell
-      gridColumns={MEMBER_GRID_COLUMNS}
-      loading={loading}
-      isEmpty={entries.length === 0}
-      topSlot={
-        streaksLoading ? (
-          <div className="flex items-center justify-end gap-2 pb-2">
-            <Skeleton className="h-4 w-4 rounded-full" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-        ) : null
-      }
-      headerCells={
-        <>
-          <div>Rank</div>
-          <div>Student</div>
-          <div>{labels.xp}</div>
-          <div>Tasks</div>
-          <div>Reviews</div>
-          <div>Streak</div>
-          <div className="text-center">Change</div>
-        </>
-      }
-      desktopRows={entries.map((item: LeaderboardEntry, index: number) => (
-        <MemberRow
-          key={`${item.user.name}-${item.rank}`}
-          entry={item}
-          index={index}
-        />
-      ))}
-      mobileRows={entries.map((item: LeaderboardEntry, index: number) => (
-        <LeaderboardMobileRow
-          key={`mobile-${item.user.name}-${item.rank}`}
-          entry={item}
-          index={index}
-          economy="team"
-        />
-      ))}
-      desktopEmpty={
-        selectedWeek === "current" ? (
-          <p>No leaderboard data available yet.</p>
-        ) : (
+    <>
+      <LeaderboardBoardShell
+        gridColumns={MEMBER_GRID_COLUMNS}
+        loading={loading}
+        isEmpty={entries.length === 0}
+        topSlot={
+          streaksLoading ? (
+            <div className="flex items-center justify-end gap-2 pb-2">
+              <Skeleton className="h-4 w-4 rounded-full" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          ) : null
+        }
+        headerCells={
           <>
-            <p>No data available for this week.</p>
-            <p className="mt-1 text-sm">
-              Weekly snapshots will be generated automatically.
-            </p>
+            <div>Rank</div>
+            <div>Student</div>
+            <div>{labels.xp}</div>
+            <div>Tasks</div>
+            <div>Reviews</div>
+            <div>Streak</div>
+            <div className="text-center">Change</div>
           </>
-        )
-      }
-      mobileEmpty={<p>No leaderboard data available yet.</p>}
-    />
+        }
+        desktopRows={entries.map((item: LeaderboardEntry, index: number) => (
+          <MemberRow
+            key={`${item.user.name}-${item.rank}`}
+            entry={item}
+            index={index}
+            onOpenProfile={setProfileUserId}
+          />
+        ))}
+        mobileRows={entries.map((item: LeaderboardEntry, index: number) => (
+          <LeaderboardMobileRow
+            key={`mobile-${item.user.name}-${item.rank}`}
+            entry={item}
+            index={index}
+            economy="team"
+            onOpenProfile={setProfileUserId}
+          />
+        ))}
+        desktopEmpty={
+          selectedWeek === "current" ? (
+            <p>No leaderboard data available yet.</p>
+          ) : (
+            <>
+              <p>No data available for this week.</p>
+              <p className="mt-1 text-sm">
+                Weekly snapshots will be generated automatically.
+              </p>
+            </>
+          )
+        }
+        mobileEmpty={<p>No leaderboard data available yet.</p>}
+      />
+      <ProfileCardDialog
+        userId={profileUserId}
+        onClose={() => setProfileUserId(null)}
+      />
+    </>
   );
 }

@@ -26,6 +26,7 @@ It's used by every authenticated user. They visit after submitting work to watch
 - **Animated count-ups** via `useCountUp(value, 800)` make the XP / Tasks / Points / Meetings numbers tick up on render.
 - **Layout-animated rows** (`framer-motion` `layout` + `AnimatePresence mode="popLayout"`) reorder smoothly when ranks shift.
 - **Mobile breakpoint (<sm)**: desktop grid hides; rows render through `LeaderboardMobileRow` / `TeamLeaderboardMobileRow` cards instead.
+- **Profile card** (2026-09-15): clicking the avatar/name cell on any student row (My Journey board, Team Journey members board, desktop and mobile) opens [`ProfileCardDialog`](../../../src/components/profile/profile-card-dialog.tsx) — a read-only ShadCN Dialog with avatar, name, active team, member-since, the four economy totals and the founder card texts with a lean badge. Fed by one RPC, `get_user_profile_card_v1(p_user_id)` (SECURITY INVOKER — shows exactly what existing RLS allows; archived users come back as "not available"). No email is exposed. The dialog is standalone: any surface with a user id can reuse it by controlling `userId`.
 - Empty states differentiate "current week, no activity yet" from "historical week with no snapshot — snapshots will be generated automatically".
 
 ## How it looks
@@ -65,8 +66,11 @@ The leaderboard is the most opinionated piece of psychology in the product. The 
   - [`src/components/leaderboard/streak-badge.tsx`](../../../src/components/leaderboard/streak-badge.tsx) — coloured streak pill
   - [`src/components/leaderboard/leaderboard-skeleton.tsx`](../../../src/components/leaderboard/leaderboard-skeleton.tsx)
   - [`src/components/leaderboard/leaderboard-mobile-rows.tsx`](../../../src/components/leaderboard/leaderboard-mobile-rows.tsx) — mobile card layout for individual + team
+  - [`src/components/leaderboard/my-journey-row.tsx`](../../../src/components/leaderboard/my-journey-row.tsx) — My Journey desktop + mobile row
+  - [`src/components/profile/profile-card-dialog.tsx`](../../../src/components/profile/profile-card-dialog.tsx) + [`profile-card-content.tsx`](../../../src/components/profile/profile-card-content.tsx) — profile card opened from rows
 - **Hooks:**
   - [`src/hooks/use-count-up.ts`](../../../src/hooks/use-count-up.ts) — animated number increment
+  - [`src/hooks/use-profile-card.ts`](../../../src/hooks/use-profile-card.ts) — `useProfileCard(userId)` → `get_user_profile_card_v1`
 - **Server helpers:** [`src/lib/leaderboard-server.ts`](../../../src/lib/leaderboard-server.ts) — `getServerSideLiveLeaderboardData`, `getServerSideAvailableWeeks`, `getServerSideLiveTeamLeaderboardData`, `getServerSideTeamAvailableWeeks`, `getServerSideUserTeamIds`, plus streak calculators
 - **Week math:** [`src/lib/week-utils.ts`](../../../src/lib/week-utils.ts) → `getISOWeekBoundaries`
 - **RPCs:**
@@ -74,6 +78,7 @@ The leaderboard is the most opinionated piece of psychology in the product. The 
   - `get_live_team_leaderboard_data(p_limit)` — current-week team rankings
   - `get_leaderboard_data(p_limit, p_week_number, p_week_year)` — historical individual snapshot
   - `get_team_leaderboard_data(p_limit, p_week_number, p_week_year)` — historical team snapshot
+  - `get_user_profile_card_v1(p_user_id)` — one student's profile card (dialog)
   - Direct selects on `leaderboard_snapshots` and `team_leaderboard_snapshots` to populate the week selector
 - **API routes:** `POST /api/leaderboard/streaks` — batch streak lookup ([`src/app/api/leaderboard/streaks/route.ts`](../../../src/app/api/leaderboard/streaks/route.ts))
 - **Auth requirement:** Authenticated. The page reads `user.id` from `supabase.auth.getUser()` server-side to compute `userTeamIds` and highlight the current row, but ranking data is visible to any authenticated user.

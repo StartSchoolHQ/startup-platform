@@ -14,11 +14,13 @@ export function LeaderboardMobileRow({
   entry,
   index,
   economy,
+  onOpenProfile,
 }: {
   entry: LeaderboardEntry;
   index: number;
   /** Which economy the totals belong to — drives the unit label. */
   economy: Economy;
+  onOpenProfile?: (userId: string) => void;
 }) {
   const labels = economyLabels(economy);
   const isFirst = entry.rank === 1;
@@ -46,20 +48,31 @@ export function LeaderboardMobileRow({
       <div className="flex min-w-[40px] items-center gap-2">
         <RankIcon type={entry.rankIcon || "none"} rank={entry.rank} />
       </div>
-      <Avatar className="h-8 w-8">
-        <AvatarImage src={entry.user.avatar} alt={entry.user.name} />
-        <AvatarFallback>
-          {entry.user.name
-            .split(" ")
-            .map((n: string) => n[0])
-            .join("")}
-        </AvatarFallback>
-      </Avatar>
+      <button
+        type="button"
+        onClick={() => onOpenProfile?.(entry.user.userId)}
+        aria-label={`View ${entry.user.name}'s profile`}
+        className="shrink-0 rounded-full"
+      >
+        <Avatar className="h-8 w-8">
+          <AvatarImage src={entry.user.avatar} alt={entry.user.name} />
+          <AvatarFallback>
+            {entry.user.name
+              .split(" ")
+              .map((n: string) => n[0])
+              .join("")}
+          </AvatarFallback>
+        </Avatar>
+      </button>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-medium">
+          <button
+            type="button"
+            onClick={() => onOpenProfile?.(entry.user.userId)}
+            className="truncate text-left text-sm font-medium hover:underline"
+          >
             {entry.user.name}
-          </span>
+          </button>
           {entry.user.isCurrentUser && <YouBadge />}
         </div>
         <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-2 text-xs">

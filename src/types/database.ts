@@ -3387,6 +3387,7 @@ export type Database = {
           team_name: string;
         }[];
       };
+      get_user_profile_card_v1: { Args: { p_user_id: string }; Returns: Json };
       get_user_progress_details: { Args: { p_user_id: string }; Returns: Json };
       get_user_progress_details_backup_v1: {
         Args: { p_user_id: string };
