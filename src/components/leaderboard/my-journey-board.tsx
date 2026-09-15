@@ -60,7 +60,7 @@ export function MyJourneyBoard({
           <div>Rank</div>
           <div>Student</div>
           <div>{labels.xp}</div>
-          <div>{labels.points}</div>
+          {labels.hasPoints && <div>{labels.points}</div>}
           <div>Tasks done</div>
         </div>
 

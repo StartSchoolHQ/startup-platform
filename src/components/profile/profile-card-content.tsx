@@ -1,7 +1,7 @@
 import { Users, Zap, type LucideIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { economyLabels } from "@/lib/economy-labels";
-import { FOUNDER_CARD_SECTIONS } from "@/lib/profile-card";
+import { FOUNDER_CARD_SECTIONS, completionPercent } from "@/lib/profile-card";
 import type { ProfileCard } from "@/types/profile-card";
 
 /** Founder answers as a question / answer grid. Quiet by design. */
@@ -34,29 +34,36 @@ export function ProfileCardBody({ card }: { card: ProfileCard }) {
   );
 }
 
-function Metric({ value, label }: { value: number; label: string }) {
+function Metric({ value, label }: { value: number | string; label: string }) {
   return (
     <div>
       <div className="text-xl leading-none font-semibold tracking-tight tabular-nums">
-        {value.toLocaleString()}
+        {typeof value === "number" ? value.toLocaleString() : value}
       </div>
       <div className="text-muted-foreground mt-1 text-xs">{label}</div>
     </div>
   );
 }
 
+/**
+ * One economy: XP, then either its points (when students see them) or a
+ * caller-supplied second metric. My Journey passes its completion instead of
+ * the hidden credits so the block never collapses to a single number.
+ */
 function EconomyBlock({
   icon: Icon,
   title,
   xp,
   points,
   labels,
+  fallback,
 }: {
   icon: LucideIcon;
   title: string;
   xp: number;
   points: number;
-  labels: { xp: string; points: string };
+  labels: { xp: string; points: string; hasPoints: boolean };
+  fallback?: { value: string; label: string };
 }) {
   return (
     <div className="space-y-3">
@@ -68,7 +75,11 @@ function EconomyBlock({
       </div>
       <div className="grid grid-cols-2 gap-4">
         <Metric value={xp} label={labels.xp} />
-        <Metric value={points} label={labels.points} />
+        {labels.hasPoints ? (
+          <Metric value={points} label={labels.points} />
+        ) : fallback ? (
+          <Metric value={fallback.value} label={fallback.label} />
+        ) : null}
       </div>
     </div>
   );
@@ -76,6 +87,10 @@ function EconomyBlock({
 
 /** Both economies, one block each. The leaderboard already ranked them. */
 export function ProfileCardFooter({ card }: { card: ProfileCard }) {
+  const done = completionPercent(
+    card.my_journey_tasks_completed,
+    card.my_journey_tasks_total
+  );
   return (
     <div className="bg-muted/40 border-t px-6 py-5">
       <div className="grid gap-5 sm:grid-cols-2 sm:gap-8 sm:[&>*+*]:border-l sm:[&>*+*]:pl-8">
@@ -85,6 +100,10 @@ export function ProfileCardFooter({ card }: { card: ProfileCard }) {
           xp={card.my_journey_xp}
           points={card.my_journey_credits}
           labels={economyLabels("my_journey")}
+          fallback={{
+            value: `${done}%`,
+            label: `done · ${card.my_journey_tasks_completed} of ${card.my_journey_tasks_total} tasks`,
+          }}
         />
         <EconomyBlock
           icon={Users}

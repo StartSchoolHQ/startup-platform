@@ -17,7 +17,7 @@ export function useProfileCard(userId: string | null) {
     queryKey: profileCardKeys.card(userId),
     queryFn: async (): Promise<ProfileCard | null> => {
       const supabase = createClient();
-      const { data, error } = await supabase.rpc("get_user_profile_card_v1", {
+      const { data, error } = await supabase.rpc("get_user_profile_card_v2", {
         p_user_id: userId as string,
       });
       if (error) throw new Error(error.message);

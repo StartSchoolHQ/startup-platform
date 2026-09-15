@@ -80,11 +80,13 @@ export function TaskActionCard({
               value={task.base_xp_reward}
               unit={labels.xp}
             />
-            <RewardRow
-              icon={CreditCard}
-              value={task.base_points_reward}
-              unit={labels.points}
-            />
+            {labels.hasPoints && (
+              <RewardRow
+                icon={CreditCard}
+                value={task.base_points_reward}
+                unit={labels.points}
+              />
+            )}
           </div>
         </div>
 

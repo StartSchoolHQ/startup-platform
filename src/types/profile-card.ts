@@ -1,6 +1,6 @@
 import type { BackgroundLean } from "@/lib/validation-schemas";
 
-/** Return shape of get_user_profile_card_v1. */
+/** Return shape of get_user_profile_card_v2. */
 export interface ProfileCard {
   user_id: string;
   name: string | null;
@@ -10,6 +10,10 @@ export interface ProfileCard {
   my_journey_credits: number;
   team_xp: number;
   team_points: number;
+  /** Approved active solo tasks — same count as the My Journey page. */
+  my_journey_tasks_completed: number;
+  /** All active solo tasks. */
+  my_journey_tasks_total: number;
   team: ProfileCardTeam | null;
   founder_card: ProfileCardFounder | null;
 }

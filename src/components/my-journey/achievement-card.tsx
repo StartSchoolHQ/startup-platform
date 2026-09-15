@@ -145,13 +145,15 @@ export function AchievementCard({
             </span>
             {labels.xp}
           </span>
-          <span className="flex items-center gap-1.5">
-            <CreditCard className="h-3.5 w-3.5" />
-            <span className="text-foreground font-semibold tabular-nums">
-              {points}
+          {labels.hasPoints && (
+            <span className="flex items-center gap-1.5">
+              <CreditCard className="h-3.5 w-3.5" />
+              <span className="text-foreground font-semibold tabular-nums">
+                {points}
+              </span>
+              {labels.points}
             </span>
-            {labels.points}
-          </span>
+          )}
         </div>
       </div>
 

@@ -106,9 +106,9 @@ export function TasksTable({
               <tr className="border-b">
                 <th className={cn(TH, "w-full")}>Task</th>
                 {!isSolo && <th className={TH}>Responsible</th>}
-                <th className={TH}>Difficulty</th>
+                {!isSolo && <th className={TH}>Difficulty</th>}
                 <th className={TH}>{labels.xp}</th>
-                <th className={TH}>{labels.points}</th>
+                {labels.hasPoints && <th className={TH}>{labels.points}</th>}
                 <th className={TH}>Status</th>
                 <th className={cn(TH, "text-right")} aria-label="Actions" />
               </tr>
@@ -138,11 +138,13 @@ export function TasksTable({
                         />
                       </td>
                     )}
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <DifficultyBadge
-                        level={DIFFICULTY_LEVEL[task.difficulty] ?? 1}
-                      />
-                    </td>
+                    {!isSolo && (
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <DifficultyBadge
+                          level={DIFFICULTY_LEVEL[task.difficulty] ?? 1}
+                        />
+                      </td>
+                    )}
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className="flex items-center gap-1.5 text-sm">
                         <Zap className="text-primary h-3.5 w-3.5" />
@@ -151,14 +153,16 @@ export function TasksTable({
                         </span>
                       </span>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="flex items-center gap-1.5 text-sm">
-                        <CreditCard className="text-primary h-3.5 w-3.5" />
-                        <span className="font-medium tabular-nums">
-                          {task.points ?? 0}
+                    {labels.hasPoints && (
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="flex items-center gap-1.5 text-sm">
+                          <CreditCard className="text-primary h-3.5 w-3.5" />
+                          <span className="font-medium tabular-nums">
+                            {task.points ?? 0}
+                          </span>
                         </span>
-                      </span>
-                    </td>
+                      </td>
+                    )}
                     <td className="px-4 py-3 whitespace-nowrap">
                       {task.phaseLocked ? (
                         <PhaseLockedBadge />

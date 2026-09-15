@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
+import { statsGridColumnsClass } from "@/components/ui/stats-grid-skeleton";
 import { SectionLabel } from "@/components/dashboard/my-journey/section-label";
 import { TransactionRow } from "@/components/transactions/transaction-row";
 import { useQuery } from "@tanstack/react-query";
@@ -49,6 +50,7 @@ export default function TransactionHistoryPage() {
     enabled: !!user?.id,
   });
 
+  // Points cards appear only for economies whose points students can see.
   const balances = [
     {
       title: solo.xp,
@@ -57,13 +59,17 @@ export default function TransactionHistoryPage() {
       icon: Zap,
       iconColor: "text-primary",
     },
-    {
-      title: solo.points,
-      value: (user?.my_journey_credits ?? 0).toLocaleString(),
-      subtitle: "Available to spend",
-      icon: CreditCard,
-      iconColor: "text-primary",
-    },
+    ...(solo.hasPoints
+      ? [
+          {
+            title: solo.points,
+            value: (user?.my_journey_credits ?? 0).toLocaleString(),
+            subtitle: "Available to spend",
+            icon: CreditCard,
+            iconColor: "text-primary",
+          },
+        ]
+      : []),
     {
       title: team.xp,
       value: (user?.team_xp ?? 0).toLocaleString(),
@@ -71,20 +77,24 @@ export default function TransactionHistoryPage() {
       icon: Zap,
       iconColor: "text-muted-foreground",
     },
-    {
-      title: team.points,
-      value: (user?.team_points ?? 0).toLocaleString(),
-      subtitle: "Startup capital available",
-      icon: CreditCard,
-      iconColor: "text-muted-foreground",
-    },
+    ...(team.hasPoints
+      ? [
+          {
+            title: team.points,
+            value: (user?.team_points ?? 0).toLocaleString(),
+            subtitle: "Startup capital available",
+            icon: CreditCard,
+            iconColor: "text-muted-foreground",
+          },
+        ]
+      : []),
   ];
 
   return (
     <div className="space-y-6">
       <Header />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className={`grid gap-4 ${statsGridColumnsClass(balances.length)}`}>
         {balances.map((card) => (
           <StatsCardComponent key={card.title} {...card} />
         ))}

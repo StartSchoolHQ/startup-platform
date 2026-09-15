@@ -113,7 +113,9 @@ export function TransactionRow({
       </div>
       <div className="flex shrink-0 flex-col items-end gap-0.5 sm:flex-row sm:items-center sm:gap-4">
         <Amount value={transaction.xp_change} unit={labels.xp} />
-        <Amount value={transaction.points_change} unit={labels.points} />
+        {labels.hasPoints && (
+          <Amount value={transaction.points_change} unit={labels.points} />
+        )}
       </div>
     </li>
   );

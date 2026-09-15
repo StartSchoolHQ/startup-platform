@@ -65,17 +65,23 @@ export function MobileTaskCard({
       )}
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-        <DifficultyBadge level={DIFFICULTY_LEVEL[task.difficulty] ?? 1} />
+        {!isSolo && (
+          <DifficultyBadge level={DIFFICULTY_LEVEL[task.difficulty] ?? 1} />
+        )}
         <span className="flex items-center gap-1.5">
           <Zap className="text-primary h-3.5 w-3.5" />
           <span className="font-medium tabular-nums">{task.xp ?? 0}</span>
           <span className="text-muted-foreground text-xs">{labels.xp}</span>
         </span>
-        <span className="flex items-center gap-1.5">
-          <CreditCard className="text-primary h-3.5 w-3.5" />
-          <span className="font-medium tabular-nums">{task.points ?? 0}</span>
-          <span className="text-muted-foreground text-xs">{labels.points}</span>
-        </span>
+        {labels.hasPoints && (
+          <span className="flex items-center gap-1.5">
+            <CreditCard className="text-primary h-3.5 w-3.5" />
+            <span className="font-medium tabular-nums">{task.points ?? 0}</span>
+            <span className="text-muted-foreground text-xs">
+              {labels.points}
+            </span>
+          </span>
+        )}
       </div>
 
       {coolingDown && !task.phaseLocked ? (

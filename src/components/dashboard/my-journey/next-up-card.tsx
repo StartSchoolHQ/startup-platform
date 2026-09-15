@@ -41,13 +41,15 @@ export function NextUpCard({ task, totalTasks }: NextUpCardProps) {
                   </span>
                   {labels.xp}
                 </span>
-                <span className="flex items-center gap-1.5">
-                  <CreditCard className="text-primary h-4 w-4" />
-                  <span className="text-foreground font-semibold">
-                    +{task.points_reward ?? 0}
+                {labels.hasPoints && (
+                  <span className="flex items-center gap-1.5">
+                    <CreditCard className="text-primary h-4 w-4" />
+                    <span className="text-foreground font-semibold">
+                      +{task.points_reward ?? 0}
+                    </span>
+                    {labels.points}
                   </span>
-                  {labels.points}
-                </span>
+                )}
               </div>
               <Button asChild size="sm">
                 <Link href="/dashboard/my-journey">

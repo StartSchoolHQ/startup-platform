@@ -20,7 +20,9 @@ export function MyJourneyStatCards({ data }: { data: MyJourneyOverview }) {
       id: "onborda-my-journey-balance",
       title: labels.xp,
       value: balances.my_journey_xp.toLocaleString(),
-      subtitle: `${balances.my_journey_credits.toLocaleString()} ${labels.points}`,
+      subtitle: labels.hasPoints
+        ? `${balances.my_journey_credits.toLocaleString()} ${labels.points}`
+        : "Earned from solo tasks",
       icon: Zap,
       iconColor: "text-primary",
       href: "/dashboard/my-journey",

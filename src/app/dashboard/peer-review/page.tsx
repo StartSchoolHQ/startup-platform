@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter, useSearchParams } from "next/navigation";
+import { redirect, useRouter, useSearchParams } from "next/navigation";
 import posthog from "posthog-js";
 import { useCallback, useEffect, useState } from "react";
 
@@ -11,6 +11,7 @@ import { DifficultyBadge } from "@/components/ui/difficulty-badge";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { invalidateNotifications } from "@/hooks/use-task-notifications";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
@@ -166,8 +167,13 @@ function TableSkeleton({
 export default function PeerReviewPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useApp();
+  const { user, loading: userLoading } = useApp();
   const queryClient = useQueryClient();
+  const {
+    data: journeys,
+    isLoading: journeysLoading,
+    isError: journeysError,
+  } = usePlatformSettings();
 
   // UI state only
   const [modalState, setModalState] = useState({
@@ -540,6 +546,29 @@ export default function PeerReviewPage() {
       isContinuation: isValidContinuation,
     });
   };
+
+  // Journey guard: peer review only exists in the Team Journey phase, so
+  // students lose this page while it is off. Admins keep access. Only a
+  // successful settings read may redirect — a failed fetch falls back to
+  // JOURNEY_DEFAULTS and must never bounce anyone off the page.
+  const settingsSettled = !journeysLoading && !userLoading;
+  const guardReady = settingsSettled && !journeysError;
+  if (guardReady && !journeys.teamJourney && user?.primary_role !== "admin") {
+    redirect("/dashboard");
+  }
+  if (!settingsSettled) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-48" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-64 rounded-xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

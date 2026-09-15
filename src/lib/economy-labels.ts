@@ -1,7 +1,9 @@
 /**
  * Single source of truth for the two economies' student-facing unit labels.
  *
- * My Journey (solo phase) earns "My Journey XP" + "My Journey Credits".
+ * My Journey (solo phase) earns "My Journey XP". Its credits still accrue in
+ * the ledger and on `users.my_journey_credits`, but students never see them
+ * (`hasPoints: false`) — every solo surface hides its points half.
  * Team Journey (startup phase) earns "Team XP" + "Team Points".
  *
  * Students must never see a bare "XP" / "Points" — always route the label
@@ -13,11 +15,17 @@ export type Economy = "my_journey" | "team";
 export interface EconomyLabels {
   xp: string;
   points: string;
+  /** Whether students see the points half of this economy at all. */
+  hasPoints: boolean;
 }
 
 const LABELS: Record<Economy, EconomyLabels> = {
-  my_journey: { xp: "My Journey XP", points: "My Journey Credits" },
-  team: { xp: "Team XP", points: "Team Points" },
+  my_journey: {
+    xp: "My Journey XP",
+    points: "My Journey Credits",
+    hasPoints: false,
+  },
+  team: { xp: "Team XP", points: "Team Points", hasPoints: true },
 };
 
 export function economyLabels(economy: Economy): EconomyLabels {

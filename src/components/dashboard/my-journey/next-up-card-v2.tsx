@@ -53,11 +53,13 @@ export function NextUpCardV2({ task, totalTasks }: NextUpCardProps) {
                   value={task.xp_reward}
                   unit={labels.xp}
                 />
-                <RewardChip
-                  icon={CreditCard}
-                  value={task.points_reward}
-                  unit={labels.points}
-                />
+                {labels.hasPoints && (
+                  <RewardChip
+                    icon={CreditCard}
+                    value={task.points_reward}
+                    unit={labels.points}
+                  />
+                )}
               </div>
               <Button asChild size="sm" className="group">
                 <Link href="/dashboard/my-journey">

@@ -9,7 +9,12 @@ import { economyLabels } from "@/lib/economy-labels";
 import { cn } from "@/lib/utils";
 import { leaderboardRowClass } from "@/components/leaderboard/row-styles";
 
-export const MY_JOURNEY_GRID_COLUMNS = "80px 220px 1fr 1fr 1fr";
+const MY_JOURNEY_LABELS = economyLabels("my_journey");
+
+/** Rank · Student · XP · (Credits) · Tasks — credits column only if shown. */
+export const MY_JOURNEY_GRID_COLUMNS = MY_JOURNEY_LABELS.hasPoints
+  ? "80px 220px 1fr 1fr 1fr"
+  : "80px 220px 1fr 1fr";
 
 type OpenProfile = (userId: string) => void;
 
@@ -92,7 +97,9 @@ export function MyJourneyRow({
           </div>
           <StudentCell entry={entry} onOpenProfile={onOpenProfile} />
           <Metric icon={Zap} value={entry.xp.toLocaleString()} />
-          <Metric icon={Coins} value={entry.credits.toLocaleString()} />
+          {labels.hasPoints && (
+            <Metric icon={Coins} value={entry.credits.toLocaleString()} />
+          )}
           <Metric icon={ListChecks} value={entry.tasks} muted />
         </div>
       </div>
@@ -114,10 +121,12 @@ export function MyJourneyRow({
               <Zap className="text-primary h-3 w-3" />
               {entry.xp.toLocaleString()} {labels.xp}
             </span>
-            <span className="flex items-center gap-1">
-              <Coins className="text-primary h-3 w-3" />
-              {entry.credits.toLocaleString()} {labels.points}
-            </span>
+            {labels.hasPoints && (
+              <span className="flex items-center gap-1">
+                <Coins className="text-primary h-3 w-3" />
+                {entry.credits.toLocaleString()} {labels.points}
+              </span>
+            )}
             <span className="flex items-center gap-1">
               <ListChecks className="h-3 w-3" />
               {entry.tasks} tasks

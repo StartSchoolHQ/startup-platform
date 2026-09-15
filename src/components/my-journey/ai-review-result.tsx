@@ -42,7 +42,8 @@ export function AiReviewResult({
       <CardContent className="space-y-4">
         {passed ? (
           <p className="text-sm text-green-700">
-            +{xp} {labels.xp} · +{points} {labels.points}
+            +{xp} {labels.xp}
+            {labels.hasPoints ? ` · +${points} ${labels.points}` : null}
           </p>
         ) : null}
         {status.feedback ? (

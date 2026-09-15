@@ -37,6 +37,12 @@ export function initials(name: string | null | undefined): string {
     .join("");
 }
 
+/** Whole-number completion percentage, 0 when there is nothing to finish. */
+export function completionPercent(completed: number, total: number): number {
+  if (total <= 0) return 0;
+  return Math.round((Math.min(completed, total) / total) * 100);
+}
+
 /** "Sep 2026" or null for a missing/invalid timestamp. */
 export function memberSince(iso: string | null | undefined): string | null {
   if (!iso) return null;

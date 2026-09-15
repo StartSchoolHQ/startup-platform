@@ -74,6 +74,8 @@ export function TaskPreviewModal({
   if (!task) return null;
 
   const labels = economyLabels(economy);
+  // Solo tasks carry no difficulty rating for students.
+  const isSolo = economy === "my_journey";
   const objectives = parseStringList(task.learning_objectives);
   const resources = parseResources(task.resources);
   const hasContent =
@@ -98,7 +100,9 @@ export function TaskPreviewModal({
             className="bg-primary/15 pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full blur-3xl"
           />
           <div className="relative flex flex-wrap items-center gap-2">
-            <DifficultyBadge level={DIFFICULTY_LEVEL[task.difficulty] ?? 1} />
+            {!isSolo && (
+              <DifficultyBadge level={DIFFICULTY_LEVEL[task.difficulty] ?? 1} />
+            )}
             {task.isRecurring && (
               <Badge
                 variant="outline"
@@ -126,11 +130,13 @@ export function TaskPreviewModal({
           </DialogDescription>
           <div className="relative flex items-center gap-2">
             <RewardChip icon={Zap} value={task.xp} unit={labels.xp} />
-            <RewardChip
-              icon={CreditCard}
-              value={task.points}
-              unit={labels.points}
-            />
+            {labels.hasPoints && (
+              <RewardChip
+                icon={CreditCard}
+                value={task.points}
+                unit={labels.points}
+              />
+            )}
           </div>
         </DialogHeader>
 
