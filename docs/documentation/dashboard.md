@@ -279,9 +279,8 @@ All admin pages verify `user.primary_role === "admin"` and redirect non-admins t
 
 ### Admin Users (`/dashboard/admin/users`)
 
-- **Tabs:** All Users, Bulk Invitations, Roles & Permissions (coming soon)
+- Single card, no tabs (the Bulk Invitations tab was removed with the Google SSO cutover)
 - `AdminUsersTable` — Columns: User, Email, Role, Last Login, Created At, Actions
-- `BulkInviteTab` — CSV upload or manual email entry
 
 ### Admin Tasks (`/dashboard/admin/tasks`)
 

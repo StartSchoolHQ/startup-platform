@@ -11,8 +11,6 @@ Public-facing pages and the auth flow before a user reaches the dashboard.
 - [Landing](./public/landing.md) — `/`
 - [Login](./public/login.md) — `/login`
 - [Profile Setup](./public/profile-setup.md) — `/profile/setup`
-- [Invite (legacy)](./public/invite.md) — `/invite`
-- [Auth Invite](./public/auth-invite.md) — `/auth/invite`
 - [Reset Password](./public/auth-reset-password.md) — `/auth/reset-password`
 - [Invite Expired](./public/auth-invite-expired.md) — `/auth/invite-expired`
 - [Full Scholarship Agreement](./public/full-scholarship-agreement.md) — `/full-scholarship-agreement`
@@ -85,14 +83,12 @@ These surfaced while documenting and aren't bugs to fix here, but they're record
 
 ### Naming inconsistencies
 - **Products → Teams rename is partial.** UI headings say "Teams"; query keys, the `Product` type, the `team-journey.ts` file, the `CreateTeamDialog` button labelled "Add Product", and breadcrumbs still say "Products". See the team-journey docs.
-- **Profile completeness check vs setup form.** `isProfileComplete` only checks `name`; `/profile/setup` enforces avatar. An avatar-less user with a name set could skip setup if they reach `/auth/invite`. See [auth-invite.md](./public/auth-invite.md).
 
 ### Architectural inconsistencies
 - **Fetching pattern**: most authenticated pages use TanStack Query; the Account page uses local `useState` + `useEffect`. Could be normalised.
 - **Admin client usage**: weekly-reports and audit-logs use the admin client (RLS bypass); peer-reviews uses the server client. Worth a consistency review.
 - **Admin guard pattern**: 3 of 4 admin core pages, and 3 of 4 admin advanced pages, follow the same `useApp()` + redirect + `AdminSkeleton` pattern. `audit-logs` is the outlier (no client guard, relies entirely on middleware + RLS).
 - **URL-synced tabs**: three admin pages reimplement the same `?tab=` syncing dance with `useSearchParams` + `useRouter.replace`. Strong candidate for a `useTabState` hook.
-- **Two parallel invite routes**: `/invite` (legacy, defensive) and `/auth/invite` (newer, uses `waitForProfile`). A V2 split — at some point the legacy one can be retired.
 
 ### Design system observations
 - All public auth pages share `bg-[#0000dd]` grid + `#ff78c8` pink accent + glassy zinc cards + Framer Motion entry animations. A coherent de-facto auth design system worth formalising.

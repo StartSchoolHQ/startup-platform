@@ -26,44 +26,6 @@ export const SupportTicketSchema = z.object({
 
 export type SupportTicketData = z.infer<typeof SupportTicketSchema>;
 
-/**
- * Single invitation schema
- */
-const InvitationSchema = z.object({
-  email: z.string().email("Invalid email format").trim().toLowerCase(),
-  first_name: z
-    .string()
-    .min(2, "First name must be at least 2 characters")
-    .max(50, "First name must be at most 50 characters")
-    .regex(
-      /^[\p{L}\s'-]+$/u,
-      "First name can only contain letters, spaces, hyphens, and apostrophes"
-    )
-    .trim(),
-  last_name: z
-    .string()
-    .min(2, "Last name must be at least 2 characters")
-    .max(50, "Last name must be at most 50 characters")
-    .regex(
-      /^[\p{L}\s'-]+$/u,
-      "Last name can only contain letters, spaces, hyphens, and apostrophes"
-    )
-    .trim(),
-});
-
-/**
- * Bulk invite validation schema
- */
-export const BulkInviteSchema = z.object({
-  invitations: z
-    .array(InvitationSchema)
-    .min(1, "At least one invitation is required")
-    .max(100, "Maximum 100 invitations allowed"),
-});
-
-export type BulkInviteData = z.infer<typeof BulkInviteSchema>;
-export type InvitationData = z.infer<typeof InvitationSchema>;
-
 // ============================================
 // FORM SCHEMAS
 // ============================================
@@ -312,15 +274,6 @@ export const AdminUserUpdateSchema = z.object({
 });
 
 export type AdminUserUpdate = z.infer<typeof AdminUserUpdateSchema>;
-
-/**
- * Resend invite schema
- */
-export const ResendInviteSchema = z.object({
-  email: z.string().email("Invalid email address"),
-});
-
-export type ResendInvite = z.infer<typeof ResendInviteSchema>;
 
 // ============================================
 // JSONB FIELD SCHEMAS

@@ -105,12 +105,6 @@ When all strikes for a team+week are resolved, creates `weekly_report_refund` no
 
 **Data payload:** `{ team_id, week_number, week_year, points_refunded }`
 
-### `POST /api/admin/bulk-invite` (notification side effect)
-
-**File:** `src/app/api/admin/bulk-invite/route.ts`
-
-Creates `system` type welcome notification when new user is invited.
-
 ---
 
 ## Database Triggers
@@ -392,4 +386,3 @@ The legacy system generated notifications from metadata (task_progress changes, 
 | `src/hooks/use-task-notifications.ts` | React Query + Realtime hook |
 | `src/app/api/notifications/task-assigned/route.ts` | Task assignment notification |
 | `src/app/api/admin/resolve-strike/route.ts` | Refund notification (side effect) |
-| `src/app/api/admin/bulk-invite/route.ts` | Welcome notification (side effect) |

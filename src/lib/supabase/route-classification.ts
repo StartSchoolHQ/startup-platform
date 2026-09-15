@@ -9,7 +9,6 @@ const PUBLIC_PREFIXES = [
   "/login",
   "/auth/",
   "/profile/setup",
-  "/invite",
   "/policy",
   "/terms",
   "/full-scholarship-agreement",

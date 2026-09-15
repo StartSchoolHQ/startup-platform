@@ -116,8 +116,7 @@ export function createAdminClient() {
 | `/auth/callback` | OAuth/PKCE callback handler |
 | `/auth/confirm` | Email OTP confirmation (password reset) |
 | `/auth/reset-password` | Password reset form |
-| `/profile/setup` | Profile completion after invitation |
-| `/invite` | Invitation acceptance page |
+| `/profile/setup` | Profile completion after first sign-in |
 
 **Protected Routes** (auth required):
 | Route | Purpose |
@@ -177,33 +176,9 @@ Handles PKCE authorization code exchange and invitation flows.
 6. User enters new password (8+ chars, must match confirmation)
 7. `supabase.auth.updateUser({ password })` → redirect to `/dashboard`
 
-### Invitation Flow
+### Account Creation
 
-**Files:**
-- `src/app/api/admin/bulk-invite/route.ts` — Bulk invite API
-- `src/app/api/admin/resend-invite/route.ts` — Resend invite API
-- `src/app/invite/page.tsx` — PKCE-based invitation page
-- `src/app/auth/invite/page.tsx` — Hash-based invitation page
-- `src/app/auth/invite-expired/page.tsx` — Expired invitation error
-
-**Bulk Invite Flow:**
-
-1. **Auth:** Admin only (`primary_role !== "admin"` → 403)
-2. **Validation:** `BulkInviteSchema` (Zod) — email, first_name, last_name per entry, max 100
-3. **Duplicate Check:** `adminClient.auth.admin.listUsers()` — rejects existing emails
-4. **Creation:** `adminClient.auth.admin.inviteUserByEmail(email, { data, redirectTo })`
-   - Sets metadata: `{ first_name, last_name, invited_by }`
-   - Redirect: `{APP_URL}/auth/callback?next=/profile/setup`
-   - Supabase sends 24-hour magic link email
-5. **Welcome Notification:** Creates `"system"` type notification for invited user
-6. **Response:** `{ total, succeeded, failed }` with per-invitation results
-
-**Invitation Acceptance (`/invite`):**
-
-1. Check for auth token (hash or PKCE code)
-2. Establish session via `exchangeCodeForSession()` or hash processing
-3. Check profile existence — create basic record if missing
-4. Redirect: incomplete profile → `/profile/setup`, else → `/dashboard`
+There is no invitation flow. New accounts are created only by Google sign-in from `/login`; the `hook_restrict_signup` auth hook admits Google + `@startschool.org` only. See `docs/GoogleSSO/`. The legacy email-invite routes (`/invite`, `/auth/invite`, bulk/resend/pending-invite APIs) were deleted on 2026-09-15. `src/app/auth/invite-expired/page.tsx` remains as the generic "code exchange failed" error page used by `/auth/callback`.
 
 ### Profile Setup (`/profile/setup`)
 
@@ -279,7 +254,6 @@ All require `primary_role === "admin"`, redirect non-admins to `/dashboard`:
 | `/dashboard/admin/peer-reviews` | Peer review oversight |
 | `/dashboard/admin/audit-logs` | Audit log viewer |
 | `/dashboard/admin/settings` | Programme phase + AI reviewer settings |
-| `/dashboard/admin/pending-invites` | Pending invitations |
 
 ### Protection Pattern
 
@@ -345,10 +319,7 @@ All require `primary_role === "admin"`, redirect non-admins to `/dashboard`:
 | Auth Callback | `src/app/auth/callback/route.ts` | PKCE code exchange |
 | OTP Confirm | `src/app/auth/confirm/route.ts` | Password reset OTP verification |
 | Reset Password | `src/app/auth/reset-password/page.tsx` | New password form |
-| Invite Page | `src/app/invite/page.tsx` | PKCE invitation acceptance |
 | Invite Expired | `src/app/auth/invite-expired/page.tsx` | Expired link error |
-| Bulk Invite API | `src/app/api/admin/bulk-invite/route.ts` | Admin batch invitations |
-| Resend Invite API | `src/app/api/admin/resend-invite/route.ts` | Resend invitation email |
 | Profile API | `src/app/api/profile/setup/route.ts` | Profile update endpoint |
 | AppProvider | `src/contexts/app-context.tsx` | Global user state + PostHog |
 
@@ -425,9 +396,6 @@ Handles race condition where auth user is created before DB trigger creates prof
 
 | Schema | Fields | Used By |
 |--------|--------|---------|
-| `InvitationSchema` | email (trimmed, lowercased), first_name (2-50), last_name (2-50) | Bulk invite |
-| `BulkInviteSchema` | invitations[] (1-100 items) | Bulk invite API |
-| `ResendInviteSchema` | email (email format) | Resend invite API |
 | `AdminUserUpdateSchema` | name?, email?, primary_role?, secondary_roles?, balance? | Admin user edit |
 
 ---
@@ -460,13 +428,9 @@ Handles race condition where auth user is created before DB trigger creates prof
 | `src/app/auth/callback/route.ts` | PKCE callback handler |
 | `src/app/auth/confirm/route.ts` | OTP confirmation |
 | `src/app/auth/reset-password/page.tsx` | Password reset UI |
-| `src/app/auth/invite/page.tsx` | Hash-based invitation |
-| `src/app/invite/page.tsx` | PKCE-based invitation |
 | `src/app/auth/invite-expired/page.tsx` | Expired link error |
 | `src/app/profile/setup/page.tsx` | Profile completion UI |
 | `src/app/api/profile/setup/route.ts` | Profile API |
-| `src/app/api/admin/bulk-invite/route.ts` | Bulk invite API |
-| `src/app/api/admin/resend-invite/route.ts` | Resend invite API |
 
 ### Utilities
 | File | Purpose |

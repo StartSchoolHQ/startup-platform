@@ -23,5 +23,5 @@ With the account gate in the database (`hook_restrict_signup`), admin onboarding
 ## Wired-up bits
 
 - **Files:** `src/app/dashboard/admin/users/page.tsx`, `src/components/admin/admin-users-table.tsx`
-- **Deprecated, still on disk until Phase 2:** `src/components/admin/bulk-invite-tab.tsx`, `manual-invite-form.tsx`, `csv-invite-uploader.tsx`, `pending-invitations-table.tsx`, `POST /api/admin/bulk-invite`, `POST /api/admin/resend-invite`, `GET /api/admin/pending-invites`
+- **History:** the email-invite tab, its components and its three API routes were deleted on 2026-09-15 (Google SSO Phase 2). Accounts are created only by Google sign-in.
 - **Related:** `docs/documentation/invitations.md` (team invitations still live there), `docs/GoogleSSO/2026-08-27-google-sso-invite-gate-design.md`

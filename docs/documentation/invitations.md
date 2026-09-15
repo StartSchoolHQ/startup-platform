@@ -1,12 +1,10 @@
 # Invitations System
 
-> The invitations system manages two distinct flows: admin bulk signup invitations (Supabase Auth email invites for onboarding new users) and team invitations (existing users inviting each other to join teams). Users can only be part of one team at a time — accepting an invitation auto-declines all others.
+> Team invitations: existing users inviting each other to join teams. Users can only be part of one team at a time — accepting an invitation auto-declines all others. Account creation is Google sign-in only (see History below).
 
 ## Overview
 
-Two separate invitation systems exist:
-
-1. **Account creation (Google SSO, since 2026-09-14)** — there is no admin invitation any more. A person signs in with their `@startschool.org` Google account; Supabase creates the auth user, the `before_user_created` hook (`public.hook_restrict_signup`) rejects anything that is not Google + `@startschool.org`, the `on_auth_user_created` trigger (`handle_new_auth_user` v2) creates the `public.users` row with the Google name and the single open batch, and `/auth/callback` sends them to `/profile/setup` (name + avatar) before the dashboard. Existing accounts (including gmail ones) link their Google identity automatically on first Google sign-in. Spec: `docs/GoogleSSO/`. The legacy email-invite routes below are **deprecated** and removed in Phase 2.
+1. **Account creation (Google SSO, since 2026-09-14)** — there is no admin invitation any more. A person signs in with their `@startschool.org` Google account; Supabase creates the auth user, the `before_user_created` hook (`public.hook_restrict_signup`) rejects anything that is not Google + `@startschool.org`, the `on_auth_user_created` trigger (`handle_new_auth_user` v2) creates the `public.users` row with the Google name and the single open batch, and `/auth/callback` sends them to `/profile/setup` (name + avatar) before the dashboard. Existing accounts (including gmail ones) link their Google identity automatically on first Google sign-in. Spec: `docs/GoogleSSO/`. The legacy email-invite routes were removed on 2026-09-15 (see History).
 2. **Team Invitations** — Team members invite existing platform users to join their team. Stored in `team_invitations` table. Users accept/decline from `/dashboard/invitations`.
 
 **Key constraint:** Users can only belong to ONE team at a time. Accepting a team invitation auto-declines all other pending invitations.
@@ -112,45 +110,9 @@ Team member sends invitation
 
 ---
 
-## Admin Bulk Invitations (deprecated — Phase 2 removal)
+## History: admin email invites (removed 2026-09-15)
 
-> Not reachable from the UI since 2026-09-14 (the admin Invitations tab was removed). Routes and components stay on disk as rollback until Phase 2 of the Google SSO plan deletes them. New accounts come from Google sign-in only.
-
-### `POST /api/admin/bulk-invite`
-
-**File:** `src/app/api/admin/bulk-invite/route.ts`
-**Auth:** Admin only (`primary_role === "admin"`)
-
-**Request:**
-```typescript
-{
-  invitations: [
-    { email: string, first_name: string, last_name: string }
-  ]  // Max 100
-}
-```
-
-**Flow:**
-1. Validate with `BulkInviteSchema` (Zod)
-2. Check each email against existing `auth.users`
-3. If new: `adminClient.auth.admin.inviteUserByEmail(email, { data, redirectTo })`
-   - Sets metadata: `{ first_name, last_name, invited_by }`
-   - Redirect: `{APP_URL}/auth/callback?next=/profile/setup`
-   - Supabase sends 24-hour magic link email
-4. Create `"system"` notification: "Welcome to StartSchool!"
-5. Return: `{ total, succeeded, failed, results[] }`
-
-### `GET /api/admin/pending-invites`
-
-**File:** `src/app/api/admin/pending-invites/route.ts`
-
-Lists users with `email_confirmed_at IS NULL` (haven't clicked invite link yet).
-
-### `POST /api/admin/resend-invite`
-
-**File:** `src/app/api/admin/resend-invite/route.ts`
-
-Resends magic link email with fresh 24-hour expiry.
+Until the Google SSO cutover, admins onboarded students by email: `POST /api/admin/bulk-invite` called `auth.admin.inviteUserByEmail`, `GET /api/admin/pending-invites` listed unconfirmed users, `POST /api/admin/resend-invite` re-sent the magic link, and `/invite` + `/auth/invite` (plus a hash handler on `/`) turned the link into a session. The admin Invitations tab was removed from the UI on 2026-09-14 and the routes, components and the `BulkInviteSchema` / `ResendInviteSchema` Zod schemas were deleted on 2026-09-15 (Google SSO Phase 2). The auth audit log showed zero `user_invited` events after the cutover. Accounts are now created only by Google sign-in — see `docs/GoogleSSO/`.
 
 ---
 
@@ -278,20 +240,16 @@ All invitation notifications route to `/dashboard/invitations` on click.
 
 | Schema | Fields |
 |--------|--------|
-| `InvitationSchema` | email (trimmed, lowercased), first_name (2-50), last_name (2-50) |
-| `BulkInviteSchema` | invitations[] (1-100 items of InvitationSchema) |
-| `ResendInviteSchema` | email (valid format) |
+| — | No invitation schemas remain; team invitations are sent by user id via `sendTeamInvitationById` |
 
 ---
 
 ## Key Constraints & Gotchas
 
 1. **One team per user** — Enforced by check before accept + auto-decline trigger
-2. **Two separate systems** — Admin bulk invites (Supabase Auth) vs team invitations (`team_invitations` table). Different tables, APIs, purposes.
-3. **Admin client required** — `auth.admin.inviteUserByEmail()` needs service role key
-4. **Auto-decline is DB-level** — Application code doesn't explicitly decline others; Postgres trigger handles it
-5. **Notification type constraint** — Must exist in `notifications_type_check` before inserting
-6. **Magic link expiry** — 24 hours for admin bulk invites. Resend creates fresh link.
+2. **Only one system** — team invitations (`team_invitations` table). Account creation is Google sign-in, not an invitation.
+3. **Auto-decline is DB-level** — Application code doesn't explicitly decline others; Postgres trigger handles it
+4. **Notification type constraint** — Must exist in `notifications_type_check` before inserting
 
 ---
 
@@ -303,9 +261,5 @@ All invitation notifications route to `/dashboard/invitations` on click.
 | `src/lib/data/invitations.ts` | All invitation CRUD functions |
 | `src/hooks/use-invitation-count.ts` | Sidebar badge hook + invalidation |
 | `src/components/team-journey/team-management-modal.tsx` | Send invitations UI |
-| `src/components/admin/pending-invitations-table.tsx` | Admin pending signups table |
-| `src/app/api/admin/bulk-invite/route.ts` | Bulk signup invitations API |
-| `src/app/api/admin/pending-invites/route.ts` | List pending signups API |
-| `src/app/api/admin/resend-invite/route.ts` | Resend invite API |
 | `src/lib/validation-schemas.ts` | Zod schemas |
 | `src/types/database.ts` | Auto-generated DB types |

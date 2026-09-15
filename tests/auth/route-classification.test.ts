@@ -16,7 +16,6 @@ describe("classifyRoute", () => {
       "/auth/auth-code-error",
       "/auth/reset-password",
       "/profile/setup",
-      "/invite",
       "/policy",
       "/terms",
       "/agreement/abc",
