@@ -2,6 +2,9 @@
  * Admin analytics RPCs — read-only shape and guard tests.
  *
  * Creates one temporary auth user with primary_role=admin (test_ prefixed,
+ * 2026-09-15: the v1 analytics RPCs lost authenticated EXECUTE (the app only
+ * calls the batch-scoped _v2 ones), so the shape tests call _v2 scoped to
+ * BATCH2 (the closed cohort that actually holds reports, meetings, strikes).
  * removed in afterAll), signs in with the anon client, and exercises every
  * get_analytics_* function against real data. Nothing is written besides
  * the throwaway test user.
@@ -68,7 +71,9 @@ afterAll(async () => {
 
 describe("analytics RPC guard", () => {
   it("rejects callers without an authenticated admin user", async () => {
-    const { error } = await admin.rpc("get_analytics_overview");
+    const { error } = await admin.rpc("get_analytics_overview_v2", {
+      p_batch_id: BATCH2,
+    });
     expect(error).not.toBeNull();
     expect(error!.message).toContain("admin access required");
   });
@@ -76,7 +81,9 @@ describe("analytics RPC guard", () => {
 
 describe("get_analytics_overview", () => {
   it("returns weekly rows with sane aggregates", async () => {
-    const { data, error } = await authed.rpc("get_analytics_overview");
+    const { data, error } = await authed.rpc("get_analytics_overview_v2", {
+      p_batch_id: BATCH2,
+    });
     expect(error).toBeNull();
     expect(Array.isArray(data)).toBe(true);
     expect(data!.length).toBeGreaterThan(0);
@@ -97,7 +104,9 @@ describe("get_analytics_overview", () => {
 
 describe("get_analytics_teams / team_detail", () => {
   it("returns team-week rows and drill-down with report ids", async () => {
-    const { data, error } = await authed.rpc("get_analytics_teams");
+    const { data, error } = await authed.rpc("get_analytics_teams_v2", {
+      p_batch_id: BATCH2,
+    });
     expect(error).toBeNull();
     expect(data!.length).toBeGreaterThan(0);
     const first = data![0];
@@ -116,7 +125,9 @@ describe("get_analytics_teams / team_detail", () => {
 
 describe("get_analytics_students / student_detail", () => {
   it("returns one row per reporting student with sparkline scores", async () => {
-    const { data, error } = await authed.rpc("get_analytics_students");
+    const { data, error } = await authed.rpc("get_analytics_students_v2", {
+      p_batch_id: BATCH2,
+    });
     expect(error).toBeNull();
     expect(data!.length).toBeGreaterThan(0);
     const first = data![0];
@@ -136,9 +147,12 @@ describe("get_analytics_students / student_detail", () => {
 
 describe("get_analytics_week_detail", () => {
   it("returns all reports of a week, lowest score first", async () => {
-    const { data: overview } = await authed.rpc("get_analytics_overview");
+    const { data: overview } = await authed.rpc("get_analytics_overview_v2", {
+      p_batch_id: BATCH2,
+    });
     const week = overview![0].week_start;
-    const { data, error } = await authed.rpc("get_analytics_week_detail", {
+    const { data, error } = await authed.rpc("get_analytics_week_detail_v2", {
+      p_batch_id: BATCH2,
       p_week_start: week,
     });
     expect(error).toBeNull();
@@ -153,7 +167,9 @@ describe("get_analytics_week_detail", () => {
 
 describe("get_analytics_meetings", () => {
   it("returns weekly volume, interest funnel, teams and learnings", async () => {
-    const { data, error } = await authed.rpc("get_analytics_meetings");
+    const { data, error } = await authed.rpc("get_analytics_meetings_v2", {
+      p_batch_id: BATCH2,
+    });
     expect(error).toBeNull();
     expect(data.weekly.length).toBeGreaterThan(0);
     expect(data.interest_funnel.length).toBeGreaterThan(0);
@@ -172,7 +188,9 @@ describe("get_analytics_meetings", () => {
 
 describe("get_analytics_retention", () => {
   it("returns cohort curve and leavers with prior scores", async () => {
-    const { data, error } = await authed.rpc("get_analytics_retention");
+    const { data, error } = await authed.rpc("get_analytics_retention_v2", {
+      p_batch_id: BATCH2,
+    });
     expect(error).toBeNull();
     expect(data.total_reporters).toBeGreaterThan(0);
     expect(data.cohort.length).toBeGreaterThan(0);
@@ -191,7 +209,9 @@ describe("get_analytics_retention", () => {
 
 describe("get_analytics_strikes", () => {
   it("returns weekly strikes and per-team totals", async () => {
-    const { data, error } = await authed.rpc("get_analytics_strikes");
+    const { data, error } = await authed.rpc("get_analytics_strikes_v2", {
+      p_batch_id: BATCH2,
+    });
     expect(error).toBeNull();
     expect(data.weekly.length).toBeGreaterThan(0);
     expect(data.by_team.length).toBeGreaterThan(0);
@@ -203,7 +223,9 @@ describe("get_analytics_strikes", () => {
 
 describe("get_analytics_task_friction", () => {
   it("returns least completed, slowest and rejected tasks", async () => {
-    const { data, error } = await authed.rpc("get_analytics_task_friction");
+    const { data, error } = await authed.rpc("get_analytics_task_friction_v2", {
+      p_batch_id: BATCH2,
+    });
     expect(error).toBeNull();
     expect(data.least_completed.length).toBeGreaterThan(0);
     for (const t of data.least_completed) {
@@ -220,7 +242,9 @@ describe("get_analytics_task_friction", () => {
 
 describe("get_analytics_economy", () => {
   it("returns weekly earn/lose and penalty stats", async () => {
-    const { data, error } = await authed.rpc("get_analytics_economy");
+    const { data, error } = await authed.rpc("get_analytics_economy_v2", {
+      p_batch_id: BATCH2,
+    });
     expect(error).toBeNull();
     expect(data.weekly.length).toBeGreaterThan(0);
     expect(data.by_type.length).toBeGreaterThan(0);
@@ -233,7 +257,9 @@ describe("get_analytics_economy", () => {
 
 describe("get_analytics_student_detail (extended)", () => {
   it("includes commitments follow-through per week", async () => {
-    const { data: students } = await authed.rpc("get_analytics_students");
+    const { data: students } = await authed.rpc("get_analytics_students_v2", {
+      p_batch_id: BATCH2,
+    });
     const { data, error } = await authed.rpc("get_analytics_student_detail", {
       p_user_id: students![0].user_id,
     });
@@ -248,7 +274,9 @@ describe("get_analytics_student_detail (extended)", () => {
 
 describe("get_analytics_tasks", () => {
   it("returns top tasks, funnel and weekly completions", async () => {
-    const { data, error } = await authed.rpc("get_analytics_tasks");
+    const { data, error } = await authed.rpc("get_analytics_tasks_v2", {
+      p_batch_id: BATCH2,
+    });
     expect(error).toBeNull();
     expect(data.top_tasks.length).toBeGreaterThan(0);
     expect(data.top_tasks.length).toBeLessThanOrEqual(15);
