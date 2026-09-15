@@ -88,3 +88,14 @@ export function ReportModalLoader({
     />
   );
 }
+
+/** Query succeeded but the cohort has nothing to show yet (fresh batch). */
+export function TabEmpty({ message }: { message: string }) {
+  return (
+    <Card>
+      <CardContent className="py-10 text-center">
+        <p className="text-muted-foreground text-sm">{message}</p>
+      </CardContent>
+    </Card>
+  );
+}

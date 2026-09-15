@@ -213,30 +213,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      batch_close_backup_20260827: {
-        Row: {
-          archived_at: string | null;
-          id: string | null;
-          snapshot_updated_at: string | null;
-          status: string | null;
-          tbl: string | null;
-        };
-        Insert: {
-          archived_at?: string | null;
-          id?: string | null;
-          snapshot_updated_at?: string | null;
-          status?: string | null;
-          tbl?: string | null;
-        };
-        Update: {
-          archived_at?: string | null;
-          id?: string | null;
-          snapshot_updated_at?: string | null;
-          status?: string | null;
-          tbl?: string | null;
-        };
-        Relationships: [];
-      };
       client_meetings: {
         Row: {
           call_type: string | null;
@@ -308,78 +284,6 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
-      };
-      deleted_dropouts_backup_20260728: {
-        Row: {
-          deleted_at: string;
-          row_data: Json;
-          tbl: string;
-        };
-        Insert: {
-          deleted_at?: string;
-          row_data: Json;
-          tbl: string;
-        };
-        Update: {
-          deleted_at?: string;
-          row_data?: Json;
-          tbl?: string;
-        };
-        Relationships: [];
-      };
-      deleted_elias_admin_backup_20260914: {
-        Row: {
-          ref_column: string | null;
-          row_data: Json | null;
-          tbl: string | null;
-        };
-        Insert: {
-          ref_column?: string | null;
-          row_data?: Json | null;
-          tbl?: string | null;
-        };
-        Update: {
-          ref_column?: string | null;
-          row_data?: Json | null;
-          tbl?: string | null;
-        };
-        Relationships: [];
-      };
-      deleted_mj_p0_tasks_backup_20260914: {
-        Row: {
-          row_data: Json | null;
-          tbl: string | null;
-        };
-        Insert: {
-          row_data?: Json | null;
-          tbl?: string | null;
-        };
-        Update: {
-          row_data?: Json | null;
-          tbl?: string | null;
-        };
-        Relationships: [];
-      };
-      deleted_test_accounts_backup_20260915: {
-        Row: {
-          ref_column: string | null;
-          row_data: Json;
-          snapshotted_at: string;
-          tbl: string;
-        };
-        Insert: {
-          ref_column?: string | null;
-          row_data: Json;
-          snapshotted_at?: string;
-          tbl: string;
-        };
-        Update: {
-          ref_column?: string | null;
-          row_data?: Json;
-          snapshotted_at?: string;
-          tbl?: string;
-        };
-        Relationships: [];
       };
       diploma_batches: {
         Row: {
@@ -1171,36 +1075,6 @@ export type Database = {
           },
         ];
       };
-      tasks_mojibake_backup_20260813: {
-        Row: {
-          description: string | null;
-          detailed_instructions: string | null;
-          id: string | null;
-          peer_review_criteria: Json | null;
-          review_instructions: string | null;
-          title: string | null;
-          updated_at: string | null;
-        };
-        Insert: {
-          description?: string | null;
-          detailed_instructions?: string | null;
-          id?: string | null;
-          peer_review_criteria?: Json | null;
-          review_instructions?: string | null;
-          title?: string | null;
-          updated_at?: string | null;
-        };
-        Update: {
-          description?: string | null;
-          detailed_instructions?: string | null;
-          id?: string | null;
-          peer_review_criteria?: Json | null;
-          review_instructions?: string | null;
-          title?: string | null;
-          updated_at?: string | null;
-        };
-        Relationships: [];
-      };
       team_achievements: {
         Row: {
           achievement_id: string;
@@ -1868,78 +1742,6 @@ export type Database = {
           },
         ];
       };
-      xp8000_strikes_backup_20260731: {
-        Row: {
-          created_at: string | null;
-          description: string | null;
-          explained_at: string | null;
-          explained_by_user_id: string | null;
-          explanation: string | null;
-          id: string | null;
-          points_penalty: number | null;
-          rejected_at: string | null;
-          rejected_by_user_id: string | null;
-          rejection_reason: string | null;
-          resolved_at: string | null;
-          resolved_by_user_id: string | null;
-          status: string | null;
-          strike_type: string | null;
-          team_id: string | null;
-          title: string | null;
-          updated_at: string | null;
-          user_id: string | null;
-          week_number: number | null;
-          week_year: number | null;
-          xp_penalty: number | null;
-        };
-        Insert: {
-          created_at?: string | null;
-          description?: string | null;
-          explained_at?: string | null;
-          explained_by_user_id?: string | null;
-          explanation?: string | null;
-          id?: string | null;
-          points_penalty?: number | null;
-          rejected_at?: string | null;
-          rejected_by_user_id?: string | null;
-          rejection_reason?: string | null;
-          resolved_at?: string | null;
-          resolved_by_user_id?: string | null;
-          status?: string | null;
-          strike_type?: string | null;
-          team_id?: string | null;
-          title?: string | null;
-          updated_at?: string | null;
-          user_id?: string | null;
-          week_number?: number | null;
-          week_year?: number | null;
-          xp_penalty?: number | null;
-        };
-        Update: {
-          created_at?: string | null;
-          description?: string | null;
-          explained_at?: string | null;
-          explained_by_user_id?: string | null;
-          explanation?: string | null;
-          id?: string | null;
-          points_penalty?: number | null;
-          rejected_at?: string | null;
-          rejected_by_user_id?: string | null;
-          rejection_reason?: string | null;
-          resolved_at?: string | null;
-          resolved_by_user_id?: string | null;
-          status?: string | null;
-          strike_type?: string | null;
-          team_id?: string | null;
-          title?: string | null;
-          updated_at?: string | null;
-          user_id?: string | null;
-          week_number?: number | null;
-          week_year?: number | null;
-          xp_penalty?: number | null;
-        };
-        Relationships: [];
-      };
     };
     Views: {
       [_ in never]: never;
@@ -2332,8 +2134,43 @@ export type Database = {
           total_students: number;
         }[];
       };
+      get_admin_program_health_v4: {
+        Args: { p_batch_id?: string };
+        Returns: {
+          active_14d: number;
+          active_7d: number;
+          at_risk_students: number;
+          avg_xp_per_student: number;
+          pending_reviews: number;
+          pending_strikes: number;
+          reports_last_week: number;
+          reports_this_week: number;
+          students_active: number;
+          students_active_wow_delta: number;
+          students_at_risk: number;
+          students_at_risk_wow_delta: number;
+          students_slowing: number;
+          tasks_last_week: number;
+          tasks_this_week: number;
+          teams_active: number;
+          teams_active_wow_delta: number;
+          teams_at_risk: number;
+          teams_at_risk_wow_delta: number;
+          teams_slowing: number;
+          total_active_teams: number;
+          total_students: number;
+        }[];
+      };
       get_admin_task_pipeline_v1: {
         Args: never;
+        Returns: {
+          activity_type: string;
+          count: number;
+          status: string;
+        }[];
+      };
+      get_admin_task_pipeline_v2: {
+        Args: { p_batch_id?: string };
         Returns: {
           activity_type: string;
           count: number;

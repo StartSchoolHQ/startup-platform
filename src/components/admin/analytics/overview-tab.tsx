@@ -11,7 +11,7 @@ import {
 import { useAnalyticsOverview } from "./use-analytics";
 import { SentimentChart } from "./sentiment-chart";
 import { WeekDetailSheet } from "./week-detail-sheet";
-import { TabError, TabSkeleton, TrendIcon } from "./shared";
+import { TabEmpty, TabError, TabSkeleton, TrendIcon } from "./shared";
 import { toNum } from "./types";
 
 function KpiCard({
@@ -85,12 +85,17 @@ export function OverviewTab({
   }, [data]);
 
   if (isLoading) return <TabSkeleton />;
-  if (isError || !stats) {
+  if (isError) {
     return (
       <TabError
         message="Could not load overview analytics."
         onRetry={() => refetch()}
       />
+    );
+  }
+  if (!stats) {
+    return (
+      <TabEmpty message="No weekly reports in this cohort yet. The overview fills in after the first reporting week." />
     );
   }
 

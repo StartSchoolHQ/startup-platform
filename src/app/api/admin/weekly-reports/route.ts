@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     // so admins can read reports across all teams.
     const adminClient = createAdminClient();
 
-    // Batch scope: current cohort by default, archived batches on request.
+    // Batch scope: uuid from the UI (open batch by default), null = all active.
     const { userIds } = await resolveScopeIds(
       adminClient,
       parseBatchParam(url.searchParams)

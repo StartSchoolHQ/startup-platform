@@ -90,7 +90,7 @@ export function AdminPeerReviewsTable() {
   );
   const [removingId, setRemovingId] = useState<string | null>(null);
   const limit = 25;
-  const { batchId } = useBatchScope();
+  const { batchId, isLoading: scopeLoading } = useBatchScope();
   const abortRef = useRef<AbortController | null>(null);
   const fetchVersion = useRef(0);
 
@@ -123,9 +123,11 @@ export function AdminPeerReviewsTable() {
   };
 
   useEffect(() => {
+    // Wait for the default (open) batch so the first fetch is already scoped.
+    if (scopeLoading) return;
     fetchReviews();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, statusFilter, batchId]);
+  }, [page, search, statusFilter, batchId, scopeLoading]);
 
   const handleRemoveReviewer = async (
     e: React.MouseEvent,

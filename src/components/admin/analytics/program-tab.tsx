@@ -22,7 +22,7 @@ import {
 } from "recharts";
 import { useAnalyticsRetention } from "./use-analytics";
 import { ChartTooltip } from "./chart-tooltip";
-import { ScoreBadge, TabError, TabSkeleton } from "./shared";
+import { ScoreBadge, TabEmpty, TabError, TabSkeleton } from "./shared";
 import { CHART_COLORS, formatWeek } from "./types";
 import { ProgramAccountability } from "./program-accountability";
 
@@ -67,6 +67,9 @@ export function ProgramTab({
   }, [data]);
 
   if (isLoading) return <TabSkeleton />;
+  if (!isError && !data) {
+    return <TabEmpty message="Nothing recorded for this cohort yet." />;
+  }
   if (isError || !data) {
     return (
       <TabError

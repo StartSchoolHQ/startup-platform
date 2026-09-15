@@ -21,7 +21,7 @@ import {
 } from "recharts";
 import { useAnalyticsMeetings } from "./use-analytics";
 import { ChartTooltip } from "./chart-tooltip";
-import { TabError, TabSkeleton } from "./shared";
+import { TabEmpty, TabError, TabSkeleton } from "./shared";
 import { CHART_COLORS, formatWeek } from "./types";
 
 const INTEREST_META: Record<string, { label: string; color: string }> = {
@@ -45,6 +45,9 @@ export function MeetingsTab({
   );
 
   if (isLoading) return <TabSkeleton />;
+  if (!isError && !data) {
+    return <TabEmpty message="Nothing recorded for this cohort yet." />;
+  }
   if (isError || !data) {
     return (
       <TabError

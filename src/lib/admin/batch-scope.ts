@@ -4,14 +4,19 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 /**
  * Batch scope for the Team Journey admin pages.
  *
- * `null` means "current cohort": users and teams with status = 'active'.
- * A uuid means that diploma batch (users.batch_id / teams.batch_id), which is
- * how an archived cohort stays reachable. Archived rows therefore never count
- * by default. Mirrors `_admin_scope_users` / `_admin_scope_teams` in SQL.
+ * A uuid means that diploma batch (users.batch_id / teams.batch_id); `null`
+ * means every user/team with status = 'active' regardless of batch. Archived
+ * rows never count either way. Mirrors `_admin_scope_users` /
+ * `_admin_scope_teams` in SQL.
+ *
+ * The UI (`useBatchScope`) defaults to the single open batch and sends its
+ * uuid, and writes `batch=current` when the admin explicitly picks "All
+ * active". Server side there is no open-batch default: a missing or non-uuid
+ * value (incl. the `current` sentinel) is simply `null`.
  */
 const uuid = z.string().uuid();
 
-/** Reads `?batch=` from a request. Anything that is not a uuid means current. */
+/** Reads `?batch=` from a request. Anything that is not a uuid is `null`. */
 export function parseBatchParam(
   searchParams: URLSearchParams | { get(name: string): string | null }
 ): string | null {

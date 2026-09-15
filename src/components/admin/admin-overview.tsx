@@ -6,14 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
+import { useBatchScope, withBatch } from "@/hooks/use-batch-scope";
 import type { AdminStats } from "@/types/admin-stats";
+import { BatchScopeSelect } from "./batch-scope-select";
 import { HealthSnapshot } from "./health-snapshot";
 import { MyJourneySection } from "./overview/my-journey-section";
 import { TeamJourneySection } from "./overview/team-journey-section";
 import { PausedCard } from "./overview/paused-card";
 
-async function fetchStats(): Promise<AdminStats> {
-  const res = await fetch("/api/admin/stats");
+async function fetchStats(batchId: string | null): Promise<AdminStats> {
+  const res = await fetch(withBatch("/api/admin/stats", batchId));
   if (!res.ok) throw new Error(`stats request failed (${res.status})`);
   return res.json();
 }
@@ -49,13 +51,30 @@ function OverviewSkeleton() {
  */
 export function AdminOverview() {
   const { data: journeys } = usePlatformSettings();
+  // Scope defaults to the open batch; wait for it so the first request is
+  // already the right one instead of "all active" followed by the batch.
+  const { batchId, isLoading: scopeLoading } = useBatchScope();
   const stats = useQuery({
-    queryKey: ["admin", "stats"],
-    queryFn: fetchStats,
+    queryKey: ["admin", "stats", batchId],
+    queryFn: () => fetchStats(batchId),
+    enabled: !scopeLoading,
     staleTime: 30 * 1000,
   });
 
-  if (stats.isLoading) return <OverviewSkeleton />;
+  const scopeBar = (
+    <div className="flex justify-end">
+      <BatchScopeSelect />
+    </div>
+  );
+
+  if (scopeLoading || stats.isLoading) {
+    return (
+      <div className="space-y-6">
+        {scopeBar}
+        <OverviewSkeleton />
+      </div>
+    );
+  }
 
   if (stats.isError || !stats.data) {
     return (
@@ -86,6 +105,7 @@ export function AdminOverview() {
 
   return (
     <div className="space-y-6">
+      {scopeBar}
       {h && (
         <HealthSnapshot
           students={{

@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const search = url.searchParams.get("search") || "";
     const status = url.searchParams.get("status") || "all";
 
-    // Batch scope: current cohort by default, archived batches on request.
+    // Batch scope: uuid from the UI (open batch by default), null = all active.
     const { userIds, teamIds } = await resolveScopeIds(
       createAdminClient(),
       parseBatchParam(url.searchParams)

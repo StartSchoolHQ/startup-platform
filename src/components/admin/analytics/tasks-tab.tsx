@@ -20,7 +20,7 @@ import {
 } from "recharts";
 import { useAnalyticsTasks } from "./use-analytics";
 import { ChartTooltip } from "./chart-tooltip";
-import { TabError, TabSkeleton } from "./shared";
+import { TabEmpty, TabError, TabSkeleton } from "./shared";
 import { TaskFrictionSection } from "./task-friction-section";
 import { CHART_COLORS, formatWeek } from "./types";
 
@@ -45,6 +45,9 @@ export function TasksTab({
   );
 
   if (isLoading) return <TabSkeleton />;
+  if (!isError && !data) {
+    return <TabEmpty message="Nothing recorded for this cohort yet." />;
+  }
   if (isError || !data) {
     return (
       <TabError

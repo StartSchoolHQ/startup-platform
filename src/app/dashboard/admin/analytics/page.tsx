@@ -16,8 +16,11 @@ import { ProgramTab } from "@/components/admin/analytics/program-tab";
 
 export default function AdminAnalyticsPage() {
   const { user, loading } = useApp();
-  const { batchId } = useBatchScope();
+  const { batchId, isLoading: scopeLoading } = useBatchScope();
   const [tab, setTab] = useState("overview");
+  // Hold every tab query until the default (open) batch is known, so the
+  // first request already carries the right scope.
+  const ready = !scopeLoading;
 
   if (!loading && (!user || user.primary_role !== "admin")) {
     redirect("/dashboard");
@@ -49,22 +52,22 @@ export default function AdminAnalyticsPage() {
           <TabsTrigger value="program">Program</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
-          <OverviewTab active={tab === "overview"} batchId={batchId} />
+          <OverviewTab active={ready && tab === "overview"} batchId={batchId} />
         </TabsContent>
         <TabsContent value="teams">
-          <TeamsTab active={tab === "teams"} batchId={batchId} />
+          <TeamsTab active={ready && tab === "teams"} batchId={batchId} />
         </TabsContent>
         <TabsContent value="students">
-          <StudentsTab active={tab === "students"} batchId={batchId} />
+          <StudentsTab active={ready && tab === "students"} batchId={batchId} />
         </TabsContent>
         <TabsContent value="tasks">
-          <TasksTab active={tab === "tasks"} batchId={batchId} />
+          <TasksTab active={ready && tab === "tasks"} batchId={batchId} />
         </TabsContent>
         <TabsContent value="meetings">
-          <MeetingsTab active={tab === "meetings"} batchId={batchId} />
+          <MeetingsTab active={ready && tab === "meetings"} batchId={batchId} />
         </TabsContent>
         <TabsContent value="program">
-          <ProgramTab active={tab === "program"} batchId={batchId} />
+          <ProgramTab active={ready && tab === "program"} batchId={batchId} />
         </TabsContent>
       </Tabs>
     </div>

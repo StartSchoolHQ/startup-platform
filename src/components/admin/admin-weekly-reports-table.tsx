@@ -87,10 +87,12 @@ export function AdminWeeklyReportsTable() {
   const [selectedReport, setSelectedReport] =
     useState<AdminWeeklyReportRow | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const { batchId } = useBatchScope();
+  const { batchId, isLoading: scopeLoading } = useBatchScope();
 
-  // Load filter options (per batch scope)
+  // Load filter options (per batch scope). Wait for the default open batch so
+  // the first request is already scoped.
   useEffect(() => {
+    if (scopeLoading) return;
     let cancelled = false;
     fetch(withBatch("/api/admin/weekly-reports/filters", batchId))
       .then((res) => res.json())
@@ -118,10 +120,11 @@ export function AdminWeeklyReportsTable() {
     return () => {
       cancelled = true;
     };
-  }, [batchId]);
+  }, [batchId, scopeLoading]);
 
   // Load reports when filters/page change
   useEffect(() => {
+    if (scopeLoading) return;
     let cancelled = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
@@ -151,7 +154,7 @@ export function AdminWeeklyReportsTable() {
     return () => {
       cancelled = true;
     };
-  }, [page, userId, teamId, week, status, context, batchId]);
+  }, [page, userId, teamId, week, status, context, batchId, scopeLoading]);
 
   // Reset page when filters change
   useEffect(() => {

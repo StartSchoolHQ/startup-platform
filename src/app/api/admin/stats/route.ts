@@ -9,14 +9,17 @@ import type {
   WeeklyTrend,
 } from "@/types/admin-stats";
 import type { AiReviewAdminSummary } from "@/types/ai-review-admin";
+import { parseBatchParam } from "@/lib/admin/batch-scope";
 
 /**
  * Admin overview data. One round trip, five RPCs, nothing the overview does
  * not render. All numbers are computed in SQL so no query can hit the
- * 1000-row client cap.
+ * 1000-row client cap. `?batch=<uuid>` scopes students, teams, tasks and
+ * trends to that diploma batch; anything else means every active row.
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const batchId = parseBatchParam(new URL(request.url).searchParams);
     const supabase = await createClient();
     const {
       data: { user },
@@ -45,10 +48,10 @@ export async function GET() {
 
     const [programHealth, taskPipeline, aiReview, teamXp, weeklyTrends] =
       await Promise.all([
-        rpc("get_admin_program_health_v3").then(
+        rpc("get_admin_program_health_v4", { p_batch_id: batchId }).then(
           (res: { data: ProgramHealth[] | null }) => res.data?.[0] ?? null
         ),
-        rpc("get_admin_task_pipeline_v1").then(
+        rpc("get_admin_task_pipeline_v2", { p_batch_id: batchId }).then(
           (res: { data: TaskPipelineRow[] | null }) =>
             (res.data ?? []).map((r) => ({ ...r, count: Number(r.count) }))
         ),
@@ -67,8 +70,8 @@ export async function GET() {
         adminClient
           .rpc("get_top_teams_with_xp", { team_limit: 10 })
           .then((res) => (res.data ?? []) as TeamRanking[]),
-        // Current cohort only; archived batches never feed the overview.
-        rpc("get_admin_weekly_trends_v2", { p_batch_id: null }).then(
+        // Same scope as the cards above; archived batches only when asked.
+        rpc("get_admin_weekly_trends_v2", { p_batch_id: batchId }).then(
           (res: { data: WeeklyTrend[] | null }) => res.data ?? []
         ),
       ]);

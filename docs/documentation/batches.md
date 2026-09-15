@@ -9,7 +9,9 @@ Spec: `docs/superpowers/specs/2026-08-27-batch-close-design.md`
 - `users.batch_id` and `teams.batch_id` point at a batch.
   **NULL means "current cohort or staff"** — admins are never tagged, and
   new sign-ups are not tagged until their batch is closed.
-- `diploma_batches.closed_at` is set when the cohort was archived.
+- `diploma_batches.closed_at` is set when the cohort was archived. The Team
+  Journey admin pages default their batch scope to the single batch with
+  `closed_at IS NULL` (see admin-panel.md, "Batch scope").
 - Archiving reuses the existing `status = 'archived'` on `users`/`teams`
   (+ `teams.archived_at`). Nothing is deleted, ever.
 
