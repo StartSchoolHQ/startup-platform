@@ -94,7 +94,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         .select("team_id, teams(id, name)")
         .eq("user_id", user!.id)
         .limit(1)
-        .single();
+        .maybeSingle();
       if (!data?.teams) return null;
       const team = data.teams as unknown as { id: string; name: string };
       return { id: team.id, name: team.name };

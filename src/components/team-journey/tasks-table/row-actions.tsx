@@ -1,4 +1,11 @@
-import { ArrowUpRight, CheckCircle2, Eye, Loader2, Play } from "lucide-react";
+import {
+  ArrowUpRight,
+  CheckCircle2,
+  Eye,
+  Loader2,
+  Lock,
+  Play,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -96,9 +103,28 @@ export function TaskRowActions({
   onPreview,
   onOpen,
 }: RowActionsProps) {
-  // Locked phase (My Journey gate): read about it, nothing else.
+  // Locked phase (My Journey gate): preview stays, Start is visibly disabled.
   if (task.phaseLocked) {
-    return <PreviewButton onClick={() => onPreview(task)} />;
+    return (
+      <>
+        <PreviewButton onClick={() => onPreview(task)} />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span tabIndex={0}>
+                <Button size="sm" className="h-8" disabled aria-disabled>
+                  <Lock className="h-3.5 w-3.5" />
+                  Start
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Locked. Finish half of the previous phase to open this one.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </>
+    );
   }
 
   const isNeverStartedRecurring =

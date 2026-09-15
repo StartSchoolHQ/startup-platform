@@ -192,9 +192,17 @@ export function TaskPreviewModal({
             Close
           </Button>
           {canStart && onStartTask && (
-            <Button onClick={handleStartTask}>
+            <Button
+              onClick={handleStartTask}
+              disabled={!!task.phaseLocked}
+              title={
+                task.phaseLocked
+                  ? "Locked. Finish half of the previous phase to open this one."
+                  : undefined
+              }
+            >
               <Play className="h-4 w-4" />
-              Start task
+              {task.phaseLocked ? "Locked" : "Start task"}
             </Button>
           )}
         </DialogFooter>

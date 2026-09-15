@@ -31,8 +31,8 @@ export function MyJourneyProgressCards({
     },
     {
       icon: TrendingUp,
-      title: "Your pace, your order",
-      text: "Pick any task, finish it, and the phase rings above fill up.",
+      title: "Phases open in order",
+      text: "Finish half of a phase and the next one unlocks. The reading list is open from day one.",
     },
     {
       icon: Users,
