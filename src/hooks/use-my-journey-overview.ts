@@ -9,9 +9,12 @@ import { MyJourneyOverview } from "@/types/dashboard";
  * side (self or admin only), so the caller just passes the profile id it
  * already has and waits for it — `enabled` keeps the query off until then.
  */
+/** Prefix key — invalidate this after anything that moves a solo task. */
+export const MY_JOURNEY_OVERVIEW_KEY = ["dashboard", "my-journey"] as const;
+
 export function useMyJourneyOverview(userId: string | undefined) {
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["dashboard", "my-journey", userId],
+    queryKey: [...MY_JOURNEY_OVERVIEW_KEY, userId],
     queryFn: async (): Promise<MyJourneyOverview> => {
       const supabase = createClient();
       const { data, error } = await supabase.rpc("get_my_journey_overview_v1", {

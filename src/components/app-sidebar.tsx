@@ -7,7 +7,7 @@ import { useApp } from "@/contexts/app-context";
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import {
-  BarChart3,
+  Compass,
   Trophy,
   User,
   Users,
@@ -44,22 +44,23 @@ type NavMainItem = {
   journey?: keyof JourneySettings;
 };
 
+// "Overview" (/dashboard) was retired on 2026-09-15 — the route now forwards
+// to the journey that is on. Its components stay in src/components/dashboard/
+// as deprecated code; re-add { title: "Overview", url: "/dashboard", icon:
+// BarChart3 } here to bring the page back.
+// Order (2026-09-15): My Journey, Leaderboard, the Team Journey pages while
+// that phase is on, then the How it works guide, then Support.
 const navMainItems: NavMainItem[] = [
-  {
-    title: "Overview",
-    url: "/dashboard",
-    icon: BarChart3,
-  },
-  {
-    title: "Leaderboard",
-    url: "/dashboard/leaderboard",
-    icon: Trophy,
-  },
   {
     title: "My Journey",
     url: "/dashboard/my-journey",
     icon: User,
     journey: "myJourney",
+  },
+  {
+    title: "Leaderboard",
+    url: "/dashboard/leaderboard",
+    icon: Trophy,
   },
   {
     title: "All Teams",
@@ -71,6 +72,12 @@ const navMainItems: NavMainItem[] = [
     title: "Peer Review",
     url: "/dashboard/peer-review",
     icon: FileText,
+    journey: "teamJourney",
+  },
+  {
+    title: "How it works",
+    url: "/dashboard/how-it-works",
+    icon: Compass,
   },
   {
     title: "Support",

@@ -184,8 +184,9 @@ export function NotificationCenter() {
             router.push("/dashboard/team-journey");
           }
         } else {
-          // Solo reminder — the card on the dashboard opens the form.
-          router.push("/dashboard");
+          // Solo reminder — the Overview is retired; the layout banner on
+          // My Journey opens the form during the Friday → Monday window.
+          router.push("/dashboard/my-journey");
         }
         break;
 

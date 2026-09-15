@@ -28,6 +28,7 @@ const pageNames: Record<string, string> = {
   "peer-review": "Peer Review",
   "team-journey": "All Teams",
   "transaction-history": "Transaction History",
+  "how-it-works": "How it works",
   support: "Support",
   account: "Account",
   invitations: "Invitations",

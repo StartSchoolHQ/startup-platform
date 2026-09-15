@@ -2,6 +2,8 @@
 
 > The post-login landing page that gives a founder their XP, points, achievements, tasks, and team standing in one glance.
 
+> **Status 2026-09-15 — retired.** `/dashboard` no longer renders an overview. It forwards to `/dashboard/my-journey` when My Journey is on, else to `/dashboard/team-journey` when Team Journey is on, and shows a placeholder only when both are off (mirror of the journey page guards, so no redirect loop). The "Overview" sidebar item was removed. The overview components (`MyJourneyOverview`, `TeamJourneyOverview` and the cards under `src/components/dashboard/my-journey/`) stay on disk as deprecated code; the Next up, Continue and Achievement progress cards now render on the My Journey page. The rest of this document describes the retired page and is kept for when it comes back.
+
 ## Purpose
 This is the first screen a member sees after logging in. It exists to answer three questions in under five seconds: "Where do I stand?", "How is my team doing?", and "What is the most useful place to click next?". Used by every authenticated user — students, team members, and admins alike — typically several times per day during active programme weeks.
 

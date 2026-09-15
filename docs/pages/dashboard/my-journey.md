@@ -2,6 +2,8 @@
 
 > A user's personal control room: individual tasks, achievement progress, weekly reports, and strikes — all keyed to their own XP and credits.
 
+> **Layout 2026-09-15.** Top row: **My Journey XP** and **Achievements** stat cards plus the **How My Journey works** explainer (`HowMyJourneyWorksCard`, two columns wide). Second row: **Next up** + **Continue** (`NextUpCardV2`, `ContinueCardV2`), then the **Achievement progress** phase track (`AchievementProgressV2`) — all three moved here from the retired Overview page via [`MyJourneyOverviewCards`](../../../src/components/journey/my-journey-overview-cards.tsx), fed by `get_my_journey_overview_v1`. Then the **Tasks** section (Refresh, phase cards, task table). The **Tasks Completed** card and the **Progress** card were dropped. My Journey credits and task difficulty are hidden from students (`hasPoints: false` in `src/lib/economy-labels.ts`). Not on this page: the solo **Weekly report** card (`WeeklyReportCard`, with past-reports history) — only the layout-level Friday → Monday banner remains as the solo report entry point.
+
 ## Purpose
 
 Most of the platform's surface (Team Journey, leaderboard, peer review) frames the user as a member of a team. This page flips the camera around: it answers "what am I, individually, accountable for and earning right now?" Founders open it to see what individual tasks are waiting for them, where they stand on achievements, and whether their weekly reflection is filed. It is the personal accountability hub that lives next to the team workspace.

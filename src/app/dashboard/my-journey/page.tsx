@@ -3,11 +3,13 @@
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
 import { AchievementsGrid } from "@/components/journey/achievements-grid";
 import { MyJourneyHeader } from "@/components/journey/my-journey-header";
-import { MyJourneyProgressCards } from "@/components/journey/my-journey-progress-cards";
+import { MyJourneyOverviewCards } from "@/components/journey/my-journey-overview-cards";
+import { HowMyJourneyWorksCard } from "@/components/journey/my-journey-progress-cards";
 import { TasksTable } from "@/components/team-journey/tasks-table";
 import { Button } from "@/components/ui/button";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useAppContext } from "@/contexts/app-context";
+import { MY_JOURNEY_OVERVIEW_KEY } from "@/hooks/use-my-journey-overview";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import {
   getUserAchievementProgress,
@@ -20,7 +22,7 @@ import { buildMyJourneyTasks } from "@/lib/my-journey-tasks";
 import { startTaskLazy } from "@/lib/tasks";
 import { StatsCard } from "@/types/dashboard";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle, CreditCard, RotateCcw, Trophy, Zap } from "lucide-react";
+import { RotateCcw, Trophy, Zap } from "lucide-react";
 import { redirect, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -36,14 +38,16 @@ export default function MyJourneyPage() {
   } = usePlatformSettings();
   const queryClient = useQueryClient();
 
-  // `undefined` = the student has not touched the filter yet, so the
-  // `?achievement=<id>` link from the dashboard strip still decides it.
-  const [pickedAchievementId, setPickedAchievementId] = useState<
-    string | null | undefined
-  >(undefined);
-
   const searchParams = useSearchParams();
   const achievementParam = searchParams.get("achievement");
+
+  // The student's own pick, remembered together with the URL it was made
+  // under: a fresh `?achievement=<id>` link (the rings on the phase track
+  // below set one) decides again until the next click on a card.
+  const [picked, setPicked] = useState<{
+    param: string | null;
+    id: string | null;
+  } | null>(null);
 
   const { data: availableTasksData = [], isPending: tasksPending } = useQuery({
     queryKey: ["myJourney", "availableTasks", user?.id],
@@ -73,20 +77,6 @@ export default function MyJourneyPage() {
     [availableTasksData, individualTasksData, user?.name, user?.avatar_url]
   );
 
-  // Derived from the solo tasks actually rendered on this page — the old
-  // `getUserTaskCompletionStats` query counted every `task_progress` row for
-  // the user, team tasks included, against a total of progress rows.
-  const taskStats = useMemo(() => {
-    const total = userTasks.length;
-    const completed = userTasks.filter((t) => t.status === "Finished").length;
-
-    return {
-      total,
-      completed,
-      completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
-    };
-  }, [userTasks]);
-
   const achievements = useMemo(
     () =>
       (Array.isArray(achievementProgress) ? achievementProgress : []).map(
@@ -111,16 +101,16 @@ export default function MyJourneyPage() {
   // Phase gate: which cards are locked and why (rule enforced in the DB).
   const locks = useMemo(() => phaseLocks(achievements), [achievements]);
 
-  // The URL only counts until the student picks something, and only when it
-  // names an achievement that actually loaded — a stale link must not filter
-  // the task list down to nothing.
+  // The URL only counts until the student picks something under it, and only
+  // when it names an achievement that actually loaded — a stale link must not
+  // filter the task list down to nothing.
   const selectedAchievementId = useMemo(() => {
-    if (pickedAchievementId !== undefined) return pickedAchievementId;
+    if (picked && picked.param === achievementParam) return picked.id;
     return achievementParam &&
       achievements.some((a) => a.achievement_id === achievementParam)
       ? achievementParam
       : null;
-  }, [pickedAchievementId, achievementParam, achievements]);
+  }, [picked, achievementParam, achievements]);
 
   const filteredTasks = useMemo(
     () =>
@@ -146,20 +136,6 @@ export default function MyJourneyPage() {
         iconColor: "text-primary",
       },
       {
-        title: labels.points,
-        value: (user?.my_journey_credits ?? 0).toLocaleString(),
-        subtitle: "Earned from solo activities",
-        icon: CreditCard,
-        iconColor: "text-primary",
-      },
-      {
-        title: "Tasks Completed",
-        value: `${taskStats.completed}/${taskStats.total}`,
-        subtitle: `${taskStats.completionRate}% completion rate`,
-        icon: CheckCircle,
-        iconColor: "text-primary",
-      },
-      {
         title: "Achievements",
         value: `${completedAchievements}/${achievements.length}`,
         subtitle: `${completedAchievements} completed`,
@@ -167,7 +143,7 @@ export default function MyJourneyPage() {
         iconColor: "text-primary",
       },
     ];
-  }, [achievements, taskStats, user?.my_journey_xp, user?.my_journey_credits]);
+  }, [achievements, user?.my_journey_xp]);
 
   const startTaskMutation = useMutation({
     mutationFn: async (rowId: string) => {
@@ -180,6 +156,7 @@ export default function MyJourneyPage() {
     retry: 0,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myJourney"] });
+      queryClient.invalidateQueries({ queryKey: MY_JOURNEY_OVERVIEW_KEY });
     },
     onError: (error) => {
       if (isPhaseLockedError(error)) {
@@ -218,6 +195,7 @@ export default function MyJourneyPage() {
         avatarUrl={user.avatar_url}
       />
 
+      {/* Top row: XP, Achievements, then the explainer taking two columns. */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {statsCards.map((card) => (
           <StatsCardComponent
@@ -229,12 +207,14 @@ export default function MyJourneyPage() {
             iconColor={card.iconColor}
           />
         ))}
+        <div className="md:col-span-2">
+          <HowMyJourneyWorksCard />
+        </div>
       </div>
 
-      <MyJourneyProgressCards
-        completed={taskStats.completed}
-        total={taskStats.total}
-      />
+      {/* Next up + Continue, then the phase track — moved here from the
+          retired Overview page. */}
+      <MyJourneyOverviewCards userId={user.id} />
 
       <section className="space-y-6">
         <div className="flex items-center justify-between">
@@ -243,9 +223,12 @@ export default function MyJourneyPage() {
             variant="outline"
             size="sm"
             className="gap-2"
-            onClick={() =>
-              queryClient.invalidateQueries({ queryKey: ["myJourney"] })
-            }
+            onClick={() => {
+              queryClient.invalidateQueries({ queryKey: ["myJourney"] });
+              queryClient.invalidateQueries({
+                queryKey: MY_JOURNEY_OVERVIEW_KEY,
+              });
+            }}
             disabled={tasksPending}
           >
             <RotateCcw
@@ -260,7 +243,7 @@ export default function MyJourneyPage() {
           achievements={achievements}
           loading={achievementsPending}
           selectedId={selectedAchievementId}
-          onSelect={setPickedAchievementId}
+          onSelect={(id) => setPicked({ param: achievementParam, id })}
           emptyText="No achievements available yet"
           cardOverride={(a) => {
             const lock = locks.get(a.achievement_id);
