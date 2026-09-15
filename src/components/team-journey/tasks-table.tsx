@@ -17,6 +17,7 @@ import {
 import { TaskCooldownStatus } from "./tasks-table/cooldown-status";
 import { TaskRowActions } from "./tasks-table/row-actions";
 import { MobileTaskCard } from "./tasks-table/mobile-task-card";
+import { PhaseLockedBadge } from "./tasks-table/phase-locked-badge";
 import {
   DIFFICULTY_LEVEL,
   isCoolingDown,
@@ -159,7 +160,9 @@ export function TasksTable({
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      {coolingDown ? (
+                      {task.phaseLocked ? (
+                        <PhaseLockedBadge />
+                      ) : coolingDown ? (
                         <TaskCooldownStatus task={task} />
                       ) : (
                         <StatusBadge

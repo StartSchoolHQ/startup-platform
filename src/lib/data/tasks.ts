@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- legacy untyped RPC calls; tighten when this file is next reworked */
 /**
  * Task Management Functions
  *
@@ -241,8 +242,9 @@ export async function getTeamTasksVisible(teamId: string, userId?: string) {
 export async function getUserTasksVisible(userId: string) {
   const supabase = createClient();
 
+  // V2 adds `phase_locked` (My Journey phase gate); V1 is untouched.
   const { data, error } = await (supabase as any).rpc(
-    "get_user_tasks_visible",
+    "get_user_tasks_visible_v2",
     {
       p_user_id: userId,
     }

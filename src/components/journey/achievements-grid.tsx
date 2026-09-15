@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { Economy } from "@/lib/economy-labels";
+import { cn } from "@/lib/utils";
 
 export type AchievementCardStatus = "in-progress" | "finished" | "not-started";
 
@@ -23,12 +24,20 @@ export interface AchievementsGridItem {
   total_tasks?: number;
   /** `achievements.color_theme` — tints the card's icon tile. */
   color_theme?: string | null;
+  sort_order?: number | null;
+  /** My Journey phase gate (V2 progress payload). */
+  is_unlocked?: boolean | null;
+  always_unlocked?: boolean | null;
 }
 
-/** Per-card copy/status tweaks a page needs (Team Journey's "Recurring Tasks"). */
+/**
+ * Per-card tweaks a page needs: Team Journey's "Recurring Tasks" copy, or a
+ * My Journey phase that is still locked (dimmed, padlock, still browsable).
+ */
 export interface AchievementCardOverride {
   description?: string;
   status?: AchievementCardStatus;
+  locked?: boolean;
 }
 
 interface AchievementsGridProps {
@@ -122,6 +131,7 @@ export function AchievementsGrid({
       <div className={GRID_CLASS}>
         {achievements.map((achievement) => {
           const override = cardOverride?.(achievement);
+          const cardLocked = !!override?.locked;
           const isSelected =
             !locked && selectedId === achievement.achievement_id;
 
@@ -140,15 +150,18 @@ export function AchievementsGrid({
                       }
                     }
               }
-              className={`rounded-xl transition-transform duration-200 ${
+              className={cn(
+                "rounded-xl transition-transform duration-200",
                 locked
                   ? "cursor-not-allowed opacity-60"
-                  : "focus-visible:ring-primary cursor-pointer hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              }`}
+                  : "focus-visible:ring-primary cursor-pointer hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+                !locked && cardLocked && "opacity-75"
+              )}
             >
               <AchievementCard
                 economy={economy}
                 title={achievement.achievement_name}
+                locked={cardLocked}
                 description={
                   locked
                     ? (lockedDescription ?? "Locked")
@@ -162,7 +175,7 @@ export function AchievementsGrid({
                       : "Show tasks"
                 }
                 status={
-                  locked
+                  locked || cardLocked
                     ? "not-started"
                     : (override?.status ?? toCardStatus(achievement.status))
                 }

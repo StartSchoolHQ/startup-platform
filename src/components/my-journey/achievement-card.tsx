@@ -6,6 +6,7 @@ import {
   CreditCard,
   Medal,
   Zap,
+  Lock,
 } from "lucide-react";
 import { economyLabels, type Economy } from "@/lib/economy-labels";
 
@@ -28,6 +29,8 @@ interface AchievementCardProps {
   actionLabel?: string;
   /** `achievements.color_theme` — gives each phase its own tile colour. */
   colorTheme?: string | null;
+  /** My Journey phase gate: padlock tile, muted status line. */
+  locked?: boolean;
 }
 
 /** Tile colours per `achievements.color_theme`; anything unknown is neutral. */
@@ -66,6 +69,7 @@ export function AchievementCard({
   totalTasks,
   actionLabel,
   colorTheme,
+  locked = false,
 }: AchievementCardProps) {
   const labels = economyLabels(economy);
   const statusMeta = STATUS_TEXT[status];
@@ -81,7 +85,8 @@ export function AchievementCard({
   const tileClass = finished
     ? "bg-green-500/10 text-green-600 dark:text-green-400"
     : (THEME_TILE[colorTheme ?? ""] ?? "bg-muted text-foreground");
-  const Icon = finished ? CheckCircle2 : Medal;
+  const tileClassFinal = locked ? "bg-muted text-muted-foreground" : tileClass;
+  const Icon = locked ? Lock : finished ? CheckCircle2 : Medal;
 
   return (
     <Card
@@ -97,7 +102,7 @@ export function AchievementCard({
           <div
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-              tileClass
+              tileClassFinal
             )}
           >
             <Icon className="h-5 w-5" />
@@ -105,8 +110,9 @@ export function AchievementCard({
           <div className="min-w-0 flex-1">
             <h3 className="text-base leading-tight font-semibold">{title}</h3>
             <p className={cn("mt-1 text-xs font-medium", statusMeta.className)}>
-              {statusMeta.text}
-              {hasProgress &&
+              {locked ? "Locked" : statusMeta.text}
+              {!locked &&
+                hasProgress &&
                 !finished &&
                 ` · ${completedTasks ?? 0} of ${totalTasks} tasks`}
             </p>

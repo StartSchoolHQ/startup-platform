@@ -96,6 +96,11 @@ export function TaskRowActions({
   onPreview,
   onOpen,
 }: RowActionsProps) {
+  // Locked phase (My Journey gate): read about it, nothing else.
+  if (task.phaseLocked) {
+    return <PreviewButton onClick={() => onPreview(task)} />;
+  }
+
   const isNeverStartedRecurring =
     task.isRecurring &&
     task.status === "Not Started" &&

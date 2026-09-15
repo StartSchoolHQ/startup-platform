@@ -10,6 +10,7 @@ import { TaskTitleCell } from "./title-cell";
 import { TaskResponsibleCell, type TeamMemberOption } from "./responsible-cell";
 import { TaskCooldownStatus } from "./cooldown-status";
 import { TaskRowActions } from "./row-actions";
+import { PhaseLockedBadge } from "./phase-locked-badge";
 import { DIFFICULTY_LEVEL, isCoolingDown, toBadgeStatus } from "./status";
 
 interface MobileTaskCardProps {
@@ -77,14 +78,18 @@ export function MobileTaskCard({
         </span>
       </div>
 
-      {coolingDown ? (
+      {coolingDown && !task.phaseLocked ? (
         <TaskCooldownStatus task={task} />
       ) : (
         <div className="flex items-center justify-between gap-3">
-          <StatusBadge
-            status={toBadgeStatus(task.status)}
-            variant={badgeVariant}
-          />
+          {task.phaseLocked ? (
+            <PhaseLockedBadge />
+          ) : (
+            <StatusBadge
+              status={toBadgeStatus(task.status)}
+              variant={badgeVariant}
+            />
+          )}
           <div className="flex items-center gap-2 [&>button]:h-9 [&>button:last-child]:min-w-24">
             <TaskRowActions
               task={task}

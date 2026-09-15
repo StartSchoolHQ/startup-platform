@@ -20,6 +20,8 @@ Most of the platform's surface (Team Journey, leaderboard, peer review) frames t
 - Strikes tab: a strikes table (currently fed by `myJourneyData.strikes` static data) with status badges, XP/Points penalties, and an Explain/Done action button.
 - Weekly reports do not live on this page: the solo report is the `WeeklyReportCard` on `/dashboard` (My Journey section), which opens `IndividualWeeklyReportModal` from `src/components/weekly-reports/individual/`.
 
+- **Phase gate** (2026-09-15): phases open in `sort_order`. A phase unlocks once the previous gated phase has at least 50% of its non-recurring tasks approved (`my_journey_phase_unlocked_v1`); **Founder Reading List** is `always_unlocked` — open from day one and never a prerequisite. Locked cards are dimmed with a padlock and say "Finish N of M tasks in <phase> to open this phase"; their tasks list with a **Locked** badge and Preview only. Enforcement is the `trg_my_journey_phase_gate` trigger on `task_progress` (admins and service role bypass), because Start is a direct client write. Readers: `get_user_tasks_visible_v2` (`phase_locked`), `get_user_achievement_progress_v2` (`is_unlocked`, `always_unlocked`). Client copy helper: `src/lib/my-journey-phase-lock.ts`.
+
 ## How it looks
 
 Top: profile header with a pink status badge and the right-aligned "Submit Weekly Report" pink CTA. Below it, a 4-column responsive grid of stats cards (collapses to 2 on md, 1 on mobile) with skeleton placeholders during initial load.

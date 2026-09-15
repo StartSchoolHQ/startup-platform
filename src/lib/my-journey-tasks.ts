@@ -63,7 +63,11 @@ function toTableItem(
     points: task.base_points_reward || 0,
     status,
     action: status === "Finished" ? "done" : "complete",
-    isAvailable: task.is_available ?? fallbackAvailable,
+    // A locked phase is never startable, whatever the row says.
+    isAvailable: task.phase_locked
+      ? false
+      : (task.is_available ?? fallbackAvailable),
+    phaseLocked: task.phase_locked,
     reviewFeedback: task.reviewer_notes,
     assignedAt: task.assigned_at,
     completedAt: task.completed_at,

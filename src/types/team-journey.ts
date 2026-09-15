@@ -182,6 +182,8 @@ export interface TaskTableItem {
   task_id?: string;
   // For achievement filtering in My Journey
   achievement_id?: string;
+  /** My Journey: the task's phase is not yet unlocked for this student. */
+  phaseLocked?: boolean;
   // For confidential task indicators
   is_confidential?: boolean | null;
   // For recurring task indicators

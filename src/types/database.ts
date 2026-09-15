@@ -17,6 +17,7 @@ export type Database = {
       achievements: {
         Row: {
           active: boolean | null;
+          always_unlocked: boolean;
           color_theme: string | null;
           context: Database["public"]["Enums"]["task_context_type"];
           created_at: string | null;
@@ -30,6 +31,7 @@ export type Database = {
         };
         Insert: {
           active?: boolean | null;
+          always_unlocked?: boolean;
           color_theme?: string | null;
           context?: Database["public"]["Enums"]["task_context_type"];
           created_at?: string | null;
@@ -43,6 +45,7 @@ export type Database = {
         };
         Update: {
           active?: boolean | null;
+          always_unlocked?: boolean;
           color_theme?: string | null;
           context?: Database["public"]["Enums"]["task_context_type"];
           created_at?: string | null;
@@ -354,6 +357,27 @@ export type Database = {
         Update: {
           row_data?: Json | null;
           tbl?: string | null;
+        };
+        Relationships: [];
+      };
+      deleted_test_accounts_backup_20260915: {
+        Row: {
+          ref_column: string | null;
+          row_data: Json;
+          snapshotted_at: string;
+          tbl: string;
+        };
+        Insert: {
+          ref_column?: string | null;
+          row_data: Json;
+          snapshotted_at?: string;
+          tbl: string;
+        };
+        Update: {
+          ref_column?: string | null;
+          row_data?: Json;
+          snapshotted_at?: string;
+          tbl?: string;
         };
         Relationships: [];
       };
@@ -2825,6 +2849,10 @@ export type Database = {
         Args: { p_user_id: string };
         Returns: Json;
       };
+      get_my_journey_overview_v1_backup_v1: {
+        Args: { p_user_id: string };
+        Returns: Json;
+      };
       get_recurring_task_status: {
         Args: { team_id_param: string; user_id_param?: string };
         Returns: {
@@ -3359,6 +3387,25 @@ export type Database = {
           xp_reward: number;
         }[];
       };
+      get_user_achievement_progress_v2: {
+        Args: { p_user_id: string };
+        Returns: {
+          achievement_description: string;
+          achievement_icon: string;
+          achievement_id: string;
+          achievement_name: string;
+          always_unlocked: boolean;
+          color_theme: string;
+          completed_tasks: number;
+          is_completed: boolean;
+          is_unlocked: boolean;
+          points_reward: number;
+          sort_order: number;
+          status: string;
+          total_tasks: number;
+          xp_reward: number;
+        }[];
+      };
       get_user_individual_tasks: {
         Args: { p_user_id: string };
         Returns: {
@@ -3413,6 +3460,40 @@ export type Database = {
           is_available: boolean;
           learning_objectives: string;
           peer_review_criteria: string;
+          priority: Database["public"]["Enums"]["task_priority_type"];
+          progress_id: string;
+          progress_status: Database["public"]["Enums"]["task_status_type"];
+          resources: string;
+          reviewer_notes: string;
+          sort_order: number;
+          started_at: string;
+          task_description: string;
+          task_id: string;
+          task_title: string;
+          tips_content: string;
+        }[];
+      };
+      get_user_tasks_visible_v2: {
+        Args: { p_user_id: string };
+        Returns: {
+          achievement_id: string;
+          achievement_name: string;
+          assigned_at: string;
+          assigned_to_user_id: string;
+          assignee_avatar_url: string;
+          assignee_name: string;
+          base_points_reward: number;
+          base_xp_reward: number;
+          category: Database["public"]["Enums"]["task_category_type"];
+          completed_at: string;
+          deliverables: string;
+          detailed_instructions: string;
+          difficulty_level: number;
+          estimated_hours: number;
+          is_available: boolean;
+          learning_objectives: string;
+          peer_review_criteria: string;
+          phase_locked: boolean;
           priority: Database["public"]["Enums"]["task_priority_type"];
           progress_id: string;
           progress_status: Database["public"]["Enums"]["task_status_type"];
@@ -3486,6 +3567,10 @@ export type Database = {
       };
       mark_notification_read: {
         Args: { p_notification_id: string; p_user_id: string };
+        Returns: boolean;
+      };
+      my_journey_phase_unlocked_v1: {
+        Args: { p_achievement_id: string; p_user_id: string };
         Returns: boolean;
       };
       parse_review_instructions_to_criteria: {

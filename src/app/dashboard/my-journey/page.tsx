@@ -15,6 +15,7 @@ import {
   getUserTasksVisible,
 } from "@/lib/database";
 import { economyLabels } from "@/lib/economy-labels";
+import { isPhaseLockedError, phaseLocks } from "@/lib/my-journey-phase-lock";
 import { buildMyJourneyTasks } from "@/lib/my-journey-tasks";
 import { startTaskLazy } from "@/lib/tasks";
 import { StatsCard } from "@/types/dashboard";
@@ -99,10 +100,16 @@ export default function MyJourneyPage() {
           completed_tasks: ach.completed_tasks || 0,
           total_tasks: ach.total_tasks || 0,
           color_theme: ach.color_theme ?? null,
+          sort_order: ach.sort_order ?? null,
+          is_unlocked: ach.is_unlocked ?? null,
+          always_unlocked: ach.always_unlocked ?? null,
         })
       ),
     [achievementProgress]
   );
+
+  // Phase gate: which cards are locked and why (rule enforced in the DB).
+  const locks = useMemo(() => phaseLocks(achievements), [achievements]);
 
   // The URL only counts until the student picks something, and only when it
   // names an achievement that actually loaded — a stale link must not filter
@@ -174,11 +181,18 @@ export default function MyJourneyPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myJourney"] });
     },
-    onError: () => {
-      toast.error("Could not start the task", {
-        description:
-          "The request did not reach the server. Try again, or contact support if it keeps failing.",
-      });
+    onError: (error) => {
+      if (isPhaseLockedError(error)) {
+        toast.error("This phase is still locked", {
+          description:
+            "Finish half of the previous phase first. The cards above show how many tasks are left.",
+        });
+      } else {
+        toast.error("Could not start the task", {
+          description:
+            "The request did not reach the server. Try again, or contact support if it keeps failing.",
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["myJourney"] });
     },
   });
@@ -248,6 +262,12 @@ export default function MyJourneyPage() {
           selectedId={selectedAchievementId}
           onSelect={setPickedAchievementId}
           emptyText="No achievements available yet"
+          cardOverride={(a) => {
+            const lock = locks.get(a.achievement_id);
+            return lock?.locked
+              ? { locked: true, description: lock.description }
+              : undefined;
+          }}
         />
 
         {tasksPending ? (

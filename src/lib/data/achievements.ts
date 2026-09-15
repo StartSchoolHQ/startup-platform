@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- legacy untyped RPC calls; tighten when this file is next reworked */
 /**
  * Achievement System Functions
  *
@@ -12,7 +13,7 @@ import { createClient } from "../supabase/client";
 
 interface SupabaseRpcClient {
   rpc(
-    fn: "get_user_achievement_progress",
+    fn: "get_user_achievement_progress" | "get_user_achievement_progress_v2",
     params: { p_user_id: string }
   ): Promise<{ data: unknown; error: unknown }>;
   rpc(
@@ -35,8 +36,9 @@ interface SupabaseRpcClient {
 export async function getUserAchievementProgress(userId: string) {
   const supabase = createClient();
 
+  // V2 adds `is_unlocked` / `always_unlocked` (My Journey phase gate).
   const { data, error } = await (supabase as unknown as SupabaseRpcClient).rpc(
-    "get_user_achievement_progress",
+    "get_user_achievement_progress_v2",
     { p_user_id: userId }
   );
 
@@ -143,7 +145,7 @@ export async function getTeamAchievementDashboard(
   };
 
   // Fetch recurring task metadata separately
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { data: recurringData, error: recurringError } = await (
     supabase as any
   ).rpc("get_recurring_task_status", {
