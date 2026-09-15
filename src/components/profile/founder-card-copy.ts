@@ -47,7 +47,7 @@ export const BACKGROUND_FIELD: {
   key: "background_reason",
   label: "What makes you say that? One or two sentences. *",
   placeholder:
-    "Where does your energy actually go, and what are you confident doing? Say it straight.",
+    "Why do you consider yourself a tech, business person or both? What are you confident doing?",
   rows: 3,
 };
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { StudentDiplomaCard } from "@/components/diplomas/student-diploma-card";
+import { FounderCardSection } from "@/components/account/founder-card-section";
 import { ProfileCard } from "@/components/account/profile-card";
-import { PasswordCard } from "@/components/account/password-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,14 +25,10 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
   const router = useRouter();
 
@@ -152,39 +148,6 @@ export default function AccountPage() {
     }
   };
 
-  const handlePasswordUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      setPasswordError("The two passwords don't match.");
-      return;
-    }
-    if (newPassword.length < 8) {
-      setPasswordError("Use at least 8 characters.");
-      return;
-    }
-
-    setSaving(true);
-    setPasswordError(null);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-      toast.success("Password updated");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (error) {
-      console.error("Error updating password:", error);
-      toast.error("An unexpected error occurred. Please try again.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="space-y-6">
@@ -234,7 +197,8 @@ export default function AccountPage() {
           Account
         </h1>
         <p className="text-muted-foreground text-sm">
-          Your photo, name and password.
+          Your photo, name and founder card. You sign in with Google, so there
+          is no password to manage here.
         </p>
       </div>
 
@@ -254,21 +218,7 @@ export default function AccountPage() {
             error={profileError}
             onSubmit={handleProfileUpdate}
           />
-          <PasswordCard
-            password={newPassword}
-            confirmPassword={confirmPassword}
-            onPasswordChange={(v) => {
-              setNewPassword(v);
-              if (passwordError) setPasswordError(null);
-            }}
-            onConfirmPasswordChange={(v) => {
-              setConfirmPassword(v);
-              if (passwordError) setPasswordError(null);
-            }}
-            saving={saving}
-            error={passwordError}
-            onSubmit={handlePasswordUpdate}
-          />
+          <FounderCardSection userId={user.id} />
         </div>
         <div className="self-start">
           <StudentDiplomaCard userId={user.id} />
