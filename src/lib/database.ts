@@ -78,6 +78,7 @@ export {
   assignTeamTaskToProgress,
   getTeamTasksVisible,
   getUserTasksVisible,
+  getMyJourneyRecurringStatus,
   createProgressIfNeededDB,
   createTask,
   updateTask,

@@ -3,10 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Lightbulb, Link2, Target } from "lucide-react";
+import { FileText, History, Lightbulb, Link2, Target } from "lucide-react";
 import type { TeamTask } from "@/types/team-journey";
 import { parseResources, parseStringList } from "@/lib/task-content";
 import { TaskMarkdown } from "@/components/tasks/task-markdown";
+import { TaskHistoryTab } from "@/components/my-journey/task-history-tab";
 import {
   TaskObjectivesList,
   TaskResourceList,
@@ -26,6 +27,11 @@ export function TaskDetailTabs({ task, onSuggestEdits }: TaskDetailTabsProps) {
   const objectives = parseStringList(task.learning_objectives);
   const resources = parseResources(task.resources);
   const tips = Array.isArray(task.tips_content) ? task.tips_content : [];
+  // Recurring tasks keep every cycle's answer; the tab exists only for them.
+  const showHistory = task.is_recurring === true;
+  const historyCount = Array.isArray(task.submission_history)
+    ? task.submission_history.length
+    : 0;
 
   const suggestEdits = (
     <Button
@@ -54,6 +60,17 @@ export function TaskDetailTabs({ task, onSuggestEdits }: TaskDetailTabsProps) {
             </span>
           )}
         </TabsTrigger>
+        {showHistory && (
+          <TabsTrigger value="history" className="gap-2 px-4">
+            <History className="h-3.5 w-3.5" />
+            History
+            {historyCount > 0 && (
+              <span className="bg-primary/10 text-primary rounded-full px-1.5 text-[10px] font-semibold tabular-nums">
+                {historyCount}
+              </span>
+            )}
+          </TabsTrigger>
+        )}
       </TabsList>
 
       <TabsContent value="task" className="mt-4">
@@ -121,6 +138,14 @@ export function TaskDetailTabs({ task, onSuggestEdits }: TaskDetailTabsProps) {
           </div>
         </Card>
       </TabsContent>
+
+      {showHistory && (
+        <TabsContent value="history" className="mt-4">
+          <Card className="gap-0 py-0">
+            <TaskHistoryTab task={task} />
+          </Card>
+        </TabsContent>
+      )}
     </Tabs>
   );
 }

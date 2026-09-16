@@ -104,15 +104,88 @@ function withResponsible(
   };
 }
 
+/** One row of `get_my_journey_recurring_status_v1`. */
+export interface MyJourneyRecurringRow {
+  task_id: string;
+  cooldown_days: number | null;
+  last_completion: string | null;
+  next_available: string | null;
+  recurring_status: "never_completed" | "available" | "cooldown" | string;
+  has_active_instance: boolean;
+}
+
+/**
+ * Overlays cooldown state onto a recurring solo task. Same-row model: the
+ * approval trigger stamps `next_available_at`, and the 30-minute cron sweep
+ * archives the submission and resets the row to not started. The merged
+ * progress status therefore stays the truth; the recurring row decorates it.
+ *
+ * - approved, window still open   → Cooldown with the countdown
+ * - approved, window already shut → Cooldown badge without a countdown: the
+ *   row is waiting for the sweep, and a "Start again" now would skip the
+ *   history archive and overwrite the last submission
+ * - not started after a reset     → Available, "Start again"
+ * - never completed               → plain Not Started
+ */
+function withRecurring(
+  task: TaskTableItem,
+  row: MyJourneyRecurringRow | undefined,
+  now: number
+): TaskTableItem {
+  if (!row) return task;
+
+  const base: TaskTableItem = {
+    ...task,
+    isRecurring: true,
+    cooldownHours: (row.cooldown_days ?? 7) * 24,
+    recurringStatus: row.recurring_status,
+    hasActiveInstance: row.has_active_instance,
+    nextAvailableAt: null,
+  };
+
+  if (task.status === "Finished") {
+    const next = row.next_available
+      ? new Date(row.next_available).getTime()
+      : NaN;
+    const stillCooling = Number.isFinite(next) && next > now;
+    return {
+      ...base,
+      status: "Cooldown",
+      action: "done",
+      isAvailable: false,
+      nextAvailableAt: stillCooling ? row.next_available : null,
+    };
+  }
+
+  if (task.status === "Not Started" && row.last_completion) {
+    return {
+      ...base,
+      status: "Available",
+      action: "restart",
+      responsible: undefined,
+      // A past instant is what the table reads as "available again".
+      nextAvailableAt: row.next_available,
+    };
+  }
+
+  return base;
+}
+
 export function buildMyJourneyTasks(
   availableTasks: unknown,
   individualTasks: unknown,
-  owner: MyJourneyTaskOwner
+  owner: MyJourneyTaskOwner,
+  recurringRows: unknown = [],
+  now: number = Date.now()
 ): TaskTableItem[] {
   const taskMap = new Map<string, TaskTableItem>();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rows = (value: unknown): any[] => (Array.isArray(value) ? value : []);
+
+  const recurring = new Map<string, MyJourneyRecurringRow>(
+    rows(recurringRows).map((row) => [row.task_id, row])
+  );
 
   // Descriptive pass: every visible solo task.
   rows(availableTasks).forEach((task) => {
@@ -130,6 +203,10 @@ export function buildMyJourneyTasks(
   });
 
   return Array.from(taskMap.values()).map((task) =>
-    withResponsible(task, owner)
+    withRecurring(
+      withResponsible(task, owner),
+      recurring.get(task.task_id ?? ""),
+      now
+    )
   );
 }

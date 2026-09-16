@@ -8,9 +8,9 @@ import { buildRouteStops } from "@/components/how-it-works/route-stops";
 
 /**
  * A quick guide to the platform, told as one route in programme order:
- * sign in, My Journey, the weekly report, the leaderboard, Team Journey,
- * support. Static copy, phase-aware through the cached journey settings;
- * nothing here queries the database on its own.
+ * My Journey, the weekly report, the leaderboard, feedback. Static copy,
+ * phase-aware through the cached journey settings; nothing here queries the
+ * database on its own.
  */
 export default function HowItWorksPage() {
   const { data: journeys, isLoading } = usePlatformSettings();
@@ -20,11 +20,13 @@ export default function HowItWorksPage() {
     <div className="mx-auto w-full max-w-3xl space-y-10 pb-8 sm:space-y-14">
       <header className="space-y-3">
         <h1 className="max-w-2xl text-3xl leading-[1.1] font-semibold tracking-tight sm:text-4xl">
-          From your first task to your first team.
+          Welcome to Startup Module Platform!
         </h1>
         <p className="text-muted-foreground max-w-prose text-base leading-relaxed">
-          The programme in {stops.length} stops, in the order you will meet
-          them. Read it once now, come back whenever you lose the thread.
+          This platform is designed to support you throughout the entire
+          programme. We&apos;ll begin with My Journey, focusing on developing
+          your individual skills and expanding your technical and
+          business-related knowledge.
         </p>
       </header>
 

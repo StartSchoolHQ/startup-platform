@@ -8,6 +8,11 @@ import {
 } from "@/components/ui/tooltip";
 import { TaskTableItem } from "@/types/team-journey";
 
+/** "14 days" for whole days, "36h" otherwise. */
+function cooldownLabel(hours: number) {
+  return hours % 24 === 0 ? `${hours / 24} days` : `${hours}h`;
+}
+
 /** Title, one-line description and the recurring / confidential markers. */
 export function TaskTitleCell({ task }: { task: TaskTableItem }) {
   return (
@@ -29,7 +34,9 @@ export function TaskTitleCell({ task }: { task: TaskTableItem }) {
               <TooltipContent>
                 <p>
                   This task can be completed again after a cooldown
-                  {task.cooldownHours && ` (${task.cooldownHours}h)`}.
+                  {task.cooldownHours &&
+                    ` (${cooldownLabel(task.cooldownHours)})`}
+                  .
                 </p>
               </TooltipContent>
             </Tooltip>

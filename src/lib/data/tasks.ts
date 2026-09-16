@@ -232,6 +232,24 @@ export async function getUserTasksVisible(userId: string) {
 }
 
 /**
+ * Cooldown state of the caller's recurring solo tasks (My Journey).
+ * Solo twin of `get_recurring_task_status`, which needs a team.
+ */
+export async function getMyJourneyRecurringStatus() {
+  const supabase = createClient();
+
+  const { data, error } = await (supabase as any).rpc(
+    "get_my_journey_recurring_status_v1"
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
  * Helper function to create progress entry if needed (lazy creation)
  * Returns the progress_id (existing or newly created)
  */

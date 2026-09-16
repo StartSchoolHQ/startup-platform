@@ -24,6 +24,8 @@ export interface AchievementsGridItem {
   total_tasks?: number;
   /** `achievements.color_theme` — tints the card's icon tile. */
   color_theme?: string | null;
+  /** `achievements.icon` — lucide name for the card's tile. */
+  icon?: string | null;
   sort_order?: number | null;
   /** My Journey phase gate (V2 progress payload). */
   is_unlocked?: boolean | null;
@@ -184,6 +186,7 @@ export function AchievementsGrid({
                 completedTasks={achievement.completed_tasks}
                 totalTasks={achievement.total_tasks}
                 colorTheme={achievement.color_theme}
+                icon={achievement.icon}
                 selected={isSelected}
               />
             </div>

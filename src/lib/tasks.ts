@@ -584,7 +584,9 @@ export async function getTaskByIdLazy(
         submission_form_schema,
         requires_review,
         review_instructions,
-        activity_type
+        activity_type,
+        is_recurring,
+        cooldown_days
       `
       )
       .eq("id", actualTaskId)
@@ -640,6 +642,8 @@ export async function getTaskByIdLazy(
       base_xp_reward: taskData.base_xp_reward || 0,
       base_points_reward: taskData.base_points_reward || 0,
       xp_reward: taskData.base_xp_reward || 0, // xp_reward maps to base_xp_reward
+      is_recurring: taskData.is_recurring === true,
+      cooldown_days: taskData.cooldown_days ?? null,
       detailed_instructions: taskData.detailed_instructions || undefined,
       tips_content:
         (taskData.tips_content as Array<{ title: string; content: string }>) ||

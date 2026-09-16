@@ -4,10 +4,14 @@ import {
   CheckCircle2,
   ChevronRight,
   CreditCard,
-  Medal,
   Zap,
   Lock,
 } from "lucide-react";
+import {
+  ACHIEVEMENT_ICONS,
+  DEFAULT_ACHIEVEMENT_ICON,
+  achievementIconKey,
+} from "@/lib/achievement-icons";
 import { economyLabels, type Economy } from "@/lib/economy-labels";
 
 interface AchievementCardProps {
@@ -29,6 +33,8 @@ interface AchievementCardProps {
   actionLabel?: string;
   /** `achievements.color_theme` — gives each phase its own tile colour. */
   colorTheme?: string | null;
+  /** `achievements.icon` — lucide name; shown while the card is open. */
+  icon?: string | null;
   /** My Journey phase gate: padlock tile, muted status line. */
   locked?: boolean;
 }
@@ -69,6 +75,7 @@ export function AchievementCard({
   totalTasks,
   actionLabel,
   colorTheme,
+  icon,
   locked = false,
 }: AchievementCardProps) {
   const labels = economyLabels(economy);
@@ -86,7 +93,10 @@ export function AchievementCard({
     ? "bg-green-500/10 text-green-600 dark:text-green-400"
     : (THEME_TILE[colorTheme ?? ""] ?? "bg-muted text-foreground");
   const tileClassFinal = locked ? "bg-muted text-muted-foreground" : tileClass;
-  const Icon = locked ? Lock : finished ? CheckCircle2 : Medal;
+  // Locked → padlock, finished → tick, otherwise the phase's own icon.
+  const PhaseIcon =
+    ACHIEVEMENT_ICONS[achievementIconKey(icon)] ?? DEFAULT_ACHIEVEMENT_ICON;
+  const Icon = locked ? Lock : finished ? CheckCircle2 : PhaseIcon;
 
   return (
     <Card

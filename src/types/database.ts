@@ -2690,6 +2690,24 @@ export type Database = {
         Args: { p_user_id: string };
         Returns: Json;
       };
+      get_my_journey_recurring_status_v1: {
+        Args: never;
+        Returns: {
+          achievement_id: string;
+          achievement_name: string;
+          cooldown_days: number;
+          has_active_instance: boolean;
+          is_recurring: boolean;
+          last_completion: string;
+          latest_progress_id: string;
+          next_available: string;
+          progress_status: Database["public"]["Enums"]["task_status_type"];
+          recurring_status: string;
+          task_id: string;
+          template_code: string;
+          title: string;
+        }[];
+      };
       get_recurring_task_status: {
         Args: { team_id_param: string; user_id_param?: string };
         Returns: {

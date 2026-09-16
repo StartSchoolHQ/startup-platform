@@ -41,14 +41,18 @@ export function TaskCooldownStatus({ task }: { task: TaskTableItem }) {
         <span className="text-xs font-medium text-green-600 dark:text-green-400">
           Available again
         </span>
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-7 px-2 text-xs"
-          onClick={() => window.location.reload()}
-        >
-          Refresh
-        </Button>
+        {/* Still "Cooldown" past the date = the page's data is stale; a row
+            already flagged "Available" is fresh and needs no reload. */}
+        {task.status === "Cooldown" && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 px-2 text-xs"
+            onClick={() => window.location.reload()}
+          >
+            Refresh
+          </Button>
+        )}
       </div>
     );
   }

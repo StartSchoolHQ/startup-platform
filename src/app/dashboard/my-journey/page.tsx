@@ -6,12 +6,12 @@ import { MyJourneyHeader } from "@/components/journey/my-journey-header";
 import { MyJourneyOverviewCards } from "@/components/journey/my-journey-overview-cards";
 import { HowMyJourneyWorksCard } from "@/components/journey/my-journey-progress-cards";
 import { TasksTable } from "@/components/team-journey/tasks-table";
-import { Button } from "@/components/ui/button";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useAppContext } from "@/contexts/app-context";
 import { MY_JOURNEY_OVERVIEW_KEY } from "@/hooks/use-my-journey-overview";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import {
+  getMyJourneyRecurringStatus,
   getUserAchievementProgress,
   getUserIndividualTasks,
   getUserTasksVisible,
@@ -22,7 +22,7 @@ import { buildMyJourneyTasks } from "@/lib/my-journey-tasks";
 import { startTaskLazy } from "@/lib/tasks";
 import { StatsCard } from "@/types/dashboard";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { RotateCcw, Trophy, Zap } from "lucide-react";
+import { Trophy, Zap } from "lucide-react";
 import { redirect, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -61,6 +61,13 @@ export default function MyJourneyPage() {
     enabled: !!user?.id,
   });
 
+  // Cooldown state of the recurring solo tasks (the RPC reads auth.uid()).
+  const { data: recurringData = [] } = useQuery({
+    queryKey: ["myJourney", "recurring", user?.id],
+    queryFn: () => getMyJourneyRecurringStatus(),
+    enabled: !!user?.id,
+  });
+
   const { data: achievementProgress = [], isPending: achievementsPending } =
     useQuery({
       queryKey: ["myJourney", "achievements", user?.id],
@@ -70,11 +77,22 @@ export default function MyJourneyPage() {
 
   const userTasks = useMemo(
     () =>
-      buildMyJourneyTasks(availableTasksData, individualTasksData, {
-        name: user?.name ?? null,
-        avatarUrl: user?.avatar_url ?? null,
-      }),
-    [availableTasksData, individualTasksData, user?.name, user?.avatar_url]
+      buildMyJourneyTasks(
+        availableTasksData,
+        individualTasksData,
+        {
+          name: user?.name ?? null,
+          avatarUrl: user?.avatar_url ?? null,
+        },
+        recurringData
+      ),
+    [
+      availableTasksData,
+      individualTasksData,
+      recurringData,
+      user?.name,
+      user?.avatar_url,
+    ]
   );
 
   const achievements = useMemo(
@@ -90,6 +108,7 @@ export default function MyJourneyPage() {
           completed_tasks: ach.completed_tasks || 0,
           total_tasks: ach.total_tasks || 0,
           color_theme: ach.color_theme ?? null,
+          icon: ach.achievement_icon ?? null,
           sort_order: ach.sort_order ?? null,
           is_unlocked: ach.is_unlocked ?? null,
           always_unlocked: ach.always_unlocked ?? null,
@@ -217,26 +236,9 @@ export default function MyJourneyPage() {
       <MyJourneyOverviewCards userId={user.id} />
 
       <section className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Tasks</h2>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2"
-            onClick={() => {
-              queryClient.invalidateQueries({ queryKey: ["myJourney"] });
-              queryClient.invalidateQueries({
-                queryKey: MY_JOURNEY_OVERVIEW_KEY,
-              });
-            }}
-            disabled={tasksPending}
-          >
-            <RotateCcw
-              className={`h-4 w-4 ${tasksPending ? "animate-spin" : ""}`}
-            />
-            {tasksPending ? "Refreshing..." : "Refresh"}
-          </Button>
-        </div>
+        {/* Data refetches on focus, reconnect and after every start/submit,
+            so there is no manual refresh control here. */}
+        <h2 className="text-xl font-semibold">Tasks</h2>
 
         <AchievementsGrid
           economy="my_journey"

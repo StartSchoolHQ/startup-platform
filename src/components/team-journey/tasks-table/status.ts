@@ -25,9 +25,14 @@ export function toBadgeStatus(status: TaskTableItem["status"]): TaskStatus {
   }
 }
 
-/** Recurring task sitting in its cooldown window (shows the progress bar). */
+/**
+ * Recurring task in its cooldown window (progress bar) or just out of it
+ * ("Available again") — both render through TaskCooldownStatus.
+ */
 export function isCoolingDown(task: TaskTableItem): boolean {
   return (
-    task.status === "Cooldown" && !!task.isRecurring && !!task.nextAvailableAt
+    (task.status === "Cooldown" || task.status === "Available") &&
+    !!task.isRecurring &&
+    !!task.nextAvailableAt
   );
 }

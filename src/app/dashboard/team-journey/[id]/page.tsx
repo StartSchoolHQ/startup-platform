@@ -1383,6 +1383,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
             achievements={achievements.map((a: any) => ({
               ...a,
               points_reward: a.credits_reward,
+              icon: a.icon ?? a.achievement_icon ?? null,
             }))}
             loading={loadingState.achievements}
             selectedId={selectedAchievementId}

@@ -127,15 +127,19 @@ export interface TeamTask {
     decision?: "approved" | "rejected";
     feedback?: string;
   }>;
+  /** Cycle archive (cron reset) and resubmit archive (solo submit RPC). */
   submission_history?: Array<{
     submission_data: Record<string, unknown> | null;
-    completed_at: string | null;
-    review_feedback: string | null;
-    reviewer_user_id: string | null;
-    assigned_to_user_id: string | null;
-    points_awarded: number | null;
+    completed_at?: string | null;
+    submitted_at?: string | null;
+    review_feedback?: string | null;
+    reviewer_user_id?: string | null;
+    assigned_to_user_id?: string | null;
+    points_awarded?: number | null;
     status: string | null;
   }>;
+  is_recurring?: boolean;
+  cooldown_days?: number | null;
 
   // For backwards compatibility and convenience
   id: string; // Maps to progress_id for existing code
