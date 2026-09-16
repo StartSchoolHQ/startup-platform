@@ -45,6 +45,7 @@ export function buildRouteStops(journeys: JourneySettings): RouteStopData[] {
   stops.push({
     id: "feedback",
     icon: MessageSquarePlus,
+    highlight: true,
     title: "Help Us Improve the Platform!",
     body: [
       "Your ideas can make a difference. Suggest new tasks you'd like to see in My Journey, report bugs, or share your ideas for improving the user experience.",

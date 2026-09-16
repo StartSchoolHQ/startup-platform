@@ -18,6 +18,8 @@ export interface RouteStopData {
   links?: RouteStopLink[];
   /** Not open yet in the programme — drawn muted, reached by a dashed track. */
   later?: boolean;
+  /** Draw the stop inside a tinted card so it stands out from the route. */
+  highlight?: boolean;
 }
 
 /**
@@ -63,35 +65,48 @@ export function RouteStop({
         <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
       </span>
 
-      {/* Content */}
+      {/* Content — a highlighted stop gets a tinted card and a filled button */}
       <div className={cn("pb-12 sm:pb-14", isLast && "pb-2")}>
-        <h2
+        <div
           className={cn(
-            "pt-2 text-lg leading-snug font-semibold tracking-tight sm:pt-3 sm:text-xl",
-            stop.later && "text-muted-foreground"
+            stop.highlight &&
+              "border-primary/30 bg-primary/5 rounded-xl border p-4 sm:p-5"
           )}
         >
-          {stop.title}
-        </h2>
-        <div className="mt-3 max-w-prose space-y-3">
-          {stop.body.map((paragraph, index) => (
-            <p
-              key={index}
-              className="text-muted-foreground text-sm leading-relaxed sm:text-[15px]"
-            >
-              {paragraph}
-            </p>
-          ))}
-        </div>
-        {stop.links && stop.links.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {stop.links.map((link) => (
-              <Button key={link.href} asChild variant="outline" size="sm">
-                <Link href={link.href}>{link.label}</Link>
-              </Button>
+          <h2
+            className={cn(
+              "text-lg leading-snug font-semibold tracking-tight sm:text-xl",
+              !stop.highlight && "pt-2 sm:pt-3",
+              stop.later && "text-muted-foreground"
+            )}
+          >
+            {stop.title}
+          </h2>
+          <div className="mt-3 max-w-prose space-y-3">
+            {stop.body.map((paragraph, index) => (
+              <p
+                key={index}
+                className="text-muted-foreground text-sm leading-relaxed sm:text-[15px]"
+              >
+                {paragraph}
+              </p>
             ))}
           </div>
-        )}
+          {stop.links && stop.links.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {stop.links.map((link) => (
+                <Button
+                  key={link.href}
+                  asChild
+                  variant={stop.highlight ? "default" : "outline"}
+                  size="sm"
+                >
+                  <Link href={link.href}>{link.label}</Link>
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </li>
   );
