@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ArrowRight,
   CalendarClock,
@@ -11,9 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useApp } from "@/contexts/app-context";
-import { useIndividualWeeklyReportStatus } from "@/hooks/use-individual-weekly-report";
-import { usePlatformSettings } from "@/hooks/use-platform-settings";
+import {
+  useIndividualWeeklyReportStatus,
+  useSoloWeeklyReportMode,
+} from "@/hooks/use-individual-weekly-report";
 import { cn } from "@/lib/utils";
 import { formatWeekPeriod } from "@/lib/weekly-reports";
 import { SectionLabel } from "@/components/dashboard/my-journey/section-label";
@@ -30,26 +31,28 @@ function formatSubmitted(date: string | null) {
 }
 
 /**
- * This week's solo report at a glance. Mode rule: a student in an active
+ * This week's solo report at a glance. Since 2026-09-21 it sits in the My
+ * Journey page's top row next to the stat cards (`h-full` matches their
+ * height). Mode rule via useSoloWeeklyReportMode: a student in an active
  * team while Team Journey is on gets the TEAM form elsewhere, so this card
- * steps aside for them (mirrors send_individual_weekly_report_reminders_v1).
+ * steps aside and renders `fallback` for them.
  */
 export function WeeklyReportCard({
   hasActiveTeam,
+  fallback = null,
 }: {
-  hasActiveTeam: boolean;
+  /** Pass when the caller already has the overview; fetched otherwise. */
+  hasActiveTeam?: boolean;
+  fallback?: ReactNode;
 }) {
-  const { user } = useApp();
-  const { data: journeys } = usePlatformSettings();
-  const soloMode =
-    journeys.myJourney && !(journeys.teamJourney && hasActiveTeam);
+  const { soloMode, userId } = useSoloWeeklyReportMode(hasActiveTeam);
   const { data, isLoading, isError, refetch } = useIndividualWeeklyReportStatus(
-    soloMode ? user?.id : undefined
+    soloMode ? userId : undefined
   );
   const [modalOpen, setModalOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  if (!soloMode) return null;
+  if (!soloMode) return <>{fallback}</>;
 
   const state = !data
     ? null
@@ -60,8 +63,8 @@ export function WeeklyReportCard({
         : "open";
 
   return (
-    <Card className="gap-0 py-0">
-      <div className="flex flex-col gap-5 p-5">
+    <Card className="h-full gap-0 py-0">
+      <div className="flex h-full flex-col gap-5 p-5">
         <SectionLabel
           icon={CalendarClock}
           title="Weekly report"
@@ -82,7 +85,7 @@ export function WeeklyReportCard({
         )}
 
         {data && state && (
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-1 flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span
                 className={cn(

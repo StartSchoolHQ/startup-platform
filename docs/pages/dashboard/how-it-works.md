@@ -8,7 +8,7 @@ New students land in My Journey with a list of tasks and little context. This pa
 
 ## What it does
 
-- Renders a static header and a vertical route of stops. Each stop is a ring marker on a track, a title, one or two short paragraphs, and optional outline buttons that deep-link into the app.
+- Renders a static header and a vertical route of stops. Each stop is a ring marker on a track, a title, one or two short paragraphs, and optional outline buttons that deep-link into the app. Since 2026-09-21 the weekly report stop also carries an action button ("Write this week's report" / "Continue draft") that opens `IndividualWeeklyReportModal` in place — shown only while the solo form applies (`useSoloWeeklyReportMode`) and this week's report is not yet submitted (`get_individual_weekly_report_status_v1`). That is the page's one live query.
 - Copy is phase-aware through `usePlatformSettings()` (already cached app-wide): the My Journey and weekly report stops only appear while My Journey is on; the Team Journey stop reads "comes next" (muted marker, dashed track) while Team Journey is off and "Build with your team" with links when it is on.
 - Unit names come from `economyLabels()` so a wording change there flows through. No database query of its own.
 

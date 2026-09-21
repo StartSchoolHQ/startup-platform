@@ -7,6 +7,9 @@ import {
   type UseMutationResult,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useApp } from "@/contexts/app-context";
+import { useMyJourneyOverview } from "@/hooks/use-my-journey-overview";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { createClient } from "@/lib/supabase/client";
 import { mapIndividualReportRpcError } from "@/lib/individual-weekly-report";
 import type { Json } from "@/types/database";
@@ -19,6 +22,31 @@ export const individualWeeklyReportKeys = {
   status: (userId?: string) =>
     ["weekly-reports", "individual", "status", userId] as const,
 };
+
+/**
+ * Mode rule, mirrored from `send_individual_weekly_report_reminders_v1`:
+ * the solo form applies while My Journey is on, unless Team Journey is on
+ * AND the student sits in an active team (they get the team form then).
+ * Callers that already hold the overview pass `hasActiveTeam`; otherwise it
+ * is fetched, and only when both journeys are on — the flag is irrelevant
+ * while Team Journey is off, so the heavier RPC stays untouched.
+ */
+export function useSoloWeeklyReportMode(hasActiveTeam?: boolean): {
+  soloMode: boolean;
+  userId: string | undefined;
+} {
+  const { user } = useApp();
+  const { data: journeys } = usePlatformSettings();
+  const needsOverview =
+    hasActiveTeam === undefined && journeys.myJourney && journeys.teamJourney;
+  const { data: overview } = useMyJourneyOverview(
+    needsOverview ? user?.id : undefined
+  );
+  const inActiveTeam = hasActiveTeam ?? overview?.has_active_team;
+  const soloMode =
+    journeys.myJourney && (!journeys.teamJourney || inActiveTeam === false);
+  return { soloMode, userId: user?.id };
+}
 
 export interface SubmitIndividualReportVars {
   data: IndividualWeeklyReportData;

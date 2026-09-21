@@ -1,20 +1,46 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  useIndividualWeeklyReportStatus,
+  useSoloWeeklyReportMode,
+} from "@/hooks/use-individual-weekly-report";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { RouteStop } from "@/components/how-it-works/route-stop";
-import { buildRouteStops } from "@/components/how-it-works/route-stops";
+import {
+  buildRouteStops,
+  WEEKLY_REPORT_ACTION,
+} from "@/components/how-it-works/route-stops";
+import { IndividualWeeklyReportModal } from "@/components/weekly-reports/individual/individual-weekly-report-modal";
 
 /**
  * A quick guide to the platform, told as one route in programme order:
  * My Journey, the weekly report, the leaderboard, feedback. Static copy,
- * phase-aware through the cached journey settings; nothing here queries the
- * database on its own.
+ * phase-aware through the cached journey settings. The one live piece is
+ * the weekly report stop: while the solo form applies and this week's
+ * report is still open, its button opens the submission modal right here.
  */
 export default function HowItWorksPage() {
   const { data: journeys, isLoading } = usePlatformSettings();
-  const stops = useMemo(() => buildRouteStops(journeys), [journeys]);
+  const { soloMode, userId } = useSoloWeeklyReportMode();
+  const { data: report } = useIndividualWeeklyReportStatus(
+    soloMode ? userId : undefined
+  );
+  const [reportOpen, setReportOpen] = useState(false);
+
+  const weeklyReportAction = useMemo(() => {
+    if (!soloMode || !report || report.submitted) return null;
+    return {
+      id: WEEKLY_REPORT_ACTION,
+      label: report.draft ? "Continue draft" : "Write this week's report",
+    };
+  }, [soloMode, report]);
+
+  const stops = useMemo(
+    () => buildRouteStops(journeys, weeklyReportAction),
+    [journeys, weeklyReportAction]
+  );
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-10 pb-8 sm:space-y-14">
@@ -51,10 +77,18 @@ export default function HowItWorksPage() {
               stop={stop}
               isLast={index === stops.length - 1}
               nextIsLater={stops[index + 1]?.later === true}
+              onAction={(id) => {
+                if (id === WEEKLY_REPORT_ACTION) setReportOpen(true);
+              }}
             />
           ))}
         </ol>
       )}
+
+      <IndividualWeeklyReportModal
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+      />
     </div>
   );
 }

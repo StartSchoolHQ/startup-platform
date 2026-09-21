@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { ArrowRight, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAppContext } from "@/contexts/app-context";
-import { useIndividualWeeklyReportStatus } from "@/hooks/use-individual-weekly-report";
-import { useMyJourneyOverview } from "@/hooks/use-my-journey-overview";
-import { usePlatformSettings } from "@/hooks/use-platform-settings";
+import {
+  useIndividualWeeklyReportStatus,
+  useSoloWeeklyReportMode,
+} from "@/hooks/use-individual-weekly-report";
 import {
   formatWeekPeriod,
   isWeeklyReportBannerWindow,
@@ -19,18 +19,9 @@ import { IndividualWeeklyReportModal } from "@/components/weekly-reports/individ
  * only until this week's report is submitted. Opens the modal in place.
  */
 export function IndividualWeeklyReportBanner() {
-  const { user } = useAppContext();
-  const { data: journeys } = usePlatformSettings();
-  // has_active_team only matters while Team Journey is on; when it is off
-  // the banner must not depend on the (heavier) overview RPC at all.
-  const { data: overview } = useMyJourneyOverview(
-    journeys.myJourney && journeys.teamJourney ? user?.id : undefined
-  );
-  const soloMode =
-    journeys.myJourney &&
-    (!journeys.teamJourney || overview?.has_active_team === false);
+  const { soloMode, userId } = useSoloWeeklyReportMode();
   const { data: status } = useIndividualWeeklyReportStatus(
-    soloMode ? user?.id : undefined
+    soloMode ? userId : undefined
   );
   const [open, setOpen] = useState(false);
 

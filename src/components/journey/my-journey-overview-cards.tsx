@@ -51,9 +51,10 @@ export function MyJourneyOverviewCards({ userId }: { userId: string }) {
 
   return (
     <>
+      {/* Continue first: finishing what is open beats starting something. */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
-        <NextUpCardV2 task={data.next_up} totalTasks={data.tasks.total} />
         <ContinueCardV2 tasks={data.in_progress} />
+        <NextUpCardV2 task={data.next_up} totalTasks={data.tasks.total} />
       </div>
 
       <AchievementProgressV2 achievements={data.achievement_progress} />

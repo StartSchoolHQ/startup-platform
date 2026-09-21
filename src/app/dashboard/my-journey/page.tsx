@@ -1,5 +1,6 @@
 "use client";
 
+import { WeeklyReportCard } from "@/components/dashboard/my-journey/weekly-report-card";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
 import { AchievementsGrid } from "@/components/journey/achievements-grid";
 import { MyJourneyHeader } from "@/components/journey/my-journey-header";
@@ -214,7 +215,9 @@ export default function MyJourneyPage() {
         avatarUrl={user.avatar_url}
       />
 
-      {/* Top row: XP, Achievements, then the explainer taking two columns. */}
+      {/* Top row: XP, Achievements, then this week's report taking two
+          columns. Team students (solo form not theirs) see the explainer
+          there instead; the full guide lives at /dashboard/how-it-works. */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {statsCards.map((card) => (
           <StatsCardComponent
@@ -227,11 +230,11 @@ export default function MyJourneyPage() {
           />
         ))}
         <div className="md:col-span-2">
-          <HowMyJourneyWorksCard />
+          <WeeklyReportCard fallback={<HowMyJourneyWorksCard />} />
         </div>
       </div>
 
-      {/* Next up + Continue, then the phase track — moved here from the
+      {/* Continue + Next up, then the phase track — moved here from the
           retired Overview page. */}
       <MyJourneyOverviewCards userId={user.id} />
 

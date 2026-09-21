@@ -9,6 +9,12 @@ export interface RouteStopLink {
   href: string;
 }
 
+/** A button that does something on the page instead of navigating. */
+export interface RouteStopAction {
+  id: string;
+  label: string;
+}
+
 export interface RouteStopData {
   id: string;
   icon: LucideIcon;
@@ -16,6 +22,8 @@ export interface RouteStopData {
   /** One or two short paragraphs. Each string is one paragraph. */
   body: ReactNode[];
   links?: RouteStopLink[];
+  /** Rendered before the links; the page handles them via `onAction`. */
+  actions?: RouteStopAction[];
   /** Not open yet in the programme — drawn muted, reached by a dashed track. */
   later?: boolean;
   /** Draw the stop inside a tinted card so it stands out from the route. */
@@ -31,12 +39,16 @@ export function RouteStop({
   stop,
   isLast,
   nextIsLater,
+  onAction,
 }: {
   stop: RouteStopData;
   isLast: boolean;
   nextIsLater: boolean;
+  onAction?: (actionId: string) => void;
 }) {
   const Icon = stop.icon;
+  const hasButtons =
+    (stop.actions?.length ?? 0) > 0 || (stop.links?.length ?? 0) > 0;
 
   return (
     <li className="relative grid grid-cols-[2.5rem_1fr] gap-x-5 sm:grid-cols-[3rem_1fr] sm:gap-x-6">
@@ -92,9 +104,18 @@ export function RouteStop({
               </p>
             ))}
           </div>
-          {stop.links && stop.links.length > 0 && (
+          {hasButtons && (
             <div className="mt-4 flex flex-wrap gap-2">
-              {stop.links.map((link) => (
+              {stop.actions?.map((action) => (
+                <Button
+                  key={action.id}
+                  size="sm"
+                  onClick={() => onAction?.(action.id)}
+                >
+                  {action.label}
+                </Button>
+              ))}
+              {stop.links?.map((link) => (
                 <Button
                   key={link.href}
                   asChild
