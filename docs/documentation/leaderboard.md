@@ -203,16 +203,22 @@ rank_position, xp_change, points_change, tasks_change,
 meetings_change, rank_change
 ```
 
-#### `get_live_my_journey_leaderboard_v1(p_limit default 50)`
+#### `get_live_my_journey_leaderboard_v2(p_limit default 50)`
 
-Live My Journey board. Returns:
+Live My Journey board (2026-09-21; the app no longer calls v1, which is
+unchanged and kept for rollback). Returns:
 
 ```
 rank_position, user_id, user_name, user_avatar_url,
-my_journey_xp, my_journey_credits, tasks_completed
+my_journey_xp, my_journey_credits, tasks_completed,
+background_lean   -- founder_profiles.background_lean: tech | business | both | null
 ```
 
 Filters `status = 'active'`, `primary_role = 'user'`, confirmed email.
+`background_lean` is a LEFT JOIN on `founder_profiles` (already
+authenticated-readable under RLS), null until the student fills the founder
+card. Rendered as the **Background** column (`LeanBadge`,
+`src/components/profile/lean-badge.tsx`).
 There is no snapshot equivalent — this board has no week selector.
 
 #### `get_live_team_members_leaderboard_v1(p_limit default 50)`
@@ -327,7 +333,7 @@ Animates numbers from 0 to target value with ease-out cubic easing.
 
 | Tab | Data Source | Columns |
 |-----|------------|---------|
-| My Journey | `get_live_my_journey_leaderboard_v1` RPC | Rank, Student, My Journey XP, My Journey Credits, Tasks done |
+| My Journey | `get_live_my_journey_leaderboard_v2` RPC | Rank, Student, Background (founder-card lean: Tech / Business / Both, dash if no card), My Journey XP, My Journey Credits (hidden for students), Tasks done |
 | Team Journey → Teams | `get_team_leaderboard_data` RPC | Rank, Team, Team XP, Team Points, Tasks, Meetings, Change |
 | Team Journey → Members | `get_live_team_members_leaderboard_v1` (current) / `get_leaderboard_data` (past weeks) | Rank, Student, Team XP, Tasks, Reviews, Streak, Change |
 

@@ -122,6 +122,7 @@ export function convertToMyJourneyEntry(
     xp: dbEntry.my_journey_xp ?? 0,
     credits: dbEntry.my_journey_credits ?? 0,
     tasks: dbEntry.tasks_completed ?? 0,
+    lean: dbEntry.background_lean ?? null,
     rankIcon: rankIconFor(dbEntry.rank_position),
   };
 }

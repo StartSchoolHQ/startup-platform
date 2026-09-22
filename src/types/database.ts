@@ -2616,6 +2616,19 @@ export type Database = {
           user_name: string;
         }[];
       };
+      get_live_my_journey_leaderboard_v2: {
+        Args: { p_limit?: number };
+        Returns: {
+          background_lean: string;
+          my_journey_credits: number;
+          my_journey_xp: number;
+          rank_position: number;
+          tasks_completed: number;
+          user_avatar_url: string;
+          user_id: string;
+          user_name: string;
+        }[];
+      };
       get_live_team_leaderboard_data: {
         Args: { p_limit?: number };
         Returns: {

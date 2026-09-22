@@ -1,6 +1,6 @@
 # Two economies — My Journey vs Team Journey
 
-Spec: `docs/superpowers/specs/2026-08-27-two-economies-design.md`
+Spec: `docs/internal/superpowers/specs/2026-08-27-two-economies-design.md`
 
 ## Overview
 
@@ -19,7 +19,7 @@ still open the hidden pages directly by URL or via Admin → Teams.
 team membership → the team form on the Team Journey page. Otherwise, My
 Journey on → the solo form (dashboard card + banner). One report per week,
 never both. Same rule in SQL: `send_individual_weekly_report_reminders_v1`.
-Feature doc: `docs/superpowers/specs/2026-09-14-individual-weekly-reports-design.md`.
+Feature doc: `docs/internal/superpowers/specs/2026-09-14-individual-weekly-reports-design.md`.
 
 Four balances live on `users`, one pair per economy. Graduation (8,000) is
 **Team XP**.
@@ -122,7 +122,7 @@ from `total_xp` to `u.team_xp`. Pre-edit copies: `*_backup_v2`.
 | RPC                                       | Shape                                                          |
 | ----------------------------------------- | -------------------------------------------------------------- |
 | `get_dashboard_overview_v2(p_user_id)`    | v1 + the four balance columns                                   |
-| `get_live_my_journey_leaderboard_v1(p_limit default 50)` | rank, user, `my_journey_xp`, `my_journey_credits`, individual tasks completed |
+| `get_live_my_journey_leaderboard_v2(p_limit default 50)` | rank, user, `my_journey_xp`, `my_journey_credits`, individual tasks completed, `background_lean` (founder card, null if none); v1 = same minus the lean, kept for rollback |
 | `get_live_team_members_leaderboard_v1(p_limit default 50)` | same shape as `get_live_leaderboard_data`, Team economy |
 | `generate_weekly_leaderboard_snapshots_v2` | snapshot column names unchanged, values are Team XP / Team Points |
 

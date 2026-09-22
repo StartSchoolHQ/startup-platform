@@ -41,7 +41,7 @@ export interface LeaderboardEntry {
 }
 
 // Type definition for a My Journey leaderboard row returned by
-// `get_live_my_journey_leaderboard_v1`
+// `get_live_my_journey_leaderboard_v2` (v1 + founder-card lean)
 export interface MyJourneyLeaderboardRow {
   rank_position: number;
   user_id: string;
@@ -50,6 +50,8 @@ export interface MyJourneyLeaderboardRow {
   my_journey_xp: number;
   my_journey_credits: number;
   tasks_completed: number;
+  /** founder_profiles.background_lean — null without a founder card. */
+  background_lean: "tech" | "business" | "both" | null;
 }
 
 /**
@@ -127,7 +129,7 @@ export async function getServerSideMyJourneyLeaderboard(
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any).rpc(
-      "get_live_my_journey_leaderboard_v1",
+      "get_live_my_journey_leaderboard_v2",
       { p_limit: limit }
     );
 

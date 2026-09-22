@@ -1,3 +1,5 @@
+import type { BackgroundLean } from "@/lib/validation-schemas";
+
 export interface LeaderboardEntry {
   rank: number;
   user: {
@@ -49,6 +51,8 @@ export interface MyJourneyLeaderboardEntry {
   xp: number;
   credits: number;
   tasks: number;
+  /** Founder-card background lean; null until the student fills the card. */
+  lean: BackgroundLean | null;
   rankIcon?: "crown" | "trophy" | "medal" | "none";
 }
 

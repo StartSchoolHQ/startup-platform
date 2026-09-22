@@ -17,6 +17,7 @@ It's used by every authenticated user. They visit after submitting work to watch
 - Caches the route at the framework level with `export const revalidate = 60` to cut DB load on a hot page.
 - **Two top-level tabs**: Individual and Teams. Switching tabs resets the week selector to "Current Week" to avoid showing a team-snapshot week on the individual tab.
 - **Week selector**: a `Select` populated by ISO-week boundaries derived from `leaderboard_snapshots` (or `team_leaderboard_snapshots`). Each option shows date range and entry count, e.g. `Nov 4–Nov 10 (47 users)`. Picking "Current Week" calls the live RPC; picking a historical week calls the snapshot RPC `get_leaderboard_data` / `get_team_leaderboard_data`.
+- **My Journey board columns** (2026-09-21): Rank, Student, Background (`LeanBadge` — the founder card's tech / business / both lean, a dash until the card is filled; fed by `get_live_my_journey_leaderboard_v2`), My Journey XP, Tasks done. On mobile the lean badge sits in the metrics line under the name.
 - **Individual leaderboard columns**: Rank, User, XP (with weekly change delta and `TrendingUp/Down` indicator), Tasks, Reviews (peer reviews count), Streak, Change.
 - **Team leaderboard columns**: Rank, Team (with member count and `~XP/member` average), XP, Points, Tasks, Meetings, Change. Each numeric column shows weekly change.
 - **Rank icons**: Crown (#1), Trophy (#2), Medal (#3), nothing for the rest, rendered by [`RankIcon`](../../../src/components/leaderboard/rank-icon.tsx).

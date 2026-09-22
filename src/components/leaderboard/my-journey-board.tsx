@@ -32,7 +32,7 @@ export function MyJourneyBoard({
     queryKey: ["leaderboard", "myJourney"],
     queryFn: async () => {
       const { data, error } = await (supabase as any).rpc(
-        "get_live_my_journey_leaderboard_v1",
+        "get_live_my_journey_leaderboard_v2",
         { p_limit: null } // null = show all students (admins excluded in RPC)
       );
       if (error) throw error;
@@ -59,6 +59,7 @@ export function MyJourneyBoard({
         >
           <div>Rank</div>
           <div>Student</div>
+          <div>Background</div>
           <div>{labels.xp}</div>
           {labels.hasPoints && <div>{labels.points}</div>}
           <div>Tasks done</div>

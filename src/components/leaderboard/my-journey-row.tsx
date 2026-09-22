@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Coins, ListChecks, Zap } from "lucide-react";
 import { RankIcon } from "@/components/leaderboard/rank-icon";
 import { YouBadge } from "@/components/leaderboard/you-badge";
+import { LeanBadge } from "@/components/profile/lean-badge";
 import { MyJourneyLeaderboardEntry } from "@/types/leaderboard";
 import { economyLabels } from "@/lib/economy-labels";
 import { cn } from "@/lib/utils";
@@ -11,10 +12,13 @@ import { leaderboardRowClass } from "@/components/leaderboard/row-styles";
 
 const MY_JOURNEY_LABELS = economyLabels("my_journey");
 
-/** Rank · Student · XP · (Credits) · Tasks — credits column only if shown. */
+/**
+ * Rank · Student · Background · XP · (Credits) · Tasks — credits column only
+ * if shown. Background is the founder-card lean (tech / business / both).
+ */
 export const MY_JOURNEY_GRID_COLUMNS = MY_JOURNEY_LABELS.hasPoints
-  ? "80px 220px 1fr 1fr 1fr"
-  : "80px 220px 1fr 1fr";
+  ? "80px 220px 120px 1fr 1fr 1fr"
+  : "80px 220px 120px 1fr 1fr";
 
 type OpenProfile = (userId: string) => void;
 
@@ -96,6 +100,9 @@ export function MyJourneyRow({
             <RankIcon type={entry.rankIcon || "none"} rank={entry.rank} />
           </div>
           <StudentCell entry={entry} onOpenProfile={onOpenProfile} />
+          <div className="flex items-center">
+            <LeanBadge lean={entry.lean} />
+          </div>
           <Metric icon={Zap} value={entry.xp.toLocaleString()} />
           {labels.hasPoints && (
             <Metric icon={Coins} value={entry.credits.toLocaleString()} />
@@ -131,6 +138,9 @@ export function MyJourneyRow({
               <ListChecks className="h-3 w-3" />
               {entry.tasks} tasks
             </span>
+            {entry.lean && (
+              <LeanBadge lean={entry.lean} className="h-5 px-1.5 text-[10px]" />
+            )}
           </div>
         </div>
       </div>
