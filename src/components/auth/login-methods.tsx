@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Google first; the legacy email + password form stays reachable behind a
- * toggle until Phase 2 removes it (see docs/GoogleSSO).
+ * toggle until Phase 2 removes it (see docs/internal/GoogleSSO).
  */
 export function LoginMethods() {
   const [open, setOpen] = useState(false);

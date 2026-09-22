@@ -1,5 +1,5 @@
 -- Individual (My Journey) weekly reports (2026-09-14). Purely additive.
--- Spec: docs/superpowers/specs/2026-09-14-individual-weekly-reports-design.md
+-- Spec: docs/internal/superpowers/specs/2026-09-14-individual-weekly-reports-design.md
 --
 --   uq_weekly_reports_individual_submitted_week : one submitted solo report
 --                                                 per student per ISO week.

@@ -2,7 +2,7 @@
 
 > Self-service profile management for the signed-in user: photo, name and founder card.
 
-> **2026-09-15.** The password card was removed — sign-in is Google SSO only (see `docs/GoogleSSO/`), so there is no password to change; the legacy reset flow at `/auth/reset-password` is untouched. In its place the **Founder card** section lets the user edit the four founder-card answers and the tech/business lean collected at profile setup (`FounderCardSection` → the shared `FounderCardForm` with `appearance="account"` and the saved row as `initial`; upsert into `founder_profiles` under the owner-write RLS policy). Saving invalidates the cached leaderboard profile card for that user. The rest of this document predates that change.
+> **2026-09-15.** The password card was removed — sign-in is Google SSO only (see `docs/internal/GoogleSSO/`), so there is no password to change; the legacy reset flow at `/auth/reset-password` is untouched. In its place the **Founder card** section lets the user edit the four founder-card answers and the tech/business lean collected at profile setup (`FounderCardSection` → the shared `FounderCardForm` with `appearance="account"` and the saved row as `initial`; upsert into `founder_profiles` under the owner-write RLS policy). Saving invalidates the cached leaderboard profile card for that user. The rest of this document predates that change.
 
 ## Purpose
 The single place where a user manages who they are inside the platform: their display name, avatar, and login password. Visited rarely but at high-value moments — first login, after an avatar embarrasses them in the leaderboard, or when rotating credentials. Email and role are intentionally not editable here.

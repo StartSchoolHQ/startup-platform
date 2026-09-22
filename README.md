@@ -26,14 +26,14 @@ A startup accelerator platform built with Next.js 16, React 19, and Supabase. He
 
 ### Prerequisites
 
-- Node.js 18.17+
+- Node.js 20.9+
 - npm
 - A [Supabase](https://supabase.com/) project
 
 ### Installation
 
 ```bash
-git clone https://github.com/your-username/startup-platform.git
+git clone https://github.com/StartSchoolHQ/startup-platform.git
 cd startup-platform
 npm install
 ```

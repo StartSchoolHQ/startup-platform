@@ -178,7 +178,7 @@ Handles PKCE authorization code exchange and invitation flows.
 
 ### Account Creation
 
-There is no invitation flow. New accounts are created only by Google sign-in from `/login`; the `hook_restrict_signup` auth hook admits Google + `@startschool.org` only. See `docs/GoogleSSO/`. The legacy email-invite routes (`/invite`, `/auth/invite`, bulk/resend/pending-invite APIs) were deleted on 2026-09-15. `src/app/auth/invite-expired/page.tsx` remains as the generic "code exchange failed" error page used by `/auth/callback`.
+There is no invitation flow. New accounts are created only by Google sign-in from `/login`; the `hook_restrict_signup` auth hook admits Google + `@startschool.org` only. See `docs/internal/GoogleSSO/`. The legacy email-invite routes (`/invite`, `/auth/invite`, bulk/resend/pending-invite APIs) were deleted on 2026-09-15. `src/app/auth/invite-expired/page.tsx` remains as the generic "code exchange failed" error page used by `/auth/callback`.
 
 ### Profile Setup (`/profile/setup`)
 

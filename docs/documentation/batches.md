@@ -1,6 +1,6 @@
 # Batches (cohorts) — close & reopen
 
-Spec: `docs/superpowers/specs/2026-08-27-batch-close-design.md`
+Spec: `docs/internal/superpowers/specs/2026-08-27-batch-close-design.md`
 
 ## Model
 

@@ -289,7 +289,7 @@ interface TeamTask {
 > **solo** My Journey report (questions #1, #2, #6, #8 of this template,
 > `weekly_reports.context = 'individual'`, RPC
 > `submit_individual_weekly_report_v1`) is specified in
-> `docs/superpowers/specs/2026-09-14-individual-weekly-reports-design.md`.
+> `docs/internal/superpowers/specs/2026-09-14-individual-weekly-reports-design.md`.
 
 ### Deadline
 

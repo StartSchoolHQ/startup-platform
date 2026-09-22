@@ -5,7 +5,7 @@ import { withBatch } from "@/hooks/use-batch-scope";
 // Pure unit tests — no database access. The UI defaults to the open batch and
 // writes `batch=current` for "All active", so the server must read that
 // sentinel (and any other non-uuid) as null.
-const UUID = "eb55d8e2-bfb2-4567-8678-420216293d78";
+const UUID = "0f6b3c2e-9a41-4d7b-8e2f-5c1a7d3e9b60";
 
 describe("parseBatchParam", () => {
   it("returns null when the param is missing", () => {

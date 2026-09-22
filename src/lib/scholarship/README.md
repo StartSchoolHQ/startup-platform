@@ -124,10 +124,10 @@ nulled and the row drops out of the index automatically.
 
 ## Porting to V2
 
-See `docs/V2_schema/scholarship_agreements.md` for the V2-port checklist.
+See `docs/internal/V2_schema/scholarship_agreements.md` for the V2-port checklist.
 The migration replays cleanly; expected effort is half a day.
 
 ## Spec + plan
 
-- `docs/superpowers/plans/2026-05-20-scholarship-agreements.md`
-- `docs/superpowers/specs/full-scholarship-template.txt` (source legal text)
+- `docs/internal/superpowers/plans/2026-05-20-scholarship-agreements.md`
+- `docs/internal/superpowers/specs/full-scholarship-template.txt` (source legal text)

@@ -476,5 +476,5 @@ changes.
 |------|---------|
 | `docs/documentation/ai-reviewer-persona.md` | The reviewer's persona, voice, method and edge cases (source of `PERSONA_PROMPT`) |
 | `docs/documentation/ai-review-criteria-guidelines.md` | How to write AI-checkable criteria |
-| `docs/superpowers/specs/2026-09-09-ai-task-reviewer-design.md` | Original design spec |
-| `docs/superpowers/plans/2026-09-09-ai-task-reviewer.md` | Implementation plan |
+| `docs/internal/superpowers/specs/2026-09-09-ai-task-reviewer-design.md` | Original design spec |
+| `docs/internal/superpowers/plans/2026-09-09-ai-task-reviewer.md` | Implementation plan |

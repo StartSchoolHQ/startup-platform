@@ -21,4 +21,4 @@ An `@startschool.org` account *is* the invitation, so the page offers no signup 
 - **Files:** `src/app/login/page.tsx`, `src/components/auth/login-methods.tsx`, `src/components/auth/google-sign-in-button.tsx`, `src/components/auth/login-form.tsx`, `src/app/auth/callback/route.ts`, `src/app/auth/auth-code-error/page.tsx`
 - **DB:** `public.hook_restrict_signup(jsonb)` (Before User Created hook), `handle_new_auth_user` v2 trigger
 - **Analytics:** `google_sign_in_started`, `google_sign_in_failed`, `user_authenticated` (callback, `auth_method` = provider), `user_login_success`, `user_login_failed`, `password_reset_requested`
-- **Docs:** `docs/GoogleSSO/2026-08-27-google-sso-invite-gate-design.md`
+- **Docs:** `docs/internal/GoogleSSO/2026-08-27-google-sso-invite-gate-design.md`

@@ -37,6 +37,7 @@ yarn-error.log*
 .env*
 .env.local
 .env.sentry-build-plugin
+!.env.example
 
 # Sensitive data files
 invitations.csv
@@ -53,6 +54,7 @@ next-env.d.ts
 
 # Local config files
 mcp.json
+.mcp.json
 CLAUDE.md
 settings.local.json
 .claude/
@@ -65,3 +67,18 @@ CHECK THIS/
 PAGES.md
 GOOGLE_PLAN.md
 StartSchool Public Platform Redesign.html
+
+# Internal docs: plans, specs, ops runbooks, legal templates, vendor pages.
+# Contain production SQL and personal data — never public.
+/docs/internal/
+
+# Local exports with real student data
+/reports/
+/diploma_resources/
+/partial-scholarship/
+/.pdfpreview/
+/image.png
+
+# macOS archive junk
+__MACOSX/
+._*

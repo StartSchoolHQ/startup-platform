@@ -15,7 +15,7 @@ import { AdminUsersTable } from "@/components/admin/admin-users-table";
 /**
  * Admin → Users. The Invitations tab was removed on 2026-09-14: accounts are
  * created by Google sign-in with an @startschool.org address (see
- * docs/GoogleSSO). A stale `?tab=invitations` URL simply shows the users list.
+ * docs/internal/GoogleSSO). A stale `?tab=invitations` URL simply shows the users list.
  */
 export default function AdminUsersPage() {
   const { user, loading } = useApp();

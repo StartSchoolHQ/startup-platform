@@ -1,5 +1,5 @@
 -- Google SSO signup gate + handle_new_auth_user v2.
--- Spec: docs/GoogleSSO/2026-08-27-google-sso-invite-gate-design.md
+-- Spec: docs/internal/GoogleSSO/2026-08-27-google-sso-invite-gate-design.md
 -- Rollback: Dashboard → Auth → Hooks → disable "Before User Created";
 --           restore the trigger from handle_new_auth_user_backup_v1
 --           (pg_get_functiondef + rename), then DROP FUNCTION

@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Answer "is this person on the platform, and in what state?" A new student appears in this list right after their first Google sign-in with an `@startschool.org` account; nothing has to be done in advance. The old Invitations tab (manual invite, CSV upload, pending invites) was removed on 2026-09-14 with the Google SSO cutover — see `docs/GoogleSSO/`.
+Answer "is this person on the platform, and in what state?" A new student appears in this list right after their first Google sign-in with an `@startschool.org` account; nothing has to be done in advance. The old Invitations tab (manual invite, CSV upload, pending invites) was removed on 2026-09-14 with the Google SSO cutover — see `docs/internal/GoogleSSO/`.
 
 ## What it does
 
@@ -24,4 +24,4 @@ With the account gate in the database (`hook_restrict_signup`), admin onboarding
 
 - **Files:** `src/app/dashboard/admin/users/page.tsx`, `src/components/admin/admin-users-table.tsx`
 - **History:** the email-invite tab, its components and its three API routes were deleted on 2026-09-15 (Google SSO Phase 2). Accounts are created only by Google sign-in.
-- **Related:** `docs/documentation/invitations.md` (team invitations still live there), `docs/GoogleSSO/2026-08-27-google-sso-invite-gate-design.md`
+- **Related:** `docs/documentation/invitations.md` (team invitations still live there), `docs/internal/GoogleSSO/2026-08-27-google-sso-invite-gate-design.md`

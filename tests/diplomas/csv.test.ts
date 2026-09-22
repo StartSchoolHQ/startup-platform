@@ -9,18 +9,18 @@ const QWASAR_HEADER =
 
 describe("parseQwasarProgressCsv", () => {
   it("produces one row per non-empty track cell, keyed by header name", () => {
-    const text = `${QWASAR_HEADER}\n16374,Janis Vedla,vedla_j,active,j@x.org,2026-02-26,Mercury-Redstone,100,84,`;
+    const text = `${QWASAR_HEADER}\n16374,Jane Doe,doe_j,active,j@x.org,2026-02-26,Mercury-Redstone,100,84,`;
     const { rows } = parseQwasarProgressCsv(text);
     expect(rows).toEqual([
       {
-        qwasar_login: "vedla_j",
+        qwasar_login: "doe_j",
         track: "Onboarding",
         percent: 100,
         cohort: "Mercury-Redstone",
         qwasar_status: "active",
       },
       {
-        qwasar_login: "vedla_j",
+        qwasar_login: "doe_j",
         track: "Preseason Web",
         percent: 84,
         cohort: "Mercury-Redstone",
@@ -66,12 +66,12 @@ describe("parseQwasarProgressCsv", () => {
 describe("parseUsernameMappingCsv", () => {
   it("parses name,email,login,status rows and lowercases emails", () => {
     const { rows } = parseUsernameMappingCsv(
-      "name,email,login,status\nJanis Vedla,Janis.Vedla@startschool.org,vedla_j,graduate"
+      "name,email,login,status\nJane Doe,Jane.Doe@startschool.org,doe_j,graduate"
     );
     expect(rows).toEqual([
       {
-        email: "janis.vedla@startschool.org",
-        login: "vedla_j",
+        email: "jane.doe@startschool.org",
+        login: "doe_j",
         status: "graduate",
       },
     ]);

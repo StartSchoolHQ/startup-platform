@@ -4,7 +4,7 @@
 
 ## Overview
 
-1. **Account creation (Google SSO, since 2026-09-14)** — there is no admin invitation any more. A person signs in with their `@startschool.org` Google account; Supabase creates the auth user, the `before_user_created` hook (`public.hook_restrict_signup`) rejects anything that is not Google + `@startschool.org`, the `on_auth_user_created` trigger (`handle_new_auth_user` v2) creates the `public.users` row with the Google name and the single open batch, and `/auth/callback` sends them to `/profile/setup` (name + avatar) before the dashboard. Existing accounts (including gmail ones) link their Google identity automatically on first Google sign-in. Spec: `docs/GoogleSSO/`. The legacy email-invite routes were removed on 2026-09-15 (see History).
+1. **Account creation (Google SSO, since 2026-09-14)** — there is no admin invitation any more. A person signs in with their `@startschool.org` Google account; Supabase creates the auth user, the `before_user_created` hook (`public.hook_restrict_signup`) rejects anything that is not Google + `@startschool.org`, the `on_auth_user_created` trigger (`handle_new_auth_user` v2) creates the `public.users` row with the Google name and the single open batch, and `/auth/callback` sends them to `/profile/setup` (name + avatar) before the dashboard. Existing accounts (including gmail ones) link their Google identity automatically on first Google sign-in. Spec: `docs/internal/GoogleSSO/`. The legacy email-invite routes were removed on 2026-09-15 (see History).
 2. **Team Invitations** — Team members invite existing platform users to join their team. Stored in `team_invitations` table. Users accept/decline from `/dashboard/invitations`.
 
 **Key constraint:** Users can only belong to ONE team at a time. Accepting a team invitation auto-declines all other pending invitations.
@@ -112,7 +112,7 @@ Team member sends invitation
 
 ## History: admin email invites (removed 2026-09-15)
 
-Until the Google SSO cutover, admins onboarded students by email: `POST /api/admin/bulk-invite` called `auth.admin.inviteUserByEmail`, `GET /api/admin/pending-invites` listed unconfirmed users, `POST /api/admin/resend-invite` re-sent the magic link, and `/invite` + `/auth/invite` (plus a hash handler on `/`) turned the link into a session. The admin Invitations tab was removed from the UI on 2026-09-14 and the routes, components and the `BulkInviteSchema` / `ResendInviteSchema` Zod schemas were deleted on 2026-09-15 (Google SSO Phase 2). The auth audit log showed zero `user_invited` events after the cutover. Accounts are now created only by Google sign-in — see `docs/GoogleSSO/`.
+Until the Google SSO cutover, admins onboarded students by email: `POST /api/admin/bulk-invite` called `auth.admin.inviteUserByEmail`, `GET /api/admin/pending-invites` listed unconfirmed users, `POST /api/admin/resend-invite` re-sent the magic link, and `/invite` + `/auth/invite` (plus a hash handler on `/`) turned the link into a session. The admin Invitations tab was removed from the UI on 2026-09-14 and the routes, components and the `BulkInviteSchema` / `ResendInviteSchema` Zod schemas were deleted on 2026-09-15 (Google SSO Phase 2). The auth audit log showed zero `user_invited` events after the cutover. Accounts are now created only by Google sign-in — see `docs/internal/GoogleSSO/`.
 
 ---
 
