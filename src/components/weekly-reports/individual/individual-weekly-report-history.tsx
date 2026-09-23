@@ -154,7 +154,7 @@ export function IndividualWeeklyReportHistory({
                         )}
                       </Answer>
 
-                      <Answer label="Alignment and motivation">
+                      <Answer label="Motivation">
                         {score === null ? (
                           <Empty />
                         ) : (

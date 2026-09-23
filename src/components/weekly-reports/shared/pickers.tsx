@@ -74,17 +74,24 @@ const TONE_SELECTED = {
   high: "bg-green-500/15 text-green-700 ring-1 ring-green-500/40 dark:text-green-300",
 };
 
-/** 1–10 as ten segments; the chosen one takes the mood colour. */
+/**
+ * 1–10 as ten segments; the chosen one takes the mood colour.
+ * End labels default to the team wording; the solo form passes its own.
+ */
 export function ScorePicker({
   value,
   onChange,
   disabled,
   ariaLabel,
+  lowLabel = "Running on empty",
+  highLabel = "Fully aligned",
 }: {
   value: number;
   onChange: (value: number) => void;
   disabled?: boolean;
   ariaLabel: string;
+  lowLabel?: string;
+  highLabel?: string;
 }) {
   return (
     <div className="space-y-1.5">
@@ -118,8 +125,8 @@ export function ScorePicker({
         })}
       </div>
       <div className="text-muted-foreground flex justify-between px-1 text-[11px]">
-        <span>Running on empty</span>
-        <span>Fully aligned</span>
+        <span>{lowLabel}</span>
+        <span>{highLabel}</span>
       </div>
     </div>
   );

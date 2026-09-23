@@ -54,7 +54,7 @@ export function IndividualReportQuestions({
       <QuestionShell
         id={soloQuestionAnchor("commitments")}
         number={1}
-        title="What were your top commitments this week?"
+        title="What were your top commitments previous week?"
         hint="Mark how each one went. Explain only the ones that didn't fully land."
         error={errors.commitments}
       >
@@ -88,8 +88,7 @@ export function IndividualReportQuestions({
       <QuestionShell
         id={soloQuestionAnchor("nextWeekCommitments")}
         number={3}
-        title="Commitments for next week"
-        hint="What are you committing to get done?"
+        title="What are your top commitments for the upcoming week?"
         error={errors.nextWeekCommitments}
       >
         <NextWeekField
@@ -103,14 +102,16 @@ export function IndividualReportQuestions({
       <QuestionShell
         id={soloQuestionAnchor("alignmentScore")}
         number={4}
-        title="On a scale of 1–10, how aligned and motivated do you feel?"
+        title="On a scale of 1 to 10, how motivated do you feel?"
         htmlFor="solo-alignment-reason"
         error={errors.alignmentScore ?? errors.alignmentReason}
       >
         <ScorePicker
           value={value.alignmentScore}
           disabled={disabled}
-          ariaLabel="Alignment and motivation score"
+          ariaLabel="Motivation score"
+          lowLabel="Running on empty"
+          highLabel="Sky is the limit"
           onChange={(score) => set("alignmentScore", score)}
         />
         <Textarea

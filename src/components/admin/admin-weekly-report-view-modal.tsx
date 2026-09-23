@@ -292,7 +292,14 @@ export function AdminWeeklyReportViewModal({
             </Section>
           )}
 
-          <Section icon={Compass} title="Alignment with goals">
+          <Section
+            icon={Compass}
+            title={
+              report.context === "individual"
+                ? "Motivation"
+                : "Alignment with goals"
+            }
+          >
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <div className="bg-muted relative h-2 flex-1 overflow-hidden rounded-full">
