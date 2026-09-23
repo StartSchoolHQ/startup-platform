@@ -4,26 +4,14 @@ import { useRef } from "react";
 import { FileText, ImageIcon, Paperclip, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export const ALLOWED_FILE_TYPES = [
-  "image/png",
-  "image/jpeg",
-  "image/jpg",
-  "image/gif",
-  "image/webp",
-  "image/svg+xml",
-  "text/plain",
-  "text/csv",
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "application/x-log",
-  "application/octet-stream", // .log files often arrive as this
-];
+import {
+  ALLOWED_FILE_TYPES,
+  MAX_FILE_SIZE,
+  MAX_FILES,
+  formatFileSize,
+} from "@/lib/support/attachment-rules";
 
-export const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB (Discord limit)
-export const MAX_FILES = 3;
+export { ALLOWED_FILE_TYPES, MAX_FILE_SIZE, MAX_FILES };
 
 /**
  * Validates a new selection against the current list. Returns the files to
@@ -49,11 +37,6 @@ export function validateAttachments(
     }
   }
   return { files: incoming };
-}
-
-function formatSize(bytes: number) {
-  const mb = bytes / 1024 / 1024;
-  return mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
 }
 
 /** "Add files" button + chip list. The native input stays hidden. */
@@ -113,7 +96,7 @@ export function AttachmentsField({
                 <Icon className="text-primary h-3.5 w-3.5 shrink-0" />
                 <span className="max-w-[180px] truncate">{file.name}</span>
                 <span className="text-muted-foreground">
-                  {formatSize(file.size)}
+                  {formatFileSize(file.size)}
                 </span>
                 <button
                   type="button"

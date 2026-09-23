@@ -17,14 +17,26 @@ export const SupportTicketSchema = z.object({
     .string()
     .min(10, "Description must be at least 10 characters")
     .max(2000, "Description must be at most 2000 characters"),
-  userInfo: z.object({
-    id: z.string().uuid("Invalid user ID"),
-    name: z.string().min(1).max(100),
-    email: z.string().email("Invalid email address").max(100),
-  }),
 });
 
 export type SupportTicketData = z.infer<typeof SupportTicketSchema>;
+
+/** Student proposal for a new My Journey task (mirrors suggest_task_v1). */
+export const TaskSuggestionSchema = z.object({
+  achievementId: z.string().uuid("Pick a phase from the list."),
+  title: z
+    .string()
+    .trim()
+    .min(5, "Title must be 5–80 characters.")
+    .max(80, "Title must be 5–80 characters."),
+  description: z
+    .string()
+    .trim()
+    .min(10, "Description must be 10–300 characters.")
+    .max(300, "Description must be 10–300 characters."),
+});
+
+export type TaskSuggestionInput = z.infer<typeof TaskSuggestionSchema>;
 
 // ============================================
 // FORM SCHEMAS
