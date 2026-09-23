@@ -4,11 +4,40 @@ import { cn } from "@/lib/utils";
 
 export type TicketPriority = "low" | "medium" | "high" | "critical";
 
-const OPTIONS: { value: TicketPriority; label: string; dot: string }[] = [
-  { value: "low", label: "Low", dot: "bg-slate-400" },
-  { value: "medium", label: "Medium", dot: "bg-amber-500" },
-  { value: "high", label: "High", dot: "bg-orange-500" },
-  { value: "critical", label: "Critical", dot: "bg-red-500" },
+const OPTIONS: {
+  value: TicketPriority;
+  label: string;
+  dot: string;
+  selected: string;
+}[] = [
+  {
+    value: "low",
+    label: "Low",
+    dot: "bg-slate-400",
+    selected:
+      "bg-slate-500/15 text-slate-800 ring-1 ring-slate-500/50 dark:text-slate-200",
+  },
+  {
+    value: "medium",
+    label: "Medium",
+    dot: "bg-amber-500",
+    selected:
+      "bg-amber-500/15 text-amber-800 ring-1 ring-amber-500/50 dark:text-amber-300",
+  },
+  {
+    value: "high",
+    label: "High",
+    dot: "bg-orange-500",
+    selected:
+      "bg-orange-500/15 text-orange-800 ring-1 ring-orange-500/50 dark:text-orange-300",
+  },
+  {
+    value: "critical",
+    label: "Critical",
+    dot: "bg-red-500",
+    selected:
+      "bg-red-500/15 text-red-800 ring-1 ring-red-500/50 dark:text-red-300",
+  },
 ];
 
 /** Segmented control for ticket priority — one glance, no dropdown. */
@@ -40,11 +69,17 @@ export function PriorityPicker({
             className={cn(
               "focus-visible:ring-primary flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50",
               selected
-                ? "bg-background text-foreground shadow-xs"
-                : "text-muted-foreground hover:text-foreground"
+                ? cn("font-semibold shadow-xs", option.selected)
+                : "text-muted-foreground hover:bg-background hover:text-foreground"
             )}
           >
-            <span className={cn("h-1.5 w-1.5 rounded-full", option.dot)} />
+            <span
+              className={cn(
+                "rounded-full",
+                selected ? "h-2 w-2" : "h-1.5 w-1.5",
+                option.dot
+              )}
+            />
             {option.label}
           </button>
         );
