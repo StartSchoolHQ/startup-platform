@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -33,13 +33,9 @@ interface Props {
 export function TicketDetailSheet({ ticket, open, onOpenChange }: Props) {
   const { user } = useAppContext();
   const queryClient = useQueryClient();
-  const [note, setNote] = useState("");
-
-  useEffect(() => {
-    // Pre-existing pattern: sync the editable note when the selected ticket changes.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setNote(ticket?.admin_note ?? "");
-  }, [ticket?.id, ticket?.admin_note]);
+  // The sheet is remounted (key={ticket.id}) whenever the selected ticket
+  // changes, so this initial value is all the sync we need.
+  const [note, setNote] = useState(ticket?.admin_note ?? "");
 
   // Signed URLs live 10 minutes; the admin storage policy allows the read.
   const links = useQuery({
@@ -63,15 +59,22 @@ export function TicketDetailSheet({ ticket, open, onOpenChange }: Props) {
     retry: 0,
     mutationFn: async (status: TicketStatus) => {
       const supabase = createClient();
-      const resolved = status === "resolved";
+      // "Save note" replays the ticket's current status, so only stamp
+      // resolved_at/resolved_by_user_id when this call actually resolves it;
+      // leave them untouched on a note-only save, clear them on reopen.
+      const resolving = ticket!.status !== "resolved" && status === "resolved";
+      const reopening = status === "open";
       const { error } = await supabase
         .from("support_tickets")
         .update({
           status,
           admin_note: note.trim() || null,
-          resolved_at: resolved ? new Date().toISOString() : null,
-          resolved_by_user_id: resolved ? (user?.id ?? null) : null,
           updated_at: new Date().toISOString(),
+          ...(resolving && {
+            resolved_at: new Date().toISOString(),
+            resolved_by_user_id: user?.id ?? null,
+          }),
+          ...(reopening && { resolved_at: null, resolved_by_user_id: null }),
         })
         .eq("id", ticket!.id);
       if (error) throw error;

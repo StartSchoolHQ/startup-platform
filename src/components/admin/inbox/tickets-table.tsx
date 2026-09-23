@@ -133,6 +133,7 @@ export function TicketsTable() {
       )}
 
       <TicketDetailSheet
+        key={selected?.id ?? "none"}
         ticket={selected}
         open={selected !== null}
         onOpenChange={(open) => !open && setSelected(null)}
