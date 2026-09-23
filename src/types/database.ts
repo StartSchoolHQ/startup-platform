@@ -789,6 +789,69 @@ export type Database = {
         };
         Relationships: [];
       };
+      support_tickets: {
+        Row: {
+          admin_note: string | null;
+          attachments: Json;
+          category: string;
+          created_at: string;
+          description: string;
+          id: string;
+          priority: string;
+          resolved_at: string | null;
+          resolved_by_user_id: string | null;
+          status: string;
+          title: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          admin_note?: string | null;
+          attachments?: Json;
+          category: string;
+          created_at?: string;
+          description: string;
+          id?: string;
+          priority: string;
+          resolved_at?: string | null;
+          resolved_by_user_id?: string | null;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          admin_note?: string | null;
+          attachments?: Json;
+          category?: string;
+          created_at?: string;
+          description?: string;
+          id?: string;
+          priority?: string;
+          resolved_at?: string | null;
+          resolved_by_user_id?: string | null;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_resolved_by_user_id_fkey";
+            columns: ["resolved_by_user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "support_tickets_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       task_edit_suggestions: {
         Row: {
           created_at: string;
@@ -945,6 +1008,70 @@ export type Database = {
             columns: ["team_id"];
             isOneToOne: false;
             referencedRelation: "teams";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      task_suggestions: {
+        Row: {
+          achievement_id: string;
+          admin_note: string | null;
+          created_at: string;
+          description: string;
+          id: string;
+          reviewed_at: string | null;
+          reviewed_by_user_id: string | null;
+          status: string;
+          title: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          achievement_id: string;
+          admin_note?: string | null;
+          created_at?: string;
+          description: string;
+          id?: string;
+          reviewed_at?: string | null;
+          reviewed_by_user_id?: string | null;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          achievement_id?: string;
+          admin_note?: string | null;
+          created_at?: string;
+          description?: string;
+          id?: string;
+          reviewed_at?: string | null;
+          reviewed_by_user_id?: string | null;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "task_suggestions_achievement_id_fkey";
+            columns: ["achievement_id"];
+            isOneToOne: false;
+            referencedRelation: "achievements";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "task_suggestions_reviewed_by_user_id_fkey";
+            columns: ["reviewed_by_user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "task_suggestions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
             referencedColumns: ["id"];
           },
         ];
@@ -4254,6 +4381,14 @@ export type Database = {
       submit_strike_explanation: {
         Args: { p_explanation: string; p_strike_id: string };
         Returns: boolean;
+      };
+      suggest_task_v1: {
+        Args: {
+          p_achievement_id: string;
+          p_description: string;
+          p_title: string;
+        };
+        Returns: Json;
       };
       update_meeting_draft: {
         Args: {
