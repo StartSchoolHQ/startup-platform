@@ -191,6 +191,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             },
             {
               section: "System",
+              title: "Inbox",
+              url: "/dashboard/admin/inbox",
+            },
+            {
+              section: "System",
               title: "Activity Log",
               url: "/dashboard/admin/audit-logs",
             },

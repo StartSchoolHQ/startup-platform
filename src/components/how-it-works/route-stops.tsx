@@ -62,7 +62,10 @@ export function buildRouteStops(
       "Your ideas can make a difference. Suggest new tasks you'd like to see in My Journey, report bugs, or share your ideas for improving the user experience.",
       "If your suggestion is implemented, you'll earn additional points that bring you closer to unlocking rewards.",
     ],
-    links: [{ label: "Submit Your Feedback", href: "/dashboard/support" }],
+    links: [
+      { label: "Suggest a task", href: "/dashboard/support?mode=suggest" },
+      { label: "Report a problem", href: "/dashboard/support" },
+    ],
   });
 
   return stops;

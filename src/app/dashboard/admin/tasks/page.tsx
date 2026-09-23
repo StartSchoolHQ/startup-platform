@@ -15,7 +15,6 @@ import { CreateTaskDialog } from "@/components/admin/create-task-dialog";
 import { ImportTasksDialog } from "@/components/admin/import-tasks-dialog";
 import { AdminTasksTable } from "@/components/admin/admin-tasks-table";
 import { AdminSkeleton } from "@/components/ui/admin-skeleton";
-import { AdminSuggestionsTable } from "@/components/admin/admin-suggestions-table";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 
 export default function AdminTasksPage() {
@@ -24,7 +23,7 @@ export default function AdminTasksPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const validTabs = ["team-tasks", "individual-tasks", "suggestions"];
+  const validTabs = ["team-tasks", "individual-tasks"];
   // Open on the journey that is currently running.
   const defaultTab = journeys.teamJourney ? "team-tasks" : "individual-tasks";
   const tabFromUrl = searchParams.get("tab");
@@ -70,7 +69,6 @@ export default function AdminTasksPage() {
         <TabsList>
           <TabsTrigger value="individual-tasks">Solo tasks</TabsTrigger>
           <TabsTrigger value="team-tasks">Team tasks</TabsTrigger>
-          <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
         </TabsList>
 
         <TabsContent value="individual-tasks" className="space-y-4">
@@ -113,22 +111,6 @@ export default function AdminTasksPage() {
             </CardHeader>
             <CardContent>
               <AdminTasksTable activityType="team" />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="suggestions" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div>
-                <CardTitle>Task edit suggestions</CardTitle>
-                <CardDescription>
-                  Review suggestions from students to improve task content.
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <AdminSuggestionsTable />
             </CardContent>
           </Card>
         </TabsContent>
