@@ -6,7 +6,7 @@
 --   drop function public.suggest_task_v1(uuid, text, text);
 --   drop table public.task_suggestions;
 --   drop table public.support_tickets;
---   delete from storage.objects where bucket_id = 'support-attachments';
+--   empty the bucket through the Storage API or the dashboard ("Empty bucket"); SQL deletes on storage.objects are blocked;
 --   delete from storage.buckets where id = 'support-attachments';
 --   drop policy if exists support_attachments_owner_insert on storage.objects;
 --   drop policy if exists support_attachments_owner_select on storage.objects;

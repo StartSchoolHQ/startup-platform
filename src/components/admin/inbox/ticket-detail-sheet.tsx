@@ -63,7 +63,7 @@ export function TicketDetailSheet({ ticket, open, onOpenChange }: Props) {
       // resolved_at/resolved_by_user_id when this call actually resolves it;
       // leave them untouched on a note-only save, clear them on reopen.
       const resolving = ticket!.status !== "resolved" && status === "resolved";
-      const reopening = status === "open";
+      const reopening = ticket!.status === "resolved" && status === "open";
       const { error } = await supabase
         .from("support_tickets")
         .update({
@@ -78,12 +78,19 @@ export function TicketDetailSheet({ ticket, open, onOpenChange }: Props) {
         })
         .eq("id", ticket!.id);
       if (error) throw error;
+      return { resolving, reopening };
     },
-    onSuccess: (_, status) => {
+    onSuccess: ({ resolving, reopening }) => {
       queryClient.invalidateQueries({
         queryKey: ["admin", "inbox", "tickets"],
       });
-      toast.success(status === "resolved" ? "Ticket resolved" : "Ticket saved");
+      toast.success(
+        resolving
+          ? "Ticket resolved"
+          : reopening
+            ? "Ticket reopened"
+            : "Ticket saved"
+      );
       onOpenChange(false);
     },
     onError: () => toast.error("Couldn't update the ticket. Try again."),

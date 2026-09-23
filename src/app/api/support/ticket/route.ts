@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { SupportTicketSchema } from "@/lib/validation-schemas";
 import {
   ALLOWED_FILE_TYPES,
@@ -77,6 +78,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 15-minute cooldown, unchanged from the Discord era (fails open on DB error).
+    // Checked here, before upload; the upsert that starts the cooldown moves
+    // to after the insert succeeds so a failed submission doesn't lock the
+    // student out.
     try {
       const { data: rateLimit } = await supabase
         .from("support_rate_limits")
@@ -98,17 +102,22 @@ export async function POST(request: NextRequest) {
           );
         }
       }
-      await supabase.from("support_rate_limits").upsert(
-        {
-          user_id: user.id,
-          last_submission_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" }
-      );
     } catch (rateLimitError) {
       console.error("Rate limit check failed:", rateLimitError);
     }
+
+    // Compensating cleanup for paths this request just wrote. The bucket has
+    // only owner INSERT/SELECT policies (no delete policy, by design), so a
+    // user-session remove() would silently match zero rows; the service-role
+    // client is the only client that can actually delete them.
+    const removeUploaded = async (paths: string[]) => {
+      const { error: removeError } = await createAdminClient()
+        .storage.from(SUPPORT_ATTACHMENTS_BUCKET)
+        .remove(paths);
+      if (removeError) {
+        console.error("Attachment cleanup failed:", removeError);
+      }
+    };
 
     // Upload first so the row never references a file that is not there.
     const ticketId = crypto.randomUUID();
@@ -122,7 +131,7 @@ export async function POST(request: NextRequest) {
       });
       if (uploadError) {
         console.error("Attachment upload failed:", uploadError);
-        if (uploaded.length) await bucket.remove(uploaded.map((a) => a.path));
+        if (uploaded.length) await removeUploaded(uploaded.map((a) => a.path));
         return NextResponse.json(
           {
             error: `Couldn't upload "${file.name}". Remove it and try again, or send the ticket without attachments.`,
@@ -151,11 +160,25 @@ export async function POST(request: NextRequest) {
       });
     if (insertError) {
       console.error("Ticket insert failed:", insertError);
-      if (uploaded.length) await bucket.remove(uploaded.map((a) => a.path));
+      if (uploaded.length) await removeUploaded(uploaded.map((a) => a.path));
       return NextResponse.json(
         { error: "Couldn't save the ticket. Please try again." },
         { status: 500 }
       );
+    }
+
+    // Cooldown starts only once the ticket is actually saved.
+    try {
+      await supabase.from("support_rate_limits").upsert(
+        {
+          user_id: user.id,
+          last_submission_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      );
+    } catch (rateLimitError) {
+      console.error("Rate limit upsert failed:", rateLimitError);
     }
 
     return NextResponse.json({ success: true, ticketId });

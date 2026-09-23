@@ -25,6 +25,13 @@ reviewed on **Admin → System → Inbox**. Discord is no longer involved.
 Nobody is notified of anything. Reply to students by email. Elias reviews
 the inbox daily.
 
+## Notes
+
+Deleting a user cascades their ticket rows but not their files in the
+bucket; remove those through the Storage API if it matters.
+
 ## Rollback
 
-See the 2026-09-23 entry in `CLAUDE.md`.
+The rollback recipe is in the header comment of
+`supabase/migrations/20260923120000_support_inbox_v1.sql` (and
+`…150000_support_inbox_v1_1_owner_insert_check.sql`).
