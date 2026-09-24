@@ -19,8 +19,8 @@ export default function AdminSettingsPage() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
         <p className="text-muted-foreground text-sm">
-          Programme phase, the automatic task reviewer and the Startie
-          assistant.
+          Programme phase and the rules behind the analytics attention list. AI
+          settings live under Admin → AI.
         </p>
       </div>
       <ProgrammePhaseCard />
