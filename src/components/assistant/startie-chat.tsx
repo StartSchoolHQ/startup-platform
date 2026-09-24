@@ -6,6 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { STARTIE_ICON_SRC } from "@/lib/assistant/icon";
 import { formatResetTime, nextUtcMidnight } from "@/lib/assistant/limits";
 import type { ChatMessage, ThreadSummary } from "@/types/assistant";
 import { StartieComposer } from "./startie-composer";
@@ -36,7 +37,7 @@ export function StartieChat(props: StartieChatProps) {
     <div className="flex h-full flex-col">
       <header className="flex items-center gap-2 border-b px-3 py-2.5 pr-12">
         <Image
-          src="/startie.png"
+          src={STARTIE_ICON_SRC}
           alt=""
           width={28}
           height={28}

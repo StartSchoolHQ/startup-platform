@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { STARTIE_ICON_SRC } from "@/lib/assistant/icon";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -22,7 +23,7 @@ export function StartieButton({ onClick, unread }: Props) {
       )}
     >
       <Image
-        src="/startie.png"
+        src={STARTIE_ICON_SRC}
         alt=""
         width={36}
         height={36}
