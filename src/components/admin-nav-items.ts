@@ -28,6 +28,11 @@ export function adminNavItems(teamJourneyOn: boolean): AdminNavItem[] {
       title: "Agreements",
       url: "/dashboard/admin/agreements",
     },
+    {
+      section: "People",
+      title: "Weekly Reports",
+      url: "/dashboard/admin/weekly-reports",
+    },
     { section: "People", title: "Diplomas", url: "/dashboard/admin/diplomas" },
     { section: "Curriculum", title: "Tasks", url: "/dashboard/admin/tasks" },
     {
@@ -36,11 +41,6 @@ export function adminNavItems(teamJourneyOn: boolean): AdminNavItem[] {
       url: "/dashboard/admin/peer-reviews",
     },
     { section: teams, title: "Teams", url: "/dashboard/admin/teams" },
-    {
-      section: teams,
-      title: "Weekly Reports",
-      url: "/dashboard/admin/weekly-reports",
-    },
     { section: "AI", title: "AI Reviews", url: "/dashboard/admin/ai-reviews" },
     { section: "AI", title: "Startie", url: "/dashboard/admin/startie" },
     { section: "Support", title: "Inbox", url: "/dashboard/admin/inbox" },

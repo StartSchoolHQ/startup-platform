@@ -32,7 +32,8 @@ describe("adminNavItems", () => {
     expect(by["Startie"]).toBe("AI");
     expect(by["Inbox"]).toBe("Support");
     expect(by["Settings"]).toBe("System");
-    expect(by["Weekly Reports"]).toBe("Teams · paused");
+    // Reports are about students in either journey, not a team-only thing.
+    expect(by["Weekly Reports"]).toBe("People");
   });
 
   it("has unique urls and titles", () => {

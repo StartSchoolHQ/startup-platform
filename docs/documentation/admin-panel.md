@@ -15,11 +15,11 @@ section changes. Tested in `tests/admin/admin-nav-items.test.ts`.
 | Insights | Activity Log | `/dashboard/admin/audit-logs` | One sentence per event, filter by student / kind / date (see `activity-log.md`) |
 | **People** | Users | `/dashboard/admin/users` | Users (default filter: active) |
 | People | Agreements | `/dashboard/admin/agreements` | Scholarships + Laptops & key cards (`?tab=equipment`) |
+| People | Weekly Reports | `/dashboard/admin/weekly-reports` | Every report, team and solo — Context filter → Solo for My Journey reports |
 | People | Diplomas | `/dashboard/admin/diplomas` | Issue / Issued / Setup (batches live under Setup) |
 | **Curriculum** | Tasks | `/dashboard/admin/tasks` | Solo tasks / Team tasks / Suggestions |
 | Curriculum | Peer Reviews | `/dashboard/admin/peer-reviews` | Team-task peer review oversight |
 | **Teams** (label "· paused" while Team Journey is off) | Teams | `/dashboard/admin/teams` | Teams + strikes |
-| Teams | Weekly Reports | `/dashboard/admin/weekly-reports` | Every report, team and solo (Context filter) |
 | **AI** | AI Reviews | `/dashboard/admin/ai-reviews` | AI Task Reviewer settings card + read-only audit of every automatic review |
 | AI | Startie | `/dashboard/admin/startie` | Usage stats, every transcript, Startie settings card |
 | **Support** | Inbox | `/dashboard/admin/inbox` | Tickets · Task suggestions · Edit suggestions (`?tab=startie` redirects to the Startie page) |
