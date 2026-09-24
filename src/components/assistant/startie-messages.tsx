@@ -1,11 +1,26 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import Image from "next/image";
 import { ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Bubble, BubbleContent } from "@/components/ui/bubble";
+import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker";
+import {
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageFooter,
+} from "@/components/ui/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@/components/ui/message-scroller";
 import { TaskMarkdown } from "@/components/tasks/task-markdown";
-import { cn } from "@/lib/utils";
+import { STARTIE_ICON_SRC } from "@/lib/assistant/icon";
 import type { ChatMessage } from "@/types/assistant";
 
 interface Props {
@@ -16,60 +31,97 @@ interface Props {
 export const DISCLOSURE =
   "I'm an AI. I can explain the platform, your progress, and think through tasks with you. I won't write your submissions. Admins can read these chats.";
 
+/**
+ * The transcript. shadcn's MessageScroller owns the scroll behaviour: it
+ * anchors each new student turn near the top, follows streamed replies at
+ * the live edge, and offers a jump-to-end button once the reader scrolls up.
+ */
 export function StartieMessages({ messages, onFlag }: Props) {
-  const endRef = useRef<HTMLDivElement>(null);
-  const lastContent = messages[messages.length - 1]?.content;
-
-  useEffect(() => {
-    // Optional call: jsdom (tests) has no scrollIntoView.
-    endRef.current?.scrollIntoView?.({ block: "end" });
-  }, [messages.length, lastContent]);
-
   return (
-    <ScrollArea className="flex-1 px-3">
-      <div className="flex flex-col gap-3 py-3">
-        {messages.length === 0 && (
-          <p className="text-muted-foreground bg-muted/50 rounded-md px-3 py-2 text-xs leading-relaxed">
-            {DISCLOSURE}
-          </p>
-        )}
-        {messages.map((m) => (
-          <Bubble key={m.id} message={m} onFlag={onFlag} />
-        ))}
-        <div ref={endRef} />
-      </div>
-    </ScrollArea>
+    <MessageScrollerProvider autoScroll defaultScrollPosition="end">
+      <MessageScroller className="flex-1">
+        <MessageScrollerViewport className="px-3">
+          <MessageScrollerContent className="gap-3 py-3">
+            <MessageScrollerItem messageId="disclosure">
+              <Marker variant="border" className="text-xs">
+                <MarkerIcon>
+                  <StartieFace size={16} />
+                </MarkerIcon>
+                <MarkerContent>{DISCLOSURE}</MarkerContent>
+              </Marker>
+            </MessageScrollerItem>
+            {messages.map((m) => (
+              <MessageScrollerItem
+                key={m.id}
+                messageId={m.id}
+                scrollAnchor={m.role === "user"}
+              >
+                <Turn message={m} onFlag={onFlag} />
+              </MessageScrollerItem>
+            ))}
+          </MessageScrollerContent>
+        </MessageScrollerViewport>
+        {/* `start-1/2` stands in for shadcn's `inset-s-1/2` utility, which
+            lives in their tailwind.css bundle that this project does not load. */}
+        <MessageScrollerButton className="start-1/2" />
+      </MessageScroller>
+    </MessageScrollerProvider>
   );
 }
 
-function Bubble({
+function StartieFace({ size }: { size: number }) {
+  return (
+    <Image
+      src={STARTIE_ICON_SRC}
+      alt=""
+      width={size}
+      height={size}
+      style={{ imageRendering: "pixelated" }}
+    />
+  );
+}
+
+function Turn({
   message,
   onFlag,
 }: {
   message: ChatMessage;
   onFlag: (id: string) => void;
 }) {
-  const isUser = message.role === "user";
+  if (message.role === "user") {
+    return (
+      <Message align="end">
+        <MessageContent>
+          <Bubble align="end">
+            <BubbleContent className="whitespace-pre-wrap">
+              {message.content}
+            </BubbleContent>
+          </Bubble>
+        </MessageContent>
+      </Message>
+    );
+  }
+
   const persisted = !message.pending && !message.id.startsWith("pending-");
   return (
-    <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
-      <div
-        className={cn(
-          "max-w-[88%] rounded-lg px-3 py-2 text-sm",
-          isUser
-            ? "bg-primary text-primary-foreground whitespace-pre-wrap"
-            : "bg-muted"
-        )}
-      >
-        {isUser ? (
-          message.content
-        ) : message.pending && !message.content ? (
-          <span className="text-muted-foreground animate-pulse">…</span>
-        ) : (
-          <TaskMarkdown>{message.content || "_(empty reply)_"}</TaskMarkdown>
-        )}
-        {!isUser && persisted && (
-          <div className="mt-1 flex justify-end">
+    <Message align="start">
+      <MessageAvatar className="bg-transparent">
+        <StartieFace size={28} />
+      </MessageAvatar>
+      <MessageContent>
+        <Bubble variant="muted">
+          <BubbleContent>
+            {message.pending && !message.content ? (
+              <span className="text-muted-foreground animate-pulse">…</span>
+            ) : (
+              <TaskMarkdown>
+                {message.content || "_(empty reply)_"}
+              </TaskMarkdown>
+            )}
+          </BubbleContent>
+        </Bubble>
+        {persisted && (
+          <MessageFooter className="px-1">
             <Button
               type="button"
               variant="ghost"
@@ -81,9 +133,9 @@ function Bubble({
             >
               <ThumbsDown className="size-3.5" />
             </Button>
-          </div>
+          </MessageFooter>
         )}
-      </div>
-    </div>
+      </MessageContent>
+    </Message>
   );
 }

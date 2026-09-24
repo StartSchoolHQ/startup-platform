@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -27,15 +29,16 @@ export interface StartieChatProps {
   onFlag: (messageId: string) => void;
   onSelectThread: (id: string) => void;
   onNewThread: () => void;
+  onClose: () => void;
 }
 
-/** Presentational chat body: header, messages, composer. No data fetching. */
+/** Presentational chat body: header, transcript, composer. No data fetching. */
 export function StartieChat(props: StartieChatProps) {
   const outOfMessages = !props.isAdmin && props.remaining === 0;
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="flex items-center gap-2 border-b px-3 py-2.5 pr-12">
+    <div className="bg-background flex h-full min-h-0 flex-col">
+      <header className="bg-primary text-primary-foreground flex items-center gap-2 px-3 py-2.5">
         <Image
           src={STARTIE_ICON_SRC}
           alt=""
@@ -46,9 +49,7 @@ export function StartieChat(props: StartieChatProps) {
         <div className="min-w-0 flex-1 leading-tight">
           <div className="text-sm font-semibold">
             Startie{" "}
-            <span className="text-muted-foreground font-normal">
-              · AI assistant
-            </span>
+            <span className="font-normal opacity-80">· AI assistant</span>
           </div>
           <Counter
             remaining={props.remaining}
@@ -62,6 +63,16 @@ export function StartieChat(props: StartieChatProps) {
           onSelectThread={props.onSelectThread}
           onNewThread={props.onNewThread}
         />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="hover:bg-primary-foreground/15 hover:text-primary-foreground size-8"
+          aria-label="Close"
+          onClick={props.onClose}
+        >
+          <X className="size-4" />
+        </Button>
       </header>
 
       {props.banner && (
@@ -92,12 +103,12 @@ function Counter({
   isAdmin: boolean;
 }) {
   if (isAdmin || remaining === null) {
-    return <div className="text-muted-foreground text-xs">unlimited</div>;
+    return <div className="text-xs opacity-80">unlimited</div>;
   }
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="text-muted-foreground cursor-default text-xs">
+        <div className="cursor-default text-xs opacity-80">
           {remaining} of {dailyLimit} left today
         </div>
       </TooltipTrigger>
