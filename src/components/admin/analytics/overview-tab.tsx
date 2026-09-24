@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useAnalyticsOverview } from "./use-analytics";
+import { useOverviewV3 } from "./use-analytics";
 import { SentimentChart } from "./sentiment-chart";
 import { WeekDetailSheet } from "./week-detail-sheet";
 import { TabEmpty, TabError, TabSkeleton, TrendIcon } from "./shared";
@@ -48,10 +48,9 @@ export function OverviewTab({
   active: boolean;
   batchId: string | null;
 }) {
-  const { data, isLoading, isError, refetch } = useAnalyticsOverview(
-    active,
-    batchId
-  );
+  // v3 = v2 + solo students in the participation denominator while My
+  // Journey is on (spec §4). Same row shape.
+  const { data, isLoading, isError, refetch } = useOverviewV3(batchId, active);
   const [weekStart, setWeekStart] = useState<string | null>(null);
 
   const stats = useMemo(() => {

@@ -58,6 +58,7 @@ async function makeUser(
 }
 
 async function removeUser(id: string) {
+  await admin.from("team_members").delete().eq("user_id", id);
   await admin.from("analytics_dismissals").delete().eq("user_id", id);
   await admin.from("ai_task_reviews").delete().eq("user_id", id);
   await admin.from("task_progress").delete().eq("user_id", id);
@@ -323,5 +324,103 @@ describe("pulse, my journey, review quality, outcomes, overview v3", () => {
     // checked here; the branch itself is verified through the kind list.
     expect(error).toBeNull();
     expect(Array.isArray(data)).toBe(true);
+  });
+});
+
+describe("review fixes (2026-09-24)", () => {
+  it("numbers programme weeks from the batch's Monday, consecutively, no duplicates", async () => {
+    // The open batch was admitted on a Tuesday; weeks must still be 1,2,3…
+    const { data } = await adminUser.rpc("get_analytics_my_journey_v1", {
+      p_batch_id: openBatch,
+    });
+    const weeks = (data as { weekly: { week: number }[] }).weekly.map(
+      (w) => w.week
+    );
+    expect(weeks[0]).toBe(1);
+    expect(weeks).toEqual([...new Set(weeks)]);
+    expect(weeks).toEqual(weeks.map((_, i) => i + 1));
+  });
+
+  it("falls back to ISO weeks when the scope is All active", async () => {
+    const { data } = await adminUser.rpc("get_analytics_my_journey_v1", {
+      p_batch_id: null as unknown as string,
+    });
+    const weeks = (data as { weekly: { week: number }[] }).weekly.map(
+      (w) => w.week
+    );
+    expect(new Set(weeks).size).toBe(weeks.length);
+    expect(Math.max(...weeks)).toBeGreaterThan(1);
+  });
+
+  it("does not let students call the analytics helpers", async () => {
+    for (const fn of [
+      "_analytics_scope_students_v1",
+      "_analytics_events_v1",
+      "_analytics_last_active_v1",
+    ]) {
+      const { error } = await student.rpc(fn as "_analytics_events_v1", {
+        p_batch_id: null as unknown as string,
+      });
+      expect(error?.message ?? "").toMatch(/permission denied/i);
+    }
+  });
+
+  it("survives a non-numeric threshold in settings", async () => {
+    const { data: before } = await admin
+      .from("platform_settings")
+      .select("value")
+      .eq("key", "analytics")
+      .single();
+    const broken = { ...(before!.value as object), inactive_days: "abc" };
+    await admin
+      .from("platform_settings")
+      .update({ value: broken })
+      .eq("key", "analytics");
+    try {
+      const { error } = await attention(openBatch);
+      expect(error).toBeNull();
+    } finally {
+      await admin
+        .from("platform_settings")
+        .update({ value: before!.value })
+        .eq("key", "analytics");
+    }
+  });
+
+  it("counts a student once in the participation denominator whether in a team or solo", async () => {
+    // Week of the batch's one solo report so far: 2026-09-14.
+    const { data: team, error: teamErr } = await admin
+      .from("teams")
+      .insert({
+        name: `test_ana_team_${STAMP}`,
+        batch_id: openBatch,
+        founder_id: studentId,
+        status: "active",
+      })
+      .select("id")
+      .single();
+    if (teamErr) throw teamErr;
+    try {
+      await admin.from("team_members").insert({
+        team_id: team!.id,
+        user_id: studentId,
+        joined_at: "2026-09-10T00:00:00Z",
+      });
+      const inTeam = await adminUser.rpc("get_analytics_overview_v3", {
+        p_batch_id: openBatch,
+      });
+      await admin.from("team_members").delete().eq("user_id", studentId);
+      const solo = await adminUser.rpc("get_analytics_overview_v3", {
+        p_batch_id: openBatch,
+      });
+      const pick = (
+        rows: { week_start: string; expected_reporters: number }[] | null
+      ) => rows?.find((r) => r.week_start === "2026-09-14")?.expected_reporters;
+      expect(inTeam.error).toBeNull();
+      expect(pick(inTeam.data)).toBe(pick(solo.data));
+    } finally {
+      await admin.from("team_members").delete().eq("team_id", team!.id);
+      await admin.from("teams").delete().eq("id", team!.id);
+    }
   });
 });

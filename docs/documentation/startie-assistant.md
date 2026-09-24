@@ -65,7 +65,7 @@ RPCs (all SECURITY DEFINER, EXECUTE authenticated + service_role, anon revoked):
 
 ## Cost
 
-Per message ≈ $0.005 on gpt-5.4-mini (7k cached prefix, ~2.4k fresh input, ~350 output, reasoning low). Realistic month for 75 students: $25–75. Hard cap (everyone at 25/day): ~$260. Levers: reasoning effort, history turns, model. The Startie page.s stats strip shows cost this month and cache hit rate.
+Per message ≈ $0.005 on gpt-5.4-mini (7k cached prefix, ~2.4k fresh input, ~350 output, reasoning low). Realistic month for 75 students: $25–75. Hard cap (everyone at 25/day): ~$260. Levers: reasoning effort, history turns, model. The Startie page's stats strip shows cost this month and cache hit rate.
 
 ## Rollback
 

@@ -198,7 +198,7 @@ export function formatActivity(row: ActivityRow): FormattedActivity {
       break;
     case "startie_chat":
       text = `${who} started a Startie chat: ${q(title)}`;
-      href = "/dashboard/admin/inbox?tab=startie";
+      href = "/dashboard/admin/startie";
       break;
     case "account_joined":
       text = `${who} joined the platform`;
