@@ -177,6 +177,48 @@ export type Database = {
           },
         ];
       };
+      analytics_dismissals: {
+        Row: {
+          admin_id: string | null;
+          created_at: string;
+          id: string;
+          note: string | null;
+          until: string;
+          user_id: string;
+        };
+        Insert: {
+          admin_id?: string | null;
+          created_at?: string;
+          id?: string;
+          note?: string | null;
+          until: string;
+          user_id: string;
+        };
+        Update: {
+          admin_id?: string | null;
+          created_at?: string;
+          id?: string;
+          note?: string | null;
+          until?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "analytics_dismissals_admin_id_fkey";
+            columns: ["admin_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "analytics_dismissals_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       assistant_messages: {
         Row: {
           cached_tokens: number | null;
@@ -1982,6 +2024,48 @@ export type Database = {
       _admin_scope_teams: { Args: { p_batch_id: string }; Returns: string[] };
       _admin_scope_users: { Args: { p_batch_id: string }; Returns: string[] };
       _analytics_assert_admin: { Args: never; Returns: undefined };
+      _analytics_events_v1: {
+        Args: { p_batch_id: string; p_include_test?: boolean };
+        Returns: {
+          at: string;
+          user_id: string;
+        }[];
+      };
+      _analytics_last_active_v1: {
+        Args: { p_batch_id: string; p_include_test?: boolean };
+        Returns: {
+          last_active: string;
+          user_id: string;
+        }[];
+      };
+      _analytics_outcomes_batch_v1: {
+        Args: { p_batch_id: string };
+        Returns: Json;
+      };
+      _analytics_phase_v1: {
+        Args: { p_batch_id: string; p_include_test?: boolean };
+        Returns: {
+          completed: number;
+          highest_phase: number;
+          phases_total: number;
+          total: number;
+          user_id: string;
+        }[];
+      };
+      _analytics_scope_students_v1: {
+        Args: { p_batch_id: string; p_include_test?: boolean };
+        Returns: {
+          batch_id: string;
+          created_at: string;
+          name: string;
+          user_id: string;
+        }[];
+      };
+      _analytics_settings_v1: { Args: never; Returns: Json };
+      _analytics_week_v1: {
+        Args: { p_batch_id: string; p_date: string };
+        Returns: number;
+      };
       accept_external_task_for_review: {
         Args: { p_progress_id: string };
         Returns: Json;
@@ -2053,6 +2137,10 @@ export type Database = {
         Returns: Json;
       };
       ai_review_requeue_stale_v1: { Args: never; Returns: number };
+      analytics_dismiss_v1: {
+        Args: { p_note: string; p_user_id: string };
+        Returns: string;
+      };
       assert_admin_or_service_v1: { Args: never; Returns: undefined };
       assign_individual_task: {
         Args: { p_task_id: string; p_user_id: string };
@@ -2471,11 +2559,35 @@ export type Database = {
         Args: { p_progress_id: string };
         Returns: Json;
       };
+      get_analytics_attention_v1: {
+        Args: { p_batch_id: string; p_include_test?: boolean };
+        Returns: {
+          dismissed_until: string;
+          last_active: string;
+          name: string;
+          reasons: string[];
+          severity: number;
+          team_name: string;
+          user_id: string;
+        }[];
+      };
       get_analytics_economy: { Args: never; Returns: Json };
       get_analytics_economy_v2: { Args: { p_batch_id: string }; Returns: Json };
       get_analytics_meetings: { Args: never; Returns: Json };
       get_analytics_meetings_v2: {
         Args: { p_batch_id: string };
+        Returns: Json;
+      };
+      get_analytics_milestones_v1: {
+        Args: { p_batch_id: string };
+        Returns: Json;
+      };
+      get_analytics_my_journey_v1: {
+        Args: { p_batch_id: string; p_include_test?: boolean };
+        Returns: Json;
+      };
+      get_analytics_outcomes_v1: {
+        Args: { p_batch_a: string; p_batch_b?: string };
         Returns: Json;
       };
       get_analytics_overview: {
@@ -2512,10 +2624,45 @@ export type Database = {
           week_start: string;
         }[];
       };
+      get_analytics_overview_v3: {
+        Args: { p_batch_id: string };
+        Returns: {
+          active_teams: number;
+          avg_score: number;
+          commitments_completed: number;
+          commitments_total: number;
+          expected_reporters: number;
+          high_scores: number;
+          low_scores: number;
+          max_score: number;
+          min_score: number;
+          real_blockers: number;
+          reports: number;
+          week_start: string;
+        }[];
+      };
+      get_analytics_pulse_v1: { Args: { p_batch_id: string }; Returns: Json };
       get_analytics_retention: { Args: never; Returns: Json };
       get_analytics_retention_v2: {
         Args: { p_batch_id: string };
         Returns: Json;
+      };
+      get_analytics_review_quality_v1: {
+        Args: { p_batch_id: string; p_include_test?: boolean };
+        Returns: {
+          approved: number;
+          first_pass_rate: number;
+          journey: string;
+          mean_attempts: number;
+          median_hours: number;
+          phase: string;
+          rejections: number;
+          sample_feedback: string[];
+          stale_in_progress: number;
+          started: number;
+          task_id: string;
+          title: string;
+        }[];
       };
       get_analytics_strikes: { Args: never; Returns: Json };
       get_analytics_strikes_v2: { Args: { p_batch_id: string }; Returns: Json };
