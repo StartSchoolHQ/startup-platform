@@ -1,6 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
+import type { AttentionRow } from "@/lib/analytics/attention";
 import { withBatch } from "@/hooks/use-batch-scope";
 import type {
   EconomyAnalytics,
@@ -15,6 +18,11 @@ import type {
   TeamDetailRow,
   TeamWeekRow,
   WeekDetailRow,
+  MilestonesData,
+  MyJourneyData,
+  OutcomesData,
+  PulseData,
+  ReviewQualityRow,
 } from "./types";
 import type { AdminWeeklyReportRow } from "@/components/admin/admin-weekly-report-view-modal";
 
@@ -168,5 +176,164 @@ export function useFullReport(reportId: string | null) {
       ),
     staleTime: STALE_TIME,
     enabled: !!reportId,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Analytics v2 (2026-09-24): the new readers assert admin in SQL, so they are
+// called straight from the browser client like the Inbox and Activity Log.
+// `null` batch = "All active"; the generated types mark uuid args non-null.
+// ---------------------------------------------------------------------------
+
+const V2_STALE = 60 * 1000;
+const batchArg = (batchId: string | null) => batchId as unknown as string;
+
+function v2Key(name: string, ...rest: (string | null)[]) {
+  return ["admin-analytics", name, ...rest.map((r) => r ?? "current")];
+}
+
+export function useAttention(batchId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: v2Key("attention", batchId),
+    enabled,
+    staleTime: V2_STALE,
+    queryFn: async (): Promise<AttentionRow[]> => {
+      const { data, error } = await createClient().rpc(
+        "get_analytics_attention_v1",
+        { p_batch_id: batchArg(batchId) }
+      );
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+  });
+}
+
+export function usePulse(batchId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: v2Key("pulse", batchId),
+    enabled,
+    staleTime: V2_STALE,
+    queryFn: async (): Promise<PulseData> => {
+      const { data, error } = await createClient().rpc(
+        "get_analytics_pulse_v1",
+        { p_batch_id: batchArg(batchId) }
+      );
+      if (error) throw new Error(error.message);
+      return data as unknown as PulseData;
+    },
+  });
+}
+
+export function useMyJourneyAnalytics(batchId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: v2Key("my-journey", batchId),
+    enabled,
+    staleTime: V2_STALE,
+    queryFn: async (): Promise<MyJourneyData> => {
+      const { data, error } = await createClient().rpc(
+        "get_analytics_my_journey_v1",
+        { p_batch_id: batchArg(batchId) }
+      );
+      if (error) throw new Error(error.message);
+      return data as unknown as MyJourneyData;
+    },
+  });
+}
+
+export function useReviewQuality(batchId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: v2Key("review-quality", batchId),
+    enabled,
+    staleTime: V2_STALE,
+    queryFn: async (): Promise<ReviewQualityRow[]> => {
+      const { data, error } = await createClient().rpc(
+        "get_analytics_review_quality_v1",
+        { p_batch_id: batchArg(batchId) }
+      );
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+  });
+}
+
+export function useMilestones(batchId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: v2Key("milestones", batchId),
+    enabled,
+    staleTime: V2_STALE,
+    queryFn: async (): Promise<MilestonesData> => {
+      const { data, error } = await createClient().rpc(
+        "get_analytics_milestones_v1",
+        { p_batch_id: batchArg(batchId) }
+      );
+      if (error) throw new Error(error.message);
+      return data as unknown as MilestonesData;
+    },
+  });
+}
+
+export function useOutcomes(
+  batchA: string | null,
+  batchB: string | null,
+  enabled = true
+) {
+  return useQuery({
+    queryKey: v2Key("outcomes", batchA, batchB),
+    enabled: enabled && !!batchA,
+    staleTime: V2_STALE,
+    queryFn: async (): Promise<OutcomesData> => {
+      const { data, error } = await createClient().rpc(
+        "get_analytics_outcomes_v1",
+        {
+          p_batch_a: batchA as string,
+          ...(batchB ? { p_batch_b: batchB } : {}),
+        }
+      );
+      if (error) throw new Error(error.message);
+      return data as unknown as OutcomesData;
+    },
+  });
+}
+
+export function useOverviewV3(batchId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: v2Key("overview-v3", batchId),
+    enabled,
+    staleTime: V2_STALE,
+    queryFn: async (): Promise<OverviewWeek[]> => {
+      const { data, error } = await createClient().rpc(
+        "get_analytics_overview_v3",
+        { p_batch_id: batchArg(batchId) }
+      );
+      if (error) throw new Error(error.message);
+      return (data ?? []) as unknown as OverviewWeek[];
+    },
+  });
+}
+
+/** Dismiss a student from the attention list for `dismiss_days`. */
+export function useDismissAttention() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    retry: 0,
+    mutationFn: async (input: { userId: string; note: string }) => {
+      const { data, error } = await createClient().rpc("analytics_dismiss_v1", {
+        p_user_id: input.userId,
+        p_note: input.note,
+      });
+      if (error) throw new Error(error.message);
+      return data as string;
+    },
+    onSuccess: () => {
+      toast.success(
+        "Dismissed. They come back on the list when the period ends."
+      );
+      queryClient.invalidateQueries({
+        queryKey: ["admin-analytics", "attention"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin-analytics", "pulse"] });
+    },
+    onError: (error: Error) =>
+      toast.error(`Couldn't dismiss — ${error.message}`),
   });
 }

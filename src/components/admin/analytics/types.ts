@@ -1,3 +1,5 @@
+import type { Database } from "@/types/database";
+
 // Payload shapes returned by /api/admin/analytics/* (mirroring the
 // get_analytics_* RPCs). Numerics from Postgres may arrive as strings —
 // normalize with Number() at the consumer.
@@ -212,4 +214,109 @@ export function toNum(v: number | string | null | undefined): number | null {
 export function formatWeek(weekStart: string): string {
   const d = new Date(weekStart);
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+// ---------------------------------------------------------------------------
+// Analytics v2 (2026-09-24) — shapes of the jsonb readers. Keys mirror SQL.
+// ---------------------------------------------------------------------------
+
+export interface PulseData {
+  students_total: number;
+  active_this_week: number;
+  active_pct: number;
+  at_risk: number;
+  completions_this_week: number;
+  avg_sentiment: number | null;
+  deltas: {
+    active: number;
+    completions: number;
+    sentiment: number | null;
+  };
+  what_moved: {
+    kind: "first_approval" | "phase_completed" | "sentiment_up" | "revenue";
+    text: string;
+    occurred_at: string;
+    user_id: string | null;
+  }[];
+}
+
+export interface MyJourneyData {
+  students_total: number;
+  funnel: { phase_order: number; phase_name: string; students: number }[];
+  weekly: {
+    week: number;
+    week_start: string;
+    active: number;
+    active_pct: number;
+    completions: number;
+    sentiment: number | null;
+  }[];
+  pace: {
+    week: number;
+    week_start: string;
+    median_phase: number | null;
+    points: { user_id: string; phase: number }[];
+  }[];
+  students: {
+    user_id: string;
+    name: string;
+    highest_phase: number;
+    completed: number;
+    total: number;
+    last_active: string | null;
+    mean_attempts: number | null;
+    sentiment: number | null;
+  }[];
+}
+
+export type ReviewQualityRow =
+  Database["public"]["Functions"]["get_analytics_review_quality_v1"]["Returns"][number];
+
+export interface MilestonesData {
+  meetings_weekly: {
+    week: number;
+    week_start: string;
+    meetings: number;
+    willingness_to_pay: number;
+  }[];
+  by_team: {
+    team_id: string;
+    team_name: string;
+    team_status: string;
+    meetings: number;
+    willingness_to_pay: number;
+    intent_to_try: number;
+    not_interested: number;
+    revenue_streams: number;
+    mrr: number;
+    verified_mrr: number;
+  }[];
+}
+
+export interface OutcomesBatch {
+  id: string;
+  name: string;
+  admission_date: string;
+  closed_at: string | null;
+  weeks: {
+    week: number;
+    week_start: string;
+    active_pct: number;
+    completions_cum: number;
+    completion_pct: number;
+    reports: number;
+    sentiment: number | null;
+  }[];
+  totals: {
+    students: number;
+    still_active: number;
+    meetings: number;
+    mrr: number;
+    reports: number;
+  };
+}
+
+export interface OutcomesData {
+  a: OutcomesBatch | { weeks: []; totals: Record<string, never> };
+  b: OutcomesBatch | null;
 }
