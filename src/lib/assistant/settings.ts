@@ -43,7 +43,7 @@ export function parseAssistantSettings(value: unknown): AssistantSettings {
 /** camelCase settings → the snake_case jsonb row `set_platform_setting_v1` stores. */
 export function toAssistantSettingsRow(
   s: AssistantSettings
-): Record<string, unknown> {
+): Record<string, string | number | boolean> {
   return {
     enabled: s.enabled,
     model: s.model,

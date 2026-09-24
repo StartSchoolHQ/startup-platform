@@ -30,3 +30,12 @@ describe("formatResetTime", () => {
     expect(formatResetTime(reset, "UTC")).toBe("00:00 UTC");
   });
 });
+
+describe("startOfUtcDay", () => {
+  it("returns 00:00 UTC of the given instant's day", async () => {
+    const { startOfUtcDay } = await import("@/lib/assistant/limits");
+    expect(startOfUtcDay(new Date("2026-09-24T23:59:59Z")).toISOString()).toBe(
+      "2026-09-24T00:00:00.000Z"
+    );
+  });
+});

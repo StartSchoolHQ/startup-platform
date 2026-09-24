@@ -6,7 +6,7 @@ export default defineConfig({
     globals: true,
     environment: "node",
     setupFiles: ["./tests/setup.ts"],
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.{ts,tsx}"],
     testTimeout: 30000,
     hookTimeout: 30000,
     // Run tests sequentially to avoid DB conflicts.

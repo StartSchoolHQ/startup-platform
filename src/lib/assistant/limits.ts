@@ -31,3 +31,10 @@ export function formatResetTime(
   }).format(resetsAt);
   return local === "00:00" ? utc : `${utc} (${local} your time)`;
 }
+
+/** 00:00 UTC of the given instant's day — the start of the current limit window. */
+export function startOfUtcDay(now: Date = new Date()): Date {
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  );
+}

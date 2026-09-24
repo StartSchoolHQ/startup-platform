@@ -3,6 +3,7 @@
 import { AppProvider } from "@/contexts/app-context";
 import { DashboardLayoutClient } from "../../components/dashboard-layout-client";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { StartieWidget } from "@/components/assistant/startie-widget";
 // Onborda disabled temporarily — uncomment to re-enable
 // import { OnbordaProvider, Onborda } from "onborda";
 // import { TOURS } from "@/components/onboarding/tours";
@@ -18,6 +19,7 @@ export function DashboardLayoutWrapper({
       <AppProvider>
         {/* Onborda disabled temporarily — unwrap to re-enable */}
         <DashboardLayoutClient>{children}</DashboardLayoutClient>
+        <StartieWidget />
       </AppProvider>
     </ErrorBoundary>
   );
