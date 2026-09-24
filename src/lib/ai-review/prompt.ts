@@ -4,7 +4,7 @@ import type { EvidenceBundle } from "./evidence";
 import { PERSONA_PROMPT } from "./prompt-persona";
 import type { CriteriaSnapshot } from "./types";
 
-export const PROMPT_VERSION = "2026-09-09.3";
+export const PROMPT_VERSION = "2026-09-24.1";
 
 /** Longest prior submission text carried into a recurring task's context. */
 const PREVIOUS_SUBMISSION_CHARS = 1500;
