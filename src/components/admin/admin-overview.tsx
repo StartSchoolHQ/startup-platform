@@ -10,6 +10,7 @@ import { useBatchScope, withBatch } from "@/hooks/use-batch-scope";
 import type { AdminStats } from "@/types/admin-stats";
 import { BatchScopeSelect } from "./batch-scope-select";
 import { HealthSnapshot } from "./health-snapshot";
+import { NeedsAttentionCard } from "./overview/needs-attention-card";
 import { MyJourneySection } from "./overview/my-journey-section";
 import { TeamJourneySection } from "./overview/team-journey-section";
 import { PausedCard } from "./overview/paused-card";
@@ -117,6 +118,7 @@ export function AdminOverview() {
           }}
         />
       )}
+      <NeedsAttentionCard batchId={batchId} />
       {!anyOn && <PausedCard />}
       {journeys.myJourney && <MyJourneySection stats={stats.data} />}
       {journeys.teamJourney && <TeamJourneySection stats={stats.data} />}

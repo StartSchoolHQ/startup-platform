@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import { BatchScopeSelect } from "@/components/admin/batch-scope-select";
 import { useBatchScope } from "@/hooks/use-batch-scope";
+import { ThisWeekTab } from "@/components/admin/analytics/this-week/this-week-tab";
 import { OverviewTab } from "@/components/admin/analytics/overview-tab";
 import { TeamsTab } from "@/components/admin/analytics/teams-tab";
 import { StudentsTab } from "@/components/admin/analytics/students-tab";
@@ -17,7 +18,7 @@ import { ProgramTab } from "@/components/admin/analytics/program-tab";
 export default function AdminAnalyticsPage() {
   const { user, loading } = useApp();
   const { batchId, isLoading: scopeLoading } = useBatchScope();
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState("this-week");
   // Hold every tab query until the default (open) batch is known, so the
   // first request already carries the right scope.
   const ready = !scopeLoading;
@@ -44,6 +45,7 @@ export default function AdminAnalyticsPage() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
+          <TabsTrigger value="this-week">This week</TabsTrigger>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="teams">Teams</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
@@ -51,6 +53,12 @@ export default function AdminAnalyticsPage() {
           <TabsTrigger value="meetings">Meetings</TabsTrigger>
           <TabsTrigger value="program">Program</TabsTrigger>
         </TabsList>
+        <TabsContent value="this-week">
+          <ThisWeekTab
+            active={ready && tab === "this-week"}
+            batchId={batchId}
+          />
+        </TabsContent>
         <TabsContent value="overview">
           <OverviewTab active={ready && tab === "overview"} batchId={batchId} />
         </TabsContent>
