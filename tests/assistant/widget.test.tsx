@@ -53,9 +53,9 @@ describe("StartieChat", () => {
     expect(box.placeholder).toMatch(/resets at 00:00 UTC/);
   });
 
-  it("shows unlimited for admins", () => {
+  it("tells admins they have no daily limit", () => {
     render(<StartieChat {...base} isAdmin remaining={null} />);
-    expect(screen.getByText("unlimited")).toBeTruthy();
+    expect(screen.getByText("No daily limit (admin)")).toBeTruthy();
   });
 
   it("renders assistant markdown and a flag button per reply", () => {

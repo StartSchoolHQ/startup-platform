@@ -103,7 +103,14 @@ function Counter({
   isAdmin: boolean;
 }) {
   if (isAdmin || remaining === null) {
-    return <div className="text-xs opacity-80">unlimited</div>;
+    return (
+      <div
+        className="text-xs opacity-80"
+        title="Students get 25 messages a day; admins are exempt"
+      >
+        No daily limit (admin)
+      </div>
+    );
   }
   return (
     <Tooltip>
