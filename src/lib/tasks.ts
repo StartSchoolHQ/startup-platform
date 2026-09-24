@@ -301,13 +301,14 @@ export async function createProgressIfNeeded(
   }
 }
 
-// Enhanced task starting with lazy progress creation
+// Enhanced task starting with lazy progress creation. Resolves to the
+// task_progress id so callers can open the task straight away.
 export async function startTaskLazy(
   taskId: string,
   teamId?: string,
   userId?: string,
   context: "team" | "individual" = "team"
-): Promise<void> {
+): Promise<string> {
   try {
     // First ensure progress entry exists
     // For team context: pass teamId but NOT userId (constraint requirement)
@@ -341,11 +342,12 @@ export async function startTaskLazy(
         .eq("id", progressId)
         .eq("user_id", userId);
       if (error) throw new Error("Failed to start task: " + error.message);
-      return;
+      return progressId;
     }
 
     // Now start the task using existing startTask function
     await startTask(progressId, userId || "");
+    return progressId;
   } catch (error) {
     if (error instanceof Error) throw error;
     throw new Error("Failed to start task");

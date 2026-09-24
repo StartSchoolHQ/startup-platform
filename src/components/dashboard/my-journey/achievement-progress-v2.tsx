@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Check, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -73,9 +72,11 @@ function PhaseRing({
 }
 
 /**
- * The six My Journey phases as a track, in programme order. Each phase is a
- * link into the My Journey page with that achievement preselected. The
- * first phase with unfinished tasks is the "active" one and reads darker.
+ * The six My Journey phases as a track, in programme order. Read-only: the
+ * rings used to link to the filtered task list, which on a small screen
+ * changed nothing in view, so they looked like dead clicks. Filtering is the
+ * phase cards' job. The first phase with unfinished tasks is the "active"
+ * one and reads darker.
  */
 export function AchievementProgressV2({
   achievements,
@@ -122,11 +123,8 @@ export function AchievementProgressV2({
                     style={{ marginLeft: RING_SIZE / 2 }}
                   />
                 )}
-                <Link
-                  href={`/dashboard/my-journey?achievement=${achievement.achievement_id}`}
-                  className="group focus-visible:ring-primary relative flex flex-col items-center gap-2.5 rounded-xl text-center focus-visible:ring-2 focus-visible:outline-none"
-                >
-                  <div className="bg-card rounded-full p-0.5 transition-transform group-hover:scale-105">
+                <div className="relative flex flex-col items-center gap-2.5 rounded-xl text-center">
+                  <div className="bg-card rounded-full p-0.5">
                     <PhaseRing
                       percent={percent}
                       completed={completed}
@@ -148,7 +146,7 @@ export function AchievementProgressV2({
                         : `${achievement.completed_tasks}/${achievement.total_tasks} tasks`}
                     </p>
                   </div>
-                </Link>
+                </div>
               </li>
             );
           })}

@@ -18,14 +18,15 @@ import {
   getUserTasksVisible,
 } from "@/lib/database";
 import { economyLabels } from "@/lib/economy-labels";
+import { MY_JOURNEY_TASKS_ANCHOR } from "@/lib/my-journey-anchors";
 import { isPhaseLockedError, phaseLocks } from "@/lib/my-journey-phase-lock";
 import { buildMyJourneyTasks } from "@/lib/my-journey-tasks";
 import { startTaskLazy } from "@/lib/tasks";
 import { StatsCard } from "@/types/dashboard";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trophy, Zap } from "lucide-react";
-import { redirect, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { redirect, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const labels = economyLabels("my_journey");
@@ -38,6 +39,7 @@ export default function MyJourneyPage() {
     isError: journeysError,
   } = usePlatformSettings();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const searchParams = useSearchParams();
   const achievementParam = searchParams.get("achievement");
@@ -49,6 +51,22 @@ export default function MyJourneyPage() {
     param: string | null;
     id: string | null;
   } | null>(null);
+
+  // The task list itself. A phase card click filters the list, which sits
+  // below the cards — on a small screen nothing visibly changes, so the
+  // click also scrolls the list into view. The scroll waits for the
+  // filtered list (and the filter banner above it) to render, otherwise it
+  // measures the old layout.
+  const taskListRef = useRef<HTMLDivElement>(null);
+  const [scrollRequest, setScrollRequest] = useState(0);
+  const selectAchievement = (id: string | null) => {
+    setPicked({ param: achievementParam, id });
+    if (id) setScrollRequest((n) => n + 1);
+  };
+  useEffect(() => {
+    if (scrollRequest === 0) return;
+    taskListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [scrollRequest]);
 
   const { data: availableTasksData = [], isPending: tasksPending } = useQuery({
     queryKey: ["myJourney", "availableTasks", user?.id],
@@ -171,12 +189,16 @@ export default function MyJourneyPage() {
       if (!taskId) {
         throw new Error(`No task row matches id ${rowId}`);
       }
-      await startTaskLazy(taskId, undefined, user!.id, "individual");
+      return startTaskLazy(taskId, undefined, user!.id, "individual");
     },
     retry: 0,
-    onSuccess: () => {
+    // Starting a task means working on it: open the task page (from the row
+    // and from the preview modal alike) instead of leaving the student on
+    // the list.
+    onSuccess: (progressId) => {
       queryClient.invalidateQueries({ queryKey: ["myJourney"] });
       queryClient.invalidateQueries({ queryKey: MY_JOURNEY_OVERVIEW_KEY });
+      router.push(`/dashboard/my-journey/task/${progressId}`);
     },
     onError: (error) => {
       if (isPhaseLockedError(error)) {
@@ -238,7 +260,8 @@ export default function MyJourneyPage() {
           retired Overview page. */}
       <MyJourneyOverviewCards userId={user.id} />
 
-      <section className="space-y-6">
+      {/* `id` is the target of the Continue / Next up card links above. */}
+      <section id={MY_JOURNEY_TASKS_ANCHOR} className="scroll-mt-6 space-y-6">
         {/* Data refetches on focus, reconnect and after every start/submit,
             so there is no manual refresh control here. */}
         <h2 className="text-xl font-semibold">Tasks</h2>
@@ -248,7 +271,7 @@ export default function MyJourneyPage() {
           achievements={achievements}
           loading={achievementsPending}
           selectedId={selectedAchievementId}
-          onSelect={(id) => setPicked({ param: achievementParam, id })}
+          onSelect={selectAchievement}
           emptyText="No achievements available yet"
           cardOverride={(a) => {
             const lock = locks.get(a.achievement_id);
@@ -258,24 +281,26 @@ export default function MyJourneyPage() {
           }}
         />
 
-        {tasksPending ? (
-          <PageSkeleton />
-        ) : filteredTasks.length === 0 ? (
-          <div className="text-muted-foreground py-8 text-center">
-            {selectedAchievementId
-              ? "No tasks found for this achievement"
-              : "No solo tasks assigned yet. Check back later for new challenges!"}
-          </div>
-        ) : (
-          <TasksTable
-            economy="my_journey"
-            tasks={filteredTasks}
-            // Solo tasks are always the student's own to start.
-            isTeamMember
-            currentUserId={user.id}
-            onStartTask={(rowId) => startTaskMutation.mutate(rowId)}
-          />
-        )}
+        <div ref={taskListRef} className="scroll-mt-6">
+          {tasksPending ? (
+            <PageSkeleton />
+          ) : filteredTasks.length === 0 ? (
+            <div className="text-muted-foreground py-8 text-center">
+              {selectedAchievementId
+                ? "No tasks found for this achievement"
+                : "No solo tasks assigned yet. Check back later for new challenges!"}
+            </div>
+          ) : (
+            <TasksTable
+              economy="my_journey"
+              tasks={filteredTasks}
+              // Solo tasks are always the student's own to start.
+              isTeamMember
+              currentUserId={user.id}
+              onStartTask={(rowId) => startTaskMutation.mutate(rowId)}
+            />
+          )}
+        </div>
       </section>
     </div>
   );

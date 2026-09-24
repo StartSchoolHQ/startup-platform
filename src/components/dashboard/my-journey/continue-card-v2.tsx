@@ -9,6 +9,7 @@ import {
   MyJourneyTaskStatus,
 } from "@/types/dashboard";
 import { SectionLabel } from "@/components/dashboard/my-journey/section-label";
+import { MY_JOURNEY_TASKS_HREF } from "@/lib/my-journey-anchors";
 
 // Student-facing wording. The shared StatusBadge speaks in reviewer terms
 // ("Peer Review", "Not Accepted"), which reads as a verdict here rather than
@@ -69,7 +70,7 @@ export function ContinueCardV2({
               Pick a task and it will show up here so you can jump back in.
             </p>
             <Button asChild size="sm" variant="outline">
-              <Link href="/dashboard/my-journey">Pick your first task</Link>
+              <Link href={MY_JOURNEY_TASKS_HREF}>Pick your first task</Link>
             </Button>
           </div>
         ) : (

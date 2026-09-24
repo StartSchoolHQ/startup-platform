@@ -6,6 +6,7 @@ import { economyLabels } from "@/lib/economy-labels";
 import { formatTaskCategory } from "@/lib/task-category-labels";
 import { MyJourneyNextUpTask } from "@/types/dashboard";
 import { SectionLabel } from "@/components/dashboard/my-journey/section-label";
+import { MY_JOURNEY_TASKS_HREF } from "@/lib/my-journey-anchors";
 
 const labels = economyLabels("my_journey");
 
@@ -17,7 +18,7 @@ interface NextUpCardProps {
 /**
  * The one task the student should pick up next — the focal card of the
  * row. The My Journey page has no task-preselect parameter, so the button
- * opens the list.
+ * scrolls to the task list further down the same page.
  */
 export function NextUpCardV2({ task, totalTasks }: NextUpCardProps) {
   const category = formatTaskCategory(task?.category);
@@ -62,8 +63,8 @@ export function NextUpCardV2({ task, totalTasks }: NextUpCardProps) {
                 )}
               </div>
               <Button asChild size="sm" className="group">
-                <Link href="/dashboard/my-journey">
-                  Open My Journey
+                <Link href={MY_JOURNEY_TASKS_HREF}>
+                  See tasks
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </Button>
