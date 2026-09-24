@@ -32,9 +32,10 @@ export const DISCLOSURE =
   "I'm an AI. I can explain the platform, your progress, and think through tasks with you. I won't write your submissions. Admins can read these chats.";
 
 /**
- * The transcript. shadcn's MessageScroller owns the scroll behaviour: it
- * anchors each new student turn near the top, follows streamed replies at
- * the live edge, and offers a jump-to-end button once the reader scrolls up.
+ * The transcript. shadcn's MessageScroller owns the scroll behaviour. In a
+ * 640px popup we deliberately do NOT anchor new turns to the top (that pushed
+ * the reply below the fold): the view stays glued to the bottom while a reply
+ * streams, and a jump-to-end button appears once the reader scrolls up.
  */
 export function StartieMessages({ messages, onFlag }: Props) {
   return (
@@ -51,11 +52,7 @@ export function StartieMessages({ messages, onFlag }: Props) {
               </Marker>
             </MessageScrollerItem>
             {messages.map((m) => (
-              <MessageScrollerItem
-                key={m.id}
-                messageId={m.id}
-                scrollAnchor={m.role === "user"}
-              >
+              <MessageScrollerItem key={m.id} messageId={m.id}>
                 <Turn message={m} onFlag={onFlag} />
               </MessageScrollerItem>
             ))}
