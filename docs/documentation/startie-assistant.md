@@ -30,7 +30,7 @@ There are no tools and no RAG. The model sees a **static prefix** (persona + stu
 | Widget | `src/components/assistant/*`, `src/hooks/use-startie-chat.ts`, `use-startie-threads.ts`, mounted in `src/app/dashboard/dashboard-layout-wrapper.tsx` |
 | Admin | Inbox → Startie tab: `src/components/admin/inbox/startie-{stats-strip,threads-table,thread-sheet}.tsx` |
 | Pricing | `src/lib/ai/pricing.ts` (shared with the AI reviewer) |
-| Migration | `supabase/migrations/20260924120000_startie_assistant_v1.sql` |
+| Migration | `supabase/migrations/20260924090501_startie_assistant_v1.sql` |
 | Tests | `tests/assistant/*` |
 
 ## Database

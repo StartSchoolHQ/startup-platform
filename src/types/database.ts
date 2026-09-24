@@ -2303,6 +2303,33 @@ export type Database = {
         Args: { p_week_number?: number; p_week_year?: number };
         Returns: Json;
       };
+      get_admin_activity_v1: {
+        Args: {
+          p_from?: string;
+          p_kinds?: string[];
+          p_limit?: number;
+          p_offset?: number;
+          p_to?: string;
+          p_user_id?: string;
+        };
+        Returns: {
+          actor_name: string;
+          actor_user_id: string;
+          amount_points: number;
+          amount_xp: number;
+          detail: string;
+          extra: Json;
+          id: string;
+          kind: string;
+          object_title: string;
+          occurred_at: string;
+          ref_id: string;
+          status: string;
+          subject_name: string;
+          subject_user_id: string;
+          team_name: string;
+        }[];
+      };
       get_admin_program_health: {
         Args: never;
         Returns: {
