@@ -468,3 +468,16 @@ export const FounderCardSchema = z.object({
 });
 
 export type FounderCardInput = z.infer<typeof FounderCardSchema>;
+
+// ---------------------------------------------------------------------------
+// Startie assistant — POST /api/assistant/chat
+// ---------------------------------------------------------------------------
+export const AssistantChatSchema = z.object({
+  threadId: z.string().uuid().optional(),
+  content: z.string().trim().min(1).max(2000),
+  pageContext: z.object({
+    route: z.string().max(200),
+    taskId: z.string().uuid().optional(),
+  }),
+});
+export type AssistantChatData = z.infer<typeof AssistantChatSchema>;
