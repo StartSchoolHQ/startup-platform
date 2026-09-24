@@ -8,6 +8,7 @@ import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import { BatchScopeSelect } from "@/components/admin/batch-scope-select";
 import { useBatchScope } from "@/hooks/use-batch-scope";
 import { ThisWeekTab } from "@/components/admin/analytics/this-week/this-week-tab";
+import { MyJourneyTab } from "@/components/admin/analytics/my-journey/my-journey-tab";
 import { OverviewTab } from "@/components/admin/analytics/overview-tab";
 import { TeamsTab } from "@/components/admin/analytics/teams-tab";
 import { StudentsTab } from "@/components/admin/analytics/students-tab";
@@ -46,6 +47,7 @@ export default function AdminAnalyticsPage() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="this-week">This week</TabsTrigger>
+          <TabsTrigger value="my-journey">My Journey</TabsTrigger>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="teams">Teams</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
@@ -56,6 +58,12 @@ export default function AdminAnalyticsPage() {
         <TabsContent value="this-week">
           <ThisWeekTab
             active={ready && tab === "this-week"}
+            batchId={batchId}
+          />
+        </TabsContent>
+        <TabsContent value="my-journey">
+          <MyJourneyTab
+            active={ready && tab === "my-journey"}
             batchId={batchId}
           />
         </TabsContent>
