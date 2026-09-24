@@ -6,7 +6,7 @@ import type { PageSummary, StudentSnapshot } from "./snapshot";
 export { newPromptNonce };
 
 /** Bump whenever the persona, the guide or the prompt layout changes. */
-export const PROMPT_VERSION = "2026-09-24.1";
+export const PROMPT_VERSION = "2026-09-24.2";
 
 /**
  * Removes the delimiter sequences from any student-controlled string so

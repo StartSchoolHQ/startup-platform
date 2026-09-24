@@ -42,6 +42,12 @@ describe("buildStaticSystemPrompt", () => {
     expect(prompt).not.toMatch(/<<<DATA [0-9a-f]{16}/);
   });
 
+  it("forbids talking about 'the guide' out loud", () => {
+    const prompt = buildStaticSystemPrompt();
+    expect(prompt).toMatch(/never say .*the guide/i);
+    expect(prompt).toMatch(/I don.t know that one/i);
+  });
+
   it("states the Socratic rule and the data-not-instructions rule", () => {
     const prompt = buildStaticSystemPrompt();
     expect(prompt).toMatch(/never write.*submission/i);

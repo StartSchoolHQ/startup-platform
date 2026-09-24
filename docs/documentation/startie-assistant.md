@@ -51,7 +51,7 @@ RPCs (all SECURITY DEFINER, EXECUTE authenticated + service_role, anon revoked):
 ## Editing Startie
 
 - **Voice / rules:** `src/lib/assistant/persona.ts`.
-- **Platform facts:** `src/lib/assistant/guide.ts` (~850 words, student-facing). Update it when a rule changes (phase gate, cooldowns, weekly report, limits).
+- **Platform facts:** `src/lib/assistant/guide.ts` (~1,550 words, student-facing, page by page). Update it when a rule changes (phase gate, cooldowns, weekly report, limits).
 - After either change, bump `PROMPT_VERSION` in `src/lib/assistant/prompt.ts` so the cache key rotates and transcripts record which prompt produced a reply.
 - Runtime knobs live in Admin → Settings → Startie assistant (no deploy): enabled, model (`gpt-5.4-mini` default), daily limit, history turns, reasoning effort.
 
