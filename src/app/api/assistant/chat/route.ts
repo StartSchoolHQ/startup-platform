@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
         model: final.model,
         input_tokens: final.usage.input,
         cached_tokens: final.usage.cached,
+        cache_write_tokens: final.usage.cacheWrite ?? 0,
         output_tokens: final.usage.output,
         cost_usd: estimateCostUsd(settings.model, final.usage),
         prompt_version: PROMPT_VERSION,

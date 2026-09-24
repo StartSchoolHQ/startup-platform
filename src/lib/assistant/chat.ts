@@ -52,7 +52,7 @@ export async function* streamStartieReply(
   });
 
   let text = "";
-  let usage: TokenUsage = { input: 0, cached: 0, output: 0 };
+  let usage: TokenUsage = { input: 0, cached: 0, cacheWrite: 0, output: 0 };
   let model = args.model;
 
   for await (const event of stream as AsyncIterable<OpenAI.Responses.ResponseStreamEvent>) {
@@ -64,6 +64,9 @@ export async function* streamStartieReply(
       usage = {
         input: u?.input_tokens ?? 0,
         cached: u?.input_tokens_details?.cached_tokens ?? 0,
+        // Diagnostic: zero writes AND zero reads means the request never
+        // qualified for caching on this model (prefix under its minimum).
+        cacheWrite: u?.input_tokens_details?.cache_write_tokens ?? 0,
         output: u?.output_tokens ?? 0,
       };
       model = event.response.model ?? args.model;

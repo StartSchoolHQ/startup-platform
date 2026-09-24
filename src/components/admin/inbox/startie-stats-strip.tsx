@@ -9,6 +9,7 @@ interface Stats {
   messages_today: number;
   cost_month_usd: number;
   cache_hit_rate: number | null;
+  cache_write_tokens: number | null;
   avg_output_tokens: number | null;
   threads_total: number;
   flagged_total: number;
@@ -52,6 +53,13 @@ export function StartieStatsStrip() {
               : `${Math.round(Number(data.cache_hit_rate) * 100)}%`,
         },
         {
+          label: "Cache writes (tokens)",
+          value:
+            data.cache_write_tokens === null
+              ? "—"
+              : Number(data.cache_write_tokens).toLocaleString("en-GB"),
+        },
+        {
           label: "Avg reply tokens",
           value:
             data.avg_output_tokens === null
@@ -62,9 +70,9 @@ export function StartieStatsStrip() {
     : [];
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       {isLoading
-        ? Array.from({ length: 4 }).map((_, i) => (
+        ? Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-xl" />
           ))
         : tiles.map((t) => (

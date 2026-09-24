@@ -221,6 +221,7 @@ export type Database = {
       };
       assistant_messages: {
         Row: {
+          cache_write_tokens: number | null;
           cached_tokens: number | null;
           content: string;
           cost_usd: number | null;
@@ -236,6 +237,7 @@ export type Database = {
           user_id: string;
         };
         Insert: {
+          cache_write_tokens?: number | null;
           cached_tokens?: number | null;
           content: string;
           cost_usd?: number | null;
@@ -251,6 +253,7 @@ export type Database = {
           user_id: string;
         };
         Update: {
+          cache_write_tokens?: number | null;
           cached_tokens?: number | null;
           content?: string;
           cost_usd?: number | null;

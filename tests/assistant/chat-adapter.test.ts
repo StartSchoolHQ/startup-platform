@@ -10,7 +10,10 @@ type Event =
         model: string;
         usage: {
           input_tokens: number;
-          input_tokens_details: { cached_tokens: number };
+          input_tokens_details: {
+            cached_tokens: number;
+            cache_write_tokens?: number;
+          };
           output_tokens: number;
         };
       };
@@ -48,7 +51,7 @@ const completed: Event = {
     model: "gpt-5.4-mini-2026-08-01",
     usage: {
       input_tokens: 100,
-      input_tokens_details: { cached_tokens: 70 },
+      input_tokens_details: { cached_tokens: 70, cache_write_tokens: 1920 },
       output_tokens: 5,
     },
   },
@@ -82,7 +85,7 @@ describe("streamStartieReply", () => {
     expect(chunks).toEqual(["Hi", " there"]);
     expect(returned).toEqual({
       text: "Hi there",
-      usage: { input: 100, cached: 70, output: 5 },
+      usage: { input: 100, cached: 70, cacheWrite: 1920, output: 5 },
       model: "gpt-5.4-mini-2026-08-01",
     });
     const body = calls[0] as Record<string, unknown>;
@@ -135,7 +138,7 @@ describe("streamStartieReply", () => {
     const { returned } = await drain(gen);
     expect(returned).toEqual({
       text: "ok",
-      usage: { input: 0, cached: 0, output: 0 },
+      usage: { input: 0, cached: 0, cacheWrite: 0, output: 0 },
       model: "gpt-5.4-mini",
     });
   });

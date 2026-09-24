@@ -95,7 +95,7 @@ function Turn({
     : [
         message.model ?? "no model",
         message.input_tokens !== null
-          ? `${message.input_tokens} in (${message.cached_tokens ?? 0} cached)`
+          ? `${message.input_tokens} in (${message.cached_tokens ?? 0} cached, ${message.cache_write_tokens ?? 0} written)`
           : null,
         message.output_tokens !== null ? `${message.output_tokens} out` : null,
         message.cost_usd !== null

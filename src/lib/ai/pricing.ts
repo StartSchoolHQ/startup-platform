@@ -7,6 +7,8 @@ export interface TokenUsage {
   input: number;
   /** Subset of `input` that hit the prompt cache (never on top of it). */
   cached: number;
+  /** Tokens OpenAI wrote to the cache on this call (diagnostic; not billed extra). */
+  cacheWrite?: number;
   output: number;
 }
 
