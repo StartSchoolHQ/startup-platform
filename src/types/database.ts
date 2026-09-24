@@ -177,6 +177,111 @@ export type Database = {
           },
         ];
       };
+      assistant_messages: {
+        Row: {
+          cached_tokens: number | null;
+          content: string;
+          cost_usd: number | null;
+          created_at: string;
+          flagged_message_id: string | null;
+          id: string;
+          input_tokens: number | null;
+          model: string | null;
+          output_tokens: number | null;
+          prompt_version: string | null;
+          role: string;
+          thread_id: string;
+          user_id: string;
+        };
+        Insert: {
+          cached_tokens?: number | null;
+          content: string;
+          cost_usd?: number | null;
+          created_at?: string;
+          flagged_message_id?: string | null;
+          id?: string;
+          input_tokens?: number | null;
+          model?: string | null;
+          output_tokens?: number | null;
+          prompt_version?: string | null;
+          role: string;
+          thread_id: string;
+          user_id: string;
+        };
+        Update: {
+          cached_tokens?: number | null;
+          content?: string;
+          cost_usd?: number | null;
+          created_at?: string;
+          flagged_message_id?: string | null;
+          id?: string;
+          input_tokens?: number | null;
+          model?: string | null;
+          output_tokens?: number | null;
+          prompt_version?: string | null;
+          role?: string;
+          thread_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assistant_messages_flagged_message_id_fkey";
+            columns: ["flagged_message_id"];
+            isOneToOne: false;
+            referencedRelation: "assistant_messages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assistant_messages_thread_id_fkey";
+            columns: ["thread_id"];
+            isOneToOne: false;
+            referencedRelation: "assistant_threads";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assistant_messages_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      assistant_threads: {
+        Row: {
+          created_at: string;
+          id: string;
+          page_context: Json;
+          title: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          page_context?: Json;
+          title: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          page_context?: Json;
+          title?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assistant_threads_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       audit_log: {
         Row: {
           action: string;
@@ -1985,6 +2090,14 @@ export type Database = {
         };
         Returns: Json;
       };
+      assistant_flag_message_v1: {
+        Args: { p_message_id: string };
+        Returns: undefined;
+      };
+      assistant_send_message_v1: {
+        Args: { p_content: string; p_page_context: Json; p_thread_id: string };
+        Returns: Json;
+      };
       award_team_achievement: {
         Args: { p_achievement_id: string; p_team_id: string };
         Returns: Json;
@@ -2497,6 +2610,27 @@ export type Database = {
           team_name: string;
           user_id: string;
           user_name: string;
+        }[];
+      };
+      get_assistant_admin_stats_v1: { Args: never; Returns: Json };
+      get_assistant_admin_threads_v1: {
+        Args: {
+          p_flagged_only?: boolean;
+          p_limit?: number;
+          p_offset?: number;
+          p_user_id?: string;
+        };
+        Returns: {
+          cost_usd: number;
+          created_at: string;
+          flagged_count: number;
+          id: string;
+          message_count: number;
+          student_avatar: string;
+          student_name: string;
+          title: string;
+          updated_at: string;
+          user_id: string;
         }[];
       };
       get_audit_logs: {
