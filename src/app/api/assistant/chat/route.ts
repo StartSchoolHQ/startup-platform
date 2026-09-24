@@ -68,6 +68,10 @@ export async function POST(request: NextRequest) {
     }
     const { threadId, content, pageContext } = parsed.data;
 
+    // Build the model client before consuming one of the student's messages:
+    // a missing OPENAI_API_KEY must fail here, not after the RPC counted it.
+    const openai = getOpenAI().withOptions({ timeout: 45_000, maxRetries: 0 });
+
     const rpc = await supabase.rpc("assistant_send_message_v1", {
       // Generated types mark uuid args non-null; the SQL accepts null (= new thread).
       p_thread_id: (threadId ?? null) as unknown as string,
@@ -107,7 +111,7 @@ export async function POST(request: NextRequest) {
     }));
 
     const reply = streamStartieReply({
-      openai: getOpenAI().withOptions({ timeout: 45_000, maxRetries: 0 }),
+      openai,
       model: settings.model,
       effort: settings.reasoningEffort,
       system: buildStaticSystemPrompt(),
