@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useApp } from "@/contexts/app-context";
 import { useAssistantSettings } from "@/hooks/use-assistant-settings";
@@ -44,9 +44,11 @@ function StartieWidgetInner({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(false);
-
-  const onReplyDone = useCallback(() => {
-    setUnread((prev) => prev || !open);
+  // Read through a ref so the reply-finished effect sees the live value even
+  // when the panel was closed after the send started.
+  const openRef = useRef(open);
+  useEffect(() => {
+    openRef.current = open;
   }, [open]);
 
   const chat = useStartieChat({
@@ -54,7 +56,9 @@ function StartieWidgetInner({
     isAdmin,
     dailyLimit: settings.dailyLimit,
     pathname,
-    onReplyDone,
+    onReplyDone: () => {
+      if (!openRef.current) setUnread(true);
+    },
   });
 
   const openPanel = () => {

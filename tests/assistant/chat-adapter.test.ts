@@ -140,3 +140,50 @@ describe("streamStartieReply", () => {
     });
   });
 });
+
+describe("streamStartieReply failure events", () => {
+  const args = {
+    model: "gpt-5.4-mini",
+    effort: "low" as const,
+    system: "S",
+    context: "C",
+    history: [],
+    promptCacheKey: "k",
+  };
+
+  it("throws on response.failed", async () => {
+    const { client } = fakeOpenAI([
+      { type: "response.output_text.delta", delta: "Hi" },
+      {
+        type: "response.failed",
+        response: { error: { message: "overloaded" } },
+      } as unknown as Event,
+    ]);
+    const gen = streamStartieReply({ ...args, openai: client });
+    expect((await gen.next()).value).toBe("Hi");
+    await expect(gen.next()).rejects.toThrow(/overloaded/);
+  });
+
+  it("throws on a stream error event", async () => {
+    const { client } = fakeOpenAI([
+      {
+        type: "error",
+        message: "bad gateway",
+        code: "502",
+      } as unknown as Event,
+    ]);
+    const gen = streamStartieReply({ ...args, openai: client });
+    await expect(gen.next()).rejects.toThrow(/bad gateway/);
+  });
+
+  it("throws on response.incomplete", async () => {
+    const { client } = fakeOpenAI([
+      {
+        type: "response.incomplete",
+        response: { incomplete_details: { reason: "max_output_tokens" } },
+      } as unknown as Event,
+    ]);
+    const gen = streamStartieReply({ ...args, openai: client });
+    await expect(gen.next()).rejects.toThrow(/max_output_tokens/);
+  });
+});

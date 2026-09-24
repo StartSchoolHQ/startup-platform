@@ -29,8 +29,9 @@ export interface StreamArgs {
 /**
  * Streams one Startie reply through the Responses API. Yields text deltas as
  * they arrive and returns the full text plus token usage when the stream
- * completes. A mid-stream failure is rethrown so the caller can record what
- * already streamed.
+ * completes. A mid-stream failure — thrown by the SDK or reported as a
+ * `response.failed` / `response.incomplete` / `error` event — is rethrown so
+ * the caller can record what already streamed.
  */
 export async function* streamStartieReply(
   args: StreamArgs
@@ -66,6 +67,18 @@ export async function* streamStartieReply(
         output: u?.output_tokens ?? 0,
       };
       model = event.response.model ?? args.model;
+    } else if (event.type === "response.failed") {
+      throw new Error(
+        `model failed: ${event.response.error?.message ?? "unknown"}`
+      );
+    } else if (event.type === "response.incomplete") {
+      throw new Error(
+        `model response incomplete: ${event.response.incomplete_details?.reason ?? "unknown"}`
+      );
+    } else if (event.type === "error") {
+      throw new Error(
+        `stream error: ${event.message ?? event.code ?? "unknown"}`
+      );
     }
   }
 

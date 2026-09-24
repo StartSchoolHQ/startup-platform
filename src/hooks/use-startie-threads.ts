@@ -40,25 +40,29 @@ export function useStartieThreads(userId: string | undefined) {
 }
 
 /** Persisted user/assistant turns of one thread, oldest first. */
+export async function fetchThreadMessages(
+  threadId: string
+): Promise<ChatMessage[]> {
+  const { data, error } = await createClient()
+    .from("assistant_messages")
+    .select("id, role, content")
+    .eq("thread_id", threadId)
+    .in("role", ["user", "assistant"])
+    .order("created_at", { ascending: true });
+  if (error) throw new Error(error.message);
+  return data.map((m) => ({
+    id: m.id,
+    role: m.role === "assistant" ? "assistant" : "user",
+    content: m.content,
+  }));
+}
+
 export function useStartieMessages(threadId: string | null) {
   return useQuery({
     queryKey: threadKey(threadId ?? ""),
     enabled: !!threadId,
     staleTime: 60 * 1000,
-    queryFn: async (): Promise<ChatMessage[]> => {
-      const { data, error } = await createClient()
-        .from("assistant_messages")
-        .select("id, role, content")
-        .eq("thread_id", threadId!)
-        .in("role", ["user", "assistant"])
-        .order("created_at", { ascending: true });
-      if (error) throw new Error(error.message);
-      return data.map((m) => ({
-        id: m.id,
-        role: m.role === "assistant" ? "assistant" : "user",
-        content: m.content,
-      }));
-    },
+    queryFn: () => fetchThreadMessages(threadId!),
   });
 }
 

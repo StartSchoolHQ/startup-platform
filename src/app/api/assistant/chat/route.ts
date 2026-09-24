@@ -5,7 +5,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { AssistantChatSchema } from "@/lib/validation-schemas";
 import { getOpenAI } from "@/lib/ai-review/openai-client";
 import { estimateCostUsd } from "@/lib/ai/pricing";
-import { streamStartieReply, type HistoryTurn } from "@/lib/assistant/chat";
+import {
+  streamStartieReply,
+  type HistoryTurn,
+  type StreamResult,
+} from "@/lib/assistant/chat";
 import { mapAssistantRpcError } from "@/lib/assistant/errors";
 import { nextUtcMidnight } from "@/lib/assistant/limits";
 import {
@@ -28,10 +32,22 @@ interface SendResult {
   remaining_today: number | null;
 }
 
+function replyHeaders(sent: SendResult): HeadersInit {
+  return {
+    "Content-Type": "text/plain; charset=utf-8",
+    "Cache-Control": "no-store",
+    "X-Startie-Thread-Id": sent.thread_id,
+    "X-Startie-Remaining":
+      sent.remaining_today === null ? "" : String(sent.remaining_today),
+  };
+}
+
 /**
  * One student message in, one streamed Startie reply out. The daily limit is
- * enforced by `assistant_send_message_v1` (student session); the reply row
- * is written with the service role once the stream ends.
+ * enforced by `assistant_send_message_v1` (student session). Once that RPC
+ * has counted the message, every path — success, model failure, snapshot
+ * failure, client disconnect — records an assistant row so the transcript
+ * and the cost ledger stay complete.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -90,96 +106,125 @@ export async function POST(request: NextRequest) {
       );
     }
     const sent = rpc.data as unknown as SendResult;
-
-    const [snapshot, page, historyRes] = await Promise.all([
-      loadStudentSnapshot(supabase, user.id),
-      loadPageSummary(supabase, pageContext),
-      supabase
-        .from("assistant_messages")
-        .select("role, content")
-        .eq("thread_id", sent.thread_id)
-        .in("role", ["user", "assistant"])
-        .order("created_at", { ascending: false })
-        .limit(settings.historyTurns * 2),
-    ]);
-    if (historyRes.error) {
-      throw new Error(`history: ${historyRes.error.message}`);
-    }
-    const history: HistoryTurn[] = [...historyRes.data].reverse().map((m) => ({
-      role: m.role === "assistant" ? "assistant" : "user",
-      content: m.content,
-    }));
-
-    const reply = streamStartieReply({
-      openai,
-      model: settings.model,
-      effort: settings.reasoningEffort,
-      system: buildStaticSystemPrompt(),
-      context: buildContextMessage(snapshot, page, newPromptNonce()),
-      history,
-      promptCacheKey: `startie:${PROMPT_VERSION}`,
-    });
-
     const admin = createAdminClient();
+
+    const recordReply = async (final: StreamResult) => {
+      const { error } = await admin.from("assistant_messages").insert({
+        thread_id: sent.thread_id,
+        user_id: user.id,
+        role: "assistant",
+        content: final.text,
+        model: final.model,
+        input_tokens: final.usage.input,
+        cached_tokens: final.usage.cached,
+        output_tokens: final.usage.output,
+        cost_usd: estimateCostUsd(settings.model, final.usage),
+        prompt_version: PROMPT_VERSION,
+      });
+      if (error) throw new Error(`reply insert: ${error.message}`);
+    };
+
+    const recordApology = async (streamed: string, cause: unknown) => {
+      console.error("[assistant] reply failed", cause);
+      Sentry.captureException(cause);
+      const text = `${streamed}${streamed ? "\n\n" : ""}_${APOLOGY}_`;
+      const { error } = await admin.from("assistant_messages").insert({
+        thread_id: sent.thread_id,
+        user_id: user.id,
+        role: "assistant",
+        content: text,
+        model: null,
+        cost_usd: 0,
+        prompt_version: PROMPT_VERSION,
+      });
+      if (error) console.error("[assistant] apology insert", error);
+      return text;
+    };
+
+    // The message is counted from here on: never answer without an assistant
+    // row and the thread id, whatever fails.
+    let reply: AsyncGenerator<string, StreamResult>;
+    try {
+      const [snapshot, page, historyRes] = await Promise.all([
+        loadStudentSnapshot(supabase, user.id),
+        loadPageSummary(supabase, pageContext),
+        supabase
+          .from("assistant_messages")
+          .select("role, content")
+          .eq("thread_id", sent.thread_id)
+          .in("role", ["user", "assistant"])
+          .order("created_at", { ascending: false })
+          .limit(settings.historyTurns * 2),
+      ]);
+      if (historyRes.error) {
+        throw new Error(`history: ${historyRes.error.message}`);
+      }
+      const history: HistoryTurn[] = [...historyRes.data]
+        .reverse()
+        .map((m) => ({
+          role: m.role === "assistant" ? "assistant" : "user",
+          content: m.content,
+        }));
+      reply = streamStartieReply({
+        openai,
+        model: settings.model,
+        effort: settings.reasoningEffort,
+        system: buildStaticSystemPrompt(),
+        context: buildContextMessage(snapshot, page, newPromptNonce()),
+        history,
+        promptCacheKey: `startie:${PROMPT_VERSION}`,
+      });
+    } catch (e) {
+      const text = await recordApology("", e);
+      return new Response(text, { headers: replyHeaders(sent) });
+    }
+
     const encoder = new TextEncoder();
+    let cancelled = false;
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
+        const safeEnqueue = (chunk: string) => {
+          if (cancelled || !chunk) return;
+          try {
+            controller.enqueue(encoder.encode(chunk));
+          } catch {
+            cancelled = true;
+          }
+        };
         let streamed = "";
         try {
+          // Keep draining even if the client left, so the reply and its cost
+          // are recorded and the student finds it when they reopen the thread.
           let next = await reply.next();
           while (!next.done) {
             streamed += next.value;
-            controller.enqueue(encoder.encode(next.value));
+            safeEnqueue(next.value);
             next = await reply.next();
           }
           const final = next.value;
-          const { error } = await admin.from("assistant_messages").insert({
-            thread_id: sent.thread_id,
-            user_id: user.id,
-            role: "assistant",
-            content: final.text,
-            model: final.model,
-            input_tokens: final.usage.input,
-            cached_tokens: final.usage.cached,
-            output_tokens: final.usage.output,
-            cost_usd: estimateCostUsd(settings.model, final.usage),
-            prompt_version: PROMPT_VERSION,
-          });
-          if (error) throw new Error(`reply insert: ${error.message}`);
+          if (!final.text.trim()) {
+            throw new Error("model returned an empty reply");
+          }
+          await recordReply(final);
         } catch (e) {
-          console.error("[assistant] reply failed", e);
-          Sentry.captureException(e);
-          const tail = `${streamed ? "\n\n" : ""}_${APOLOGY}_`;
-          controller.enqueue(encoder.encode(tail));
-          await admin
-            .from("assistant_messages")
-            .insert({
-              thread_id: sent.thread_id,
-              user_id: user.id,
-              role: "assistant",
-              content: `${streamed}${tail}`.trim(),
-              model: null,
-              cost_usd: 0,
-              prompt_version: PROMPT_VERSION,
-            })
-            .then(({ error }) => {
-              if (error) console.error("[assistant] apology insert", error);
-            });
+          const text = await recordApology(streamed, e);
+          safeEnqueue(text.slice(streamed.length));
         } finally {
-          controller.close();
+          if (!cancelled) {
+            try {
+              controller.close();
+            } catch {
+              // Already closed by the runtime.
+            }
+          }
         }
+      },
+      cancel() {
+        cancelled = true;
       },
     });
 
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-store",
-        "X-Startie-Thread-Id": sent.thread_id,
-        "X-Startie-Remaining":
-          sent.remaining_today === null ? "" : String(sent.remaining_today),
-      },
-    });
+    return new Response(stream, { headers: replyHeaders(sent) });
   } catch (error) {
     console.error("[assistant] chat route", error);
     Sentry.captureException(error);

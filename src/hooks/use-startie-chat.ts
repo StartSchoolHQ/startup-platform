@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getPageContext } from "@/lib/assistant/page-context";
 import type { ChatMessage } from "@/types/assistant";
 import {
+  fetchThreadMessages,
   remainingKey,
   threadKey,
   threadsKey,
@@ -20,7 +21,7 @@ interface Options {
   isAdmin: boolean;
   dailyLimit: number;
   pathname: string;
-  /** Called when a reply finishes streaming (used for the unread dot). */
+  /** Fires when a reply has fully streamed in (widget unread dot). */
   onReplyDone?: () => void;
 }
 
@@ -97,11 +98,18 @@ export function useStartieChat(opts: Options) {
       }
 
       if (newThreadId) {
-        setThreadId(newThreadId);
-        await queryClient.invalidateQueries({
+        // Fill the cache for this thread BEFORE switching to it, so the
+        // persisted turns are already there when the optimistic bubbles go
+        // and the disclosure line never flashes between the two.
+        await queryClient.fetchQuery({
           queryKey: threadKey(newThreadId),
+          queryFn: () => fetchThreadMessages(newThreadId),
+          staleTime: 0,
         });
+        setThreadId(newThreadId);
       }
+      setPending([]);
+      opts.onReplyDone?.();
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: threadsKey(opts.userId) }),
         queryClient.invalidateQueries({
@@ -109,8 +117,6 @@ export function useStartieChat(opts: Options) {
         }),
       ]);
       setRemainingOverride(null);
-      setPending([]);
-      opts.onReplyDone?.();
     },
     onError: (error: Error) => {
       setPending([]);

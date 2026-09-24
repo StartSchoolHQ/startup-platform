@@ -63,10 +63,10 @@ function Bubble({
       >
         {isUser ? (
           message.content
-        ) : message.content ? (
-          <TaskMarkdown>{message.content}</TaskMarkdown>
-        ) : (
+        ) : message.pending && !message.content ? (
           <span className="text-muted-foreground animate-pulse">…</span>
+        ) : (
+          <TaskMarkdown>{message.content || "_(empty reply)_"}</TaskMarkdown>
         )}
         {!isUser && persisted && (
           <div className="mt-1 flex justify-end">
