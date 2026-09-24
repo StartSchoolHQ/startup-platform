@@ -9,13 +9,14 @@ import { BatchScopeSelect } from "@/components/admin/batch-scope-select";
 import { useBatchScope } from "@/hooks/use-batch-scope";
 import { ThisWeekTab } from "@/components/admin/analytics/this-week/this-week-tab";
 import { MyJourneyTab } from "@/components/admin/analytics/my-journey/my-journey-tab";
-import { OverviewTab } from "@/components/admin/analytics/overview-tab";
-import { TeamsTab } from "@/components/admin/analytics/teams-tab";
-import { StudentsTab } from "@/components/admin/analytics/students-tab";
-import { TasksTab } from "@/components/admin/analytics/tasks-tab";
-import { MeetingsTab } from "@/components/admin/analytics/meetings-tab";
-import { ProgramTab } from "@/components/admin/analytics/program-tab";
+import { TeamJourneyTab } from "@/components/admin/analytics/team-journey/team-journey-tab";
+import { CurriculumTab } from "@/components/admin/analytics/curriculum/curriculum-tab";
+import { OutcomesTab } from "@/components/admin/analytics/outcomes/outcomes-tab";
 
+/**
+ * Five journey-aware tabs. "This week" is the landing view: who needs
+ * attention and what moved. The batch selector scopes every tab.
+ */
 export default function AdminAnalyticsPage() {
   const { user, loading } = useApp();
   const { batchId, isLoading: scopeLoading } = useBatchScope();
@@ -38,7 +39,8 @@ export default function AdminAnalyticsPage() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Analytics</h2>
           <p className="text-muted-foreground text-sm">
-            How students and teams have felt over time, why, and what got done.
+            Who needs attention this week, how the cohort is progressing, and
+            which tasks need work.
           </p>
         </div>
         <BatchScopeSelect />
@@ -48,12 +50,9 @@ export default function AdminAnalyticsPage() {
         <TabsList>
           <TabsTrigger value="this-week">This week</TabsTrigger>
           <TabsTrigger value="my-journey">My Journey</TabsTrigger>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="teams">Teams</TabsTrigger>
-          <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="tasks">Tasks</TabsTrigger>
-          <TabsTrigger value="meetings">Meetings</TabsTrigger>
-          <TabsTrigger value="program">Program</TabsTrigger>
+          <TabsTrigger value="team-journey">Team Journey</TabsTrigger>
+          <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
+          <TabsTrigger value="outcomes">Outcomes</TabsTrigger>
         </TabsList>
         <TabsContent value="this-week">
           <ThisWeekTab
@@ -67,23 +66,20 @@ export default function AdminAnalyticsPage() {
             batchId={batchId}
           />
         </TabsContent>
-        <TabsContent value="overview">
-          <OverviewTab active={ready && tab === "overview"} batchId={batchId} />
+        <TabsContent value="team-journey">
+          <TeamJourneyTab
+            active={ready && tab === "team-journey"}
+            batchId={batchId}
+          />
         </TabsContent>
-        <TabsContent value="teams">
-          <TeamsTab active={ready && tab === "teams"} batchId={batchId} />
+        <TabsContent value="curriculum">
+          <CurriculumTab
+            active={ready && tab === "curriculum"}
+            batchId={batchId}
+          />
         </TabsContent>
-        <TabsContent value="students">
-          <StudentsTab active={ready && tab === "students"} batchId={batchId} />
-        </TabsContent>
-        <TabsContent value="tasks">
-          <TasksTab active={ready && tab === "tasks"} batchId={batchId} />
-        </TabsContent>
-        <TabsContent value="meetings">
-          <MeetingsTab active={ready && tab === "meetings"} batchId={batchId} />
-        </TabsContent>
-        <TabsContent value="program">
-          <ProgramTab active={ready && tab === "program"} batchId={batchId} />
+        <TabsContent value="outcomes">
+          <OutcomesTab active={ready && tab === "outcomes"} batchId={batchId} />
         </TabsContent>
       </Tabs>
     </div>
