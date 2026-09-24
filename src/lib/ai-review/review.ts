@@ -1,4 +1,5 @@
 import type { EvidenceBundle } from "./evidence";
+import { estimateCostUsd } from "@/lib/ai/pricing";
 import { getOpenAI } from "./openai-client";
 import {
   buildSystemPrompt,
@@ -22,19 +23,14 @@ export interface ModelReview {
   promptVersion: string;
 }
 
-/** USD per 1M tokens; update when pricing changes (verified 2026-09-09). */
-const PRICING: Record<string, { input: number; output: number }> = {
-  "gpt-5.4": { input: 2.5, output: 15 },
-  "gpt-5.4-mini": { input: 0.75, output: 4.5 },
-};
-
+/** Kept for callers/tests; delegates to the shared pricing table. */
 export function estimateCost(
   model: string,
   input: number,
-  output: number
+  output: number,
+  cached = 0
 ): number {
-  const p = PRICING[model] ?? PRICING["gpt-5.4"];
-  return Number(((input * p.input + output * p.output) / 1_000_000).toFixed(5));
+  return estimateCostUsd(model, { input, cached, output });
 }
 
 /** A second model call needs this much of the worker budget left to be safe. */
@@ -87,11 +83,12 @@ export async function reviewWithModel(
       const result = parseReviewResult(response.output_text);
       const input = response.usage?.input_tokens ?? 0;
       const output = response.usage?.output_tokens ?? 0;
+      const cached = response.usage?.input_tokens_details?.cached_tokens ?? 0;
       return {
         result,
         raw: response,
         usage: { input, output },
-        costUsd: estimateCost(settings.model, input, output),
+        costUsd: estimateCost(settings.model, input, output, cached),
         model: response.model ?? settings.model,
         promptVersion: PROMPT_VERSION,
       };
