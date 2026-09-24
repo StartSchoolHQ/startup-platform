@@ -1,28 +1,29 @@
 # Admin panel
 
-Restructured 2026-09-11. The panel is grouped by what an admin is doing, not by
-database table, and the overview only shows the journey that is switched on.
+Regrouped 2026-09-24 (analytics v2). The sidebar is organised by what an
+admin is doing, so AI things sit with AI things and insights with insights.
+Section labels come from `src/components/admin-nav-items.ts`
+(`adminNavItems(teamJourneyOn)`), rendered by `nav-main.tsx` whenever the
+section changes. Tested in `tests/admin/admin-nav-items.test.ts`.
 
 ## Sections (sidebar order)
 
 | Section | Page | Route | What it holds |
 |---|---|---|---|
-| — | Overview | `/dashboard/admin` | Students health card; My Journey block; Team Journey block |
-| Curriculum | Tasks | `/dashboard/admin/tasks` | Solo tasks / Team tasks / Suggestions. Opens on the running journey |
-| Curriculum | AI Reviews | `/dashboard/admin/ai-reviews` | Read-only audit of every automatic review |
-| Curriculum | Peer Reviews | `/dashboard/admin/peer-reviews` | Team-task peer review oversight |
-| People | Users | `/dashboard/admin/users` | Users (default filter: active) / Invitations |
-| People | Agreements | `/dashboard/admin/agreements` | Scholarships tab + Laptops & key cards tab (`?tab=equipment`) |
+| — | Overview | `/dashboard/admin` | Students health, **Needs attention** (top 5 from the attention list), My Journey block, Team Journey block |
+| **Insights** | Analytics | `/dashboard/admin/analytics` | This week · My Journey · Team Journey · Curriculum · Outcomes (see `admin-analytics.md`) |
+| Insights | Activity Log | `/dashboard/admin/audit-logs` | One sentence per event, filter by student / kind / date (see `activity-log.md`) |
+| **People** | Users | `/dashboard/admin/users` | Users (default filter: active) |
+| People | Agreements | `/dashboard/admin/agreements` | Scholarships + Laptops & key cards (`?tab=equipment`) |
 | People | Diplomas | `/dashboard/admin/diplomas` | Issue / Issued / Setup (batches live under Setup) |
-| Team Journey | Teams | `/dashboard/admin/teams` | Teams + strikes. Section label reads "paused" while the phase is off |
-| Team Journey | Weekly Reports | `/dashboard/admin/weekly-reports` | Every submitted report |
-| Team Journey | Analytics | `/dashboard/admin/analytics` | Sentiment, retention, meetings, task friction (Batch 2 retrospective) |
-| System | Activity Log | `/dashboard/admin/audit-logs` | Audit log + rewards feed |
-| System | Settings | `/dashboard/admin/settings` | Programme Phase switches, AI Task Reviewer |
-
-Section labels come from `items[].section` on the Admin nav entry in
-`src/components/app-sidebar.tsx`; `nav-main.tsx` renders a label whenever the
-section changes.
+| **Curriculum** | Tasks | `/dashboard/admin/tasks` | Solo tasks / Team tasks / Suggestions |
+| Curriculum | Peer Reviews | `/dashboard/admin/peer-reviews` | Team-task peer review oversight |
+| **Teams** (label "· paused" while Team Journey is off) | Teams | `/dashboard/admin/teams` | Teams + strikes |
+| Teams | Weekly Reports | `/dashboard/admin/weekly-reports` | Every report, team and solo (Context filter) |
+| **AI** | AI Reviews | `/dashboard/admin/ai-reviews` | AI Task Reviewer settings card + read-only audit of every automatic review |
+| AI | Startie | `/dashboard/admin/startie` | Usage stats, every transcript, Startie settings card |
+| **Support** | Inbox | `/dashboard/admin/inbox` | Tickets · Task suggestions · Edit suggestions (`?tab=startie` redirects to the Startie page) |
+| **System** | Settings | `/dashboard/admin/settings` | Programme Phase switches · Attention rules |
 
 ## Overview
 
@@ -30,70 +31,36 @@ section changes.
 (React Query, 30 s stale) and renders:
 
 1. **Students** card (`HealthSnapshot` with `students` only).
-2. **My Journey** block when `journeys.myJourney` is on: `AiReviewsSummary` +
+2. **Needs attention** card (`overview/needs-attention-card.tsx`): top five of
+   `get_analytics_attention_v1` for the selected batch, linking to Analytics.
+3. **My Journey** block when `journeys.myJourney` is on: `AiReviewsSummary` +
    `TaskPipelineCard` for `activity_type = 'individual'`.
-3. **Team Journey** block when `journeys.teamJourney` is on: team health card,
+4. **Team Journey** block when `journeys.teamJourney` is on: team health card,
    `ProgramHealthCards`, `NeedsAttentionFeed`, `WeeklyTrendsChart`, team task
    pipeline, `AdminCharts`.
-4. `PausedCard` when both are off.
+5. `PausedCard` when both are off.
 
-## Batch scope (Team Journey pages)
+## Batch scope
 
-Analytics, Weekly Reports and Peer Reviews carry a **batch** selector
-(`BatchScopeSelect`, state in `?batch=` via `useBatchScope`).
+Overview, Analytics, Weekly Reports and Peer Reviews carry a **batch**
+selector (`BatchScopeSelect`, state in `?batch=` via `useBatchScope`).
 
-- **The open batch** (default, listed first as "<name> (open)"): rows whose
-  `users.batch_id` / `teams.batch_id` match the single `diploma_batches` row
-  with `closed_at IS NULL`. Decided 2026-09-15: admin analytics focus on the
-  running cohort. With zero or several open batches the default falls back to
-  "All active".
-- **All active** (`?batch=current`): users and teams with `status = 'active'`
-  regardless of batch — the pre-2026-09-15 default, still one click away.
-- **A closed batch** (e.g. Mercury-Redstone · closed): that batch's rows. This
-  is how the Batch 2 retrospective stays reachable.
+- **The open batch** (default): rows whose `users.batch_id` / `teams.batch_id`
+  match the single `diploma_batches` row with `closed_at IS NULL`.
+- **All active** (`?batch=current`): users and teams with `status = 'active'`.
+- **A closed batch** (e.g. Mercury-Redstone): that batch's rows — the Batch 2
+  retrospective.
 
-Archived rows never count unless a closed batch is picked. While the batch
-list is loading (no `?batch=` yet), `useBatchScope` reports `isLoading` and
-every consumer holds its queries, so the first request already carries the
-open batch's uuid instead of fetching "all active" first.
+Server side the scope is `p_batch_id uuid` (NULL = all active) on every
+analytics RPC, resolved through `_admin_scope_users(uuid)` /
+`_admin_scope_teams(uuid)`. Test accounts (`test\_%@test.local`) and
+`[TEST]%` teams are excluded everywhere.
 
-Server side the scope is `p_batch_id uuid` (NULL = all active) on the `_v2` RPCs
-`get_analytics_{overview,teams,students,tasks,meetings,retention,strikes,economy,task_friction}_v2`,
-`get_analytics_week_detail_v2(date, uuid)` and `get_admin_weekly_trends_v2`,
-all built on `_admin_scope_users(uuid)` / `_admin_scope_teams(uuid)`. Routes
-that filter tables directly (weekly reports, peer reviews) resolve the same
-id lists with `resolveScopeIds` in `src/lib/admin/batch-scope.ts`. The
-per-entity detail RPCs (team, student, report) are unchanged: they are
-already scoped by id. Since 2026-09-15 the admin overview follows the same scope: `/api/admin/stats?batch=` → `get_admin_program_health_v4(uuid)`, `get_admin_task_pipeline_v2(uuid)` and `get_admin_weekly_trends_v2(uuid)`; the selector sits top-right of the overview and defaults to the open batch like every other page. Only the Team XP ranking (`get_top_teams_with_xp`) is still unscoped.
+## Settings
 
-Users and Teams keep their own batch/status filters; Diplomas deliberately
-includes archived students because graduates are archived by definition.
-
-## Where the numbers come from
-
-| Field on `AdminStats` | Source | Note |
-|---|---|---|
-| `programHealth` | `get_admin_program_health_v3()` | Student buckets count only `users.status = 'active'`. v2 counted archived Batch 2 students |
-| `taskPipeline` | `get_admin_task_pipeline_v1()` | Grouped in SQL by `tasks.activity_type` + status; excludes archived users/teams. Replaces a client-side select that hit the 1000-row cap |
-| `aiReview` | `get_ai_review_admin_summary_v1()` | Same numbers as the AI Reviews page header |
-| `teamXp` | `get_top_teams_with_xp(10)` | |
-| `weeklyTrends` | `get_admin_weekly_trends_v2(NULL)` | All active users/teams, not batch-scoped |
-
-All five are called with the service-role client inside the route after the
-admin check. New read RPCs get a new name (`_v3`, `_v1`); existing ones are
-never edited in place.
-
-## Removed on 2026-09-11 and why
-
-- **Progress page** (`/dashboard/admin/progress`, `team-detail-modal.tsx`,
-  `student-progress-alerts.tsx`): duplicated the overview health card with a
-  different RPC (so the two disagreed) and the Teams / Analytics pages.
-- **Laptops & Keycards page**: same component as Agreements with a different
-  type filter. Route now redirects to the Equipment tab.
-- **Roles & Permissions tab**, two **Download Template** buttons, the
-  **AI Analysis "coming soon"** card: stubs with no implementation behind them.
-- **Task Pipeline pie** (`task-status-chart.tsx`): drew the capped 1000 count.
-- **Quick-link grid** on the overview: the sidebar now lists every page.
-- `audit-logs/page-old.tsx` + `lib/audit-log-formatter.ts`: dead v1 copies.
-
-Settings cards moved from the top of the overview to `/dashboard/admin/settings`.
+- **Programme Phase** (`programme-phase-card.tsx`): My Journey / Team Journey
+  switches → `platform_settings.journeys`.
+- **Attention rules** (`attention-rules-card.tsx`): thresholds behind
+  Analytics → This week → `platform_settings.analytics`.
+- AI Task Reviewer settings moved to the AI Reviews page; Startie settings to
+  the Startie page.

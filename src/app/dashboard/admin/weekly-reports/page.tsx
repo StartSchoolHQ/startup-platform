@@ -33,8 +33,8 @@ export default function AdminWeeklyReportsPage() {
         <CardHeader>
           <CardTitle>All weekly reports</CardTitle>
           <CardDescription>
-            Browse and inspect every weekly report submitted by teams. Filter by
-            user, team, or week, then click a row to read the full report.
+            Every weekly report, team and solo. Use the Context filter for solo
+            My Journey reports. Click a row to read the full report.
           </CardDescription>
         </CardHeader>
         <CardContent>

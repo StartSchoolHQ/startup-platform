@@ -28,7 +28,7 @@ There are no tools and no RAG. The model sees a **static prefix** (persona + stu
 | Route | `src/app/api/assistant/chat/route.ts`, `src/lib/assistant/chat.ts` (stream adapter), `errors.ts` |
 | Settings | `src/lib/assistant/settings.ts`, `src/hooks/use-assistant-settings.ts`, `src/components/admin/assistant-settings-card.tsx` |
 | Widget | `src/components/assistant/*`, `src/hooks/use-startie-chat.ts`, `use-startie-threads.ts`, mounted in `src/app/dashboard/dashboard-layout-wrapper.tsx` |
-| Admin | Inbox → Startie tab: `src/components/admin/inbox/startie-{stats-strip,threads-table,thread-sheet}.tsx` |
+| Admin | Admin → AI → Startie (`src/app/dashboard/admin/startie/page.tsx`): `src/components/admin/inbox/startie-{stats-strip,threads-table,thread-sheet}.tsx` + the settings card |
 | Pricing | `src/lib/ai/pricing.ts` (shared with the AI reviewer) |
 | Migration | `supabase/migrations/20260924090501_startie_assistant_v1.sql` |
 | Tests | `tests/assistant/*` |
@@ -65,7 +65,7 @@ RPCs (all SECURITY DEFINER, EXECUTE authenticated + service_role, anon revoked):
 
 ## Cost
 
-Per message ≈ $0.005 on gpt-5.4-mini (7k cached prefix, ~2.4k fresh input, ~350 output, reasoning low). Realistic month for 75 students: $25–75. Hard cap (everyone at 25/day): ~$260. Levers: reasoning effort, history turns, model. The Startie tab's stats strip shows cost this month and cache hit rate.
+Per message ≈ $0.005 on gpt-5.4-mini (7k cached prefix, ~2.4k fresh input, ~350 output, reasoning low). Realistic month for 75 students: $25–75. Hard cap (everyone at 25/day): ~$260. Levers: reasoning effort, history turns, model. The Startie page.s stats strip shows cost this month and cache hit rate.
 
 ## Rollback
 

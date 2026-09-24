@@ -25,6 +25,7 @@ import {
 import { NotificationCenter } from "@/components/notification-center";
 
 import { NavMain } from "@/components/nav-main";
+import { adminNavItems } from "@/components/admin-nav-items";
 import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
@@ -134,77 +135,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
     // Add admin section if user is admin (show whenever role is available)
     if (isAdmin) {
-      const teamSection = journeys.teamJourney
-        ? "Team Journey"
-        : "Team Journey · paused";
       return [
         ...baseItems,
         {
           title: "Admin",
           url: "/dashboard/admin",
           icon: Settings,
-          items: [
-            {
-              section: "Curriculum",
-              title: "Tasks",
-              url: "/dashboard/admin/tasks",
-            },
-            {
-              section: "Curriculum",
-              title: "AI Reviews",
-              url: "/dashboard/admin/ai-reviews",
-            },
-            {
-              section: "Curriculum",
-              title: "Peer Reviews",
-              url: "/dashboard/admin/peer-reviews",
-            },
-            {
-              section: "People",
-              title: "Users",
-              url: "/dashboard/admin/users",
-            },
-            {
-              section: "People",
-              title: "Agreements",
-              url: "/dashboard/admin/agreements",
-            },
-            {
-              section: "People",
-              title: "Diplomas",
-              url: "/dashboard/admin/diplomas",
-            },
-            {
-              section: teamSection,
-              title: "Teams",
-              url: "/dashboard/admin/teams",
-            },
-            {
-              section: teamSection,
-              title: "Weekly Reports",
-              url: "/dashboard/admin/weekly-reports",
-            },
-            {
-              section: teamSection,
-              title: "Analytics",
-              url: "/dashboard/admin/analytics",
-            },
-            {
-              section: "System",
-              title: "Inbox",
-              url: "/dashboard/admin/inbox",
-            },
-            {
-              section: "System",
-              title: "Activity Log",
-              url: "/dashboard/admin/audit-logs",
-            },
-            {
-              section: "System",
-              title: "Settings",
-              url: "/dashboard/admin/settings",
-            },
-          ],
+          items: adminNavItems(journeys.teamJourney),
         },
       ];
     }

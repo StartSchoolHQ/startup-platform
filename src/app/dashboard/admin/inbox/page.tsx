@@ -15,21 +15,16 @@ import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import { AdminSuggestionsTable } from "@/components/admin/admin-suggestions-table";
 import { TicketsTable } from "@/components/admin/inbox/tickets-table";
 import { TaskSuggestionsTable } from "@/components/admin/inbox/task-suggestions-table";
-import { StartieStatsStrip } from "@/components/admin/inbox/startie-stats-strip";
-import { StartieThreadsTable } from "@/components/admin/inbox/startie-threads-table";
 
-const TABS = [
-  "tickets",
-  "task-suggestions",
-  "edit-suggestions",
-  "startie",
-] as const;
+const TABS = ["tickets", "task-suggestions", "edit-suggestions"] as const;
 
 export default function AdminInboxPage() {
   const { user, loading } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabFromUrl = searchParams.get("tab") ?? "";
+  // Startie moved to its own page under Admin → AI.
+  if (tabFromUrl === "startie") redirect("/dashboard/admin/startie");
   const activeTab = (TABS as readonly string[]).includes(tabFromUrl)
     ? tabFromUrl
     : "tickets";
@@ -65,7 +60,6 @@ export default function AdminInboxPage() {
           <TabsTrigger value="tickets">Tickets</TabsTrigger>
           <TabsTrigger value="task-suggestions">Task suggestions</TabsTrigger>
           <TabsTrigger value="edit-suggestions">Edit suggestions</TabsTrigger>
-          <TabsTrigger value="startie">Startie</TabsTrigger>
         </TabsList>
 
         <TabsContent value="tickets">
@@ -94,22 +88,6 @@ export default function AdminInboxPage() {
             </CardHeader>
             <CardContent>
               <TaskSuggestionsTable />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="startie" className="space-y-4">
-          <StartieStatsStrip />
-          <Card>
-            <CardHeader>
-              <CardTitle>Startie conversations</CardTitle>
-              <CardDescription>
-                Every student chat with the assistant. Flags are thumbs-downs
-                from students on a reply.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <StartieThreadsTable />
             </CardContent>
           </Card>
         </TabsContent>

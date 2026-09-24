@@ -4,8 +4,7 @@ import { redirect } from "next/navigation";
 import { useApp } from "@/contexts/app-context";
 import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import { ProgrammePhaseCard } from "@/components/admin/programme-phase-card";
-import { AiReviewSettingsCard } from "@/components/admin/ai-review-settings-card";
-import { AssistantSettingsCard } from "@/components/admin/assistant-settings-card";
+import { AttentionRulesCard } from "@/components/admin/attention-rules-card";
 
 export default function AdminSettingsPage() {
   const { user, loading } = useApp();
@@ -25,8 +24,7 @@ export default function AdminSettingsPage() {
         </p>
       </div>
       <ProgrammePhaseCard />
-      <AiReviewSettingsCard />
-      <AssistantSettingsCard />
+      <AttentionRulesCard />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import { AiReviewsTable } from "@/components/admin/ai-reviews-table";
+import { AiReviewSettingsCard } from "@/components/admin/ai-review-settings-card";
 
 export default function AdminAiReviewsPage() {
   const { user, loading } = useApp();
@@ -28,6 +29,7 @@ export default function AdminAiReviewsPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">AI Reviews</h2>
       </div>
+      <AiReviewSettingsCard />
       <Card>
         <CardHeader>
           <CardTitle>All AI Reviews</CardTitle>
