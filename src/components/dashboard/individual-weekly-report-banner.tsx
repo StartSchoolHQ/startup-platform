@@ -29,7 +29,7 @@ export function IndividualWeeklyReportBanner() {
   if (!isWeeklyReportBannerWindow(status.week)) return null;
 
   return (
-    <div className="px-4 pt-2">
+    <div className="px-4 pt-1 pb-6">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3">
         <div className="flex items-center gap-3">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400">

@@ -8,6 +8,16 @@ import type { AiReviewStatus } from "@/lib/database";
 
 const labels = economyLabels("my_journey");
 
+type CriterionResult = NonNullable<AiReviewStatus["criteria_results"]>[number];
+
+/**
+ * Verdict card for an AI-reviewed solo task.
+ *
+ * The prose feedback is the hero on both outcomes. Criteria are summarised as
+ * a "N of M checks passed" line; only the failed ones are listed (label +
+ * what the reviewer saw), since the passed ones add nothing the founder can
+ * act on and the full rubric should not be handed over verbatim.
+ */
 export function AiReviewResult({
   status,
   taskStatus,
@@ -22,6 +32,10 @@ export function AiReviewResult({
   onResubmit: () => void;
 }) {
   const passed = taskStatus === "approved";
+  const criteria = status.criteria_results ?? [];
+  const failed = criteria.filter((c) => !c.passed);
+  const passedCount = criteria.length - failed.length;
+
   return (
     <Card className={passed ? "border-green-500/40" : "border-amber-500/40"}>
       <CardHeader>
@@ -51,27 +65,12 @@ export function AiReviewResult({
             {status.feedback}
           </div>
         ) : null}
-        {status.criteria_results?.length ? (
-          <ul className="space-y-1 text-sm">
-            {status.criteria_results.map((c) => (
-              <li key={c.id} className="flex gap-2">
-                {c.passed ? (
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
-                ) : (
-                  <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-                )}
-                <span>
-                  <span className="font-medium">{c.label}</span>
-                  {c.evidence ? (
-                    <span className="text-muted-foreground">
-                      {" "}
-                      — {c.evidence}
-                    </span>
-                  ) : null}
-                </span>
-              </li>
-            ))}
-          </ul>
+        {criteria.length ? (
+          <CriteriaSummary
+            passedCount={passedCount}
+            total={criteria.length}
+            failed={passed ? [] : failed}
+          />
         ) : null}
         {!passed ? (
           <Button className="w-full gap-2" onClick={onResubmit}>
@@ -81,5 +80,43 @@ export function AiReviewResult({
         ) : null}
       </CardContent>
     </Card>
+  );
+}
+
+function CriteriaSummary({
+  passedCount,
+  total,
+  failed,
+}: {
+  passedCount: number;
+  total: number;
+  failed: CriterionResult[];
+}) {
+  const allPassed = passedCount === total;
+  return (
+    <div className="space-y-2 text-sm">
+      <p className="flex items-center gap-2 font-medium">
+        {allPassed ? (
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
+        ) : (
+          <XCircle className="h-4 w-4 shrink-0 text-amber-600" />
+        )}
+        {allPassed
+          ? `All ${total} checks passed`
+          : `${passedCount} of ${total} checks passed`}
+      </p>
+      {failed.length ? (
+        <ul className="space-y-2 border-l-2 border-amber-500/40 pl-3">
+          {failed.map((c) => (
+            <li key={c.id}>
+              <p className="font-medium">{c.label}</p>
+              {c.evidence ? (
+                <p className="text-muted-foreground">{c.evidence}</p>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
   );
 }

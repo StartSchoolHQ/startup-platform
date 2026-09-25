@@ -87,7 +87,7 @@ Student submits individual task → submit_individual_task_v1(progress_id, submi
 | `src/lib/data/ai-reviews.ts` | `submitIndividualTaskV1`, `getAiReviewStatus` (student-facing RPC wrappers) |
 | `src/hooks/use-ai-review-status.ts` | Polling hook (3 s / 15 s after 5 min, stops when final) |
 | `src/components/my-journey/ai-review-progress.tsx` | "Reviewing your submission" stage UI + filler copy |
-| `src/components/my-journey/ai-review-result.tsx` | Verdict card: pass/fail, feedback, per-criterion list, resubmit |
+| `src/components/my-journey/ai-review-result.tsx` | Verdict card: pass/fail, feedback, "N of M checks passed" + failed criteria only, resubmit |
 | `src/app/dashboard/admin/ai-reviews/page.tsx` | Admin audit page |
 | `src/app/api/admin/ai-reviews/route.ts` | Admin list API (paginated, filtered, searched) |
 | `src/hooks/use-ai-review-settings.ts` | Admin settings read/write (via the existing `set_platform_setting_v1`) |
@@ -313,8 +313,11 @@ Default `confidence_threshold` is **0.75** (admin-editable).
   for the first 5 minutes, then every 15 s, and stops entirely once `status` is no longer
   `queued`/`running`.
 - On a final status, `AiReviewResult` (`src/components/my-journey/ai-review-result.tsx`) shows a
-  pass/fail card with the attempt number, XP/points earned (approved only), the full feedback text,
-  and the per-criterion pass/fail list with each criterion's cited evidence. Rejected submissions get
+  pass/fail card with the attempt number, XP/points earned (approved only), the full feedback text
+  (the hero), and a "N of M checks passed" line. Only **failed** criteria are listed (label + the
+  reviewer's cited evidence); passed ones stay collapsed in the count and an approved card shows
+  "All M checks passed" with no list — the prose already names every gap, and the verbatim rubric
+  is not handed to the founder (Startie deliberately never reads it either). Rejected submissions get
   a "Fix and resubmit" button that reopens the same submission flow **prefilled** with the previous
   description and links (`TaskSubmissionModal`'s optional `initialData` prop, derived from
   `task.submission_data` via `normalizeSubmission`; files cannot be prefilled and must be

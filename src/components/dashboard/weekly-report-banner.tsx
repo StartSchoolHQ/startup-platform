@@ -92,7 +92,7 @@ export function WeeklyReportBanner() {
     : "";
 
   return (
-    <div className="px-4 pt-2">
+    <div className="px-4 pt-1 pb-4">
       {unsubmittedTeams.map((team) => (
         <Alert
           key={team.teamId}
