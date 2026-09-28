@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import type { KeyboardEvent } from "react";
 import { SendHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,9 @@ interface Props {
   disabled: boolean;
   streaming: boolean;
   outOfMessages: boolean;
+  /** Controlled: the widget owns the draft so it survives minimize. */
+  draft: string;
+  onDraftChange: (text: string) => void;
   onSend: (content: string) => void;
 }
 
@@ -19,16 +22,17 @@ export function StartieComposer({
   disabled,
   streaming,
   outOfMessages,
+  draft,
+  onDraftChange,
   onSend,
 }: Props) {
-  const [draft, setDraft] = useState("");
   const trimmed = draft.trim();
   const canSend = !disabled && !streaming && trimmed.length > 0;
 
   const submit = () => {
     if (!canSend) return;
     onSend(trimmed.slice(0, MAX));
-    setDraft("");
+    onDraftChange("");
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -47,7 +51,7 @@ export function StartieComposer({
       <div className="flex items-end gap-2">
         <Textarea
           value={draft}
-          onChange={(e) => setDraft(e.target.value.slice(0, MAX))}
+          onChange={(e) => onDraftChange(e.target.value.slice(0, MAX))}
           onKeyDown={onKeyDown}
           placeholder={placeholder}
           disabled={disabled}

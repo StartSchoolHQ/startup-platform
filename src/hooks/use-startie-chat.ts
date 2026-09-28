@@ -132,9 +132,25 @@ export function useStartieChat(opts: Options) {
       });
       if (error) throw new Error(error.message);
     },
+    // Optimistic: the thumbs-down turns filled the moment it is pressed, so
+    // the student sees it registered and cannot press it twice.
+    onMutate: (messageId: string) => {
+      if (!threadId) return;
+      const key = threadKey(threadId);
+      const previous = queryClient.getQueryData<ChatMessage[]>(key);
+      queryClient.setQueryData<ChatMessage[]>(key, (old) =>
+        old?.map((m) => (m.id === messageId ? { ...m, flagged: true } : m))
+      );
+      return { key, previous };
+    },
     onSuccess: () => toast.success("Thanks, an admin will look at that reply."),
-    onError: (error: Error) =>
-      toast.error(`Couldn't flag that reply — ${error.message}`),
+    onError: (error: Error, _id, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(ctx.key, ctx.previous);
+      toast.error(`Couldn't flag that reply — ${error.message}`);
+    },
+    onSettled: (_d, _e, _id, ctx) => {
+      if (ctx) void queryClient.invalidateQueries({ queryKey: ctx.key });
+    },
   });
 
   const selectThread = useCallback((id: string) => {

@@ -39,22 +39,34 @@ export function useStartieThreads(userId: string | undefined) {
   });
 }
 
-/** Persisted user/assistant turns of one thread, oldest first. */
+/**
+ * Persisted user/assistant turns of one thread, oldest first. The thread's
+ * `system_note` rows are read in the same query only to mark which replies
+ * the student already flagged (`flagged_message_id`); they never render.
+ */
 export async function fetchThreadMessages(
   threadId: string
 ): Promise<ChatMessage[]> {
   const { data, error } = await createClient()
     .from("assistant_messages")
-    .select("id, role, content")
+    .select("id, role, content, flagged_message_id")
     .eq("thread_id", threadId)
-    .in("role", ["user", "assistant"])
+    .in("role", ["user", "assistant", "system_note"])
     .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
-  return data.map((m) => ({
-    id: m.id,
-    role: m.role === "assistant" ? "assistant" : "user",
-    content: m.content,
-  }));
+  const flagged = new Set(
+    data
+      .filter((m) => m.role === "system_note" && m.flagged_message_id)
+      .map((m) => m.flagged_message_id as string)
+  );
+  return data
+    .filter((m) => m.role === "user" || m.role === "assistant")
+    .map((m) => ({
+      id: m.id,
+      role: m.role === "assistant" ? "assistant" : "user",
+      content: m.content,
+      ...(flagged.has(m.id) ? { flagged: true } : {}),
+    }));
 }
 
 export function useStartieMessages(threadId: string | null) {

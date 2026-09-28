@@ -17,16 +17,18 @@ export function StartieButton({ onClick, unread }: Props) {
       onClick={onClick}
       aria-label="Open Startie, the AI assistant"
       className={cn(
-        "bg-background hover:bg-muted fixed right-4 bottom-4 z-40 flex size-12",
+        "bg-background hover:bg-muted fixed right-4 bottom-4 z-40 flex size-14",
         "items-center justify-center rounded-full border shadow-lg transition",
-        "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none"
+        "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
+        // Pops back in when the panel minimizes into this corner.
+        "animate-in fade-in-0 zoom-in-75 duration-150 motion-reduce:animate-none"
       )}
     >
       <Image
         src={STARTIE_ICON_SRC}
         alt=""
-        width={36}
-        height={36}
+        width={42}
+        height={42}
         className="pointer-events-none"
         style={{ imageRendering: "pixelated" }}
       />

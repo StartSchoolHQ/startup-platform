@@ -119,17 +119,31 @@ function Turn({
         </Bubble>
         {persisted && (
           <MessageFooter className="px-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground size-6"
-              aria-label="Not helpful"
-              title="Not helpful — flag for an admin"
-              onClick={() => onFlag(message.id)}
-            >
-              <ThumbsDown className="size-3.5" />
-            </Button>
+            {message.flagged ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-primary size-6 disabled:opacity-100"
+                aria-label="Flagged for an admin"
+                title="Flagged — an admin will look at this reply"
+                disabled
+              >
+                <ThumbsDown className="size-3.5 fill-current" />
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground size-6"
+                aria-label="Not helpful"
+                title="Not helpful — flag for an admin"
+                onClick={() => onFlag(message.id)}
+              >
+                <ThumbsDown className="size-3.5" />
+              </Button>
+            )}
           </MessageFooter>
         )}
       </MessageContent>

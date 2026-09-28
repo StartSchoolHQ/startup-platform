@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { X } from "lucide-react";
+import { Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -29,7 +29,10 @@ export interface StartieChatProps {
   onFlag: (messageId: string) => void;
   onSelectThread: (id: string) => void;
   onNewThread: () => void;
-  onClose: () => void;
+  /** Hides the panel; thread, reply-in-flight and draft all survive. */
+  onMinimize: () => void;
+  draft: string;
+  onDraftChange: (text: string) => void;
 }
 
 /** Presentational chat body: header, transcript, composer. No data fetching. */
@@ -68,10 +71,11 @@ export function StartieChat(props: StartieChatProps) {
           variant="ghost"
           size="icon"
           className="hover:bg-primary-foreground/15 hover:text-primary-foreground size-8"
-          aria-label="Close"
-          onClick={props.onClose}
+          aria-label="Minimize"
+          title="Minimize — your chat and unsent text are kept"
+          onClick={props.onMinimize}
         >
-          <X className="size-4" />
+          <Minus className="size-4" />
         </Button>
       </header>
 
@@ -87,6 +91,8 @@ export function StartieChat(props: StartieChatProps) {
         disabled={outOfMessages}
         streaming={props.streaming}
         outOfMessages={outOfMessages}
+        draft={props.draft}
+        onDraftChange={props.onDraftChange}
         onSend={props.onSend}
       />
     </div>

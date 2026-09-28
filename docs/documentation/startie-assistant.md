@@ -44,7 +44,7 @@ RPCs (all SECURITY DEFINER, EXECUTE authenticated + service_role, anon revoked):
 | RPC | What |
 |---|---|
 | `assistant_send_message_v1(p_thread_id, p_content, p_page_context)` | Advisory lock per user, counts today's `user` rows (UTC day), raises `ASSISTANT_LIMIT_REACHED` / `INVALID_CONTENT` / `THREAD_NOT_FOUND`, creates the thread when `p_thread_id` is null, inserts the user row, returns `{thread_id, message_id, remaining_today}` (null for admins). Does **not** check `enabled` — the route does. |
-| `assistant_flag_message_v1(p_message_id)` | Thumbs-down: one `system_note` per assistant reply (unique partial index). |
+| `assistant_flag_message_v1(p_message_id)` | Thumbs-down: one `system_note` per assistant reply (unique partial index). The widget reads those notes back with the transcript, so a flagged reply shows a filled, disabled thumbs-down (optimistic on press; survives reload). |
 | `get_assistant_admin_stats_v1()` | Messages today, cost this month, cache hit rate, avg reply tokens; NULL for non-admins. |
 | `get_assistant_admin_threads_v1(p_flagged_only, p_user_id, p_limit, p_offset)` | Thread list with per-thread counts and cost; empty for non-admins. |
 
@@ -62,6 +62,7 @@ RPCs (all SECURITY DEFINER, EXECUTE authenticated + service_role, anon revoked):
 - The task summary sent to the model never includes `peer_review_criteria` or `review_instructions`.
 - No tools, no write path from the model. Worst case is a bad answer, which admins can read and students can flag.
 - Disclosure: the widget shows "I'm an AI… Admins can read these chats." at the top of every new thread (EU AI Act Art. 50).
+- Minimize, never close: the header button and Escape hide the panel (150 ms shrink into the face button) but the thread, a reply still streaming and the unsent draft all survive. The draft lives in the always-mounted widget (`use-startie-draft.ts`) keyed by thread and is mirrored to `sessionStorage` (`startie:draft:<thread|new>`) so a reload keeps it too. Added 2026-09-28 after colleagues lost half-written answers when they closed the chat to look something up on the page.
 
 ## Cost
 

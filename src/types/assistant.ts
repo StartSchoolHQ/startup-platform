@@ -12,6 +12,8 @@ export interface ChatMessage {
   content: string;
   /** True while the reply is still streaming in. */
   pending?: boolean;
+  /** Assistant replies only: the student already sent this one to an admin. */
+  flagged?: boolean;
 }
 
 export interface ThreadSummary {

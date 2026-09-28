@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { StartieChat } from "@/components/assistant/startie-chat";
 
 class NoopObserver {
@@ -35,7 +35,9 @@ const base = {
   onFlag: vi.fn(),
   onSelectThread: vi.fn(),
   onNewThread: vi.fn(),
-  onClose: vi.fn(),
+  onMinimize: vi.fn(),
+  draft: "",
+  onDraftChange: vi.fn(),
 };
 
 describe("StartieChat", () => {
@@ -74,11 +76,63 @@ describe("StartieChat", () => {
     ).toHaveLength(1);
   });
 
-  it("has a close control that reports back to the widget", () => {
-    const onClose = vi.fn();
-    render(<StartieChat {...base} onClose={onClose} />);
-    screen.getByRole("button", { name: /close/i }).click();
-    expect(onClose).toHaveBeenCalledTimes(1);
+  it("shows a flagged reply as already flagged and disables the button", () => {
+    const onFlag = vi.fn();
+    render(
+      <StartieChat
+        {...base}
+        onFlag={onFlag}
+        messages={[
+          { id: "1", role: "user", content: "hi" },
+          { id: "2", role: "assistant", content: "meh", flagged: true },
+          { id: "3", role: "assistant", content: "ok" },
+        ]}
+      />
+    );
+    const flagged = screen.getByRole("button", {
+      name: /flagged for an admin/i,
+    }) as HTMLButtonElement;
+    expect(flagged.disabled).toBe(true);
+    flagged.click();
+    expect(onFlag).not.toHaveBeenCalled();
+    expect(
+      screen.getAllByRole("button", { name: /^not helpful/i })
+    ).toHaveLength(1);
+  });
+
+  it("has a minimize control, not a close, that reports back to the widget", () => {
+    const onMinimize = vi.fn();
+    render(<StartieChat {...base} onMinimize={onMinimize} />);
+    expect(screen.queryByRole("button", { name: /close/i })).toBeNull();
+    screen.getByRole("button", { name: /minimize/i }).click();
+    expect(onMinimize).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders the draft the widget owns and reports edits upward", () => {
+    const onDraftChange = vi.fn();
+    render(
+      <StartieChat {...base} draft="kept text" onDraftChange={onDraftChange} />
+    );
+    const box = screen.getByRole("textbox") as HTMLTextAreaElement;
+    expect(box.value).toBe("kept text");
+    fireEvent.change(box, { target: { value: "kept text more" } });
+    expect(onDraftChange).toHaveBeenCalledWith("kept text more");
+  });
+
+  it("clears the draft after sending", () => {
+    const onSend = vi.fn();
+    const onDraftChange = vi.fn();
+    render(
+      <StartieChat
+        {...base}
+        draft="  send me  "
+        onSend={onSend}
+        onDraftChange={onDraftChange}
+      />
+    );
+    screen.getByRole("button", { name: /send/i }).click();
+    expect(onSend).toHaveBeenCalledWith("send me");
+    expect(onDraftChange).toHaveBeenCalledWith("");
   });
 
   it("renders the transcript inside a MessageScroller viewport", () => {
