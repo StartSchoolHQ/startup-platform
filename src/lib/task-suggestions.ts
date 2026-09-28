@@ -4,6 +4,25 @@ export const SUGGESTION_TITLE_MAX = 80;
 export const SUGGESTION_DESCRIPTION_MIN = 10;
 export const SUGGESTION_DESCRIPTION_MAX = 300;
 
+/**
+ * Real tasks from the My Journey library (MJ-P1-07, MJ-P2-04), shown next to
+ * the suggest form so students copy the house style: verb first, one
+ * outcome, one or two sentences on what they do and why.
+ */
+export const SUGGESTION_EXAMPLES: { title: string; description: string }[] = [
+  {
+    title:
+      "Write a one-sentence problem statement without mentioning a solution",
+    description:
+      "Describe a real problem in one sentence, with zero mention of how you'd solve it.",
+  },
+  {
+    title: "Cold-message 5 potential users you don't know",
+    description:
+      "Reach out to 5 strangers who might have the problem you're exploring, and ask to talk.",
+  },
+];
+
 export const SUGGESTION_LIMIT_MESSAGE =
   "You've suggested 5 tasks today — come back tomorrow.";
 

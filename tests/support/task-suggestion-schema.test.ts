@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { TaskSuggestionSchema } from "@/lib/validation-schemas";
 import {
   mapSuggestTaskError,
+  SUGGESTION_EXAMPLES,
   SUGGESTION_LIMIT_MESSAGE,
 } from "@/lib/task-suggestions";
 
@@ -60,5 +61,18 @@ describe("mapSuggestTaskError", () => {
     expect(mapSuggestTaskError(null)).toBe(
       "Couldn't send the suggestion. Please try again."
     );
+  });
+});
+
+describe("SUGGESTION_EXAMPLES", () => {
+  it("shows students examples that would pass the schema themselves", () => {
+    expect(SUGGESTION_EXAMPLES.length).toBeGreaterThanOrEqual(2);
+    for (const example of SUGGESTION_EXAMPLES) {
+      const parsed = TaskSuggestionSchema.safeParse({
+        achievementId: PHASE,
+        ...example,
+      });
+      expect(parsed.success, example.title).toBe(true);
+    }
   });
 });

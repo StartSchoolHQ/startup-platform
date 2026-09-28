@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { SectionLabel } from "@/components/dashboard/my-journey/section-label";
+import { SUGGESTION_EXAMPLES } from "@/lib/task-suggestions";
 import type { SupportMode } from "@/types/support-inbox";
 
 const TIPS: Record<
@@ -41,7 +42,10 @@ interface Props {
   userEmail?: string | null;
 }
 
-/** Left column: three tips for the active mode plus who is sending. Server-renderable. */
+/**
+ * Left column: three tips for the active mode, real examples from the task
+ * library in suggest mode, plus who is sending. Server-renderable.
+ */
 export function SupportTips({ mode, userName, userEmail }: Props) {
   const { title, items } = TIPS[mode];
   return (
@@ -64,6 +68,7 @@ export function SupportTips({ mode, userName, userEmail }: Props) {
             </li>
           ))}
         </ul>
+        {mode === "suggest" && <Examples />}
         <p className="text-muted-foreground border-t pt-4 text-xs">
           Sending as{" "}
           <span className="text-foreground font-medium">{userName ?? "…"}</span>
@@ -71,5 +76,27 @@ export function SupportTips({ mode, userName, userEmail }: Props) {
         </p>
       </div>
     </Card>
+  );
+}
+
+/** Two library tasks, title + card description, in the shape we ask for. */
+function Examples() {
+  return (
+    <div className="space-y-3 border-t pt-4">
+      <p className="text-xs font-medium">Examples from the task library</p>
+      <ul className="space-y-3">
+        {SUGGESTION_EXAMPLES.map((example) => (
+          <li
+            key={example.title}
+            className="bg-muted/50 space-y-1 rounded-md border px-3 py-2.5"
+          >
+            <p className="text-sm leading-snug font-medium">{example.title}</p>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              {example.description}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

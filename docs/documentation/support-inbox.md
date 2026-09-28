@@ -13,6 +13,9 @@ reviewed on **Admin → System → Inbox**. Discord is no longer involved.
   `task_suggestions`. 5 per student per rolling 24 h; the sixth returns
   `SUGGESTION_LIMIT_REACHED`, shown as "You've suggested 5 tasks today —
   come back tomorrow." Students cannot insert into the table directly.
+  The tips column shows two real library tasks (`SUGGESTION_EXAMPLES` in
+  `src/lib/task-suggestions.ts`, mirrors MJ-P1-07 and MJ-P2-04) so students
+  copy the house style for title + description (added 2026-09-28).
 
 ## Admin side — `/dashboard/admin/inbox`
 

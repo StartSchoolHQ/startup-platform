@@ -139,6 +139,7 @@ export function SuggestTaskForm() {
               if (e.target.value.length <= SUGGESTION_DESCRIPTION_MAX)
                 update("description", e.target.value);
             }}
+            placeholder="Read Rob Fitzpatrick's short, practical guide to customer conversations that reveal the truth instead of comforting opinions."
             className="min-h-[120px] resize-y"
             disabled={busy}
             aria-invalid={!!errors.description}
