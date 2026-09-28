@@ -103,7 +103,10 @@ export default function ProfileSetupPage() {
       <FounderCardForm
         onError={setError}
         onDone={() => {
-          router.push("/dashboard");
+          // Finishing the founder card is the first-sign-in moment (every new
+          // account is routed through setup), so land on the platform guide
+          // rather than straight in the task list.
+          router.push("/dashboard/how-it-works");
           router.refresh();
         }}
       />

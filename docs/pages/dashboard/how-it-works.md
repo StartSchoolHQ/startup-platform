@@ -4,7 +4,7 @@
 
 ## Purpose
 
-New students land in My Journey with a list of tasks and little context. This page answers "what is this place and what happens next?" in one read: sign in, My Journey and the AI reviewer, the weekly report, the leaderboard and founder cards, Team Journey later, where to ask for help. Added 2026-09-15 together with the retirement of the Overview page; sits in the sidebar between Leaderboard (or the Team Journey pages, when on) and Support.
+New students land in My Journey with a list of tasks and little context. This page answers "what is this place and what happens next?" in one read: sign in, My Journey and the AI reviewer, the weekly report, the leaderboard and founder cards, Team Journey later, where to ask for help. Added 2026-09-15 together with the retirement of the Overview page; sits in the sidebar between Leaderboard (or the Team Journey pages, when on) and Support. Since 2026-09-28 it is also the first page a new account sees: finishing the founder card on `/profile/setup` pushes here instead of `/dashboard` (colleagues reported landing in the task list with no context on first sign-in).
 
 ## What it does
 
