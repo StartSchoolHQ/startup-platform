@@ -8,6 +8,7 @@ import {
 } from "@/hooks/use-individual-weekly-report";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { RouteStop } from "@/components/how-it-works/route-stop";
+import { ProgrammeTimeline } from "@/components/how-it-works/timeline/programme-timeline";
 import {
   buildRouteStops,
   WEEKLY_REPORT_ACTION,
@@ -20,6 +21,8 @@ import { IndividualWeeklyReportModal } from "@/components/weekly-reports/individ
  * phase-aware through the cached journey settings. The one live piece is
  * the weekly report stop: while the solo form applies and this week's
  * report is still open, its button opens the submission modal right here.
+ * The programme timeline sits under the route, the one section that needs
+ * more width than the reading column.
  */
 export default function HowItWorksPage() {
   const { data: journeys, isLoading } = usePlatformSettings();
@@ -42,9 +45,12 @@ export default function HowItWorksPage() {
     [journeys, weeklyReportAction]
   );
 
+  // Date only, so the today line lands on the same day server- and client-side.
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-10 pb-8 sm:space-y-14">
-      <header className="space-y-3">
+    <div className="mx-auto w-full max-w-6xl space-y-10 pb-8 sm:space-y-14">
+      <header className="mx-auto max-w-3xl space-y-3">
         <h1 className="max-w-2xl text-3xl leading-[1.1] font-semibold tracking-tight sm:text-4xl">
           Welcome to Startup Module Platform!
         </h1>
@@ -56,34 +62,51 @@ export default function HowItWorksPage() {
         </p>
       </header>
 
-      {isLoading ? (
-        <div className="space-y-10">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="grid grid-cols-[3rem_1fr] gap-x-6">
-              <Skeleton className="h-12 w-12 rounded-full" />
-              <div className="space-y-3 pt-3">
-                <Skeleton className="h-6 w-2/3" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-5/6" />
+      <div className="mx-auto w-full max-w-3xl">
+        {isLoading ? (
+          <div className="space-y-10">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="grid grid-cols-[3rem_1fr] gap-x-6">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <div className="space-y-3 pt-3">
+                  <Skeleton className="h-6 w-2/3" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        ) : (
+          <ol className="flex flex-col">
+            {stops.map((stop, index) => (
+              <RouteStop
+                key={stop.id}
+                stop={stop}
+                isLast={index === stops.length - 1}
+                nextIsLater={stops[index + 1]?.later === true}
+                onAction={(id) => {
+                  if (id === WEEKLY_REPORT_ACTION) setReportOpen(true);
+                }}
+              />
+            ))}
+          </ol>
+        )}
+      </div>
+
+      <section className="space-y-3">
+        <div className="mx-auto max-w-3xl space-y-1">
+          <h2 className="text-xl font-semibold tracking-tight">
+            Programme timeline
+          </h2>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            September to December on one scale: the curriculum month by month,
+            the My Journey phases, every planned task, the readings and the
+            recurring rhythm. Dates are the plan; phases open by progress.
+            Scroll sideways.
+          </p>
         </div>
-      ) : (
-        <ol className="flex flex-col">
-          {stops.map((stop, index) => (
-            <RouteStop
-              key={stop.id}
-              stop={stop}
-              isLast={index === stops.length - 1}
-              nextIsLater={stops[index + 1]?.later === true}
-              onAction={(id) => {
-                if (id === WEEKLY_REPORT_ACTION) setReportOpen(true);
-              }}
-            />
-          ))}
-        </ol>
-      )}
+        <ProgrammeTimeline today={today} />
+      </section>
 
       <IndividualWeeklyReportModal
         open={reportOpen}

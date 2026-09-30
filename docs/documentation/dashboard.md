@@ -254,6 +254,7 @@ Full detail on the phase-aware split, the gating matrix and the
 | Invitations | `/dashboard/invitations` | Pending (accept/decline) + Sent tabs, PostHog tracking |
 | Transaction History | `/dashboard/transaction-history` | Timeline of all XP/point transactions |
 | Support | `/dashboard/support` | Help/FAQ placeholder |
+| How it works | `/dashboard/how-it-works` | Programme guide as a route of stops, then the **programme timeline**: Sep–Dec on one day scale (curriculum months, the four My Journey phases with their planned windows and the real 50% gate rule, every planned task, readings, recurring rhythm). Static content in `src/components/how-it-works/timeline/timeline-data.ts` — next batch, edit the dates there. Pure scale/packing helpers in `timeline-scale.ts`, tests under `tests/how-it-works/`. |
 
 ---
 
