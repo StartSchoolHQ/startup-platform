@@ -1,77 +1,71 @@
-import Image from "next/image";
-import Link from "next/link";
+import { Space_Grotesk } from "next/font/google";
+import {
+  LoginBrandBand,
+  LoginBrandPanel,
+} from "@/components/auth/login-brand-panel";
 import { LoginMethods } from "@/components/auth/login-methods";
+
+/** Brand display face, used for the headline only. */
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["700"],
+  variable: "--font-brand",
+});
+
+/** Faint pencil scribbles on the canvas, as in the brand mockups. */
+function Scribbles() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 400 800"
+      className="pointer-events-none absolute inset-0 h-full w-full text-neutral-400/50"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      preserveAspectRatio="xMaxYMid slice"
+    >
+      <path d="M300 60c20 30 40-40 60 10s30-30 40 10" />
+      <path d="M280 120c30 20 50-50 80 0s20-20 40 20" />
+      <path d="M220 680c30-40 40 30 70-20s30 40 60-10" />
+      <path d="M250 740c20-30 30 20 60-10s30 30 50 0" />
+    </svg>
+  );
+}
 
 export default function LoginPage() {
   return (
-    <div className="bg-background grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
-      {/* Brand panel */}
-      <section className="relative hidden overflow-hidden bg-[oklch(0.17_0.035_275)] text-white lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div
-          aria-hidden
-          className="bg-primary/40 pointer-events-none absolute -top-40 -left-32 h-[34rem] w-[34rem] rounded-full blur-[120px]"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute right-0 bottom-0 h-72 w-72 rounded-full bg-[oklch(0.572_0.194_293.89)]/30 blur-[100px]"
-        />
+    <div
+      className={`${spaceGrotesk.variable} grid min-h-screen bg-[#F5F4F0] text-neutral-900 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]`}
+    >
+      <LoginBrandPanel />
 
-        <Image
-          src="/images/startschool-logo.png"
-          alt="StartSchool"
-          width={132}
-          height={34}
-          className="relative h-8 w-auto object-contain"
-          priority
-        />
+      <div className="flex flex-col">
+        <LoginBrandBand />
 
-        <div className="relative max-w-md space-y-4">
-          <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight xl:text-5xl">
-            Good to see you again.
-          </h1>
-          <p className="text-lg text-white/60">
-            Your tasks, team and rewards are right where you left them.
-          </p>
-        </div>
+        <section className="relative flex flex-1 items-start justify-center px-5 py-10 sm:px-10 lg:items-center">
+          <Scribbles />
 
-        <p className="relative text-xs text-white/40">
-          StartSchool · Tech Education Foundation ·{" "}
-          <Link href="/policy" className="hover:text-white/70">
-            Privacy
-          </Link>{" "}
-          ·{" "}
-          <Link href="/terms" className="hover:text-white/70">
-            Terms
-          </Link>
-        </p>
-      </section>
+          <div className="relative w-full max-w-[26rem] space-y-6 rounded-2xl border border-neutral-200 bg-white p-7 shadow-[0_8px_30px_rgba(0,0,0,0.06)] sm:p-9">
+            <div className="space-y-1.5 text-center">
+              <h2 className="text-3xl font-semibold tracking-tight">Sign in</h2>
+              <p className="text-sm leading-relaxed text-neutral-500">
+                Use your StartSchool account
+                <br />
+                to continue to the Startup Module.
+              </p>
+            </div>
 
-      {/* Form panel */}
-      <section className="flex items-center justify-center px-6 py-12 sm:px-10">
-        <div className="w-full max-w-sm space-y-8">
-          <Image
-            src="/images/startschool-logo.png"
-            alt="StartSchool"
-            width={132}
-            height={34}
-            className="h-8 w-auto object-contain lg:hidden"
-            priority
-          />
-          <div className="space-y-1">
-            <h2 className="text-2xl font-semibold tracking-tight">Sign in</h2>
-            <p className="text-muted-foreground text-sm">
-              Use your @startschool.org Google account.
+            <LoginMethods />
+
+            <p className="text-center text-sm leading-relaxed text-neutral-500">
+              Members only. If you don&apos;t have access,
+              <br />
+              contact the StartSchool team.
             </p>
           </div>
-
-          <LoginMethods />
-
-          <p className="text-muted-foreground text-xs">
-            First time here? Your account is created automatically when you sign
-            in with Google.
-          </p>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
