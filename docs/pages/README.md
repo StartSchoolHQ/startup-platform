@@ -8,7 +8,7 @@ These docs are grounded in the actual code at the time of writing. They will rot
 
 Public-facing pages and the auth flow before a user reaches the dashboard.
 
-- [Landing](./public/landing.md) — `/`
+- [Root redirect](./public/landing.md) — `/`
 - [Login](./public/login.md) — `/login`
 - [Profile Setup](./public/profile-setup.md) — `/profile/setup`
 - [Reset Password](./public/auth-reset-password.md) — `/auth/reset-password`

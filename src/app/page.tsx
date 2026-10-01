@@ -1,9 +1,15 @@
-import { HeroLanding } from "@/components/hero-landing";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
-  return (
-    <main className="min-h-screen w-full">
-      <HeroLanding />
-    </main>
-  );
+/**
+ * No public landing: the platform is members-only (Google, @startschool.org).
+ * Signed-in users go straight to the dashboard, everyone else to sign in.
+ */
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  redirect(user ? "/dashboard" : "/login");
 }
