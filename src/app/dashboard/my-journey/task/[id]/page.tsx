@@ -37,6 +37,9 @@ export default function IndividualTaskDetailPage() {
 
   const taskId = params.id as string;
   const viewed = useRef(false);
+  // The status query refetches on every focus/mount and reports a finished
+  // review each time; capture each (attempt, outcome) once.
+  const reportedReview = useRef<string | null>(null);
 
   const loadTask = useCallback(async () => {
     if (!taskId || !user?.id) return;
@@ -89,14 +92,20 @@ export default function IndividualTaskDetailPage() {
       loadTask();
       invalidateJourneyCaches();
       if (status && !["queued", "running"].includes(status.status)) {
+        const key = `${status.attempt}:${status.status}:${status.created_at}`;
+        if (reportedReview.current === key) return;
+        reportedReview.current = key;
         posthog.capture("ai_review_completed", {
-          task_id: taskId,
+          // Before 2026-10-06 this carried the progress row id under task_id.
+          task_id: task?.task_id ?? null,
+          task_title: task?.title ?? null,
+          progress_id: taskId,
           outcome: status.status,
           attempt: status.attempt,
         });
       }
     },
-    [loadTask, invalidateJourneyCaches, taskId]
+    [loadTask, invalidateJourneyCaches, taskId, task?.task_id, task?.title]
   );
 
   /**
@@ -146,6 +155,8 @@ export default function IndividualTaskDetailPage() {
       const result = await submitIndividualTaskV1(task.progress_id, payload);
       posthog.capture("individual_task_submitted", {
         task_id: task.task_id,
+        task_title: task.title,
+        progress_id: task.progress_id,
         attempt: result.attempt,
         mode: result.mode,
       });
