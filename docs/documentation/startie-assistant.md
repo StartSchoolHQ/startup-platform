@@ -68,6 +68,19 @@ RPCs (all SECURITY DEFINER, EXECUTE authenticated + service_role, anon revoked):
 
 Per message ≈ $0.005 on gpt-5.4-mini (7k cached prefix, ~2.4k fresh input, ~350 output, reasoning low). Realistic month for 75 students: $25–75. Hard cap (everyone at 25/day): ~$260. Levers: reasoning effort, history turns, model. The Startie page's stats strip shows cost this month and cache hit rate.
 
+## Observability (PostHog)
+
+Every reply is one `$ai_generation` event in PostHog AI observability (project 121888, EU).
+`streamStartieReply` captures it through `src/lib/ai/telemetry.ts` on success and on failure
+(partial text + error), and the chat route awaits `flushAiTelemetry()` before closing the stream.
+Identity: distinct id = the student's `users.id` (same as the browser identify), trace id = the
+student's `assistant_messages` row, `$ai_session_id` = the thread, so one conversation is one
+session on the Sessions tab. Properties: full prompt (system, developer, history) and reply,
+tokens incl. cached and reasoning, latency, time to first token, `feature: startie`,
+`prompt_version`, `reasoning_effort`. Clusters groups these conversations by topic once a few
+days of traffic exist. Off when `NEXT_PUBLIC_POSTHOG_KEY` is unset or under Vitest. The capture
+is hand-rolled because `@posthog/ai` pins `openai@^6` and the app is on 7.
+
 ## Rollback
 
 Soft: Admin → Settings → Startie assistant → Enabled off. Widget disappears, route returns 503.

@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { AssistantChatSchema } from "@/lib/validation-schemas";
 import { getOpenAI } from "@/lib/ai-review/openai-client";
 import { estimateCostUsd } from "@/lib/ai/pricing";
+import { flushAiTelemetry } from "@/lib/ai/telemetry";
 import {
   streamStartieReply,
   type HistoryTurn,
@@ -174,6 +175,12 @@ export async function POST(request: NextRequest) {
         context: buildContextMessage(snapshot, page, newPromptNonce()),
         history,
         promptCacheKey: `startie:${PROMPT_VERSION}`,
+        telemetry: {
+          distinctId: user.id,
+          traceId: sent.message_id,
+          sessionId: sent.thread_id,
+          properties: { prompt_version: PROMPT_VERSION },
+        },
       });
     } catch (e) {
       const text = await recordApology("", e);
@@ -211,6 +218,9 @@ export async function POST(request: NextRequest) {
           const text = await recordApology(streamed, e);
           safeEnqueue(text.slice(streamed.length));
         } finally {
+          // The reply's $ai_generation is already captured; make sure it is
+          // sent before this stream (and the function) ends.
+          await flushAiTelemetry();
           if (!cancelled) {
             try {
               controller.close();

@@ -1,6 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type OpenAI from "openai";
 import { streamStartieReply } from "@/lib/assistant/chat";
+import { captureAiGeneration } from "@/lib/ai/telemetry";
+
+vi.mock("@/lib/ai/telemetry", () => ({ captureAiGeneration: vi.fn() }));
 
 type Event =
   | { type: "response.output_text.delta"; delta: string }
@@ -188,5 +191,82 @@ describe("streamStartieReply failure events", () => {
     ]);
     const gen = streamStartieReply({ ...args, openai: client });
     await expect(gen.next()).rejects.toThrow(/max_output_tokens/);
+  });
+});
+
+describe("streamStartieReply telemetry", () => {
+  const telemetry = {
+    distinctId: "user-1",
+    traceId: "msg-1",
+    sessionId: "thread-1",
+    properties: { prompt_version: "v1" },
+  };
+  const args = {
+    model: "gpt-5.4-mini",
+    effort: "low" as const,
+    system: "S",
+    context: "C",
+    history: [{ role: "user" as const, content: "hello" }],
+    promptCacheKey: "k",
+    telemetry,
+  };
+
+  beforeEach(() => {
+    vi.mocked(captureAiGeneration).mockReset();
+  });
+
+  it("captures one generation with the full prompt, reply, usage and timing", async () => {
+    const { client } = fakeOpenAI([
+      { type: "response.output_text.delta", delta: "Hi" },
+      { type: "response.output_text.delta", delta: " there" },
+      completed,
+    ]);
+    await drain(streamStartieReply({ ...args, openai: client }));
+    expect(captureAiGeneration).toHaveBeenCalledTimes(1);
+    const g = vi.mocked(captureAiGeneration).mock.calls[0][0];
+    expect(g).toMatchObject({
+      distinctId: "user-1",
+      traceId: "msg-1",
+      sessionId: "thread-1",
+      spanName: "startie.reply",
+      feature: "startie",
+      model: "gpt-5.4-mini-2026-08-01",
+      output: "Hi there",
+      usage: { input: 100, cached: 70, cacheWrite: 1920, output: 5 },
+      stream: true,
+      properties: { prompt_version: "v1", reasoning_effort: "low" },
+    });
+    expect(g.input.map((m) => m.role)).toEqual(["system", "developer", "user"]);
+    expect(g.input[2].content).toBe("hello");
+    expect(g.error).toBeUndefined();
+    expect(g.latencySeconds).toBeGreaterThanOrEqual(0);
+    expect(g.timeToFirstTokenSeconds).toBeGreaterThanOrEqual(0);
+  });
+
+  it("captures a failed stream as an error with the partial reply, then rethrows", async () => {
+    const { client } = fakeOpenAI(
+      [
+        { type: "response.output_text.delta", delta: "Hi" },
+        { type: "response.output_text.delta", delta: " there" },
+        completed,
+      ],
+      1
+    );
+    const gen = streamStartieReply({ ...args, openai: client });
+    await gen.next();
+    await expect(gen.next()).rejects.toThrow("stream died");
+    expect(captureAiGeneration).toHaveBeenCalledTimes(1);
+    const g = vi.mocked(captureAiGeneration).mock.calls[0][0];
+    expect(g.output).toBe("Hi");
+    expect(g.error).toBeInstanceOf(Error);
+    expect(g.model).toBe("gpt-5.4-mini");
+  });
+
+  it("captures nothing without a telemetry context", async () => {
+    const { client } = fakeOpenAI([completed]);
+    await drain(
+      streamStartieReply({ ...args, telemetry: undefined, openai: client })
+    );
+    expect(captureAiGeneration).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,11 @@
+import type OpenAI from "openai";
 import type { EvidenceBundle } from "./evidence";
 import { estimateCostUsd } from "@/lib/ai/pricing";
+import {
+  captureAiGeneration,
+  type AiMessage,
+  type AiTelemetryContext,
+} from "@/lib/ai/telemetry";
 import { getOpenAI } from "./openai-client";
 import {
   buildSystemPrompt,
@@ -36,24 +42,62 @@ export function estimateCost(
 /** A second model call needs this much of the worker budget left to be safe. */
 const RETRY_COST_MS = 95_000;
 
+const REASONING_EFFORT = "medium" as const;
+
+/**
+ * Flattens the multipart user message for PostHog: text stays, images and
+ * PDFs become labels. Their base64 payloads would blow the event size cap
+ * and the evidence manifest already records what was sent.
+ */
+function toAiMessages(
+  messages: {
+    role: string;
+    content: string | OpenAI.Responses.ResponseInputContent[];
+  }[]
+): AiMessage[] {
+  return messages.map((m) => ({
+    role: m.role,
+    content:
+      typeof m.content === "string"
+        ? m.content
+        : m.content
+            .map((part) => {
+              if (part.type === "input_text") return part.text;
+              if (part.type === "input_file") {
+                return `[file: ${part.filename ?? "file"}]`;
+              }
+              return "[image]";
+            })
+            .join("\n"),
+  }));
+}
+
+/**
+ * One review = one model call, or two when the first reply is unparseable.
+ * With `telemetry` set, every call becomes its own `$ai_generation` event on
+ * the review's trace — including SDK failures, so timeouts show up in
+ * PostHog with their latency instead of vanishing.
+ */
 export async function reviewWithModel(
   criteria: CriteriaSnapshot,
   bundle: EvidenceBundle,
   settings: AiReviewSettings,
-  deadlineAt?: number
+  deadlineAt?: number,
+  telemetry?: AiTelemetryContext
 ): Promise<ModelReview> {
   const openai = getOpenAI();
   const nonce = newPromptNonce();
+  const messages = [
+    { role: "system" as const, content: buildSystemPrompt(nonce) },
+    {
+      role: "user" as const,
+      content: buildUserContent(criteria, bundle, nonce),
+    },
+  ];
   const request = {
     model: settings.model,
-    reasoning: { effort: "medium" as const },
-    input: [
-      { role: "system" as const, content: buildSystemPrompt(nonce) },
-      {
-        role: "user" as const,
-        content: buildUserContent(criteria, bundle, nonce),
-      },
-    ],
+    reasoning: { effort: REASONING_EFFORT },
+    input: messages,
     text: {
       format: {
         type: "json_schema" as const,
@@ -78,12 +122,61 @@ export async function reviewWithModel(
         `Model returned unparseable output (retry budget exhausted): ${lastError instanceof Error ? lastError.message : String(lastError)}`
       );
     }
-    const response = await openai.responses.create(request);
+    const callStartedAt = Date.now();
+    let response: Awaited<ReturnType<typeof openai.responses.create>>;
+    try {
+      response = await openai.responses.create(request);
+    } catch (e) {
+      if (telemetry) {
+        captureAiGeneration({
+          ...telemetry,
+          spanName: "ai_review.grade",
+          feature: "ai_review",
+          model: settings.model,
+          input: toAiMessages(messages),
+          output: null,
+          usage: { input: 0, cached: 0, output: 0 },
+          latencySeconds: (Date.now() - callStartedAt) / 1000,
+          stream: false,
+          error: e,
+          properties: {
+            ...telemetry.properties,
+            reasoning_effort: REASONING_EFFORT,
+            model_call: attempt + 1,
+          },
+        });
+      }
+      throw e;
+    }
+    const input = response.usage?.input_tokens ?? 0;
+    const output = response.usage?.output_tokens ?? 0;
+    const cached = response.usage?.input_tokens_details?.cached_tokens ?? 0;
+    if (telemetry) {
+      captureAiGeneration({
+        ...telemetry,
+        spanName: "ai_review.grade",
+        feature: "ai_review",
+        model: response.model ?? settings.model,
+        input: toAiMessages(messages),
+        output: response.output_text || null,
+        usage: {
+          input,
+          cached,
+          output,
+          reasoning:
+            response.usage?.output_tokens_details?.reasoning_tokens ?? 0,
+        },
+        latencySeconds: (Date.now() - callStartedAt) / 1000,
+        stream: false,
+        properties: {
+          ...telemetry.properties,
+          reasoning_effort: REASONING_EFFORT,
+          model_call: attempt + 1,
+        },
+      });
+    }
     try {
       const result = parseReviewResult(response.output_text);
-      const input = response.usage?.input_tokens ?? 0;
-      const output = response.usage?.output_tokens ?? 0;
-      const cached = response.usage?.input_tokens_details?.cached_tokens ?? 0;
       return {
         result,
         raw: response,

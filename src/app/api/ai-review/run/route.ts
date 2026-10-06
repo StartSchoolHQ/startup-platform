@@ -2,6 +2,7 @@ import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { runReview } from "@/lib/ai-review/run-review";
+import { flushAiTelemetry } from "@/lib/ai/telemetry";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -45,5 +46,8 @@ export async function POST(request: Request) {
     // Leave the row in `running`; the sweeper retries (3x) then finalises as failed.
     console.error("[ai-review] run failed", parsed.data.review_id, e);
     return NextResponse.json({ error: "review_failed" }, { status: 500 });
+  } finally {
+    // The model call's $ai_generation event must leave before the function dies.
+    await flushAiTelemetry();
   }
 }

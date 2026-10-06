@@ -402,6 +402,21 @@ output. Update `PRICING` if OpenAI changes list prices — this is an estimate s
 (`ai_task_reviews.cost_usd`) and surfaced in the admin summary (`cost_usd`) and detail dialog, not a
 billing-accurate figure from OpenAI's own usage API.
 
+## Observability (PostHog)
+
+Each model call is one `$ai_generation` event in PostHog AI observability (project 121888, EU),
+captured in `reviewWithModel` through `src/lib/ai/telemetry.ts`: a parse-retry is a second event
+on the same trace (`model_call: 2`), an SDK failure (timeout, 5xx) is an error event with its
+latency. The worker route awaits `flushAiTelemetry()` in `finally`. Identity: distinct id = the
+student's `users.id`, trace id = the `ai_task_reviews` row id, `$ai_session_id` null (one-shot).
+Properties: the system prompt and the flattened user message (text kept; images and PDFs become
+`[image]` / `[file: name]` labels, never base64), the raw JSON verdict, tokens incl. cached and
+reasoning, latency, `feature: ai_review`, `prompt_version`, `task_id`, `progress_id`,
+`attempt`, `reasoning_effort`. Datasets: save real traces from the Traces tab to a dataset and
+re-run them after a persona or criteria change to catch regressions before shipping. Runs with
+`dryRun` (calibration script, tests) capture nothing. Off when `NEXT_PUBLIC_POSTHOG_KEY` is unset
+or under Vitest. Hand-rolled because `@posthog/ai` pins `openai@^6` and the app is on 7.
+
 ---
 
 ## Rollback

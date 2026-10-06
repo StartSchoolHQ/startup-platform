@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
+import type { AiTelemetryContext } from "@/lib/ai/telemetry";
+import { PROMPT_VERSION } from "./prompt";
 import { applyDecision } from "./apply";
 import { decide } from "./decide";
 import { buildEvidence } from "./evidence";
@@ -27,6 +29,8 @@ export interface SnapshotOptions {
   /** Called with the manifest as soon as evidence is built, before the model call. */
   onEvidence?: (manifest: EvidenceManifestEntry[]) => Promise<void>;
   deadlineAt?: number;
+  /** PostHog AI observability; omitted on dry runs and in tests. */
+  telemetry?: AiTelemetryContext;
 }
 export interface RunOutput {
   outcome: ReviewOutcome;
@@ -69,7 +73,8 @@ export async function runReviewOnSnapshot(
     criteria,
     bundle,
     settings,
-    opts.deadlineAt
+    opts.deadlineAt,
+    opts.telemetry
   );
   const d = decide(model.result, settings.confidenceThreshold);
   return {
@@ -147,6 +152,19 @@ export async function runReview(
           .eq("id", reviewId);
       },
       deadlineAt: opts.deadlineAt,
+      telemetry: opts.dryRun
+        ? undefined
+        : {
+            distinctId: row.user_id,
+            traceId: row.id,
+            sessionId: null,
+            properties: {
+              prompt_version: PROMPT_VERSION,
+              task_id: row.task_id,
+              progress_id: row.progress_id,
+              attempt: row.attempt,
+            },
+          },
     }
   );
 
