@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { getPageContext } from "@/lib/assistant/page-context";
+import { track } from "@/lib/analytics/events";
 import type { ChatMessage } from "@/types/assistant";
 import {
   fetchThreadMessages,
@@ -72,6 +73,10 @@ export function useStartieChat(opts: Options) {
           error?: string;
         };
         setPending([]);
+        track("startie_reply_failed", {
+          page: opts.pathname,
+          status: res.status,
+        });
         if (res.status === 429) setRemainingOverride(0);
         if (res.status === 429 || res.status === 503) {
           setBanner(body.error ?? "Startie is unavailable right now.");
@@ -109,6 +114,11 @@ export function useStartieChat(opts: Options) {
         setThreadId(newThreadId);
       }
       setPending([]);
+      track("startie_message_sent", {
+        page: opts.pathname,
+        new_thread: !threadId,
+        chars: content.length,
+      });
       opts.onReplyDone?.();
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: threadsKey(opts.userId) }),
@@ -143,7 +153,10 @@ export function useStartieChat(opts: Options) {
       );
       return { key, previous };
     },
-    onSuccess: () => toast.success("Thanks, an admin will look at that reply."),
+    onSuccess: () => {
+      track("startie_reply_flagged", {});
+      toast.success("Thanks, an admin will look at that reply.");
+    },
     onError: (error: Error, _id, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(ctx.key, ctx.previous);
       toast.error(`Couldn't flag that reply — ${error.message}`);

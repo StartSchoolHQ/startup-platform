@@ -28,7 +28,9 @@ export function PostHogRouteGate() {
 
     if (isNoTrackRoute(pathname ?? "")) {
       posthog.opt_out_capturing();
-    } else {
+    } else if (posthog.has_opted_out_capturing()) {
+      // Only flip when needed: opt_in_capturing() sends an $opt_in event each
+      // time it is called, and this effect runs on every navigation.
       posthog.opt_in_capturing();
     }
   }, [pathname]);

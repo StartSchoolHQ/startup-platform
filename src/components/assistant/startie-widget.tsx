@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics/events";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useApp } from "@/contexts/app-context";
@@ -94,6 +95,7 @@ function StartieWidgetInner({
   const openPanel = () => {
     setUnread(false);
     setOpen(true);
+    track("startie_opened", { page: pathname });
   };
 
   return (

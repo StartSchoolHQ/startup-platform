@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics/events";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { TicketPriority } from "@/components/support/priority-picker";
@@ -106,6 +107,10 @@ export function useReportProblemForm() {
         throw new Error(error.error || error.message || fallback);
       }
       setLastSubmissionTime(now);
+      track("support_ticket_submitted", {
+        priority: ticket.priority,
+        attachments: ticket.attachments.length,
+      });
       setTicket(EMPTY_TICKET);
       toast.success("Ticket sent", {
         description: "The team has it and will reply to your email.",

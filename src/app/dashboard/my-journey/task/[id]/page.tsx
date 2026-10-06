@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { getTaskByIdLazy } from "@/lib/tasks";
@@ -12,6 +12,7 @@ import type { AiReviewStatus } from "@/lib/database";
 import { TaskActionCard } from "@/components/my-journey/task-action-card";
 import { TaskDetailTabs } from "@/components/my-journey/task-detail-tabs";
 import posthog from "posthog-js";
+import { track } from "@/lib/analytics/events";
 import { TaskSubmissionModal } from "@/components/tasks/task-submission-modal";
 import { useAppContext } from "@/contexts/app-context";
 import { toast } from "sonner";
@@ -35,6 +36,7 @@ export default function IndividualTaskDetailPage() {
   const [showSuggestEditsModal, setShowSuggestEditsModal] = useState(false);
 
   const taskId = params.id as string;
+  const viewed = useRef(false);
 
   const loadTask = useCallback(async () => {
     if (!taskId || !user?.id) return;
@@ -43,6 +45,15 @@ export default function IndividualTaskDetailPage() {
     try {
       const taskData = await getTaskByIdLazy(taskId, user.id);
       setTask(taskData);
+      if (taskData && !viewed.current) {
+        viewed.current = true;
+        track("individual_task_viewed", {
+          task_id: taskData.task_id,
+          task_title: taskData.title,
+          status: taskData.status ?? null,
+          category: taskData.category ?? null,
+        });
+      }
     } catch (error) {
       console.error("Error loading task:", error);
     } finally {

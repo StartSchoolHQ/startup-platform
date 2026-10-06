@@ -22,6 +22,7 @@ import { MY_JOURNEY_TASKS_ANCHOR } from "@/lib/my-journey-anchors";
 import { isPhaseLockedError, phaseLocks } from "@/lib/my-journey-phase-lock";
 import { buildMyJourneyTasks } from "@/lib/my-journey-tasks";
 import { startTaskLazy } from "@/lib/tasks";
+import { track } from "@/lib/analytics/events";
 import { StatsCard } from "@/types/dashboard";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trophy, Zap } from "lucide-react";
@@ -195,7 +196,14 @@ export default function MyJourneyPage() {
     // Starting a task means working on it: open the task page (from the row
     // and from the preview modal alike) instead of leaving the student on
     // the list.
-    onSuccess: (progressId) => {
+    onSuccess: (progressId, rowId) => {
+      const row = userTasks.find((t) => t.id === rowId);
+      if (row?.task_id) {
+        track("individual_task_started", {
+          task_id: row.task_id,
+          task_title: row.title,
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["myJourney"] });
       queryClient.invalidateQueries({ queryKey: MY_JOURNEY_OVERVIEW_KEY });
       router.push(`/dashboard/my-journey/task/${progressId}`);

@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics/events";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AlertCircle, Send } from "lucide-react";
@@ -56,6 +57,7 @@ export function SuggestTaskForm() {
     }
     suggest.mutate(parsed.data, {
       onSuccess: () => {
+        track("task_suggestion_submitted", {});
         setForm(EMPTY);
         toast.success("Suggestion sent", {
           description: "We'll review it and add it to the library if it fits.",
