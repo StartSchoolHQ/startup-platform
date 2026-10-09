@@ -29,7 +29,7 @@ export function HowMyJourneyWorksCard() {
     {
       icon: TrendingUp,
       title: "Phases open in order",
-      text: "Finish half of a phase and the next one unlocks. The reading list is open from day one.",
+      text: "Finish 75% of a phase and the next one unlocks. The reading list is open from day one.",
     },
     {
       icon: Users,

@@ -20,9 +20,9 @@ export interface PhaseLock {
   description?: string;
 }
 
-/** Approved tasks needed for >= 50% of `total` (matches the SQL rule). */
-export function requiredForHalf(total: number): number {
-  return Math.ceil(total / 2);
+/** Approved tasks needed for >= 75% of `total` (matches the SQL rule). */
+export function requiredToUnlock(total: number): number {
+  return Math.ceil((total * 3) / 4);
 }
 
 /**
@@ -50,7 +50,7 @@ export function phaseLocks(rows: PhaseProgressRow[]): Map<string, PhaseLock> {
     }
     const total = prev.total_tasks ?? 0;
     const done = prev.completed_tasks ?? 0;
-    const needed = requiredForHalf(total);
+    const needed = requiredToUnlock(total);
     locks.set(row.achievement_id, {
       locked: true,
       description: `Locked. Finish ${needed} of ${total} tasks in ${prev.achievement_name} to open this phase (${done} done).`,

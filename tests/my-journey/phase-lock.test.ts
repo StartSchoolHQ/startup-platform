@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   isPhaseLockedError,
   phaseLocks,
-  requiredForHalf,
+  requiredToUnlock,
 } from "@/lib/my-journey-phase-lock";
 
 const rows = [
@@ -45,11 +45,11 @@ const rows = [
 ];
 
 describe("my journey phase lock helpers", () => {
-  it("needs the ceiling of half the tasks", () => {
-    expect(requiredForHalf(11)).toBe(6);
-    expect(requiredForHalf(12)).toBe(6);
-    expect(requiredForHalf(15)).toBe(8);
-    expect(requiredForHalf(0)).toBe(0);
+  it("needs the ceiling of three quarters of the tasks", () => {
+    expect(requiredToUnlock(11)).toBe(9);
+    expect(requiredToUnlock(12)).toBe(9);
+    expect(requiredToUnlock(15)).toBe(12);
+    expect(requiredToUnlock(0)).toBe(0);
   });
 
   it("explains a locked phase with the previous phase's numbers", () => {
@@ -58,10 +58,10 @@ describe("my journey phase lock helpers", () => {
     expect(locks.get("read")).toEqual({ locked: false });
     expect(locks.get("p2")?.locked).toBe(true);
     expect(locks.get("p2")?.description).toBe(
-      "Locked. Finish 6 of 11 tasks in Know Yourself & Experiment to open this phase (4 done)."
+      "Locked. Finish 9 of 11 tasks in Know Yourself & Experiment to open this phase (4 done)."
     );
     expect(locks.get("p3")?.description).toContain(
-      "8 of 15 tasks in Get Outside the Building"
+      "12 of 15 tasks in Get Outside the Building"
     );
   });
 

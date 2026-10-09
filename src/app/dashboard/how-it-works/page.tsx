@@ -99,7 +99,7 @@ export default function HowItWorksPage() {
             Programme timeline
           </h2>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            September to December on one scale: the curriculum month by month,
+            September to January on one scale: the curriculum month by month,
             the My Journey phases, every planned task, the readings and the
             recurring rhythm. Dates are the plan; phases open by progress.
             Scroll sideways.

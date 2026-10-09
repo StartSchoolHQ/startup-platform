@@ -154,7 +154,7 @@ export function ProgrammeTimeline({ today }: { today: string }) {
             <LaneHeading
               icon={Milestone}
               title="My Journey phases"
-              aside="Planned windows. Phases open by progress, not by date. About 45 min a day."
+              aside="Planned windows. 75% of a phase opens the next. About 45 min a day."
             />
             <PhaseLane />
 
@@ -168,7 +168,7 @@ export function ProgrammeTimeline({ today }: { today: string }) {
             <LaneHeading
               icon={BookOpen}
               title="Reading"
-              aside="The Mom Test and Mindset count toward Phase 1"
+              aside="The Mom Test and Mindset at your own pace, deadline Dec 20"
             />
             <ReadingLane />
 

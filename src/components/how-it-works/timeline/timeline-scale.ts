@@ -6,8 +6,8 @@
 
 /** First Monday shown on the ruler. */
 export const RANGE_START = "2026-09-07";
-/** Last day shown, inclusive. */
-export const RANGE_END = "2026-12-31";
+/** Last day shown, inclusive: the Sunday after the Building Hackathon. */
+export const RANGE_END = "2027-01-17";
 export const PX_PER_DAY = 18;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -63,14 +63,17 @@ export function monthSpans(): MonthSpan[] {
   let y = first.getUTCFullYear();
   let m = first.getUTCMonth();
   const rangeEnd = toUtc(RANGE_END);
+  const firstYear = y;
   while (Date.UTC(y, m, 1) <= rangeEnd) {
     const monthStart = Date.UTC(y, m, 1);
     const monthEnd = Date.UTC(y, m + 1, 0);
+    const monthName = new Date(monthStart).toLocaleString("en-GB", {
+      month: "long",
+      timeZone: "UTC",
+    });
     out.push({
-      label: new Date(monthStart).toLocaleString("en-GB", {
-        month: "long",
-        timeZone: "UTC",
-      }),
+      // The year appears once the board crosses into a new one.
+      label: y === firstYear ? monthName : `${monthName} ${y}`,
       start: toIso(Math.max(monthStart, toUtc(RANGE_START))),
       end: toIso(Math.min(monthEnd, rangeEnd)),
     });

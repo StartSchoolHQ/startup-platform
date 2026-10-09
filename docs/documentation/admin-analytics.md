@@ -36,7 +36,7 @@ Severity = number of reasons, +1 when inactive. **Activity** = task start/submit
 
 - **Active student (week)**: any activity event in that week. Weekly active % = active ÷ active-status students in scope.
 - **Highest phase**: max gated phase where `my_journey_phase_unlocked_v1` is true (1 when none).
-- **Pace**: median of "phase reached by week end" across students; a phase counts as reached once ≥50% of the previous phase's gated tasks were approved by then.
+- **Pace**: median of "phase reached by week end" across students; a phase counts as reached once ≥75% of the previous phase's gated tasks were approved by then.
 - **First-pass rate**: solo = attempt-1 approvals ÷ progress rows with any AI decision; team = approved with no rejected `review_completed` event ÷ reviewed.
 - **Median hours**: `completed_at − started_at` for approved rows.
 - **Participation (overview v3)**: reports ÷ expected, where expected = team members that week + solo students without a team that week while My Journey is on. Solo reports become team reports the week a student joins a team; the sentiment line is continuous.

@@ -22,7 +22,7 @@ export function PhaseFunnel({ funnel, total }: Props) {
       <CardHeader>
         <CardTitle>Where students are</CardTitle>
         <CardDescription>
-          Highest phase each student has unlocked. Phases open at 50% of the
+          Highest phase each student has unlocked. Phases open at 75% of the
           previous one.
         </CardDescription>
       </CardHeader>

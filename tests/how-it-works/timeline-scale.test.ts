@@ -32,8 +32,8 @@ describe("timeline scale", () => {
     const weeks = weekStarts();
     expect(weeks[0]).toBe("2026-09-07");
     expect(weeks[1]).toBe("2026-09-14");
-    expect(weeks.at(-1)).toBe("2026-12-28");
-    expect(weeks).toHaveLength(17);
+    expect(weeks.at(-1)).toBe("2027-01-11");
+    expect(weeks).toHaveLength(19);
   });
 
   it("clips the month spans to the range", () => {
@@ -43,9 +43,11 @@ describe("timeline scale", () => {
       "October",
       "November",
       "December",
+      "January 2027",
     ]);
     expect(months[0]).toMatchObject({ start: "2026-09-07", end: "2026-09-30" });
     expect(months[3]).toMatchObject({ start: "2026-12-01", end: "2026-12-31" });
+    expect(months[4]).toMatchObject({ start: "2027-01-01", end: "2027-01-17" });
   });
 });
 

@@ -22,7 +22,7 @@ describe("ProgrammeTimeline", () => {
 
   it("labels the gate with the app's real unlock rule", () => {
     render(<ProgrammeTimeline today="2026-09-30" />);
-    expect(screen.getByText(/6 of 11 Phase 1 tasks approved/)).toBeTruthy();
+    expect(screen.getByText(/9 of 11 Phase 1 tasks approved/)).toBeTruthy();
   });
 
   it("marks today only while the programme is running", () => {

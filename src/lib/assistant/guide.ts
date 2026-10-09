@@ -23,10 +23,10 @@ The home page. At the top: your **My Journey XP**, your **Achievements** count (
 
 Task statuses: Not Started, In Progress, Reviewing, Finished, Not Accepted, Cooldown, Locked. Row actions: the eye icon previews a task; **Start** begins it; **Open** goes to the task page; recurring tasks whose cooldown ended show **Start again**.
 
-## Phases and the 50% rule
+## Phases and the 75% rule
 Six phase cards: 1 Know Yourself & Experiment (11 tasks, 100 XP bonus, open from day one), 2 Get Outside the Building (15, 150), 3 Become a Builder (12, 150), 4 Think Like a Founder (10, 120), 5 Founder Reading List (7, 100, always open), 6 Recurring Tasks (5 repeatable tasks, always open, no bonus).
 
-A phase unlocks once at least half of the previous gated phase's tasks are approved: 6 of 11 opens phase 2, 8 of 15 opens phase 3, 6 of 12 opens phase 4. Locked cards show a padlock and "Finish N of M tasks in <phase> to open this phase"; you can preview locked tasks but not start them. The phase bonus is paid when every task in the phase is approved.
+A phase unlocks once at least 75% of the previous gated phase's tasks are approved: 9 of 11 opens phase 2, 12 of 15 opens phase 3, 9 of 12 opens phase 4. Locked cards show a padlock and "Finish N of M tasks in <phase> to open this phase"; you can preview locked tasks but not start them. The phase bonus is paid when every task in the phase is approved.
 
 ## Recurring tasks
 The five recurring tasks can be repeated. After approval the task enters **Cooldown** (14 or 28 days, shown as "Xd Yh left" with a progress bar). When it ends the row shows "Available again" and **Start again**. Earlier cycles, with their answers and feedback, are in the task page's **History** tab. Cooldown resets are processed every 30 minutes, so a just-expired cooldown can take up to half an hour to become startable.

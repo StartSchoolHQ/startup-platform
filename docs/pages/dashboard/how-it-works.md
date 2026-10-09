@@ -26,4 +26,13 @@ Left-aligned, `max-w-3xl`. One large tracking-tight headline ("From your first t
 
 ## Keeping it true
 
-The copy states facts that live elsewhere: Google sign-in with `@startschool.org` only (`hook_restrict_signup`), phases unlock at half of the previous phase (`my_journey_phase_unlocked_v1`, 50% hard-coded), weekly report due Monday 10:00 Riga time (weekly-report card / reminders), AI review with unlimited attempts (`docs/documentation/ai-task-review.md`). Change one of those and update the stop.
+The copy states facts that live elsewhere: Google sign-in with `@startschool.org` only (`hook_restrict_signup`), phases unlock at 75% of the previous phase (`my_journey_phase_unlocked_v1`, 75% hard-coded since 2026-10-09), weekly report due Monday 10:00 Riga time (weekly-report card / reminders), AI review with unlimited attempts (`docs/documentation/ai-task-review.md`). Change one of those and update the stop.
+
+## Programme timeline
+
+Under the route sits the **programme timeline** (added 2026-09-29, re-planned 2026-10-09 from the programme board): one horizontally scrolling day scale from 7 Sep 2026 to 17 Jan 2027 with a sticky month/week ruler and a today line the board scrolls to on load.
+
+- **Lanes, top to bottom:** Startup Module curriculum (one cell per month, goals + topic pills, January = hackathon prep and the Building Hackathon), My Journey phases (four overlapping bars with their planned windows and task counts; under each phase start a label with the real unlock rule, e.g. "Opens at 9 of 11 Phase 1 tasks approved (75%)"; the holiday buffer and the two January hackathon weeks as dashed milestones), Tasks (every planned solo task as a card with its phase colour, planned days and effort; six tasks carry a dashed "waits until" tail for the days spent waiting for replies), Reading (The Mom Test and Mindset, own pace, deadline 20 Dec) and Recurring (four rows, a dot per planned date).
+- **Content is static** in `src/components/how-it-works/timeline/timeline-data.ts`; task titles must match `tasks.title`. Pure scale and row-packing helpers in `timeline-scale.ts`; lanes in `timeline-lanes.tsx` / `timeline-lanes-top.tsx`; colours in `phase-colors.ts`. Tests under `tests/how-it-works/`.
+- **Deliberately not on the board:** a "create your profile" step (profile setup is forced before the dashboard, there is no task for it) and the Founder Reading List books (always open, no planned dates).
+- **Next batch:** edit the dates in `timeline-data.ts`, extend `RANGE_END` in `timeline-scale.ts` if the programme runs longer, and keep the `opensAt` strings in step with the SQL rule.

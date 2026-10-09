@@ -203,7 +203,7 @@ export function TaskPreviewModal({
               disabled={!!task.phaseLocked}
               title={
                 task.phaseLocked
-                  ? "Locked. Finish half of the previous phase to open this one."
+                  ? "Locked. Finish 75% of the previous phase to open this one."
                   : undefined
               }
             >

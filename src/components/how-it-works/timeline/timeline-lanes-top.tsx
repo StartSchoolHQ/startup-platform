@@ -1,7 +1,12 @@
 import type { LucideIcon } from "lucide-react";
 import { Target } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CURRICULUM_MONTHS, HOLIDAY_BUFFER, PHASES } from "./timeline-data";
+import {
+  CURRICULUM_MONTHS,
+  HACKATHON,
+  HOLIDAY_BUFFER,
+  PHASES,
+} from "./timeline-data";
 import { PHASE_BAR, PHASE_EDGE } from "./phase-colors";
 import { formatRange, monthSpans, spanWidth, xOf } from "./timeline-scale";
 
@@ -85,7 +90,8 @@ const PHASE_ROW_H = 38;
 const GATE_ROW_H = 26;
 
 /**
- * Four overlapping phase bars on two rows, the holiday buffer, and under
+ * Four overlapping phase bars on two rows, the holiday buffer and the
+ * January hackathon weeks as dashed milestones, and under
  * each phase start a label saying how the app really opens it. The gate
  * line drops from the previous phase's bar to its label so nothing covers
  * the bar text.
@@ -134,17 +140,20 @@ export function PhaseLane() {
           </div>
         );
       })}
-      <div
-        className="text-muted-foreground absolute flex h-8 items-center rounded-md border border-dashed px-3 text-xs whitespace-nowrap"
-        style={{
-          top: 0,
-          left: xOf(HOLIDAY_BUFFER.start),
-          width: spanWidth(HOLIDAY_BUFFER.start, HOLIDAY_BUFFER.end),
-        }}
-      >
-        {HOLIDAY_BUFFER.label},{" "}
-        {formatRange(HOLIDAY_BUFFER.start, HOLIDAY_BUFFER.end)}
-      </div>
+      {[HOLIDAY_BUFFER, ...HACKATHON].map((m, i) => (
+        <div
+          key={m.label}
+          className="text-muted-foreground absolute flex h-8 items-center overflow-hidden rounded-md border border-dashed px-3 text-xs whitespace-nowrap"
+          style={{
+            top: (i % 2) * PHASE_ROW_H,
+            left: xOf(m.start),
+            width: spanWidth(m.start, m.end),
+          }}
+          title={`${m.label}, ${formatRange(m.start, m.end)}`}
+        >
+          {m.label}, {formatRange(m.start, m.end)}
+        </div>
+      ))}
     </div>
   );
 }

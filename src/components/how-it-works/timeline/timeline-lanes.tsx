@@ -3,6 +3,7 @@ import { READINGS, RECURRING, TASKS } from "./timeline-data";
 import { PHASE_EDGE, READING_EDGE, RECURRING_DOT } from "./phase-colors";
 import {
   PX_PER_DAY,
+  dayIndex,
   formatEffort,
   formatRange,
   packRows,
@@ -13,39 +14,71 @@ import {
 const TASK_MIN_DAYS = 8;
 const TASK_ROW_H = 68;
 
-/** Every dated task as a small card with its phase colour on the edge. */
+function cardWidth(start: string, end: string, minDays: number): number {
+  return Math.max(spanWidth(start, end), minDays * PX_PER_DAY) - 4;
+}
+
+/**
+ * Every dated task as a small card with its phase colour on the edge. A
+ * task that waits for replies after the work is done gets a dashed tail
+ * out to that date, so the wait sits on the scale too.
+ */
 export function TaskLane() {
-  const rows = packRows(TASKS, TASK_MIN_DAYS);
+  // Pack on the full footprint so a tail never runs under the next card.
+  const rows = packRows(
+    TASKS.map((t) => ({ start: t.start, end: t.waitsUntil ?? t.end })),
+    TASK_MIN_DAYS
+  );
   const rowCount = Math.max(...rows) + 1;
   return (
     <div className="relative mx-3" style={{ height: rowCount * TASK_ROW_H }}>
-      {TASKS.map((task, i) => (
-        <div
-          key={`${task.phase}-${task.title}`}
-          className={cn(
-            "bg-card absolute flex h-[62px] flex-col justify-between rounded-md border border-l-[3px] px-2.5 py-1.5 shadow-xs",
-            task.reading ? READING_EDGE : PHASE_EDGE[task.phase]
-          )}
-          style={{
-            top: rows[i] * TASK_ROW_H,
-            left: xOf(task.start),
-            width:
-              Math.max(
-                spanWidth(task.start, task.end),
-                TASK_MIN_DAYS * PX_PER_DAY
-              ) - 4,
-          }}
-          title={`${task.title} (${formatRange(task.start, task.end)}, ${formatEffort(task.hours)})`}
-        >
-          <p className="line-clamp-2 text-[11.5px] leading-tight font-medium">
-            {task.title}
-          </p>
-          <p className="text-muted-foreground flex gap-2 text-[10.5px] whitespace-nowrap tabular-nums">
-            <span>{formatRange(task.start, task.end)}</span>
-            <span>{formatEffort(task.hours)}</span>
-          </p>
-        </div>
-      ))}
+      {TASKS.map((task, i) => {
+        const width = cardWidth(task.start, task.end, TASK_MIN_DAYS);
+        const tail =
+          task.waitsUntil && dayIndex(task.waitsUntil) > dayIndex(task.end)
+            ? xOf(task.waitsUntil) + PX_PER_DAY - (xOf(task.start) + width)
+            : 0;
+        const wait = task.waitsUntil
+          ? `waits until ${formatRange(task.waitsUntil, task.waitsUntil)}`
+          : null;
+        const summary = [
+          formatRange(task.start, task.end),
+          formatEffort(task.hours),
+          ...(wait ? [wait] : []),
+        ].join(", ");
+        return (
+          <div
+            key={`${task.phase}-${task.title}`}
+            className="absolute"
+            style={{ top: rows[i] * TASK_ROW_H, left: xOf(task.start) }}
+          >
+            <div
+              className={cn(
+                "bg-card flex h-[62px] flex-col justify-between rounded-md border border-l-[3px] px-2.5 py-1.5 shadow-xs",
+                task.reading ? READING_EDGE : PHASE_EDGE[task.phase]
+              )}
+              style={{ width }}
+              title={`${task.title} (${summary})`}
+            >
+              <p className="line-clamp-2 text-[11.5px] leading-tight font-medium">
+                {task.title}
+              </p>
+              <p className="text-muted-foreground flex gap-2 overflow-hidden text-[10.5px] whitespace-nowrap tabular-nums">
+                <span>{formatRange(task.start, task.end)}</span>
+                <span>{formatEffort(task.hours)}</span>
+                {wait && <span>{wait}</span>}
+              </p>
+            </div>
+            {tail > 0 && (
+              <span
+                aria-hidden
+                className="border-muted-foreground/50 absolute top-[31px] border-t border-dashed"
+                style={{ left: width, width: tail }}
+              />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -68,17 +101,13 @@ export function ReadingLane() {
           style={{
             top: rows[i] * READING_ROW_H,
             left: xOf(r.start),
-            width:
-              Math.max(
-                spanWidth(r.start, r.end),
-                READING_MIN_DAYS * PX_PER_DAY
-              ) - 4,
+            width: cardWidth(r.start, r.end, READING_MIN_DAYS),
           }}
           title={`${r.title} (${formatRange(r.start, r.end)}, ${formatEffort(r.hours)})`}
         >
           <span className="font-medium">{r.title}</span>
           <span className="text-muted-foreground text-[10.5px] tabular-nums">
-            {formatEffort(r.hours)}
+            {formatRange(r.start, r.end)}, {formatEffort(r.hours)}
           </span>
         </div>
       ))}

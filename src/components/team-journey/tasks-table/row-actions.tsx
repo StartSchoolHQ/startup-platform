@@ -119,7 +119,7 @@ export function TaskRowActions({
               </span>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Locked. Finish half of the previous phase to open this one.</p>
+              <p>Locked. Finish 75% of the previous phase to open this one.</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

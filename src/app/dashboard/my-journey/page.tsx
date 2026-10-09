@@ -212,7 +212,7 @@ export default function MyJourneyPage() {
       if (isPhaseLockedError(error)) {
         toast.error("This phase is still locked", {
           description:
-            "Finish half of the previous phase first. The cards above show how many tasks are left.",
+            "Finish 75% of the previous phase first. The cards above show how many tasks are left.",
         });
       } else {
         toast.error("Could not start the task", {
