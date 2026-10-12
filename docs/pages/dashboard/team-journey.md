@@ -2,6 +2,8 @@
 
 > Browse every startup team on the platform, jump into your own, or spin up a new one.
 
+> **Layout 2026-10-12.** Aligned to My Journey (Sasha's SMP-07/08/09/17 and the visual pass): page header "Team Journey" with a subtitle and a primary **Create team** button, then All teams / My team / Archive as tabs with a search box. No framer-motion, no Sort select, no "product" wording; the sidebar item and breadcrumb now say "Team Journey". Team cards (`TeamCard`, `team-card.tsx`) show members and Team XP (the team economy, not the legacy combined wallet), ring the viewer's own team, and dropped the always-$0 revenue. The create dialog scrolls on small screens, shows inline field errors, names the real failure reason (the RPC's "You are already in a team" is said up front when the viewer already has one), and accepts names of 2+ characters. Grid and skeleton in `team-grid.tsx`.
+
 ## Purpose
 
 This is the team directory. Where `/dashboard/my-journey` is the user's

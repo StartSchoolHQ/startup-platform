@@ -90,7 +90,7 @@ export function WeeklyReportsTable({
       case "done":
         return {
           buttonText: "Done",
-          buttonClass: "bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90",
+          buttonClass: "",
           icon: <CheckCircle className="mr-1 h-3 w-3" />,
         };
       case "missed":

@@ -3,6 +3,8 @@
 > The team's command center: stats, members, tasks, weekly reports,
 > client meetings, and strikes for one specific product.
 
+> **Layout 2026-10-12.** One scrolling page in My Journey's shape instead of four tabs. Header (`TeamHeader`: logo, name, "Team Journey"/"Archived" badge, role or "View only" badge, muted guest note, Website link only when set, **Manage team** for founders, co-founders and leaders) → top row: **Team XP** and **Team Points** stat cards plus the **team weekly report card** two columns wide (`TeamWeeklyReportCard`: this week's status, a dot per member, Past reports, Write this week's / View this week's — Sasha's SMP-11) → **Members** card + **How Team Journey works** explainer (SMP-14) → **Tasks** section (achievement cards filter the table and scroll to it, SMP-21; status/assignee toolbar; shared `TasksTable`; locked state as a neutral alert; one "How it works" link replaces the four dead "Read About" buttons, SMP-12) → **Client meetings**, **Strikes** and **Past weekly reports** as cards with ids `#tasks`, `#meetings`, `#strikes`, `#reports`. Code: `src/components/team-journey/detail/*`, reads in `src/hooks/use-team-detail.ts`, assign/start mutations in `src/hooks/use-team-task-actions.ts` (toasts instead of inline tinted boxes), shaping in `src/lib/team-journey/detail-transforms.ts`. The `?tab=` URL parameter and the manual Refresh button are gone. No RPC changed. The unused `recurring-tasks-card.tsx` was deleted.
+
 ## Purpose
 
 This is where the actual work of running a team happens. A team member

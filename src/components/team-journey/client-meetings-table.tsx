@@ -543,7 +543,7 @@ export function ClientMeetingsTable({
                           }
                           alt={meeting.users?.name || "Unknown User"}
                         />
-                        <AvatarFallback className="text-primary-foreground bg-gradient-to-r from-purple-400 to-pink-400 text-xs font-bold">
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                           {(meeting.users?.name || "U")
                             .split(" ")
                             .map((n) => n[0])

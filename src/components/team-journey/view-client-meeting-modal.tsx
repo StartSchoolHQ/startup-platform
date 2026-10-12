@@ -129,13 +129,23 @@ export function ViewClientMeetingModal({
   const getOutcomeBadge = (outcome: string) => {
     switch (outcome) {
       case "excellent":
-        return <Badge className="bg-green-100 text-green-800">Excellent</Badge>;
+        return (
+          <Badge className="bg-green-500/10 text-green-700 dark:text-green-400">
+            Excellent
+          </Badge>
+        );
       case "good":
-        return <Badge className="bg-blue-100 text-blue-800">Good</Badge>;
+        return <Badge className="bg-primary/10 text-primary">Good</Badge>;
       case "average":
-        return <Badge className="bg-yellow-100 text-yellow-800">Average</Badge>;
+        return (
+          <Badge className="bg-amber-500/10 text-amber-700 dark:text-amber-400">
+            Average
+          </Badge>
+        );
       case "poor":
-        return <Badge className="bg-red-100 text-red-800">Poor</Badge>;
+        return (
+          <Badge className="bg-destructive/10 text-destructive">Poor</Badge>
+        );
       default:
         return <Badge variant="outline">Not specified</Badge>;
     }
@@ -213,7 +223,7 @@ export function ViewClientMeetingModal({
                     src={meeting.users?.avatar_url || "/avatars/john-doe.jpg"}
                     alt={meeting.users?.name || "Unknown User"}
                   />
-                  <AvatarFallback className="text-primary-foreground bg-gradient-to-r from-purple-400 to-pink-400 text-sm font-bold">
+                  <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
                     {(meeting.users?.name || "U")
                       .split(" ")
                       .map((n) => n[0])
@@ -342,7 +352,7 @@ export function ViewClientMeetingModal({
           {meeting.meeting_data?.mainLearnings && (
             <div className="space-y-2">
               <h3 className="font-semibold">Main Learnings</h3>
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950/20">
+              <div className="bg-muted/40 rounded-lg p-3">
                 <p className="text-sm whitespace-pre-wrap">
                   {meeting.meeting_data.mainLearnings}
                 </p>
@@ -374,7 +384,7 @@ export function ViewClientMeetingModal({
           {(meeting.meeting_data?.internalActions ||
             meeting.meeting_data?.actionDeadline ||
             meeting.meeting_data?.actionResponsible) && (
-            <div className="space-y-3 border-l-4 border-l-orange-500 bg-orange-50/50 p-4 dark:bg-orange-950/10">
+            <div className="border-l-primary/40 bg-muted/40 space-y-3 rounded-r-lg border-l-4 p-4">
               <h3 className="font-semibold">Internal Actions</h3>
               {meeting.meeting_data.internalActions && (
                 <div className="text-sm">
@@ -404,7 +414,7 @@ export function ViewClientMeetingModal({
           {meeting.meeting_data?.teamImprovements && (
             <div className="space-y-2">
               <h3 className="font-semibold">Team Learnings</h3>
-              <div className="rounded-lg bg-purple-50 p-3 dark:bg-purple-950/20">
+              <div className="bg-muted/40 rounded-lg p-3">
                 <p className="text-sm whitespace-pre-wrap">
                   {meeting.meeting_data.teamImprovements}
                 </p>

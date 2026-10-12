@@ -991,17 +991,12 @@ export function AddClientMeetingModal({
                   variant="outline"
                   onClick={handleSaveAsDraft}
                   disabled={isPending}
-                  className="border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
                 >
                   <Save className="mr-1 h-4 w-4" />
                   {saveDraftMutation.isPending ? "Saving..." : "Save as Draft"}
                 </Button>
               )}
-              <Button
-                type="submit"
-                disabled={isPending}
-                className="bg-[#ff78c8] text-white hover:bg-[#ff78c8]/90"
-              >
+              <Button type="submit" disabled={isPending}>
                 {isPending
                   ? isEditMode
                     ? "Updating..."

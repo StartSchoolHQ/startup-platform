@@ -3,6 +3,8 @@
 > The full briefing and action surface for a single team task: read it,
 > start it, submit it, retry it, reassign it.
 
+> **Layout 2026-10-12.** The solo task page's shape: category eyebrow + status badge + title + description header, then Task / Tips / Submission / Peer review / History / Previous tabs (`TeamTaskTabs`, Tips re-enabled, Markdown through the shared `TaskMarkdown`) on the left and one action card on the right (`TeamTaskActionCard`: rewards, assignee, then Start / Submit / Cancel / Fix and resubmit / Reassign by status and permission). Submission goes through the shared `TaskSubmissionModal` (files still stored as URL strings). Reads in `src/hooks/use-team-task.ts`, the five mutations in `src/hooks/use-team-task-mutations.ts`, timeline shaping in `src/lib/team-journey/task-timeline.ts`, components in `src/components/team-journey/task/*`. Dropped: the legacy list of multiple review attempts parsed out of `submission_notes` (the last one still shows as feedback). Peer review flow unchanged.
+
 ## Purpose
 
 This is the deep-end of the team workflow. The team detail page lists

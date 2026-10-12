@@ -103,6 +103,7 @@ export function TeamManagementModal({
   );
   const [loading, setLoading] = useState(false);
   const [invitingUsers, setInvitingUsers] = useState<Set<string>>(new Set());
+  const [changingRoleFor, setChangingRoleFor] = useState<string | null>(null);
 
   // Team details form state
   const [editFormData, setEditFormData] = useState({
@@ -166,6 +167,9 @@ export function TeamManagementModal({
     memberId: string,
     newRole: "member" | "leader" | "founder" | "co_founder"
   ) => {
+    // The modal stays open: the refreshed team prop updates the badge in
+    // place, so the change is visible where it was made (Sasha SMP-18).
+    setChangingRoleFor(memberId);
     try {
       await updateTeamMemberRole(team.id, memberId, newRole);
       posthog.capture("team_member_role_changed", {
@@ -174,12 +178,15 @@ export function TeamManagementModal({
         member_id: memberId,
         new_role: newRole,
       });
-      toast.success("Member role updated successfully");
+      toast.success(newRole === "leader" ? "Made a leader" : "Made a member");
       onRefresh?.();
-      onClose();
     } catch (error) {
       console.error("Error updating role:", error);
-      toast.error("Failed to update member role");
+      toast.error("Could not change the role", {
+        description: "The change did not reach the server. Try again.",
+      });
+    } finally {
+      setChangingRoleFor(null);
     }
   };
 
@@ -506,10 +513,16 @@ export function TeamManagementModal({
             {/* Current Team Tab */}
             <TabsContent
               value="current-team"
-              className="mt-6 flex-1 space-y-4 overflow-y-auto"
+              className="mt-6 flex-1 space-y-4 overflow-y-auto px-1 pb-1"
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Team Members</h3>
+                <div>
+                  <h3 className="text-lg font-semibold">Team Members</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Leaders can assign and reassign tasks and manage members.
+                    Members work on the tasks.
+                  </p>
+                </div>
                 {canManageMembers && userRole === "founder" && (
                   <div className="flex gap-2">
                     <Button
@@ -571,28 +584,33 @@ export function TeamManagementModal({
 
                       {canManageMembers && member.team_role !== "founder" && (
                         <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              handleChangeRole(member.user_id, "leader")
-                            }
-                            className="h-8 px-2 text-xs"
-                          >
-                            <Shield className="mr-1 h-3 w-3" />
-                            Make Leader
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              handleChangeRole(member.user_id, "member")
-                            }
-                            className="h-8 px-2 text-xs"
-                          >
-                            <User className="mr-1 h-3 w-3" />
-                            Make Member
-                          </Button>
+                          {member.team_role === "leader" ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                handleChangeRole(member.user_id, "member")
+                              }
+                              disabled={changingRoleFor === member.user_id}
+                              className="h-8 px-2 text-xs"
+                            >
+                              <User className="mr-1 h-3 w-3" />
+                              Make member
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                handleChangeRole(member.user_id, "leader")
+                              }
+                              disabled={changingRoleFor === member.user_id}
+                              className="h-8 px-2 text-xs"
+                            >
+                              <Shield className="mr-1 h-3 w-3" />
+                              Make leader
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -613,7 +631,7 @@ export function TeamManagementModal({
             {/* Invite Users Tab */}
             <TabsContent
               value="invite-users"
-              className="mt-6 flex-1 space-y-4 overflow-y-auto"
+              className="mt-6 flex-1 space-y-4 overflow-y-auto px-1 pb-1"
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Invite New Members</h3>
@@ -702,7 +720,7 @@ export function TeamManagementModal({
             {userRole === "founder" ? (
               <TabsContent
                 value="team-details"
-                className="mt-6 flex-1 space-y-4 overflow-y-auto"
+                className="mt-6 flex-1 space-y-4 overflow-y-auto px-1 pb-1"
               >
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">Edit Team Details</h3>
@@ -853,7 +871,7 @@ export function TeamManagementModal({
             ) : (
               <TabsContent
                 value="team-details"
-                className="mt-6 flex-1 space-y-4 overflow-y-auto"
+                className="mt-6 flex-1 space-y-4 overflow-y-auto px-1 pb-1"
               >
                 <div className="py-8 text-center">
                   <Crown className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
