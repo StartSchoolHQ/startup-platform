@@ -51,18 +51,32 @@ interface WeeklyReport {
 
 interface WeeklyReportsTableProps {
   reports: WeeklyReport[];
+  /** A parent can open one week's dialog (the team page's report card). */
+  openReportId?: string | null;
+  onOpenReportChange?: (id: string | null) => void;
 }
 
-export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
-  const [selectedReport, setSelectedReport] = useState<WeeklyReport | null>(
-    null
-  );
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+export function WeeklyReportsTable({
+  reports,
+  openReportId = null,
+  onOpenReportChange,
+}: WeeklyReportsTableProps) {
+  // The row a viewer clicked, or the week a parent asked to open; either
+  // one shows the dialog, closing clears both.
+  const [clicked, setClicked] = useState<WeeklyReport | null>(null);
+  const external = openReportId
+    ? (reports.find((r) => r.id === openReportId) ?? null)
+    : null;
+  const selectedReport = clicked ?? external;
+  const isDialogOpen = selectedReport !== null;
 
-  const handleViewReport = (report: WeeklyReport) => {
-    setSelectedReport(report);
-    setIsDialogOpen(true);
+  const handleDialogChange = (open: boolean) => {
+    if (open) return;
+    setClicked(null);
+    onOpenReportChange?.(null);
   };
+
+  const handleViewReport = (report: WeeklyReport) => setClicked(report);
 
   const getStatusConfig = (status: WeeklyReport["status"]) => {
     switch (status) {
@@ -221,7 +235,7 @@ export function WeeklyReportsTable({ reports }: WeeklyReportsTableProps) {
       </div>
 
       {/* View Report Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
         <DialogContent className="max-h-[85vh] sm:max-w-[900px]">
           <DialogHeader>
             <DialogTitle>Weekly Report - {selectedReport?.week}</DialogTitle>
