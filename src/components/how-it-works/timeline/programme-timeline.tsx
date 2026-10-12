@@ -154,7 +154,7 @@ export function ProgrammeTimeline({ today }: { today: string }) {
             <LaneHeading
               icon={Milestone}
               title="My Journey phases"
-              aside="Planned windows. 75% of a phase opens the next. About 45 min a day."
+              aside="Start Sep 28. 75% of a phase unlocks the next. About 45 min a day."
             />
             <PhaseLane />
 

@@ -3,6 +3,7 @@ import { Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   CURRICULUM_MONTHS,
+  GATES,
   HACKATHON,
   HOLIDAY_BUFFER,
   PHASES,
@@ -92,8 +93,8 @@ const GATE_ROW_H = 26;
 /**
  * Four overlapping phase bars on two rows, the holiday buffer and the
  * January hackathon weeks as dashed milestones, and under
- * each phase start a label saying how the app really opens it. The gate
- * line drops from the previous phase's bar to its label so nothing covers
+ * each gate date a label with the 75% rule and the planned day. The gate
+ * line drops from the gated phase's bar to its label so nothing covers
  * the bar text.
  */
 export function PhaseLane() {
@@ -122,24 +123,21 @@ export function PhaseLane() {
           </span>
         </div>
       ))}
-      {PHASES.filter((p) => p.opensAt).map((p) => {
-        const prevRow = (p.number - 2) % 2;
-        return (
-          <div
-            key={`gate-${p.number}`}
-            className="border-muted-foreground/50 absolute border-l border-dashed"
-            style={{
-              top: prevRow * PHASE_ROW_H,
-              bottom: 0,
-              left: xOf(p.start),
-            }}
-          >
-            <span className="bg-card text-muted-foreground absolute bottom-0 left-1.5 rounded-full border px-2 py-0.5 text-[11px] whitespace-nowrap">
-              {p.opensAt}
-            </span>
-          </div>
-        );
-      })}
+      {GATES.map((g) => (
+        <div
+          key={`gate-${g.phase}`}
+          className="border-muted-foreground/50 absolute border-l border-dashed"
+          style={{
+            top: ((g.phase - 1) % 2) * PHASE_ROW_H,
+            bottom: 0,
+            left: xOf(g.date),
+          }}
+        >
+          <span className="bg-card text-muted-foreground absolute bottom-0 left-1.5 rounded-full border px-2 py-0.5 text-[11px] whitespace-nowrap">
+            {g.label}
+          </span>
+        </div>
+      ))}
       {[HOLIDAY_BUFFER, ...HACKATHON].map((m, i) => (
         <div
           key={m.label}

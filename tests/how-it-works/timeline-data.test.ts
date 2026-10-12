@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   CURRICULUM_MONTHS,
+  GATES,
   HACKATHON,
   HOLIDAY_BUFFER,
   PHASES,
@@ -32,12 +33,17 @@ describe("timeline data", () => {
   });
 
   it("states the 75% gate with the numbers the app uses", () => {
-    expect(PHASES.map((p) => p.opensAt)).toEqual([
-      undefined,
-      "Opens at 9 of 11 Phase 1 tasks approved (75%)",
-      "Opens at 12 of 15 Phase 2 tasks approved (75%)",
-      "Opens at 9 of 12 Phase 3 tasks approved (75%)",
+    expect(GATES.map((g) => g.label)).toEqual([
+      "75% done (9/11) · Phase 2 unlocks Oct 13",
+      "75% done (12/15) · Phase 3 unlocks Nov 2",
+      "75% done (9/12) · Phase 4 unlocks Nov 26",
+      "75% done (8/10)",
     ]);
+    // The first three gates sit on the day the next phase is planned to open.
+    for (const g of GATES.slice(0, 3)) {
+      expect(g.date).toBe(PHASES[g.phase].start);
+    }
+    expect(inRange(GATES[3].date)).toBe(true);
   });
 
   it("lists exactly the tasks each phase counts", () => {

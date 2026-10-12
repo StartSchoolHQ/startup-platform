@@ -20,8 +20,13 @@ export interface Phase {
   start: string;
   end: string;
   taskCount: number;
-  /** How the app opens this phase (the previous phase's gate). */
-  opensAt?: string;
+}
+
+export interface Gate {
+  /** The phase whose bar row carries the marker. */
+  phase: Phase["number"];
+  date: string;
+  label: string;
 }
 
 export interface TimelineTask {
@@ -122,8 +127,8 @@ export const CURRICULUM_MONTHS: CurriculumMonth[] = [
     label: "Jan",
     goals: ["MVP built in the Building Hackathon"],
     topics: [
-      "Jan 4–8: preparing for the hackathon",
-      "Jan 11–15: Building Hackathon, goal MVP",
+      "Jan 4–8 · Preparing for the hackathon",
+      "Jan 11–15 · Building Hackathon (goal: MVP)",
     ],
   },
 ];
@@ -142,7 +147,6 @@ export const PHASES: Phase[] = [
     start: "2026-10-13",
     end: "2026-11-25",
     taskCount: 15,
-    opensAt: "Opens at 9 of 11 Phase 1 tasks approved (75%)",
   },
   {
     number: 3,
@@ -150,7 +154,6 @@ export const PHASES: Phase[] = [
     start: "2026-11-02",
     end: "2026-12-13",
     taskCount: 12,
-    opensAt: "Opens at 12 of 15 Phase 2 tasks approved (75%)",
   },
   {
     number: 4,
@@ -158,8 +161,20 @@ export const PHASES: Phase[] = [
     start: "2026-11-26",
     end: "2026-12-20",
     taskCount: 10,
-    opensAt: "Opens at 9 of 12 Phase 3 tasks approved (75%)",
   },
+];
+
+/**
+ * Gate markers as the board draws them: the 75% rule the app enforces,
+ * with the day the plan expects it to be met. The last one has no next
+ * phase to unlock.
+ */
+// prettier-ignore
+export const GATES: Gate[] = [
+  { phase: 1, date: "2026-10-13", label: "75% done (9/11) · Phase 2 unlocks Oct 13" },
+  { phase: 2, date: "2026-11-02", label: "75% done (12/15) · Phase 3 unlocks Nov 2" },
+  { phase: 3, date: "2026-11-26", label: "75% done (9/12) · Phase 4 unlocks Nov 26" },
+  { phase: 4, date: "2026-12-11", label: "75% done (8/10)" },
 ];
 
 /** Deadline for Mindset and the last task; the buffer follows. */
