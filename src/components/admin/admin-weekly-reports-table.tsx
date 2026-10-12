@@ -26,6 +26,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ChevronLeft, ChevronRight, Eye, X } from "lucide-react";
+import { ScoreBadge } from "@/components/weekly-reports/shared/score-badge";
+import { motivationScore } from "@/lib/admin/weekly-report-motivation";
 
 interface FilterOption {
   id: string;
@@ -283,6 +285,7 @@ export function AdminWeeklyReportsTable() {
               <TableHead className="w-[160px]">Week</TableHead>
               <TableHead>User</TableHead>
               <TableHead>Team</TableHead>
+              <TableHead className="w-[120px]">Motivation</TableHead>
               <TableHead className="w-[120px]">Status</TableHead>
               <TableHead className="w-[160px]">Submitted</TableHead>
               <TableHead className="w-[80px] text-right"></TableHead>
@@ -302,6 +305,9 @@ export function AdminWeeklyReportsTable() {
                     <Skeleton className="h-4 w-32" />
                   </TableCell>
                   <TableCell>
+                    <Skeleton className="h-4 w-12" />
+                  </TableCell>
+                  <TableCell>
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
                   <TableCell>
@@ -315,7 +321,7 @@ export function AdminWeeklyReportsTable() {
             ) : reports.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="text-muted-foreground py-10 text-center text-sm"
                 >
                   No weekly reports match these filters.
@@ -358,6 +364,9 @@ export function AdminWeeklyReportsTable() {
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <ScoreBadge score={motivationScore(r.submission_data)} />
                     </TableCell>
                     <TableCell>
                       {r.status === "submitted" ? (

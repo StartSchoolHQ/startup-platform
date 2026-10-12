@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import { AdminWeeklyReportsTable } from "@/components/admin/admin-weekly-reports-table";
+import { WeeklyReportsMotivationCard } from "@/components/admin/weekly-reports-motivation-card";
 
 export default function AdminWeeklyReportsPage() {
   const { user, loading } = useApp();
@@ -28,6 +29,8 @@ export default function AdminWeeklyReportsPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Weekly Reports</h2>
       </div>
+
+      <WeeklyReportsMotivationCard />
 
       <Card>
         <CardHeader>

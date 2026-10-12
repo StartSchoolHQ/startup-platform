@@ -15,7 +15,7 @@ section changes. Tested in `tests/admin/admin-nav-items.test.ts`.
 | Insights | Activity Log | `/dashboard/admin/audit-logs` | One sentence per event, filter by student / kind / date (see `activity-log.md`) |
 | **People** | Users | `/dashboard/admin/users` | Users (default filter: active) |
 | People | Agreements | `/dashboard/admin/agreements` | Scholarships + Laptops & key cards (`?tab=equipment`) |
-| People | Weekly Reports | `/dashboard/admin/weekly-reports` | Every report, team and solo — Context filter → Solo for My Journey reports |
+| People | Weekly Reports | `/dashboard/admin/weekly-reports` | Every report, team and solo — Context filter → Solo for My Journey reports; Motivation column (the 1–10 score per report) and a "Motivation last week" card (average of last week's submitted solo reports, batch-scoped, from `/api/admin/weekly-reports/summary`) |
 | People | Diplomas | `/dashboard/admin/diplomas` | Issue / Issued / Setup (batches live under Setup) |
 | **Curriculum** | Tasks | `/dashboard/admin/tasks` | Solo tasks / Team tasks / Suggestions |
 | Curriculum | Peer Reviews | `/dashboard/admin/peer-reviews` | Team-task peer review oversight |
