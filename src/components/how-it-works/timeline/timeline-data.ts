@@ -1,6 +1,6 @@
 /**
  * Static content of the programme timeline board (Sep 2026–Jan 2027).
- * Dates are the planned windows from the programme board of 2026-10-09;
+ * Dates are the planned windows from the programme board of 2026-10-12;
  * task titles match the `tasks` table. Phases open by progress in the app,
  * not by date — the board shows the plan, the gate copy shows the rule.
  * Next batch: edit the dates here.
@@ -30,7 +30,10 @@ export interface TimelineTask {
   start: string;
   end: string;
   hours: number;
-  /** Books: read at your own pace, so the bar runs past the phase window. */
+  /**
+   * Books: Mindset is read at your own pace, so its bar runs past the
+   * phase window.
+   */
   reading?: boolean;
   /** Work is done by `end`; replies or results are waited for until here. */
   waitsUntil?: string;
@@ -159,7 +162,7 @@ export const PHASES: Phase[] = [
   },
 ];
 
-/** Deadline for the Phase 1 books and the last task; the buffer follows. */
+/** Deadline for Mindset and the last task; the buffer follows. */
 export const READING_DEADLINE = "2026-12-20";
 
 export const HOLIDAY_BUFFER: Milestone = {
@@ -190,10 +193,10 @@ const waits = (waitsUntil: string) => ({ waitsUntil });
 // prettier-ignore
 export const TASKS: TimelineTask[] = [
   // Phase 1
-  t(1, "Read The Mom Test Book", "2026-09-28", READING_DEADLINE, 3, READ),
+  t(1, "Read The Mom Test Book", "2026-09-28", "2026-10-11", 3, READ),
   t(1, "Watch a grit/resilience primer and recall your own moment", "2026-09-29", "2026-09-29", 0.5),
   t(1, "Write about a time you failed and what it taught you", "2026-09-29", "2026-09-29", 0.5),
-  t(1, "Read Mindset: The New Psychology of Success", "2026-10-05", READING_DEADLINE, 5, READ),
+  t(1, "Read Mindset: The New Psychology of Success", "2026-10-12", READING_DEADLINE, 5, READ),
   t(1, "List three problems you've personally felt strongly about", "2026-10-05", "2026-10-05", 0.5),
   t(1, "Write a one-sentence problem statement without mentioning a solution", "2026-10-05", "2026-10-06", 0.25),
   t(1, "Practice the 5 Whys on a problem you care about", "2026-10-06", "2026-10-06", 0.5),
@@ -243,11 +246,14 @@ export const TASKS: TimelineTask[] = [
   t(4, "48-Hour Founder Challenge", "2026-12-18", READING_DEADLINE, 16),
 ];
 
-/** The two Phase 1 books, read at your own pace until the deadline. */
+/**
+ * The two Phase 1 books: The Mom Test in the first two weeks, then Mindset
+ * at your own pace until the deadline.
+ */
 // prettier-ignore
 export const READINGS: Reading[] = [
-  { title: "The Mom Test", start: "2026-09-28", end: READING_DEADLINE, hours: 3 },
-  { title: "Mindset", start: "2026-10-05", end: READING_DEADLINE, hours: 5 },
+  { title: "The Mom Test", start: "2026-09-28", end: "2026-10-11", hours: 3 },
+  { title: "Mindset", start: "2026-10-12", end: READING_DEADLINE, hours: 5 },
 ];
 
 const FORTNIGHTLY = [

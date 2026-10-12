@@ -56,8 +56,8 @@ describe("timeline data", () => {
       expect(dayIndex(task.start), task.title).toBeGreaterThanOrEqual(
         dayIndex(phase.start)
       );
-      // Books run at your own pace to the deadline; everything else ends
-      // with its phase.
+      // Mindset runs at your own pace to the deadline; everything else
+      // ends with its phase.
       const latest = task.reading ? READING_DEADLINE : phase.end;
       expect(dayIndex(task.end), task.title).toBeLessThanOrEqual(
         dayIndex(latest)
@@ -82,9 +82,15 @@ describe("timeline data", () => {
 
   it("keeps readings, milestones and recurring dates inside the board range", () => {
     expect(READINGS.map((r) => r.title)).toEqual(["The Mom Test", "Mindset"]);
+    const [momTest, mindset] = READINGS;
+    // The Mom Test fills the first two weeks; Mindset starts the day after
+    // and runs at your own pace to the deadline.
+    expect(momTest.start).toBe(PHASES[0].start);
+    expect(dayIndex(momTest.end) - dayIndex(momTest.start)).toBe(13);
+    expect(dayIndex(mindset.start)).toBe(dayIndex(momTest.end) + 1);
+    expect(mindset.end).toBe(READING_DEADLINE);
     for (const r of READINGS) {
-      expect(inRange(r.start), r.title).toBe(true);
-      expect(r.end).toBe(READING_DEADLINE);
+      expect(inRange(r.start) && inRange(r.end), r.title).toBe(true);
     }
     for (const m of [HOLIDAY_BUFFER, ...HACKATHON]) {
       expect(inRange(m.start) && inRange(m.end), m.label).toBe(true);

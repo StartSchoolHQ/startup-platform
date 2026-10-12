@@ -168,7 +168,7 @@ export function ProgrammeTimeline({ today }: { today: string }) {
             <LaneHeading
               icon={BookOpen}
               title="Reading"
-              aside="The Mom Test and Mindset at your own pace, deadline Dec 20"
+              aside="The Mom Test in the first two weeks, then Mindset at your own pace until Dec 20"
             />
             <ReadingLane />
 
