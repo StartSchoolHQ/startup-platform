@@ -558,6 +558,7 @@ export function transformTeamToProduct(
           avatar_url: string | null;
           total_xp: number;
           total_points: number;
+          team_xp?: number;
         };
       }) => ({
         id: member.users?.id || member.user_id,
@@ -566,9 +567,11 @@ export function transformTeamToProduct(
       })
     ) || [];
 
+  // Team Journey economy only (users.team_xp); total_xp is the legacy
+  // combined wallet and would count solo XP as the team's.
   const totalTeamXP =
     team.team_members?.reduce(
-      (sum: number, member) => sum + (member.users?.total_xp || 0),
+      (sum: number, member) => sum + (member.users?.team_xp || 0),
       0
     ) || 0;
 

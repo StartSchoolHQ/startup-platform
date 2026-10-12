@@ -310,7 +310,8 @@ export async function getAllTeamsForJourney(
           name,
           avatar_url,
           total_xp,
-          total_points
+          total_points,
+          team_xp
         )
       ),
       revenue_streams (
@@ -392,7 +393,8 @@ export async function getUserTeamsForJourney(
           name,
           avatar_url,
           total_xp,
-          total_points
+          total_points,
+          team_xp
         )
       ),
       revenue_streams (
@@ -475,7 +477,8 @@ export async function getArchivedTeamsForJourney(
           name,
           avatar_url,
           total_xp,
-          total_points
+          total_points,
+          team_xp
         )
       ),
       revenue_streams (

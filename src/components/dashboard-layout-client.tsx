@@ -26,13 +26,50 @@ const pageNames: Record<string, string> = {
   leaderboard: "Leaderboard",
   "my-journey": "My Journey",
   "peer-review": "Peer Review",
-  "team-journey": "All Teams",
+  "team-journey": "Team Journey",
   "transaction-history": "Transaction History",
   "how-it-works": "How it works",
   support: "Support",
   account: "Account",
   invitations: "Invitations",
 };
+
+/** What a section's detail page is called when the URL only has an id. */
+const detailNames: Record<string, string> = {
+  "team-journey": "Team",
+  "my-journey": "Task",
+};
+
+const isId = (segment: string) =>
+  /^[0-9a-f-]{20,}$/i.test(segment) || segment.startsWith("temp-");
+
+const titleCase = (slug: string) =>
+  slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+/**
+ * Breadcrumb trail from the pathname. One level deep (`/dashboard/admin`)
+ * the section is the current page. Deeper, the section becomes a link and
+ * the last named segment is the current page (`Team Journey > Task`,
+ * `Admin > Users`) — Sasha's SMP-03/SMP-10: the trail was never clickable.
+ */
+function breadcrumbs(pathname: string) {
+  const segments = pathname
+    .replace(/^\/dashboard\/?/, "")
+    .split("/")
+    .filter(Boolean);
+  const section = segments[0];
+  if (!section) return { section: null, current: null };
+  const sectionName = pageNames[section] ?? titleCase(section);
+  if (segments.length === 1) return { section: null, current: sectionName };
+  const named = segments.slice(1).filter((s) => !isId(s));
+  const current = named.length
+    ? titleCase(named[named.length - 1])
+    : (detailNames[section] ?? "Details");
+  return {
+    section: { name: sectionName, href: `/dashboard/${section}` },
+    current,
+  };
+}
 
 function PageLoader() {
   return (
@@ -59,16 +96,7 @@ export function DashboardLayoutClient({
 }) {
   const { loading } = useApp();
   const pathname = usePathname();
-
-  // Derive current page name from pathname
-  const segments = pathname.replace(/^\/dashboard\/?/, "").split("/");
-  const currentPageSlug = segments[0] || "";
-  const currentPageName = currentPageSlug
-    ? (pageNames[currentPageSlug] ??
-      currentPageSlug
-        .replace(/-/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase()))
-    : "";
+  const trail = breadcrumbs(pathname);
 
   return (
     <SidebarProvider>
@@ -83,11 +111,21 @@ export function DashboardLayoutClient({
                 <BreadcrumbItem className="hidden md:block">
                   <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
                 </BreadcrumbItem>
-                {currentPageName && (
+                {trail.section && (
                   <>
                     <BreadcrumbSeparator className="hidden md:block" />
                     <BreadcrumbItem className="hidden md:block">
-                      <BreadcrumbPage>{currentPageName}</BreadcrumbPage>
+                      <BreadcrumbLink href={trail.section.href}>
+                        {trail.section.name}
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                  </>
+                )}
+                {trail.current && (
+                  <>
+                    <BreadcrumbSeparator className="hidden md:block" />
+                    <BreadcrumbItem className="hidden md:block">
+                      <BreadcrumbPage>{trail.current}</BreadcrumbPage>
                     </BreadcrumbItem>
                   </>
                 )}
@@ -101,7 +139,9 @@ export function DashboardLayoutClient({
           <>
             <WeeklyReportBanner />
             <IndividualWeeklyReportBanner />
-            <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+            {/* Bottom padding clears the floating Startie button (56px at
+                bottom-4) so it never covers a page's last row of buttons. */}
+            <div className="flex flex-1 flex-col gap-4 p-4 pt-0 pb-24">
               {children}
             </div>
           </>

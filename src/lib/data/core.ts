@@ -79,6 +79,7 @@ export interface DatabaseTeam {
       name: string | null;
       avatar_url: string | null;
       total_xp: number;
+      team_xp?: number;
       total_points: number;
     };
   }[];

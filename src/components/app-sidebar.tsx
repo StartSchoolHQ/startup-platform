@@ -64,7 +64,7 @@ const navMainItems: NavMainItem[] = [
     icon: Trophy,
   },
   {
-    title: "All Teams",
+    title: "Team Journey",
     url: "/dashboard/team-journey",
     icon: Users,
     journey: "teamJourney",
