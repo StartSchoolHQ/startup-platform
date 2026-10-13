@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   getTeamAchievementDashboard,
+  getTeamAchievementThemes,
   getTeamDetails,
   getTeamStatsCombined,
   getTeamStrikes,
@@ -102,9 +103,22 @@ export function useTeamDetail(
     enabled: !!teamId && !!userId,
   });
 
+  // `get_team_achievement_dashboard` carries the icon name but not the
+  // colour theme, so the cards were all rendering the neutral tile. The
+  // themes come straight from `achievements` (authenticated-readable).
+  const { data: achievementThemes = {} } = useQuery({
+    queryKey: ["teamJourney", "achievementThemes"],
+    queryFn: () => getTeamAchievementThemes(),
+    staleTime: 60 * 60 * 1000,
+  });
+
   const achievements = useMemo(
-    () => sortTeamAchievements(dashboard?.achievements ?? []),
-    [dashboard?.achievements]
+    () =>
+      sortTeamAchievements(dashboard?.achievements ?? []).map((a) => ({
+        ...a,
+        color_theme: achievementThemes[a.achievement_id] ?? null,
+      })),
+    [dashboard?.achievements, achievementThemes]
   );
 
   const { data: strikes = [] } = useQuery({

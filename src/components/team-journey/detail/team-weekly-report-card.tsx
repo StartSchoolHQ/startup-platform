@@ -67,6 +67,10 @@ export function TeamWeeklyReportCard({
           aside={week ? formatWeekPeriod(week) : undefined}
         />
 
+        {/* Same two-group row as the solo card: status on the left, actions
+            on the right. The member dots sit with the status so the right
+            group stays two buttons wide and the row keeps the solo card's
+            height. */}
         <div className="flex flex-1 flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span
@@ -99,10 +103,7 @@ export function TeamWeeklyReportCard({
                 {sent} of {members.length} sent · due Monday 10:00 Riga time
               </p>
             </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="flex -space-x-2">
+            <div className="ml-1 flex -space-x-2">
               {members.map((m) => {
                 const known = m.user_id in submissionStatus;
                 const done = submissionStatus[m.user_id];
@@ -112,9 +113,9 @@ export function TeamWeeklyReportCard({
                     className="relative"
                     title={m.name ?? ""}
                   >
-                    <Avatar className="border-card h-8 w-8 border-2">
+                    <Avatar className="border-card h-7 w-7 border-2">
                       <AvatarImage src={m.avatar_url || ""} />
-                      <AvatarFallback className="bg-muted text-xs font-semibold">
+                      <AvatarFallback className="bg-muted text-[10px] font-semibold">
                         {initials(m.name)}
                       </AvatarFallback>
                     </Avatar>
@@ -131,6 +132,9 @@ export function TeamWeeklyReportCard({
                 );
               })}
             </div>
+          </div>
+
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"

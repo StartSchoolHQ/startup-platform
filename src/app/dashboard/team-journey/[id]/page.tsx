@@ -1,20 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { use, useState } from "react";
+import { use, useMemo, useState } from "react";
 import { redirect } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CreditCard, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatsCardComponent } from "@/components/dashboard/stats-card";
 import { TeamDetailSkeleton } from "@/components/ui/team-detail-skeleton";
-import {
-  TeamHeader,
-  MANAGER_ROLES,
-} from "@/components/team-journey/detail/team-header";
+import { TeamHeader } from "@/components/team-journey/detail/team-header";
 import { TeamWeeklyReportCard } from "@/components/team-journey/detail/team-weekly-report-card";
-import { TeamMembersCard } from "@/components/team-journey/detail/team-members-card";
+import { TeamNextUpCard } from "@/components/team-journey/detail/team-next-up-card";
+import { TeamActivityCard } from "@/components/team-journey/detail/team-activity-card";
 import { HowTeamJourneyWorksCard } from "@/components/team-journey/detail/how-team-journey-works-card";
+import { ProfileCardDialog } from "@/components/profile/profile-card-dialog";
 import { TeamTasksSection } from "@/components/team-journey/detail/team-tasks-section";
 import { TeamMeetingsSection } from "@/components/team-journey/detail/team-meetings-section";
 import { TeamStrikesSection } from "@/components/team-journey/detail/team-strikes-section";
@@ -30,14 +29,16 @@ import { useTeamDetail } from "@/hooks/use-team-detail";
 import { useTeamTaskActions } from "@/hooks/use-team-task-actions";
 import { economyLabels } from "@/lib/economy-labels";
 import type { TeamStrike } from "@/lib/team-journey/detail-transforms";
+import { pickTeamNextUp } from "@/lib/team-journey/next-up";
 
 const labels = economyLabels("team");
 
 type Modal = "teamManagement" | "weeklyReport" | "addMeeting" | "explainStrike";
 
 /**
- * One team's page in My Journey's shape (2026-10-12): header, stat row with
- * the weekly report card, members + how it works, then Tasks, Client
+ * One team's page in My Journey's shape (2026-10-12): header with the
+ * members row, stat row with the weekly report card, Next up + Team
+ * activity (the explainer only on a true first visit), then Tasks, Client
  * meetings, Strikes and Past reports as sections instead of tabs.
  */
 export default function TeamDetailPage(props: {
@@ -55,8 +56,13 @@ export default function TeamDetailPage(props: {
   const [modal, setModal] = useState<Modal | null>(null);
   const [selectedStrike, setSelectedStrike] = useState<TeamStrike | null>(null);
   const [openReportId, setOpenReportId] = useState<string | null>(null);
+  const [profileUserId, setProfileUserId] = useState<string | null>(null);
 
   const d = useTeamDetail(teamId, user?.id, userLoading);
+  const nextUp = useMemo(
+    () => pickTeamNextUp(d.tasks, d.achievements, user?.id),
+    [d.tasks, d.achievements, user?.id]
+  );
   const actions = useTeamTaskActions({
     teamId,
     teamName: d.team?.name ?? "",
@@ -99,8 +105,10 @@ export default function TeamDetailPage(props: {
   }
 
   const team = d.team;
-  const canManage =
-    d.isTeamMember && !!d.userRole && MANAGER_ROLES.includes(d.userRole);
+  const firstVisit =
+    !d.loadingAchievements &&
+    d.meetingsCount === 0 &&
+    d.tasks.every((t) => t.status === "not_started");
   const thisWeekId = d.weekBoundaries
     ? `${d.weekBoundaries.week_year}-${d.weekBoundaries.week_number}`
     : null;
@@ -119,6 +127,8 @@ export default function TeamDetailPage(props: {
         status={team.status}
         isTeamMember={d.isTeamMember}
         userRole={d.userRole}
+        members={d.members}
+        onMemberClick={setProfileUserId}
         onManage={() => setModal("teamManagement")}
       />
 
@@ -160,13 +170,33 @@ export default function TeamDetailPage(props: {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <TeamMembersCard
-          members={d.members}
-          canManage={canManage}
-          onManage={() => setModal("teamManagement")}
+      {/* Row 2 as on My Journey (`items-start`, each card its own height):
+          Next up + Team activity. A true first visit — no meetings logged,
+          no task touched — gets the explainer in the left slot instead. */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+        {firstVisit ? (
+          <HowTeamJourneyWorksCard />
+        ) : (
+          <TeamNextUpCard
+            nextUp={nextUp.nextUp}
+            inProgress={nextUp.inProgress}
+            unlocked={d.achievementsUnlocked}
+            meetingsCount={d.meetingsCount}
+            isTeamMember={d.isTeamMember}
+            currentUserId={user?.id}
+            onAddMeeting={() => setModal("addMeeting")}
+            onSeeTasks={() => scrollTo("tasks")}
+          />
+        )}
+        <TeamActivityCard
+          meetingsCount={d.meetingsCount}
+          strikesCount={team.strikes_count ?? 0}
+          reportsCount={d.weeklyReports.length}
+          lastReportWeek={d.weeklyReports[0]?.dateRange ?? null}
+          isTeamMember={d.isTeamMember}
+          onAddMeeting={() => setModal("addMeeting")}
+          onJump={scrollTo}
         />
-        <HowTeamJourneyWorksCard />
       </div>
 
       <TeamTasksSection
@@ -258,6 +288,10 @@ export default function TeamDetailPage(props: {
         open={modal === "addMeeting"}
         onOpenChange={(open) => setModal(open ? "addMeeting" : null)}
         teamId={team.id}
+      />
+      <ProfileCardDialog
+        userId={profileUserId}
+        onClose={() => setProfileUserId(null)}
       />
       {selectedStrike && (
         <ExplainStrikeModal

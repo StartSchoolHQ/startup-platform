@@ -117,6 +117,7 @@ export {
   getUserAchievementProgress,
   getTasksByAchievement,
   getTeamAchievementDashboard,
+  getTeamAchievementThemes,
   getTeamAchievements,
 } from "./data/achievements";
 

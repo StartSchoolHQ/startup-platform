@@ -49,6 +49,12 @@ const THEME_TILE: Record<string, string> = {
   indigo: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
   amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   teal: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
+  // Team Journey themes (achievements.color_theme where context = 'team').
+  cyan: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
+  lime: "bg-lime-500/10 text-lime-700 dark:text-lime-400",
+  emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  slate: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
+  pink: "bg-pink-500/10 text-pink-600 dark:text-pink-400",
 };
 
 const STATUS_TEXT = {

@@ -161,6 +161,23 @@ export async function getTeamAchievementDashboard(
 }
 
 /**
+ * `achievements.color_theme` per team achievement id. The dashboard RPC does
+ * not return the theme, and the team page needs it to tint the phase cards
+ * the way My Journey does.
+ */
+export async function getTeamAchievementThemes(): Promise<
+  Record<string, string | null>
+> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("achievements")
+    .select("id, color_theme")
+    .eq("context", "team");
+  if (error) throw error;
+  return Object.fromEntries((data ?? []).map((a) => [a.id, a.color_theme]));
+}
+
+/**
  * Get team achievements with progress tracking
  * Shows achievement status based on task completion
  */
