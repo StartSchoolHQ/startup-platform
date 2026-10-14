@@ -13,7 +13,7 @@ import { PostHog } from "posthog-node";
  * local runs without PostHog never emit anything.
  */
 
-export type AiFeature = "startie" | "ai_review";
+export type AiFeature = "startie" | "ai_review" | "program_assistant";
 
 export interface AiMessage {
   role: string;

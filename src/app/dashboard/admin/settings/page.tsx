@@ -5,6 +5,7 @@ import { useApp } from "@/contexts/app-context";
 import { AdminSkeleton } from "@/components/ui/admin-skeleton";
 import { ProgrammePhaseCard } from "@/components/admin/programme-phase-card";
 import { AttentionRulesCard } from "@/components/admin/attention-rules-card";
+import { ProgramAssistantSettingsCard } from "@/components/admin/program-assistant-settings-card";
 
 export default function AdminSettingsPage() {
   const { user, loading } = useApp();
@@ -19,12 +20,13 @@ export default function AdminSettingsPage() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
         <p className="text-muted-foreground text-sm">
-          Programme phase and the rules behind the analytics attention list. AI
-          settings live under Admin → AI.
+          Programme phase, the rules behind the analytics attention list, and
+          the daily Tech module check. AI settings live under Admin → AI.
         </p>
       </div>
       <ProgrammePhaseCard />
       <AttentionRulesCard />
+      <ProgramAssistantSettingsCard />
     </div>
   );
 }

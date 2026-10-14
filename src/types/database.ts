@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5";
+    PostgrestVersion: "13.0.5";
   };
   public: {
     Tables: {
@@ -435,6 +435,24 @@ export type Database = {
           },
         ];
       };
+      deleted_janis_reset_backup_20260925: {
+        Row: {
+          backed_up_at: string;
+          row_data: Json;
+          tbl: string;
+        };
+        Insert: {
+          backed_up_at?: string;
+          row_data: Json;
+          tbl: string;
+        };
+        Update: {
+          backed_up_at?: string;
+          row_data?: Json;
+          tbl?: string;
+        };
+        Relationships: [];
+      };
       diploma_batches: {
         Row: {
           admission_date: string | null;
@@ -736,6 +754,27 @@ export type Database = {
           is_active?: boolean;
           sort_order?: number;
           weeks?: number | null;
+        };
+        Relationships: [];
+      };
+      reading_resources_backup_20260930: {
+        Row: {
+          id: string | null;
+          resources: Json | null;
+          template_code: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string | null;
+          resources?: Json | null;
+          template_code?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string | null;
+          resources?: Json | null;
+          template_code?: string | null;
+          updated_at?: string | null;
         };
         Relationships: [];
       };
@@ -2069,6 +2108,7 @@ export type Database = {
         Args: { p_batch_id: string; p_date: string };
         Returns: number;
       };
+      _qwasar_norm_name_v1: { Args: { p: string }; Returns: string };
       accept_external_task_for_review: {
         Args: { p_progress_id: string };
         Returns: Json;
@@ -3159,6 +3199,7 @@ export type Database = {
           title: string;
         }[];
       };
+      get_program_assistant_latest_v1: { Args: never; Returns: Json };
       get_recurring_task_status: {
         Args: { team_id_param: string; user_id_param?: string };
         Returns: {
@@ -3880,10 +3921,63 @@ export type Database = {
         Args: { p_achievement_id: string; p_user_id: string };
         Returns: boolean;
       };
+      my_journey_phase_unlocked_v1_backup_v1: {
+        Args: { p_achievement_id: string; p_user_id: string };
+        Returns: boolean;
+      };
       parse_review_instructions_to_criteria: {
         Args: { review_text: string };
         Returns: Json;
       };
+      program_attendance_upsert_v1: { Args: { p_rows: Json }; Returns: Json };
+      program_data_issue_fix_v1: {
+        Args: { p_fixes: Json; p_run_id: string };
+        Returns: number;
+      };
+      program_data_issue_replace_v1: {
+        Args: { p_issues: Json; p_run_id: string };
+        Returns: number;
+      };
+      program_data_issue_resolve_v1: {
+        Args: { p_id: number; p_resolved?: boolean };
+        Returns: Json;
+      };
+      program_explain_inputs_v1: { Args: { p_run_id: string }; Returns: Json };
+      program_explanations_write_v1: {
+        Args: { p_rows: Json; p_run_id: string };
+        Returns: number;
+      };
+      program_kick_run_v1: { Args: { p_kind?: string }; Returns: undefined };
+      program_request_sheet_refresh_v1: { Args: never; Returns: number };
+      program_run_finish_v1: {
+        Args: {
+          p_error?: string;
+          p_run_id: string;
+          p_slack_message?: string;
+          p_snapshot_date?: string;
+          p_status: string;
+        };
+        Returns: undefined;
+      };
+      program_run_start_v1: {
+        Args: { p_kind: string; p_triggered_by?: string };
+        Returns: string;
+      };
+      program_run_step_v1: {
+        Args: { p_run_id: string; p_step: Json };
+        Returns: undefined;
+      };
+      program_snapshot_upsert_v1: {
+        Args: { p_kind: string; p_rows: Json; p_snapshot_date: string };
+        Returns: Json;
+      };
+      program_student_tracks_v1: { Args: never; Returns: Json };
+      program_verdicts_write_v1: {
+        Args: { p_run_id: string; p_snapshot_date: string };
+        Returns: Json;
+      };
+      program_watchdog_v1: { Args: never; Returns: undefined };
+      qwasar_student_track_upsert_v1: { Args: { p_rows: Json }; Returns: Json };
       reassign_task: {
         Args: {
           p_new_user_id: string;

@@ -33,6 +33,11 @@ export function adminNavItems(teamJourneyOn: boolean): AdminNavItem[] {
       title: "Weekly Reports",
       url: "/dashboard/admin/weekly-reports",
     },
+    {
+      section: "People",
+      title: "Tech module",
+      url: "/dashboard/admin/tech-module",
+    },
     { section: "People", title: "Diplomas", url: "/dashboard/admin/diplomas" },
     { section: "Curriculum", title: "Tasks", url: "/dashboard/admin/tasks" },
     {
