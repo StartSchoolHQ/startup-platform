@@ -3949,6 +3949,7 @@ export type Database = {
       };
       program_kick_run_v1: { Args: { p_kind?: string }; Returns: undefined };
       program_request_sheet_refresh_v1: { Args: never; Returns: number };
+      program_run_digest_v1: { Args: { p_run_id?: string }; Returns: Json };
       program_run_finish_v1: {
         Args: {
           p_error?: string;
@@ -3958,6 +3959,10 @@ export type Database = {
           p_status: string;
         };
         Returns: undefined;
+      };
+      program_run_mark_posted_v1: {
+        Args: { p_run_id: string };
+        Returns: string;
       };
       program_run_start_v1: {
         Args: { p_kind: string; p_triggered_by?: string };

@@ -15,7 +15,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TechModuleSummary } from "@/components/admin/tech-module/summary";
 import { VerdictsTable } from "@/components/admin/tech-module/verdicts-table";
 import { DataIssuesTab } from "@/components/admin/tech-module/data-issues-tab";
+import { Button } from "@/components/ui/button";
+import { Send } from "lucide-react";
 import {
+  usePostDigestToSlack,
   useProgramAssistantLatest,
   useRunProgramAssistantNow,
 } from "@/hooks/use-program-assistant";
@@ -28,6 +31,7 @@ export default function AdminTechModulePage() {
   const { user, loading } = useApp();
   const { data, isLoading, isError, error } = useProgramAssistantLatest();
   const runNow = useRunProgramAssistantNow();
+  const postSlack = usePostDigestToSlack();
 
   if (!loading && (!user || user.primary_role !== "admin")) {
     redirect("/dashboard");
@@ -100,14 +104,27 @@ export default function AdminTechModulePage() {
             </TabsContent>
             <TabsContent value="digest">
               <Card>
-                <CardHeader>
-                  <CardTitle>Slack digest</CardTitle>
-                  <CardDescription>
-                    Generated every run.{" "}
-                    {data.run?.slack_posted_at
-                      ? `Posted ${data.run.slack_posted_at}.`
-                      : "Not posted (Slack is off in Settings)."}
-                  </CardDescription>
+                <CardHeader className="flex flex-row items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <CardTitle>Slack digest</CardTitle>
+                    <CardDescription>
+                      Generated every run. Scheduled runs post it when the Slack
+                      switch in Settings is on; manual runs only post through
+                      this button.{" "}
+                      {data.run?.slack_posted_at
+                        ? `Last posted ${new Date(data.run.slack_posted_at).toLocaleString("en-GB", { timeZone: "Europe/Riga" })}.`
+                        : "Not posted yet."}
+                    </CardDescription>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!data.run?.slack_message || postSlack.isPending}
+                    onClick={() => postSlack.mutate()}
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    {postSlack.isPending ? "Posting…" : "Post to Slack"}
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <pre className="bg-muted overflow-x-auto rounded-md p-4 text-sm whitespace-pre-wrap">

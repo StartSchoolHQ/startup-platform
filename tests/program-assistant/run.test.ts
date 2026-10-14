@@ -185,6 +185,7 @@ describe("runProgramAssistant", () => {
       "data_issues:ok",
       "explain:ok",
       "sheet_refresh:ok",
+      "slack_post:ok",
     ]);
     expect(posts.map((p) => p.url.split("/webhook")[1])).toEqual([
       "/program/attendance-sync",

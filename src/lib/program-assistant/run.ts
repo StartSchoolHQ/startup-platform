@@ -12,6 +12,7 @@ import {
 } from "./explain";
 import { callProgramWebhook, sendProgramAlert, WEBHOOK_PATHS } from "./n8n";
 import { buildSlackDigest } from "./slack";
+import { postDigestToSlack, slackWebhookUrl } from "./slack-post";
 import {
   fetchQwasarCsv,
   QwasarAuthError,
@@ -286,6 +287,27 @@ export async function runProgramAssistant(
         {}
       );
       return { value: requestId, log: { request_id: requestId } };
+    });
+
+    // Scheduled runs post when the switch is on; ad-hoc runs never post by
+    // themselves (the admin page has a Post to Slack button for that).
+    await step("slack_post", false, async () => {
+      if (!settings.slackEnabled) {
+        return { value: null, log: { skipped: "slack_enabled off" } };
+      }
+      if (opts.kind !== "scheduled") {
+        return {
+          value: null,
+          log: { skipped: "manual run; use Post to Slack" },
+        };
+      }
+      const webhookUrl = slackWebhookUrl();
+      if (!webhookUrl) {
+        throw new Error("SLACK_WEBHOOK_URL not set");
+      }
+      await postDigestToSlack({ webhookUrl, text: slackMessage, fetchImpl });
+      await rpc(admin, "program_run_mark_posted_v1", { p_run_id: runId });
+      return { value: true, log: { posted: true } };
     });
 
     await rpc(admin, "program_run_finish_v1", {

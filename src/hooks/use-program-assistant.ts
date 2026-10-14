@@ -75,6 +75,29 @@ export function useResolveDataIssue() {
   });
 }
 
+/** "Post to Slack": sends the latest digest through the server-side webhook. */
+export function usePostDigestToSlack() {
+  const queryClient = useQueryClient();
+  return useMutation<{ posted_at: string }, Error, void>({
+    mutationFn: async () => {
+      const res = await fetch("/api/admin/program-assistant/slack", {
+        method: "POST",
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
+      return body;
+    },
+    retry: 0,
+    onSuccess: () => {
+      toast.success("Digest posted to Slack");
+      queryClient.invalidateQueries({ queryKey: PROGRAM_ASSISTANT_KEY });
+    },
+    onError: (e) => {
+      toast.error(`Could not post to Slack — ${e.message}`);
+    },
+  });
+}
+
 /** "Run now": the admin route kicks a run through the database, like cron. */
 export function useRunProgramAssistantNow() {
   const queryClient = useQueryClient();
