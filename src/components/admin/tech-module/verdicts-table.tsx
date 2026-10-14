@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -12,13 +13,18 @@ import {
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { VERDICT_COLUMNS, VerdictTableRow } from "./verdict-row";
-import type { TimelineRow, VerdictRow } from "@/types/program-assistant";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { VerdictCard } from "./verdict-card";
+import { VerdictTableRow } from "./verdict-row";
+import type {
+  TimelineRow,
+  VerdictRow,
+  VerdictStatus,
+} from "@/types/program-assistant";
 
 interface Props {
   verdicts: VerdictRow[];
@@ -26,18 +32,67 @@ interface Props {
 }
 
 const ALL = "all";
+const FLAGGED: VerdictStatus[] = ["Talk to", "Watch"];
+const QUIET: VerdictStatus[] = ["On pace", "Not tracked"];
+
+function Section({
+  title,
+  count,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  count: number;
+  open: boolean;
+  onToggle?: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center gap-2">
+        {onToggle ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-2 h-8 px-2 text-base font-semibold"
+            onClick={onToggle}
+            aria-expanded={open}
+          >
+            {open ? (
+              <ChevronDown className="mr-1 h-4 w-4" />
+            ) : (
+              <ChevronRight className="mr-1 h-4 w-4" />
+            )}
+            {title}
+            <span className="text-muted-foreground ml-2 font-normal">
+              {count}
+            </span>
+          </Button>
+        ) : (
+          <h3 className="text-base font-semibold">
+            {title}
+            <span className="text-muted-foreground ml-2 font-normal">
+              {count}
+            </span>
+          </h3>
+        )}
+      </div>
+      {open && children}
+    </section>
+  );
+}
 
 export function VerdictsTable({ verdicts, timeline }: Props) {
-  const [status, setStatus] = useState(ALL);
   const [track, setTrack] = useState(ALL);
   const [study, setStudy] = useState(ALL);
   const [search, setSearch] = useState("");
+  const [openQuiet, setOpenQuiet] = useState<Record<string, boolean>>({});
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
     return verdicts.filter(
       (v) =>
-        (status === ALL || v.status === status) &&
         (track === ALL || (v.track ?? "FS") === track) &&
         (study === ALL ||
           (study === "part-time"
@@ -48,47 +103,20 @@ export function VerdictsTable({ verdicts, timeline }: Props) {
           (v.login ?? "").toLowerCase().includes(q) ||
           (v.email ?? "").toLowerCase().includes(q))
     );
-  }, [verdicts, status, track, study, search]);
+  }, [verdicts, track, study, search]);
+
+  const by = (s: VerdictStatus) => rows.filter((v) => v.status === s);
+  const searching = search.trim() !== "";
 
   return (
-    <div className="space-y-3">
-      {timeline.length > 0 && (
-        <div className="text-muted-foreground grid gap-1 text-xs sm:grid-cols-3">
-          {timeline.map((t) => (
-            <div key={t.track}>
-              <span className="text-foreground font-medium">
-                {t.track} week {t.week}
-              </span>{" "}
-              · {t.requirement}
-              {t.threshold_percent != null && (
-                <>
-                  {" "}
-                  · bar {t.threshold_module} ≥ {t.threshold_percent}%
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="flex flex-wrap gap-2">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-2">
         <Input
           placeholder="Search name, login, email"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-56"
         />
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>All statuses</SelectItem>
-            <SelectItem value="Talk to">Talk to</SelectItem>
-            <SelectItem value="Watch">Watch</SelectItem>
-            <SelectItem value="On pace">On pace</SelectItem>
-            <SelectItem value="Not tracked">Not tracked</SelectItem>
-          </SelectContent>
-        </Select>
         <Select value={track} onValueChange={setTrack}>
           <SelectTrigger className="w-32">
             <SelectValue />
@@ -109,38 +137,76 @@ export function VerdictsTable({ verdicts, timeline }: Props) {
             <SelectItem value="part-time">Part-time</SelectItem>
           </SelectContent>
         </Select>
-        <span className="text-muted-foreground self-center text-sm">
-          {rows.length} of {verdicts.length}
-        </span>
+        {timeline.length > 0 && (
+          <div className="text-muted-foreground ml-auto text-xs">
+            {timeline.map((t) => (
+              <div key={t.track}>
+                <span className="text-foreground font-medium">
+                  {t.track} wk {t.week}
+                </span>
+                : {t.requirement}
+                {t.threshold_percent != null && (
+                  <> · bar {t.threshold_percent}%</>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Student</TableHead>
-              <TableHead>Progress</TableHead>
-              <TableHead>Last login</TableHead>
-              <TableHead>Attendance</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Rule</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={VERDICT_COLUMNS}
-                  className="text-muted-foreground py-8 text-center"
-                >
-                  No students match.
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((v) => <VerdictTableRow key={v.qwasar_user_id} v={v} />)
-            )}
-          </TableBody>
-        </Table>
-      </div>
+
+      {FLAGGED.map((s) => {
+        const list = by(s);
+        if (list.length === 0) return null;
+        return (
+          <Section key={s} title={s} count={list.length} open>
+            <div className="grid gap-3 md:grid-cols-2">
+              {list.map((v) => (
+                <VerdictCard key={v.qwasar_user_id} v={v} />
+              ))}
+            </div>
+          </Section>
+        );
+      })}
+
+      {QUIET.map((s) => {
+        const list = by(s);
+        if (list.length === 0) return null;
+        const open = searching || !!openQuiet[s];
+        return (
+          <Section
+            key={s}
+            title={s}
+            count={list.length}
+            open={open}
+            onToggle={() => setOpenQuiet((o) => ({ ...o, [s]: !o[s] }))}
+          >
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Track</TableHead>
+                    <TableHead>Progress</TableHead>
+                    <TableHead>Last login</TableHead>
+                    <TableHead>Attendance</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {list.map((v) => (
+                    <VerdictTableRow key={v.qwasar_user_id} v={v} />
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </Section>
+        );
+      })}
+
+      {rows.length === 0 && (
+        <p className="text-muted-foreground py-8 text-center text-sm">
+          No students match.
+        </p>
+      )}
     </div>
   );
 }
