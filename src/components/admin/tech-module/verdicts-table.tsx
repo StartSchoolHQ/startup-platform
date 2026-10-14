@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { VerdictTableRow } from "./verdict-row";
+import { VERDICT_COLUMNS, VerdictTableRow } from "./verdict-row";
 import type { TimelineRow, VerdictRow } from "@/types/program-assistant";
 
 interface Props {
@@ -119,18 +119,17 @@ export function VerdictsTable({ verdicts, timeline }: Props) {
             <TableRow>
               <TableHead>Student</TableHead>
               <TableHead>Progress</TableHead>
-              <TableHead>Trend</TableHead>
               <TableHead>Last login</TableHead>
               <TableHead>Attendance</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Why · next step</TableHead>
+              <TableHead>Rule</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={VERDICT_COLUMNS}
                   className="text-muted-foreground py-8 text-center"
                 >
                   No students match.
