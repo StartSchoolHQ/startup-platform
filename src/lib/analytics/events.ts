@@ -19,7 +19,7 @@ export interface ProductEvents {
   /** The student pressed Start on a solo task and the row was created. */
   individual_task_started: { task_id: string; task_title: string };
   /** The Startie panel was opened from the floating button. */
-  startie_opened: { page: string };
+  startie_opened: { page: string; source: "button" | "review_feedback" };
   /** A student message reached the server and the reply finished streaming. */
   startie_message_sent: { page: string; new_thread: boolean; chars: number };
   /** The chat request failed or was refused (limit, disabled, server error). */

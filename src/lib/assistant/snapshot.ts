@@ -29,6 +29,18 @@ export interface PageSummary {
     isRecurring: boolean;
     cooldownDays: number | null;
   } | null;
+  /**
+   * The student's latest settled AI review of this task, exactly what the
+   * result card already shows them: verdict, attempt, prose feedback and
+   * the failed checks. Never the rubric, the passed checks' evidence or
+   * the reviewer's confidence. Null off task pages and while a review runs.
+   */
+  review: {
+    outcome: "approved" | "rejected";
+    attempt: number;
+    feedback: string | null;
+    failedChecks: { label: string; evidence: string }[];
+  } | null;
 }
 
 /**
@@ -84,9 +96,10 @@ export async function loadStudentSnapshot(
  */
 export async function loadPageSummary(
   supabase: SupabaseClient<Database>,
-  page: PageContext
+  page: PageContext,
+  userId?: string
 ): Promise<PageSummary> {
-  if (!page.taskId) return { route: page.route, task: null };
+  if (!page.taskId) return { route: page.route, task: null, review: null };
   const { data, error } = await supabase
     .from("tasks")
     .select(
@@ -94,8 +107,11 @@ export async function loadPageSummary(
     )
     .eq("id", page.taskId)
     .maybeSingle();
-  if (error || !data) return { route: page.route, task: null };
+  if (error || !data) return { route: page.route, task: null, review: null };
   const phase = data.achievements as { name: string } | null;
+  const review = userId
+    ? await loadLatestReview(supabase, page.taskId, userId)
+    : null;
   return {
     route: page.route,
     task: {
@@ -106,5 +122,57 @@ export async function loadPageSummary(
       isRecurring: Boolean(data.is_recurring),
       cooldownDays: data.cooldown_days,
     },
+    review,
   };
+}
+
+interface ReviewStatusRow {
+  attempt: number;
+  status: string;
+  feedback: string | null;
+  criteria_results:
+    | { label?: string; passed?: boolean; evidence?: string }[]
+    | null;
+}
+
+/**
+ * Same path the result card uses: the student's own progress row, then the
+ * owner-only `get_ai_review_status_v1` RPC. Any failure degrades to null;
+ * a missing review must never break the chat.
+ */
+async function loadLatestReview(
+  supabase: SupabaseClient<Database>,
+  taskId: string,
+  userId: string
+): Promise<PageSummary["review"]> {
+  try {
+    const progress = await supabase
+      .from("task_progress")
+      .select("id")
+      .eq("task_id", taskId)
+      .eq("user_id", userId)
+      .eq("context", "individual")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const progressId = progress.data?.id;
+    if (progress.error || !progressId) return null;
+
+    const { data, error } = await supabase.rpc("get_ai_review_status_v1", {
+      p_progress_id: progressId,
+    });
+    if (error || !data) return null;
+    const row = data as unknown as ReviewStatusRow;
+    if (row.status !== "approved" && row.status !== "rejected") return null;
+    return {
+      outcome: row.status,
+      attempt: row.attempt,
+      feedback: row.feedback,
+      failedChecks: (row.criteria_results ?? [])
+        .filter((c) => c.passed === false)
+        .map((c) => ({ label: c.label ?? "", evidence: c.evidence ?? "" })),
+    };
+  } catch {
+    return null;
+  }
 }

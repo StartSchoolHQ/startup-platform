@@ -1,6 +1,11 @@
 "use client";
 
-import { CheckCircle2, RefreshCw, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  MessageCircleQuestion,
+  RefreshCw,
+  XCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { economyLabels } from "@/lib/economy-labels";
@@ -24,12 +29,18 @@ export function AiReviewResult({
   xp,
   points,
   onResubmit,
+  onAskStartie,
 }: {
   status: AiReviewStatus;
   taskStatus: "approved" | "rejected";
   xp: number;
   points: number;
   onResubmit: () => void;
+  /**
+   * Opens Startie with the failed checks preloaded. Omitted when the
+   * assistant is switched off, so the card shows no dead button.
+   */
+  onAskStartie?: () => void;
 }) {
   const passed = taskStatus === "approved";
   const criteria = status.criteria_results ?? [];
@@ -73,10 +84,22 @@ export function AiReviewResult({
           />
         ) : null}
         {!passed ? (
-          <Button className="w-full gap-2" onClick={onResubmit}>
-            <RefreshCw className="h-4 w-4" />
-            Fix and resubmit
-          </Button>
+          <div className="space-y-2">
+            <Button className="w-full gap-2" onClick={onResubmit}>
+              <RefreshCw className="h-4 w-4" />
+              Fix and resubmit
+            </Button>
+            {onAskStartie ? (
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={onAskStartie}
+              >
+                <MessageCircleQuestion className="h-4 w-4" />
+                Ask Startie about this feedback
+              </Button>
+            ) : null}
+          </div>
         ) : null}
       </CardContent>
     </Card>

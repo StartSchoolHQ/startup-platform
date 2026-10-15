@@ -8,6 +8,10 @@ import { useAssistantSettings } from "@/hooks/use-assistant-settings";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { useStartieChat } from "@/hooks/use-startie-chat";
 import { useStartieDraft } from "@/hooks/use-startie-draft";
+import {
+  STARTIE_OPEN_EVENT,
+  type StartieOpenDetail,
+} from "@/lib/assistant/open";
 import type { AssistantSettings } from "@/lib/assistant/types";
 import { cn } from "@/lib/utils";
 import { StartieButton } from "./startie-button";
@@ -95,8 +99,27 @@ function StartieWidgetInner({
   const openPanel = () => {
     setUnread(false);
     setOpen(true);
-    track("startie_opened", { page: pathname });
+    track("startie_opened", { page: pathname, source: "button" });
   };
+
+  // Pages open the panel with a prepared question (e.g. "Ask Startie about
+  // this feedback" on a failed review) by dispatching STARTIE_OPEN_EVENT.
+  // The draft replaces whatever was unsent: the student chose this question.
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const detail = (e as CustomEvent<StartieOpenDetail>).detail;
+      if (detail?.draft) setDraft(detail.draft);
+      setUnread(false);
+      setClosing(false);
+      setOpen(true);
+      track("startie_opened", {
+        page: pathname,
+        source: detail?.source ?? "button",
+      });
+    };
+    window.addEventListener(STARTIE_OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(STARTIE_OPEN_EVENT, onOpen);
+  }, [pathname, setDraft]);
 
   return (
     <>

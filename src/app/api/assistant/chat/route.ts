@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
     try {
       const [snapshot, page, historyRes] = await Promise.all([
         loadStudentSnapshot(supabase, user.id),
-        loadPageSummary(supabase, pageContext),
+        loadPageSummary(supabase, pageContext, user.id),
         supabase
           .from("assistant_messages")
           .select("role, content")

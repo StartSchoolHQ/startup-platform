@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AiReviewProgress } from "@/components/my-journey/ai-review-progress";
 import { AiReviewResult } from "@/components/my-journey/ai-review-result";
+import { useAssistantSettings } from "@/hooks/use-assistant-settings";
+import { openStartie, reviewFeedbackDraft } from "@/lib/assistant/open";
 import { economyLabels } from "@/lib/economy-labels";
 import type { AiReviewStatus } from "@/lib/database";
 import type { TeamTask } from "@/types/team-journey";
@@ -62,6 +64,25 @@ export function TaskActionCard({
         day: "numeric",
       })}`
     : "Not started yet";
+
+  // "Ask Startie about this feedback" only when the widget is actually
+  // mounted (assistant switched on); the chat route adds the full review to
+  // Startie's page context, so the draft just has to name what failed.
+  const { data: assistant } = useAssistantSettings();
+  const askStartie =
+    assistant.enabled && review && task.status === "rejected"
+      ? () =>
+          openStartie({
+            source: "review_feedback",
+            draft: reviewFeedbackDraft({
+              title: task.title,
+              attempt: review.attempt,
+              failedChecks: (review.criteria_results ?? [])
+                .filter((c) => !c.passed)
+                .map((c) => c.label),
+            }),
+          })
+      : undefined;
 
   return (
     <Card className="relative gap-0 overflow-hidden py-0">
@@ -136,6 +157,7 @@ export function TaskActionCard({
             xp={task.base_xp_reward}
             points={task.base_points_reward}
             onResubmit={onComplete}
+            onAskStartie={askStartie}
           />
         ) : task.status === "approved" ? (
           <div className="flex items-center justify-center gap-2 rounded-lg bg-green-500/10 py-2.5 text-sm font-medium text-green-700 dark:text-green-400">

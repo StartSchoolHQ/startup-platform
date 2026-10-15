@@ -16,16 +16,21 @@ export function decide(result: ReviewResult, threshold: number): Decision {
     };
   }
   if (result.decision) {
+    // A low-confidence pass almost always has every criterion marked passed
+    // (that is why the model said true), so "the failed ones" is usually an
+    // empty list. Fall back to naming all of them: the student still needs
+    // to know which checks to strengthen, not a placeholder sentence.
     const weak = result.criteria.filter((c) => !c.passed).map((c) => c.label);
-    const names = weak.length
-      ? weak.join(", ")
-      : "the criteria the reviewer was least sure about";
+    const names = (weak.length ? weak : result.criteria.map((c) => c.label))
+      .filter((label) => label.trim().length > 0)
+      .join(", ");
+    const target = names || "each requirement of the task";
     return {
       outcome: "rejected",
       rejectReason: "low_confidence",
       // The model's own feedback is written for a PASS here (it decided true)
       // and would contradict the rejection, so it is deliberately dropped.
-      feedback: `The reviewer could not verify your work with enough certainty. Please add clearer evidence for: ${names}.`,
+      feedback: `The reviewer leaned towards a pass but could not verify your work with enough certainty. Add clearer, concrete evidence (names, dates, numbers, screenshots or links) for: ${target}.`,
     };
   }
   return {

@@ -21,6 +21,8 @@ describe("track", () => {
     vi.mocked(posthog.capture).mockImplementation(() => {
       throw new Error("not loaded");
     });
-    expect(() => track("startie_opened", { page: "/dashboard" })).not.toThrow();
+    expect(() =>
+      track("startie_opened", { page: "/dashboard", source: "button" })
+    ).not.toThrow();
   });
 });
