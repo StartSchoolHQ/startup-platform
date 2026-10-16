@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "test:rewards": "vitest run tests/rewards",
     "ai-review:calibrate": "npx tsx scripts/ai-review-calibrate.ts",
+    "ai-review:replay": "npx tsx scripts/ai-review-replay.ts",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "typecheck": "tsc --noEmit",

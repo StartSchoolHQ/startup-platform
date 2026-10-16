@@ -106,6 +106,19 @@ describe("buildSystemPrompt", () => {
     );
   });
 
+  it("tells the model to judge intent, not keywords", () => {
+    expect(p).toContain("You are the decider");
+    expect(p).toContain(
+      "Never fail an item because a particular word or phrase is missing"
+    );
+    expect(p).toContain(
+      '"I read the book" meets "states the book was read in full"'
+    );
+    // The two literal exceptions survive.
+    expect(p).toContain("Hard gates stay hard");
+    expect(p).toContain("Be strict on quantities");
+  });
+
   it("says nothing about self-check tasks — those never reach the model", () => {
     expect(p).not.toMatch(/self-check/i);
     expect(p).not.toMatch(/requires_review/i);

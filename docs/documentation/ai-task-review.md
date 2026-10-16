@@ -93,6 +93,7 @@ Student submits individual task → submit_individual_task_v1(progress_id, submi
 | `src/hooks/use-ai-review-settings.ts` | Admin settings read/write (via the existing `set_platform_setting_v1`) |
 | `src/components/admin/ai-review-settings-card.tsx` | Admin settings card (enabled, mode, threshold, model) |
 | `scripts/ai-review-calibrate.ts` | Calibration dry-run against historical team submissions |
+| `scripts/ai-review-replay.ts` | Replay past `ai_task_reviews` rows as a dry run with the current persona (and optionally the tasks' current criteria) |
 
 ---
 
@@ -394,6 +395,23 @@ false rejections are acceptable. Each run costs roughly $1–4 in OpenAI spend.
 
 ---
 
+## Replay Script
+
+**File:** `scripts/ai-review-replay.ts`. **Run:** `npm run ai-review:replay -- --codes MJ-P1-01,MJ-P1-03,MJ-READ- --sole E1 [--fresh-criteria] [--limit 40] [--model gpt-5.4]`
+or `-- --ids <review uuid>,<review uuid>`. Dry run: nothing is written and no telemetry is captured.
+
+Re-reviews past `ai_task_reviews` rows (default: rejected ones) with the code's **current** persona, using
+each row's own `criteria_snapshot` and `submission_snapshot`. `--codes` filters by `tasks.template_code`
+prefix, `--sole E1` keeps only rows where that criterion was the single failed one, and `--fresh-criteria`
+grades against the tasks' current `peer_review_criteria` instead of the snapshot, so a criteria rewrite
+can be checked too. Prints before/after per row and a summary, and writes
+`reports/ai-review-replay-<YYYYMMDD-HHmm>.json`. Use it after any persona or criteria change: a prompt
+edit should flip the false rejections it targets without flipping anything else.
+
+First use (2026-10-16): 24 reading-task submissions had been rejected solely on "states the book was read
+in full" under `PROMPT_VERSION` 2026-09-24.1. Persona rule 2 ("You are the decider; the criteria help")
+plus the criterion rewrite in migration `reading_criteria_intent_v1` are checked with it (`--fresh-criteria`); the result is recorded in the CLAUDE.md rollback entry.
+
 ## Cost
 
 Estimated per-review from a hardcoded per-model `PRICING` table in `review.ts` (USD per 1M tokens,
@@ -469,6 +487,7 @@ changes.
 | `src/hooks/use-ai-review-status.ts` | Student polling hook |
 | `src/hooks/use-ai-review-settings.ts` | Admin settings read/write hook |
 | `scripts/ai-review-calibrate.ts` | Calibration dry-run script |
+| `scripts/ai-review-replay.ts` | Replay script for past reviews (dry run) |
 
 ### Types
 | File | Purpose |
