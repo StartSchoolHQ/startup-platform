@@ -82,6 +82,14 @@ Each line in "What to evaluate" must be a single, self-contained, checkable stat
   bar being visible, an incognito/private-window indicator, or a username/account name in shot, say so
   in the line itself. The reviewer marks a criterion unmet (not "probably fine") when a stated
   visibility requirement isn't visible in the evidence.
+- **Never demand a magic phrase.** Do not write "states that the book was read in full", "confirms
+  the essays were read" or any line that can only be met by the student writing a particular sentence
+  — especially for facts the reviewer cannot verify anyway. The model follows criteria text literally:
+  in October 2026 that one line rejected 24 good reading reflections (18 students) because nobody had
+  written "in full". Write what the submission must *show* instead ("a reflection that clearly draws
+  on the book's content"), and if the task's own Evidence Required never asks for a statement, do not
+  grade one. Length guidance ("3-4 sentences") is a target the reviewer treats loosely; only counts of
+  evidence ("at least 2 screenshots") are enforced as numbers.
 - **Never phrase a check as a reviewer action.** "Click the link and check," "open it yourself,"
   "google it and compare," "log in and confirm" all assume the reviewer can act — it cannot. Rephrase
   as what the *evidence* must show, not what the reviewer must do.
@@ -142,3 +150,5 @@ Reject if:
 4. Are the two block titles exactly "What to evaluate" and "Reject if" — not renamed, not merged?
 5. If the task's deliverable is naturally a video or a login-walled page, does the task's own
    instructions ask the student for a screenshot/PDF substitute instead of the thing itself?
+6. Can every line be met without the student writing one specific sentence? If a line says "states
+   that…" or "confirms that…", rewrite it as what the submission must show.

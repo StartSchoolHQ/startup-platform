@@ -117,6 +117,9 @@ describe("buildSystemPrompt", () => {
     // The two literal exceptions survive.
     expect(p).toContain("Hard gates stay hard");
     expect(p).toContain("Be strict on quantities");
+    // Length guidance is a target, not a gate (the first replay rejected
+    // 5- and 6-sentence answers to a "3-4 sentences" task).
+    expect(p).toContain('"3-4 sentences" or "a short paragraph" is a target');
   });
 
   it("says nothing about self-check tasks — those never reach the model", () => {
