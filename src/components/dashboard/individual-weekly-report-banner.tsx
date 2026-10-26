@@ -14,7 +14,8 @@ import {
 import { IndividualWeeklyReportModal } from "@/components/weekly-reports/individual/individual-weekly-report-modal";
 
 /**
- * Solo twin of WeeklyReportBanner: Friday → Monday 10:00 Riga, only while
+ * Solo twin of WeeklyReportBanner: Friday → Monday 12:00 Riga (the solo
+ * cutoff; teams close at 10:00), only while
  * My Journey is on, only for students who resolve to the solo form, and
  * only until this week's report is submitted. Opens the modal in place.
  */
@@ -37,7 +38,7 @@ export function IndividualWeeklyReportBanner() {
           </span>
           <p className="text-sm">
             <span className="font-semibold text-amber-800 dark:text-amber-200">
-              Weekly report due Monday 10:00
+              Weekly report due Monday 12:00
             </span>
             <span className="text-muted-foreground">
               {" "}

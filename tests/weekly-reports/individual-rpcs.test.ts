@@ -235,3 +235,39 @@ describe("submit_individual_weekly_report_v1", () => {
     expect(error).not.toBeNull();
   });
 });
+
+describe("get_riga_week_boundaries_v2 (solo cutoff Monday 12:00 Riga)", () => {
+  async function weekStart(iso: string, cutoff = "12:00:00") {
+    const { data, error } = await admin.rpc("get_riga_week_boundaries_v2", {
+      input_date: iso,
+      p_cutoff: cutoff,
+    });
+    expect(error).toBeNull();
+    return (data as { week_start: string }[])[0].week_start;
+  }
+
+  it("keeps Monday before 12:00 Riga in the previous week (winter time)", async () => {
+    expect(await weekStart("2026-10-26T11:59:00+02:00")).toBe("2026-10-19");
+    expect(await weekStart("2026-10-26T12:00:00+02:00")).toBe("2026-10-26");
+  });
+
+  it("uses Riga local time, not UTC, for the cutoff (summer time)", async () => {
+    // 11:30 Riga summer = 08:30 UTC; still last week under the 12:00 cutoff.
+    expect(await weekStart("2026-06-01T11:30:00+03:00")).toBe("2026-05-25");
+    expect(await weekStart("2026-06-01T12:30:00+03:00")).toBe("2026-06-01");
+  });
+
+  it("matches the 10:00 team rule when asked for 10:00", async () => {
+    expect(await weekStart("2026-10-26T11:30:00+02:00", "10:00:00")).toBe(
+      "2026-10-26"
+    );
+  });
+
+  it("solo status RPC reports the 12:00-cutoff week", async () => {
+    const { data } = await student.rpc(
+      "get_individual_weekly_report_status_v1"
+    );
+    const expected = await weekStart(new Date().toISOString());
+    expect(data.week.week_start).toBe(expected);
+  });
+});

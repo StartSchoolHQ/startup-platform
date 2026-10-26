@@ -92,9 +92,10 @@ export function formatWeekPeriod(weekBoundaries: WeekBoundaries): string {
 }
 
 /**
- * Banner window: Friday 00:00 through Monday 10:00 Riga. `week_start` is
- * always a Monday, so Friday = week_start + 4 days. After Monday 10:00
- * `get_riga_week_boundaries` flips to the new week, whose Friday is ahead,
+ * Banner window: Friday 00:00 through the Monday cutoff (team 10:00, solo
+ * 12:00 Riga — whichever RPC produced `week`). `week_start` is
+ * always a Monday, so Friday = week_start + 4 days. After the cutoff
+ * the boundaries RPC flips to the new week, whose Friday is ahead,
  * so the banner closes by itself.
  */
 export function isWeeklyReportBannerWindow(

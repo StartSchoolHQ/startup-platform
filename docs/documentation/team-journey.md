@@ -372,7 +372,7 @@ Returns:
 | `getCurrentWeekBoundaries()` | Get current week via RPC |
 | `hasUserSubmittedThisWeek(userId, teamId)` | Check submission status |
 | `formatWeekPeriod(boundaries)` | Format for display |
-| `isWeeklyReportBannerWindow(boundaries, now?)` | Friday → Monday 10:00 banner window (shared by both banners) |
+| `isWeeklyReportBannerWindow(boundaries, now?)` | Friday → Monday cutoff banner window (shared by both banners; team 10:00, solo 12:00 Riga) |
 
 ### Weekly Report Banner
 

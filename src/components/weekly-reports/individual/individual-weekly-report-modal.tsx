@@ -154,7 +154,7 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
       onOpenChange={onOpenChange}
       eyebrow="My Journey"
       title="Weekly report"
-      description={`${weekLabel ? `${weekLabel}. ` : ""}Four quick questions. Due Monday 10:00 Riga time.`}
+      description={`${weekLabel ? `${weekLabel}. ` : ""}Four quick questions. Due Monday 12:00 Riga time.`}
       chip={restoredDraft ? <HeaderChip>Draft restored</HeaderChip> : undefined}
       formId="solo-weekly-report-form"
       onSubmit={handleSubmit}

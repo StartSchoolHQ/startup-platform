@@ -12,7 +12,7 @@ still open the hidden pages directly by URL or via Admin → Teams.
 
 | Phase            | What it is         | Units earned              | Weekly reports / strikes |
 | ---------------- | ------------------ | ------------------------- | ------------------------ |
-| **My Journey**   | Solo preparation   | My Journey XP · My Journey Credits | Solo weekly report (4 questions, reminders only — no strikes/penalty) |
+| **My Journey**   | Solo preparation   | My Journey XP · My Journey Credits | Solo weekly report (4 questions, due Monday 12:00 Riga, reminders only — no strikes/penalty) |
 | **Team Journey** | The startup phase  | Team XP · Team Points     | Yes                      |
 
 **Which weekly report form a student gets:** Team Journey on **and** active

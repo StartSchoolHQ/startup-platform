@@ -114,7 +114,7 @@ export function WeeklyReportCard({
                 <p className="text-muted-foreground text-xs">
                   {state === "submitted"
                     ? formatSubmitted(data.submitted_at)
-                    : "Due Monday 10:00 Riga time"}
+                    : "Due Monday 12:00 Riga time"}
                 </p>
               </div>
             </div>
