@@ -122,6 +122,20 @@ describe("buildSystemPrompt", () => {
     expect(p).toContain('"3-4 sentences" or "a short paragraph" is a target');
   });
 
+  it("applies the recurring repeat rule only to earlier approved months", () => {
+    expect(p).toContain("earlier approved entries from previous months");
+    expect(p).toContain(
+      "A resubmission that fixes the current entry after a rejection is not a repeat"
+    );
+    expect(p).toContain(
+      "If no earlier entries are listed, the repeat rule does not apply"
+    );
+    // The old wording treated any listed text as a repeat candidate.
+    expect(p).not.toContain(
+      "when previous submissions for this task are listed"
+    );
+  });
+
   it("says nothing about self-check tasks — those never reach the model", () => {
     expect(p).not.toMatch(/self-check/i);
     expect(p).not.toMatch(/requires_review/i);
@@ -171,12 +185,15 @@ describe("buildUserContent — recurring task", () => {
   };
   const text = textOf(buildUserContent(recurring, bundle, NONCE));
 
-  it("lists the previous submissions in nonce-delimited blocks", () => {
+  it("lists the earlier approved entries in nonce-delimited blocks", () => {
     expect(text).toContain(
-      "# Previous submissions for this recurring task (do not accept a repeat)"
+      "# Earlier approved entries from previous months (do not accept a repeat of one of these)"
+    );
+    expect(text).not.toContain(
+      "# Previous submissions for this recurring task"
     );
     expect(text).toContain(
-      `<<<EVIDENCE ${NONCE} prev-1 (previous submission)>>>`
+      `<<<EVIDENCE ${NONCE} prev-1 (earlier approved entry)>>>`
     );
     expect(text).toContain(`<<<END ${NONCE} prev-1>>>`);
     expect(text).toContain("Two months ago I ran three interviews");

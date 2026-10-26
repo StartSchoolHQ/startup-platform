@@ -4,9 +4,9 @@ import type { EvidenceBundle } from "./evidence";
 import { PERSONA_PROMPT } from "./prompt-persona";
 import type { CriteriaSnapshot } from "./types";
 
-export const PROMPT_VERSION = "2026-10-16.1";
+export const PROMPT_VERSION = "2026-10-26.1";
 
-/** Longest prior submission text carried into a recurring task's context. */
+/** Longest earlier-entry text carried into a recurring task's context. */
 const PREVIOUS_SUBMISSION_CHARS = 1500;
 
 /**
@@ -72,17 +72,19 @@ export function buildUserContent(
     `<<<EVIDENCE ${nonce} ${id} (${stripDelimiters(label)})>>>`;
   const close = (id: string) => `<<<END ${nonce} ${id}>>>`;
 
-  // Prior submissions are founder-written text, so they go inside the same
-  // nonce-delimited, untrusted blocks the evidence items use.
+  // Earlier approved entries (previous months of a recurring task) are
+  // founder-written text, so they go inside the same nonce-delimited,
+  // untrusted blocks the evidence items use. The RPC lists approved cycles
+  // only — a rejected draft of the current entry never appears here.
   const previous = (criteria.previous_submissions ?? []).filter((s) =>
     s?.trim()
   );
   const previousBlock =
     criteria.is_recurring && previous.length
-      ? `\n# Previous submissions for this recurring task (do not accept a repeat)\n${previous
+      ? `\n# Earlier approved entries from previous months (do not accept a repeat of one of these)\n${previous
           .map(
             (text, i) =>
-              `${open(`prev-${i + 1}`, "previous submission")}\n${stripDelimiters(
+              `${open(`prev-${i + 1}`, "earlier approved entry")}\n${stripDelimiters(
                 text
               ).slice(0, PREVIOUS_SUBMISSION_CHARS)}\n${close(`prev-${i + 1}`)}`
           )

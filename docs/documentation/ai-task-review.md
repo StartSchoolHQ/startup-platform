@@ -115,7 +115,7 @@ service-role client.
 | `status` | TEXT | `queued` \| `running` \| `approved` \| `rejected` \| `failed` |
 | `stage` | TEXT | `fetching_evidence` \| `reading_files` \| `checking_links` \| `reviewing` \| `finalizing` |
 | `submission_snapshot` | JSONB | Normalised `{description, links:[{url,title}], files:[{url,name,size,type}]}`, frozen at submit time |
-| `criteria_snapshot` | JSONB | `{criteria, review_instructions, deliverables, title, description, detailed_instructions, is_recurring, previous_submissions}` frozen at submit time. `detailed_instructions` is the task's Requirements / Evidence Required text; `previous_submissions` is up to 3 prior submission descriptions for this progress row, newest first, and is `[]` unless the task `is_recurring` |
+| `criteria_snapshot` | JSONB | `{criteria, review_instructions, deliverables, title, description, detailed_instructions, is_recurring, previous_submissions}` frozen at submit time. `detailed_instructions` is the task's Requirements / Evidence Required text; `previous_submissions` is up to 3 descriptions of earlier **approved** cycles of this progress row (the `status = 'approved'` entries the cooldown sweep archived into `submission_history`), newest first, and is `[]` unless the task `is_recurring`. Rejected drafts of the current cycle are never included — before 2026-10-26 they were, so fixing exactly what the reviewer asked for read as a "repeat" (24 wrong rejections, 8 students) |
 | `evidence_manifest` | JSONB | Per evidence item: `{id, source, url, label, status, chars, bytes, note}` |
 | `model` | TEXT | Model that actually answered (from the API response) |
 | `prompt_version` | TEXT | `PROMPT_VERSION` from `prompt.ts` at review time |

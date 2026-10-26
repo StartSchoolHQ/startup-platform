@@ -360,7 +360,7 @@ describe("submit_individual_task_v1", () => {
     expect(tp!.submission_history).toHaveLength(1);
   });
 
-  it("carries the task's full bar and prior entries for a recurring task", async () => {
+  it("carries the task's full bar and only earlier APPROVED entries for a recurring task", async () => {
     const progressId = await createProgress("in_progress", recurringTaskId);
     const first = await student.rpc("submit_individual_task_v1", {
       p_progress_id: progressId,
@@ -387,9 +387,15 @@ describe("submit_individual_task_v1", () => {
       p_payload: { feedback: "say what changed", reject_reason: "criteria" },
     });
 
+    // A resubmission after a rejection is the SAME month's entry, fixed. The
+    // rejected draft must not be offered to the reviewer as a "previous
+    // submission" — that is what made "add the date and resubmit" read as a
+    // copy-paste repeat (24 wrong rejections before 2026-10-26).
     const second = await student.rpc("submit_individual_task_v1", {
       p_progress_id: progressId,
-      p_submission_data: { description: "February: first paying customer." },
+      p_submission_data: {
+        description: "January: shipped the landing page. Dated 2026-01-31.",
+      },
     });
     expect(second.error).toBeNull();
     const { data: secondSnapshot } = await admin
@@ -397,8 +403,51 @@ describe("submit_individual_task_v1", () => {
       .select("criteria_snapshot")
       .eq("id", second.data.review_id)
       .single();
-    expect(secondSnapshot!.criteria_snapshot.previous_submissions).toEqual([
-      "January: shipped the landing page.",
+    expect(secondSnapshot!.criteria_snapshot.previous_submissions).toEqual([]);
+
+    // Simulate the cooldown sweep: the approved January entry is archived with
+    // status 'approved' and the row is reopened for the next month. The history
+    // also still holds the rejected January draft from the resubmit above.
+    const { data: row } = await admin
+      .from("task_progress")
+      .select("submission_history")
+      .eq("id", progressId)
+      .single();
+    const history = (row!.submission_history as unknown[]) ?? [];
+    expect(history).toHaveLength(1);
+    expect(history[0]).toMatchObject({ status: "rejected" });
+    const { error: sweepErr } = await admin
+      .from("task_progress")
+      .update({
+        submission_history: [
+          ...history,
+          {
+            status: "approved",
+            completed_at: new Date().toISOString(),
+            submission_data: {
+              description:
+                "January: shipped the landing page. Dated 2026-01-31.",
+            },
+          },
+        ],
+        submission_data: null,
+        status: "in_progress",
+      })
+      .eq("id", progressId);
+    expect(sweepErr).toBeNull();
+
+    const third = await student.rpc("submit_individual_task_v1", {
+      p_progress_id: progressId,
+      p_submission_data: { description: "February: first paying customer." },
+    });
+    expect(third.error).toBeNull();
+    const { data: thirdSnapshot } = await admin
+      .from("ai_task_reviews")
+      .select("criteria_snapshot")
+      .eq("id", third.data.review_id)
+      .single();
+    expect(thirdSnapshot!.criteria_snapshot.previous_submissions).toEqual([
+      "January: shipped the landing page. Dated 2026-01-31.",
     ]);
   });
 

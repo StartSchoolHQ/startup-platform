@@ -12,6 +12,8 @@
  * --ids              explicit ai_task_reviews ids (overrides --codes / --sole / --status)
  * --status           rejected (default) | approved | all
  * --fresh-criteria   grade against tasks.peer_review_criteria as it is now
+ * --no-previous      replay with an empty previous_submissions list (what the
+ *                    RPC feeds since 2026-10-26 for a row with no approved cycle)
  */
 import { config } from "dotenv";
 import { mkdirSync, writeFileSync } from "fs";
@@ -126,7 +128,9 @@ async function main() {
           deliverables: t.deliverables ?? [],
           review_instructions: t.review_instructions,
           is_recurring: t.is_recurring ?? false,
-          previous_submissions: snapshotCriteria?.previous_submissions ?? [],
+          previous_submissions: flag("no-previous")
+            ? []
+            : (snapshotCriteria?.previous_submissions ?? []),
           criteria: Array.isArray(t.peer_review_criteria)
             ? (t.peer_review_criteria as CriteriaSnapshot["criteria"])
             : [],

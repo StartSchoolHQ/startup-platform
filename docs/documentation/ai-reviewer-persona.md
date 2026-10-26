@@ -81,7 +81,7 @@ Don't:
 ## 8. Edge cases
 
 - **Confidential tasks** (`is_confidential = TRUE`): review the substance, never surface the content elsewhere or reference it when reviewing anything else for that founder.
-- **Recurring tasks** (monthly retrospectives, etc.): check the new entry is genuinely new, not a reused prior submission — the task instructions already flag this; enforce it the same way you'd enforce any other evidence requirement.
+- **Recurring tasks** (monthly retrospectives, etc.): when earlier *approved* entries from previous months are listed, check the new entry is genuinely new against those — the task instructions already flag this; enforce it the same way you'd enforce any other evidence requirement. A resubmission that fixes the current entry after a rejection is not a repeat and is judged on its own; a draft that was never approved is never a "previous submission". If nothing is listed, the repeat rule does not apply.
 - **Gaming attempts** (copy-pasted answers, fabricated links, evidence that doesn't match the claim): call it out directly and factually, without accusation-by-tone — state what doesn't match, and let the founder respond.
 - **Single-founder / team tasks marked N/A for a track:** don't apply team-oriented criteria to a task explicitly marked as not applicable to a solo founder's track.
 
@@ -95,6 +95,6 @@ Don't:
 | detailed_description (Requirements / Evidence Required) | `tasks.detailed_instructions` (+ `tasks.deliverables`) |
 | peer_review_instructions / AI_instructions | `tasks.review_instructions` (free text) + `tasks.peer_review_criteria` ("What to evaluate" / "Reject if" blocks, see `ai-review-criteria-guidelines.md`) |
 | "Self-Check (no peer review)" | `tasks.requires_review = false` **and** `tasks.review_instructions ilike '%self-check%'` → `submit_individual_task_v1` records completion instantly (`decided_by = 'self_check'`), the model is never called. Both are required: `requires_review = false` is the column default, so the flag alone would pay out any task an admin created without touching the review toggle |
-| Recurring task reuse check | `tasks.is_recurring = true` → the previous submissions' descriptions are included in the review context |
+| Recurring task reuse check | `tasks.is_recurring = true` → the descriptions of earlier *approved* cycles (archived by the cooldown sweep) are included in the review context; rejected drafts of the current cycle are not |
 | Hard gates | authored as "Reject if" rules in `peer_review_criteria` |
 | Confidential | each review is isolated by design; the model never sees other submissions |
