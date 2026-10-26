@@ -37,7 +37,7 @@ export function buildRouteStops(
       title: "Submit your Weekly Report",
       body: [
         "Submit your mandatory weekly report to reflect on what you've accomplished, identify your main focus areas, and recognise any challenges or bottlenecks. It's an opportunity to understand your progress and make the most of your journey.",
-        "Due every Monday at 10:00 (Riga time). The Weekly report card on My Journey opens the form any day; from Friday a banner reminds you too.",
+        "Due every Monday at 12:00 (Riga time). The Weekly report card on My Journey opens the form any day; from Friday a banner reminds you too.",
       ],
       actions: weeklyReportAction ? [weeklyReportAction] : undefined,
     });
