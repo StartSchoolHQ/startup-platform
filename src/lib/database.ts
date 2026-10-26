@@ -88,6 +88,8 @@ export {
   type ResourceItem,
   type TipContent,
   type CreateTaskParams,
+  type TaskCategory,
+  type TaskPriority,
 } from "./data/tasks";
 
 // ============================================================================

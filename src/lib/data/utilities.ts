@@ -10,6 +10,7 @@
  * - Helper utilities
  */
 
+import type { TablesUpdate } from "@/types/database";
 import type { Product } from "@/types/team-journey";
 import { createClient } from "../supabase/client";
 import type { DatabaseTeam } from "./core";
@@ -235,7 +236,7 @@ export async function updateTeamDetails(
     }
   }
 
-  const updateData: Record<string, unknown> = {};
+  const updateData: TablesUpdate<"teams"> = {};
   if (updates.name !== undefined) updateData.name = updates.name.trim();
   if (updates.description !== undefined)
     updateData.description = updates.description;
@@ -348,7 +349,7 @@ export async function updateTeamDetailsV2(
     }
   }
 
-  const updateData: Record<string, unknown> = {};
+  const updateData: TablesUpdate<"teams"> = {};
   if (updates.name !== undefined) updateData.name = updates.name.trim();
   if (updates.description !== undefined)
     updateData.description = updates.description;

@@ -11,6 +11,7 @@
  */
 
 import { createClient } from "../supabase/client";
+import type { Database, TablesInsert, TablesUpdate } from "@/types/database";
 
 type Json =
   | string
@@ -282,22 +283,28 @@ export async function createProgressIfNeededDB(
 // TASK CRUD OPERATIONS (Admin)
 // ============================================================================
 
-export interface PeerReviewCriteria {
+// The DB enums are the source of truth for these two; the admin dialogs
+// used to offer a "critical" priority the column rejects.
+export type TaskCategory = Database["public"]["Enums"]["task_category_type"];
+export type TaskPriority = Database["public"]["Enums"]["task_priority_type"];
+
+// Type aliases (not interfaces) so they are assignable to the Json columns.
+export type PeerReviewCriteria = {
   category: string;
   points: string[];
-}
+};
 
-export interface ResourceItem {
+export type ResourceItem = {
   title: string;
   description: string;
   type: "documentation" | "video" | "article" | "tool" | "example";
   url?: string;
-}
+};
 
-export interface TipContent {
+export type TipContent = {
   title: string;
   content: string;
-}
+};
 
 export interface CreateTaskParams {
   templateCode: string;
@@ -305,8 +312,8 @@ export interface CreateTaskParams {
   title: string;
   description?: string;
   detailedInstructions?: string;
-  category?: string;
-  priority?: "low" | "medium" | "high" | "critical";
+  category?: TaskCategory;
+  priority?: TaskPriority;
   difficultyLevel?: number;
   estimatedHours?: number;
   baseXpReward?: number;
@@ -334,7 +341,7 @@ export interface CreateTaskParams {
 export async function createTask(params: CreateTaskParams) {
   const supabase = createClient();
 
-  const taskInsert = {
+  const taskInsert: TablesInsert<"tasks"> = {
     template_code: params.templateCode,
     activity_type: params.taskContext || "team",
     title: params.title,
@@ -366,7 +373,7 @@ export async function createTask(params: CreateTaskParams) {
 
   const { data, error } = await supabase
     .from("tasks")
-    .insert(taskInsert as any)
+    .insert(taskInsert)
     .select("id")
     .single();
 
@@ -386,7 +393,7 @@ export async function updateTask(
 ) {
   const supabase = createClient();
 
-  const updateData: Record<string, unknown> = {};
+  const updateData: TablesUpdate<"tasks"> = {};
 
   if (params.templateCode !== undefined)
     updateData.template_code = params.templateCode;

@@ -125,9 +125,10 @@ beforeAll(async () => {
       feedback: `test_ana rejection ${attempt}`,
       submission_snapshot: {},
       criteria_snapshot: {},
-      finished_at: new Date(
-        Date.now() - (14 - attempt) * 86400000
-      ).toISOString(),
+      // Minutes ago, so they are the task's newest rejections and land in
+      // the review-quality feedback sample even when live students have
+      // been rejected on the same task recently.
+      finished_at: new Date(Date.now() - (3 - attempt) * 60000).toISOString(),
     }))
   );
   if (aiErr) throw aiErr;
@@ -253,16 +254,33 @@ describe("pulse, my journey, review quality, outcomes, overview v3", () => {
   });
 
   it("review quality counts the seeded rejections and the stale task", async () => {
-    const { data, error } = await adminUser.rpc(
-      "get_analytics_review_quality_v1",
-      { p_batch_id: openBatch, p_include_test: true }
-    );
-    expect(error).toBeNull();
-    const row = data!.find((r) => r.task_id === taskId);
+    // The seeded student sits on a real phase-1 task that live students also
+    // work on, so compare against the same row WITHOUT test accounts instead
+    // of asserting absolute numbers that drift with production data.
+    const [withTest, withoutTest] = await Promise.all([
+      adminUser.rpc("get_analytics_review_quality_v1", {
+        p_batch_id: openBatch,
+        p_include_test: true,
+      }),
+      adminUser.rpc("get_analytics_review_quality_v1", {
+        p_batch_id: openBatch,
+        p_include_test: false,
+      }),
+    ]);
+    expect(withTest.error).toBeNull();
+    expect(withoutTest.error).toBeNull();
+    const row = withTest.data!.find((r) => r.task_id === taskId);
+    const real = withoutTest.data?.find((r) => r.task_id === taskId);
     expect(row).toBeDefined();
-    expect(row!.rejections).toBeGreaterThanOrEqual(2);
-    expect(Number(row!.first_pass_rate)).toBe(0);
-    expect(row!.stale_in_progress).toBeGreaterThanOrEqual(1);
+    // Two first-attempt rejections can only add rejections, add one stale
+    // row and pull the first-pass rate down (or keep it at 0).
+    expect(row!.rejections).toBeGreaterThanOrEqual((real?.rejections ?? 0) + 2);
+    const realRate =
+      real?.first_pass_rate == null ? 0 : Number(real.first_pass_rate);
+    expect(Number(row!.first_pass_rate)).toBeLessThanOrEqual(realRate);
+    expect(row!.stale_in_progress).toBeGreaterThanOrEqual(
+      (real?.stale_in_progress ?? 0) + 1
+    );
     expect(row!.sample_feedback.some((f) => f.includes("test_ana"))).toBe(true);
   });
 

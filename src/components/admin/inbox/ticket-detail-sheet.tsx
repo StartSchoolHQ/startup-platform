@@ -51,7 +51,7 @@ export function TicketDetailSheet({ ticket, open, onOpenChange }: Props) {
           600
         );
       if (error) throw error;
-      return new Map(data.map((d) => [d.path ?? "", d.signedUrl]));
+      return new Map(data.map((d) => [d.path ?? "", d.signedUrl ?? ""]));
     },
   });
 

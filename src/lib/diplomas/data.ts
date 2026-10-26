@@ -2,6 +2,7 @@
 // service-role client — callers (API routes) are responsible for the admin
 // check via requireAdmin(), except the student-own-diploma readers.
 
+import type { TablesUpdate } from "@/types/database";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DIPLOMAS_BUCKET } from "./constants";
 import type {
@@ -101,7 +102,7 @@ export async function updateDiplomaStudent(input: {
   personal_code?: string | null;
   startup_module_completed?: boolean;
 }) {
-  const patch: Record<string, unknown> = {};
+  const patch: TablesUpdate<"users"> = {};
   if ("personal_code" in input) patch.personal_code = input.personal_code;
   if (input.startup_module_completed !== undefined) {
     patch.startup_module_completed = input.startup_module_completed;
