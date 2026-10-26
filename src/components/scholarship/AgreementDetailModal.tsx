@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -62,29 +63,23 @@ export function AgreementDetailModal({
   agreementId,
   onChanged,
 }: AgreementDetailModalProps) {
-  const [data, setData] = useState<DetailPayload | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const reload = useCallback(async () => {
-    if (!agreementId) return;
-    setLoading(true);
-    try {
+  const detail = useQuery({
+    queryKey: ["agreements", "admin", "detail", agreementId],
+    enabled: open && !!agreementId,
+    retry: 0,
+    queryFn: async (): Promise<DetailPayload | null> => {
       const res = await fetch(`/api/agreements/admin/${agreementId}`);
       if (!res.ok) {
         toast.error("Failed to load agreement detail");
-        return;
+        return null;
       }
       const json = (await res.json()) as { data: DetailPayload };
-      setData(json.data);
-    } finally {
-      setLoading(false);
-    }
-  }, [agreementId]);
-
-  useEffect(() => {
-    if (open && agreementId) reload();
-    if (!open) setData(null);
-  }, [open, agreementId, reload]);
+      return json.data;
+    },
+  });
+  const data = open ? (detail.data ?? null) : null;
+  const loading = detail.isFetching;
+  const { refetch: reload } = detail;
 
   useEffect(() => {
     if (!open || !agreementId) return;
@@ -100,7 +95,7 @@ export function AgreementDetailModal({
           filter: `id=eq.${agreementId}`,
         },
         () => {
-          reload();
+          void reload();
           onChanged();
         }
       )
@@ -112,7 +107,9 @@ export function AgreementDetailModal({
           table: "scholarship_agreement_events",
           filter: `agreement_id=eq.${agreementId}`,
         },
-        () => reload()
+        () => {
+          void reload();
+        }
       )
       .subscribe();
 

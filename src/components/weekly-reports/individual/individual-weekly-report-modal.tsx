@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import posthog from "posthog-js";
 import { Loader2, Save, Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -65,16 +65,19 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
   const [restoredDraft, setRestoredDraft] = useState(false);
 
   // Prefill ONLY when the dialog opens — depending on `status.draft` would
-  // reset the form mid-typing whenever the status query refetches.
-  useEffect(() => {
-    if (!open) return;
-    setForm(
-      status?.draft ? draftToForm(status.draft) : emptyIndividualReportForm()
-    );
-    setRestoredDraft(Boolean(status?.draft));
-    setErrors({});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  // reset the form mid-typing whenever the status query refetches. Done
+  // during render (adjust-state-on-prop-change) rather than in an effect.
+  const [seededOpen, setSeededOpen] = useState<boolean | null>(null);
+  if (open !== seededOpen) {
+    setSeededOpen(open);
+    if (open) {
+      setForm(
+        status?.draft ? draftToForm(status.draft) : emptyIndividualReportForm()
+      );
+      setRestoredDraft(Boolean(status?.draft));
+      setErrors({});
+    }
+  }
 
   const hasContent = hasIndividualReportContent(form);
   const weekLabel = status ? formatWeekPeriod(status.week) : null;

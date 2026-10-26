@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatDate } from "@/lib/date-utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle, FileText, Link, Upload, X, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { economyLabels, type Economy } from "@/lib/economy-labels";
 
@@ -155,8 +155,12 @@ export function TaskDetailsModal({
     "accepted" | "rejected" | null
   >(null);
 
-  // Reset form state when modal opens/closes or task changes
-  useEffect(() => {
+  // Reset form state when the modal opens/closes or the task changes. Done
+  // during render (adjust-state-on-prop-change) rather than in an effect.
+  const resetKey = `${isOpen}|${mode}|${taskData?.id ?? ""}`;
+  const [appliedResetKey, setAppliedResetKey] = useState<string | null>(null);
+  if (resetKey !== appliedResetKey) {
+    setAppliedResetKey(resetKey);
     if (!isOpen) {
       // Modal closed - reset everything
       setFormData({});
@@ -207,8 +211,7 @@ export function TaskDetailsModal({
       setUrlError(null);
       setValidationErrors([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, mode, taskData?.id]);
+  }
 
   // Default form schema for submission mode
   const defaultSchema: FormSchema = {

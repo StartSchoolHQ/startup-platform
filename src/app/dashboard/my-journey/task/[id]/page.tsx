@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTaskByIdLazy } from "@/lib/tasks";
 import { submitIndividualTaskV1 } from "@/lib/database";
 import { uploadTaskFiles } from "@/lib/file-upload";
@@ -29,8 +29,6 @@ export default function IndividualTaskDetailPage() {
   const params = useParams();
   const { user } = useAppContext();
   const queryClient = useQueryClient();
-  const [task, setTask] = useState<TeamTask | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuggestEditsModal, setShowSuggestEditsModal] = useState(false);
@@ -41,34 +39,30 @@ export default function IndividualTaskDetailPage() {
   // review each time; capture each (attempt, outcome) once.
   const reportedReview = useRef<string | null>(null);
 
+  const userId = user?.id;
+  const taskQuery = useQuery({
+    queryKey: ["my-journey-task", taskId, userId],
+    enabled: !!taskId && !!userId,
+    queryFn: () => getTaskByIdLazy(taskId, userId!),
+  });
+  const task: TeamTask | null = taskQuery.data ?? null;
+  const loading = taskQuery.isPending;
+  const { refetch: refetchTask } = taskQuery;
   const loadTask = useCallback(async () => {
-    if (!taskId || !user?.id) return;
+    await refetchTask();
+  }, [refetchTask]);
 
-    setLoading(true);
-    try {
-      const taskData = await getTaskByIdLazy(taskId, user.id);
-      setTask(taskData);
-      if (taskData && !viewed.current) {
-        viewed.current = true;
-        track("individual_task_viewed", {
-          task_id: taskData.task_id,
-          task_title: taskData.title,
-          status: taskData.status ?? null,
-          category: taskData.category ?? null,
-        });
-      }
-    } catch (error) {
-      console.error("Error loading task:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [taskId, user?.id]);
-
+  // Report the first successful view once per page visit.
   useEffect(() => {
-    if (taskId && user?.id) {
-      loadTask();
-    }
-  }, [taskId, user?.id, loadTask]);
+    if (!task || viewed.current) return;
+    viewed.current = true;
+    track("individual_task_viewed", {
+      task_id: task.task_id,
+      task_title: task.title,
+      status: task.status ?? null,
+      category: task.category ?? null,
+    });
+  }, [task]);
 
   const reviewActive =
     task?.status === "pending_review" ||
@@ -124,7 +118,7 @@ export default function IndividualTaskDetailPage() {
         type: "external",
       })),
     };
-  }, [task?.status, task?.submission_data]);
+  }, [task]);
 
   const handleSubmission = async (submissionData: Record<string, unknown>) => {
     if (!task || !user?.id || !task.progress_id) return;

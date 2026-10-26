@@ -13,6 +13,7 @@
  * UI guard is defence-in-depth, not the security boundary.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { redirect } from "next/navigation";
 import { AgreementDetailModal } from "@/components/scholarship/AgreementDetailModal";
 import { AgreementsSummaryCard } from "@/components/scholarship/AgreementsSummaryCard";
@@ -96,8 +97,6 @@ export function AgreementsQueue({
   embedded = false,
 }: AgreementsQueueProps) {
   const { user, loading } = useApp();
-  const [rows, setRows] = useState<Row[]>([]);
-  const [rowsLoading, setRowsLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -120,9 +119,11 @@ export function AgreementsQueue({
     return () => clearTimeout(handle);
   }, [searchInput]);
 
-  const reload = useCallback(async () => {
-    setRowsLoading(true);
-    try {
+  const rowsQuery = useQuery({
+    queryKey: ["agreements", "admin", "list", search, statusFilter, typeFilter],
+    enabled: user?.primary_role === "admin",
+    retry: 0,
+    queryFn: async (): Promise<Row[]> => {
       const params = new URLSearchParams();
       if (search) params.set("q", search);
       if (statusFilter !== "all") params.set("status", statusFilter);
@@ -131,18 +132,16 @@ export function AgreementsQueue({
       const res = await fetch(`/api/agreements/admin${qs ? `?${qs}` : ""}`);
       if (!res.ok) {
         toast.error("Failed to load agreements");
-        return;
+        // Throwing keeps the previously loaded rows on screen.
+        throw new Error(`Failed to load agreements (${res.status})`);
       }
       const { data } = (await res.json()) as { data: Row[] };
-      setRows(data);
-    } finally {
-      setRowsLoading(false);
-    }
-  }, [search, statusFilter, typeFilter]);
-
-  useEffect(() => {
-    if (user?.primary_role === "admin") reload();
-  }, [user, reload]);
+      return data;
+    },
+  });
+  const rows = rowsQuery.data;
+  const rowsLoading = rowsQuery.isPending;
+  const { refetch: reload } = rowsQuery;
 
   // Whitelist the four statuses the board cares about AND this queue's
   // agreement types. Always applied, so a row in any other status or of a
@@ -150,7 +149,7 @@ export function AgreementsQueue({
   // API returns. Pure view filter; rows stay in the DB.
   const visibleRows = useMemo(
     () =>
-      rows.filter(
+      (rows ?? []).filter(
         (row) =>
           VISIBLE_STATUSES.has(row.status) && types.includes(row.agreement_type)
       ),
@@ -189,11 +188,11 @@ export function AgreementsQueue({
 
   const onBulkDone = useCallback(() => {
     setSelectedIds(new Set());
-    reload();
+    void reload();
   }, [reload]);
 
   const onDetailChanged = useCallback(() => {
-    reload();
+    void reload();
   }, [reload]);
 
   const onCloseDetail = useCallback((open: boolean) => {

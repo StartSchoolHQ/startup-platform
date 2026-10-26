@@ -36,16 +36,23 @@ import {
   type TipContent,
   type PeerReviewCriteria,
   type ResourceItem,
+  type TaskPriority,
 } from "@/lib/database";
 import { AdminTaskItem } from "@/types/team-journey";
 
 interface EditTaskDialogProps {
+  /** The dialog is open exactly while a task is selected. */
   task: AdminTaskItem | null;
+  /** Called when the admin closes the dialog; the parent clears `task`. */
+  onClose?: () => void;
   onTaskUpdated?: () => void;
 }
 
-export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
-  const [open, setOpen] = useState(false);
+export function EditTaskDialog({
+  task,
+  onClose,
+  onTaskUpdated,
+}: EditTaskDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -73,60 +80,61 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
   const [reviewInstructions, setReviewInstructions] = useState("");
   const [tags, setTags] = useState<string[]>([]);
 
-  // Open modal and load full task data when task is set
+  // Load the full task (rich content) whenever a task is selected. Only the
+  // post-await setters run here, so nothing is set synchronously in the
+  // effect; a stale response for a previously selected task is dropped.
   useEffect(() => {
-    if (task) {
-      setOpen(true);
-      loadFullTaskData(task.id);
-    }
+    if (!task) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const fullTask = await getTaskForEdit(task.id);
+        if (cancelled) return;
+
+        // Load basic fields
+        setTitle(fullTask.title || "");
+        setDescription(fullTask.description || "");
+        setCategory(fullTask.category || "product-foundation");
+        setPriority(fullTask.priority || "medium");
+        setDifficultyLevel(fullTask.difficulty_level || 1);
+        setBaseXpReward(fullTask.base_xp_reward || 100);
+        setBasePointsReward(fullTask.base_points_reward || 10);
+        setEstimatedHours(fullTask.estimated_hours || 0);
+
+        // Load rich content fields
+        setDetailedInstructions(fullTask.detailed_instructions || "");
+        setTipsContent(
+          (fullTask.tips_content as unknown as TipContent[]) || []
+        );
+        setPeerReviewCriteria(
+          (fullTask.peer_review_criteria as unknown as PeerReviewCriteria[]) ||
+            []
+        );
+        setLearningObjectives(fullTask.learning_objectives || []);
+        setDeliverables(fullTask.deliverables || []);
+        setResources((fullTask.resources as unknown as ResourceItem[]) || []);
+        setReviewInstructions(fullTask.review_instructions || "");
+        setTags(fullTask.tags || []);
+        setActiveTab("basic");
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Error loading task details:", error);
+        setError("Failed to load task details. Please try again.");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [task]);
 
-  // Load full task data including rich content
-  const loadFullTaskData = async (taskId: string) => {
-    try {
-      // Reset any previous errors/success messages
-      setError("");
-      setSuccess("");
-      setIsSubmitting(false);
-
-      const fullTask = await getTaskForEdit(taskId);
-
-      // Load basic fields
-      setTitle(fullTask.title || "");
-      setDescription(fullTask.description || "");
-      setCategory(fullTask.category || "product-foundation");
-      setPriority(fullTask.priority || "medium");
-      setDifficultyLevel(fullTask.difficulty_level || 1);
-      setBaseXpReward(fullTask.base_xp_reward || 100);
-      setBasePointsReward(fullTask.base_points_reward || 10);
-      setEstimatedHours(fullTask.estimated_hours || 0);
-
-      // Load rich content fields
-      setDetailedInstructions(fullTask.detailed_instructions || "");
-      setTipsContent((fullTask.tips_content as unknown as TipContent[]) || []);
-      setPeerReviewCriteria(
-        (fullTask.peer_review_criteria as unknown as PeerReviewCriteria[]) || []
-      );
-      setLearningObjectives(fullTask.learning_objectives || []);
-      setDeliverables(fullTask.deliverables || []);
-      setResources((fullTask.resources as unknown as ResourceItem[]) || []);
-      setReviewInstructions(fullTask.review_instructions || "");
-      setTags(fullTask.tags || []);
-      setActiveTab("basic");
-    } catch (error) {
-      console.error("Error loading task details:", error);
-      setError("Failed to load task details. Please try again.");
-    }
+  // Closing clears the transient messages so the next open starts clean,
+  // then hands control back to the parent, which clears `task`.
+  const closeDialog = () => {
+    setError("");
+    setSuccess("");
+    setIsSubmitting(false);
+    onClose?.();
   };
-
-  // Clean up when dialog closes
-  useEffect(() => {
-    if (!open) {
-      setError("");
-      setSuccess("");
-      setIsSubmitting(false);
-    }
-  }, [open]);
 
   // Helper functions for managing dynamic lists
   const addTip = () => {
@@ -278,7 +286,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
           | "team-growth"
           | "legal-finance"
           | "pitch",
-        priority: priority as "low" | "medium" | "high" | "critical",
+        priority: priority as TaskPriority,
         difficultyLevel,
         estimatedHours,
         baseXpReward,
@@ -301,10 +309,8 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
 
       await updateTask(task.id, updateData);
 
-      setSuccess("Task updated successfully!");
-
       // Close dialog and refresh parent data
-      setOpen(false);
+      closeDialog();
       onTaskUpdated?.();
     } catch (error) {
       console.error("Error updating task:", error);
@@ -331,12 +337,17 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
     (task as { activity_type?: string }).activity_type || "team";
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) closeDialog();
+      }}
+    >
       <DialogContent
         className="flex h-[80vh] max-w-2xl flex-col"
         onEscapeKeyDown={() => {
           if (!isSubmitting) {
-            setOpen(false);
+            closeDialog();
           }
         }}
       >
@@ -504,7 +515,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                           <SelectItem value="low">Low</SelectItem>
                           <SelectItem value="medium">Medium</SelectItem>
                           <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="critical">Critical</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -937,7 +948,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
                           <Badge variant="secondary">{category}</Badge>
                           <Badge
                             variant={
-                              priority === "high" || priority === "critical"
+                              priority === "high" || priority === "urgent"
                                 ? "destructive"
                                 : "default"
                             }
@@ -1001,7 +1012,7 @@ export function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={closeDialog}
               disabled={isSubmitting}
             >
               Cancel

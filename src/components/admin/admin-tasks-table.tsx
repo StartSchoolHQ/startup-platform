@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Edit,
   Trash2,
@@ -52,8 +53,6 @@ interface AdminTasksTableProps {
 }
 
 export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
-  const [tasks, setTasks] = useState<AdminTaskItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<
     "created_at" | "title" | "priority" | "difficulty_level" | "category"
   >("created_at");
@@ -64,21 +63,15 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const loadTasks = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await getAllTasks(activityType, sortBy, sortOrder);
-      setTasks(data);
-    } catch (error) {
-      console.error("Error loading tasks:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [activityType, sortBy, sortOrder]);
-
-  useEffect(() => {
-    loadTasks();
-  }, [loadTasks]);
+  const tasksQuery = useQuery({
+    queryKey: ["admin", "tasks", activityType, sortBy, sortOrder],
+    queryFn: () => getAllTasks(activityType, sortBy, sortOrder),
+  });
+  const tasks = tasksQuery.data ?? [];
+  const loading = tasksQuery.isPending;
+  const loadTasks = async () => {
+    await tasksQuery.refetch();
+  };
 
   const handleSort = (column: typeof sortBy) => {
     if (sortBy === column) {
@@ -428,6 +421,7 @@ export function AdminTasksTable({ activityType }: AdminTasksTableProps) {
       {/* Edit Task Dialog */}
       <EditTaskDialog
         task={editingTask}
+        onClose={() => setEditingTask(null)}
         onTaskUpdated={async () => {
           setEditingTask(null);
           await loadTasks();

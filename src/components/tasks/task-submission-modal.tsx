@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,17 +110,20 @@ export function TaskSubmissionModal({
 
   // Seed the form each time the modal opens, then leave it alone — keyed on
   // `isOpen` only, so a caller passing a fresh object literal on every render
-  // cannot re-seed (and wipe) what the student is typing.
-  useEffect(() => {
-    if (!isOpen) return;
-    setFormData(
-      initialData?.description ? { description: initialData.description } : {}
-    );
-    setExternalUrls(initialData?.external_urls ?? []);
-    setUploadedFiles([]);
-    setErrors({});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  // cannot re-seed (and wipe) what the student is typing. Done during render
+  // (React's adjust-state-on-prop-change pattern) rather than in an effect.
+  const [seededOpen, setSeededOpen] = useState<boolean | null>(null);
+  if (isOpen !== seededOpen) {
+    setSeededOpen(isOpen);
+    if (isOpen) {
+      setFormData(
+        initialData?.description ? { description: initialData.description } : {}
+      );
+      setExternalUrls(initialData?.external_urls ?? []);
+      setUploadedFiles([]);
+      setErrors({});
+    }
+  }
 
   const schema = formSchema?.fields?.length ? formSchema : DEFAULT_SCHEMA;
   const isResubmission = !!initialData?.description;

@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
-import { draftKey, readDraft, writeDraft } from "@/lib/assistant/draft";
+import {
+  draftKey,
+  readDraft,
+  subscribeDrafts,
+  writeDraft,
+} from "@/lib/assistant/draft";
 
 describe("Startie draft storage", () => {
   beforeEach(() => sessionStorage.clear());
@@ -25,7 +30,7 @@ describe("Startie draft storage", () => {
     expect(readDraft("t1")).toBe("");
   });
 
-  it("never throws when storage is unavailable", () => {
+  it("never throws when storage is unavailable and keeps the draft in memory", () => {
     const original = Object.getOwnPropertyDescriptor(window, "sessionStorage");
     Object.defineProperty(window, "sessionStorage", {
       configurable: true,
@@ -35,9 +40,21 @@ describe("Startie draft storage", () => {
     });
     try {
       expect(() => writeDraft("t1", "x")).not.toThrow();
-      expect(readDraft("t1")).toBe("");
+      // The reload safety net is gone, but the page-lifetime draft survives.
+      expect(readDraft("t1")).toBe("x");
     } finally {
       if (original) Object.defineProperty(window, "sessionStorage", original);
     }
+  });
+
+  it("notifies subscribers on every write, until they unsubscribe", () => {
+    let calls = 0;
+    const unsubscribe = subscribeDrafts(() => calls++);
+    writeDraft("t1", "a");
+    writeDraft("t1", "");
+    expect(calls).toBe(2);
+    unsubscribe();
+    writeDraft("t1", "b");
+    expect(calls).toBe(2);
   });
 });

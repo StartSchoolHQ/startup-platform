@@ -38,6 +38,7 @@ import {
   type TipContent,
   type PeerReviewCriteria,
   type ResourceItem,
+  type TaskPriority,
 } from "@/lib/database";
 import { getTemplate } from "@/lib/task-templates";
 import { generateNextTemplateCode } from "@/lib/template-codes";
@@ -68,7 +69,10 @@ export function CreateTaskDialog({
   const [estimatedHours, setEstimatedHours] = useState(0);
   const [baseXpReward, setBaseXpReward] = useState(100);
   const [basePointsReward, setBasePointsReward] = useState(10);
-  const [requiresReview, setRequiresReview] = useState(false);
+  // Team tasks always require review, individual ones never do by default.
+  const [requiresReview, setRequiresReview] = useState(
+    defaultTaskType === "team"
+  );
 
   // Rich content state
   const [detailedInstructions, setDetailedInstructions] = useState("");
@@ -87,14 +91,7 @@ export function CreateTaskDialog({
   const [cooldownDays, setCooldownDays] = useState(7);
   const [isConfidential, setIsConfidential] = useState(false);
 
-  // Auto-set category to repeatable-tasks when isRecurring is checked
-  useEffect(() => {
-    if (isRecurring) {
-      setCategory("repeatable-tasks");
-    }
-  }, [isRecurring]);
-
-  // Auto-generate template code and set peer review when context or category changes
+  // Auto-generate the template code when context or category changes
   useEffect(() => {
     let isCancelled = false;
 
@@ -143,10 +140,6 @@ export function CreateTaskDialog({
         }
       }
     };
-
-    // Enforce business rules: team tasks always require review, individual tasks never do
-    const shouldRequireReview = taskContext === "team";
-    setRequiresReview(shouldRequireReview);
 
     generateCode();
 
@@ -308,7 +301,7 @@ export function CreateTaskDialog({
           | "team-growth"
           | "legal-finance"
           | "pitch",
-        priority: priority as "low" | "medium" | "high" | "critical",
+        priority: priority as TaskPriority,
         difficultyLevel,
         estimatedHours,
         baseXpReward,
@@ -357,7 +350,7 @@ export function CreateTaskDialog({
       setEstimatedHours(0);
       setBaseXpReward(100);
       setBasePointsReward(10);
-      setRequiresReview(false);
+      setRequiresReview(defaultTaskType === "team");
       setIsRecurring(false);
       setCooldownDays(7);
       setIsConfidential(false);
@@ -636,7 +629,12 @@ export function CreateTaskDialog({
                       <Label htmlFor="category">Category</Label>
                       <Select
                         value={category}
-                        onValueChange={setCategory}
+                        onValueChange={(value) => {
+                          setCategory(value);
+                          // A category change resets the review rule:
+                          // team tasks require review, individual don't.
+                          setRequiresReview(taskContext === "team");
+                        }}
                         disabled={isSubmitting}
                       >
                         <SelectTrigger>
@@ -695,7 +693,7 @@ export function CreateTaskDialog({
                           <SelectItem value="low">Low</SelectItem>
                           <SelectItem value="medium">Medium</SelectItem>
                           <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="critical">Critical</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -784,7 +782,11 @@ export function CreateTaskDialog({
                         type="checkbox"
                         id="isRecurring"
                         checked={isRecurring}
-                        onChange={(e) => setIsRecurring(e.target.checked)}
+                        onChange={(e) => {
+                          setIsRecurring(e.target.checked);
+                          // Recurring tasks live in the repeatable category.
+                          if (e.target.checked) setCategory("repeatable-tasks");
+                        }}
                         disabled={isSubmitting}
                         className="h-4 w-4"
                       />
@@ -1323,7 +1325,7 @@ export function CreateTaskDialog({
                           <Badge variant="secondary">{templateCode}</Badge>
                           <Badge
                             variant={
-                              priority === "high" || priority === "critical"
+                              priority === "high" || priority === "urgent"
                                 ? "destructive"
                                 : "default"
                             }

@@ -10,7 +10,8 @@ import { createClient } from "@/lib/supabase/client";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 interface UserProfile {
@@ -21,8 +22,6 @@ interface UserProfile {
 }
 
 export default function AccountPage() {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
 
@@ -32,8 +31,14 @@ export default function AccountPage() {
 
   const router = useRouter();
 
-  const loadUserProfile = useCallback(async () => {
-    try {
+  const profileQuery = useQuery({
+    queryKey: ["account", "profile"],
+    // The form is seeded from this once per loaded profile, so it must not
+    // refetch behind the user's back; a save refetches explicitly.
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    retry: 0,
+    queryFn: async (): Promise<UserProfile | null> => {
       const supabase = createClient();
       const {
         data: { user: authUser },
@@ -41,7 +46,7 @@ export default function AccountPage() {
       } = await supabase.auth.getUser();
       if (authError || !authUser) {
         router.push("/login");
-        return;
+        return null;
       }
 
       const { data: userProfile, error: profileError } = await supabase
@@ -52,23 +57,25 @@ export default function AccountPage() {
 
       if (profileError || !userProfile) {
         toast.error("Failed to load user profile");
-        return;
+        return null;
       }
+      return userProfile;
+    },
+  });
+  const user = profileQuery.data ?? null;
+  const loading = profileQuery.isPending || (profileQuery.isFetching && !user);
+  const loadUserProfile = async () => {
+    await profileQuery.refetch();
+  };
 
-      setUser(userProfile);
-      setName(userProfile.name || "");
-      setAvatarPreview(userProfile.avatar_url);
-    } catch (error) {
-      console.error("Error loading user profile:", error);
-      toast.error("An unexpected error occurred");
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
-
-  useEffect(() => {
-    loadUserProfile();
-  }, [loadUserProfile]);
+  // Seed the editable fields from each freshly loaded profile (first load
+  // and after a save) — adjust-state-on-prop-change, done during render.
+  const [seededFrom, setSeededFrom] = useState<UserProfile | null>(null);
+  if (user && user !== seededFrom) {
+    setSeededFrom(user);
+    setName(user.name || "");
+    setAvatarPreview(user.avatar_url);
+  }
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -174,14 +181,7 @@ export default function AccountPage() {
           <p className="text-muted-foreground mb-4 text-sm">
             Couldn&apos;t load your profile.
           </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setLoading(true);
-              loadUserProfile();
-            }}
-          >
+          <Button variant="outline" size="sm" onClick={() => loadUserProfile()}>
             <RefreshCw className="h-4 w-4" />
             Try again
           </Button>

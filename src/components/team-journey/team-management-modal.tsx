@@ -1,7 +1,7 @@
 "use client";
 
 import posthog from "posthog-js";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/date-utils";
 import {
@@ -412,22 +412,28 @@ export function TeamManagementModal({
     }
   };
 
-  // Load users once when invite tab becomes active
-  useEffect(() => {
-    if (activeTab === "invite-users" && allAvailableUsers.length === 0) {
+  // The invite-tab user list is fetched once, on the first visit to the tab
+  // (from the tab change handler, not an effect).
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === "invite-users" && allAvailableUsers.length === 0) {
       loadAllAvailableUsers();
     }
-  }, [activeTab, loadAllAvailableUsers, allAvailableUsers.length]);
+  };
 
-  // Reset form data when team prop changes
-  useEffect(() => {
+  // Reset the edit form when the team prop changes — React's adjust-state-
+  // on-prop-change pattern, done during render rather than in an effect.
+  const teamKey = `${team.name}\u0000${team.description ?? ""}\u0000${team.website ?? ""}`;
+  const [syncedTeamKey, setSyncedTeamKey] = useState(teamKey);
+  if (teamKey !== syncedTeamKey) {
+    setSyncedTeamKey(teamKey);
     setEditFormData({
       name: team.name,
       description: team.description || "",
       website: team.website || "",
     });
     setEditError("");
-  }, [team.name, team.description, team.website]);
+  }
 
   return (
     <>
@@ -477,7 +483,7 @@ export function TeamManagementModal({
 
           <Tabs
             value={activeTab}
-            onValueChange={setActiveTab}
+            onValueChange={handleTabChange}
             className="flex w-full flex-1 flex-col overflow-hidden"
           >
             <TabsList

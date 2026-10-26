@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,12 @@ import { toast } from "sonner";
 import { SupportedEidMethods } from "./SupportedEidMethods";
 
 type AgreementType = "full" | "partial" | "part_time" | "laptop" | "keycard";
+
+// "Today" as an external store: nothing to subscribe to, a value that is
+// stable within a day, and no value during server rendering.
+const subscribeNever = () => () => {};
+const getTodayIso = () => new Date().toISOString().slice(0, 10);
+const getUndefined = () => undefined;
 
 interface AgreementFormProps {
   agreementType: AgreementType;
@@ -87,14 +93,14 @@ export function AgreementForm({
 }: AgreementFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
-  // Computed after mount to avoid SSR/CSR hydration mismatch; caps the
-  // date-of-birth picker at today so a future DOB can't be entered.
-  const [maxBirthdate, setMaxBirthdate] = useState<string | undefined>(
-    undefined
+  // Caps the date-of-birth picker at today so a future DOB can't be entered.
+  // Read through useSyncExternalStore: the server renders no cap (avoiding
+  // an SSR/CSR hydration mismatch) and the client fills it in on hydration.
+  const maxBirthdate = useSyncExternalStore(
+    subscribeNever,
+    getTodayIso,
+    getUndefined
   );
-  useEffect(() => {
-    setMaxBirthdate(new Date().toISOString().slice(0, 10));
-  }, []);
 
   function clearError(field: keyof FieldErrors) {
     if (errors[field]) {

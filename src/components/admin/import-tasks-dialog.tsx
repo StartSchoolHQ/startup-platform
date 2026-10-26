@@ -20,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { parseTasksFromExcel, TaskExcelRow } from "@/lib/excel-utils";
-import { createTask } from "@/lib/database";
+import { createTask, type TaskPriority } from "@/lib/database";
 import { generateNextTemplateCode } from "@/lib/template-codes";
 import { createClient } from "@/lib/supabase/client";
 
@@ -212,16 +212,19 @@ export function ImportTasksDialog() {
                 .filter((s) => s)
             : undefined;
 
-          // Normalize priority - map CSV values to enum values
-          let priority: "low" | "medium" | "high" | "critical" | undefined;
+          // Normalize priority - map CSV values to the DB enum
+          // (low | medium | high | urgent); "top" and "critical" are legacy
+          // sheet values.
+          let priority: TaskPriority | undefined;
           const rawPriority = task.priority?.toLowerCase();
           if (rawPriority === "top") {
             priority = "high";
+          } else if (rawPriority === "critical" || rawPriority === "urgent") {
+            priority = "urgent";
           } else if (
             rawPriority === "low" ||
             rawPriority === "medium" ||
-            rawPriority === "high" ||
-            rawPriority === "critical"
+            rawPriority === "high"
           ) {
             priority = rawPriority;
           } else {

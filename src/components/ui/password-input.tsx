@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Eye, EyeOff, Check, X } from "lucide-react";
 import { Input } from "./input";
 import { Button } from "./button";
@@ -9,6 +9,29 @@ interface PasswordStrength {
   score: number; // 0-3
   label: string;
   color: string;
+}
+
+function computeStrength(password: string): PasswordStrength {
+  if (!password) return { score: 0, label: "", color: "" };
+
+  let score = 0;
+  const hasLength = password.length >= 8;
+  const hasNumber = /\d/.test(password);
+  const hasLetter = /[a-zA-Z]/.test(password);
+  const hasSpecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(password);
+  const hasMixedCase = /[a-z]/.test(password) && /[A-Z]/.test(password);
+
+  if (hasLength) score++;
+  if (hasNumber && hasLetter) score++;
+  if (hasSpecial) score++;
+  if (hasMixedCase && password.length >= 12) score++;
+
+  if (score === 0 || !hasLength) {
+    return { score: 0, label: "Too weak", color: "text-red-600" };
+  }
+  if (score === 1) return { score: 1, label: "Weak", color: "text-orange-600" };
+  if (score === 2) return { score: 2, label: "Good", color: "text-yellow-600" };
+  return { score: 3, label: "Strong", color: "text-green-600" };
 }
 
 interface PasswordInputProps {
@@ -30,43 +53,8 @@ export function PasswordInput({
 }: PasswordInputProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [strength, setStrength] = useState<PasswordStrength>({
-    score: 0,
-    label: "",
-    color: "",
-  });
-
-  // Calculate password strength
-  useEffect(() => {
-    if (!password) {
-      setStrength({ score: 0, label: "", color: "" });
-      return;
-    }
-
-    let score = 0;
-    const hasLength = password.length >= 8;
-    const hasNumber = /\d/.test(password);
-    const hasLetter = /[a-zA-Z]/.test(password);
-    const hasSpecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(password);
-    const hasMixedCase = /[a-z]/.test(password) && /[A-Z]/.test(password);
-
-    // Scoring logic
-    if (hasLength) score++;
-    if (hasNumber && hasLetter) score++;
-    if (hasSpecial) score++;
-    if (hasMixedCase && password.length >= 12) score++;
-
-    // Map score to strength
-    if (score === 0 || !hasLength) {
-      setStrength({ score: 0, label: "Too weak", color: "text-red-600" });
-    } else if (score === 1) {
-      setStrength({ score: 1, label: "Weak", color: "text-orange-600" });
-    } else if (score === 2) {
-      setStrength({ score: 2, label: "Good", color: "text-yellow-600" });
-    } else {
-      setStrength({ score: 3, label: "Strong", color: "text-green-600" });
-    }
-  }, [password]);
+  // Pure derivation of the prop — no state to keep in sync.
+  const strength = computeStrength(password);
 
   const meetsMinLength = password.length >= 8;
   const hasSpecialChar = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(password);

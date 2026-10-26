@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   emptyTeamReportForm,
@@ -29,7 +29,9 @@ export function useTeamReportDraft({ open, teamId, userId }: Options) {
   const [pendingLocalDraft, setPendingLocalDraft] =
     useState<TeamWeeklyReportForm | null>(null);
   const [restoredFromDb, setRestoredFromDb] = useState(false);
-  const initialized = useRef(false);
+  // True once this open's draft lookup has finished (so a re-render does not
+  // reload over the student's edits); cleared on close.
+  const [initialized, setInitialized] = useState(false);
   const DRAFT_KEY = `weekly-report-draft-${teamId}-${userId}`;
 
   const clearLocal = useCallback(
@@ -43,13 +45,21 @@ export function useTeamReportDraft({ open, teamId, userId }: Options) {
     setRestoredFromDb(false);
   }, []);
 
-  useEffect(() => {
+  // Closing resets the form so the next open starts from the DB draft again.
+  // Done during render (adjust-state-on-prop-change) rather than in an effect.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (!open) {
-      initialized.current = false;
-      reset();
-      return;
+      setInitialized(false);
+      setFormState(emptyTeamReportForm());
+      setExistingDraftId(null);
+      setRestoredFromDb(false);
     }
-    if (initialized.current) return;
+  }
+
+  useEffect(() => {
+    if (!open || initialized) return;
     let cancelled = false;
     (async () => {
       setIsLoadingDraft(true);
@@ -90,7 +100,7 @@ export function useTeamReportDraft({ open, teamId, userId }: Options) {
         console.error("Error loading draft:", err);
       } finally {
         if (!cancelled) {
-          initialized.current = true;
+          setInitialized(true);
           setIsLoadingDraft(false);
         }
       }
@@ -98,16 +108,16 @@ export function useTeamReportDraft({ open, teamId, userId }: Options) {
     return () => {
       cancelled = true;
     };
-  }, [open, teamId, userId, DRAFT_KEY, clearLocal, reset]);
+  }, [open, initialized, teamId, userId, DRAFT_KEY, clearLocal]);
 
   useEffect(() => {
-    if (!open || !initialized.current || isLoadingDraft) return;
+    if (!open || !initialized || isLoadingDraft) return;
     const id = setTimeout(() => {
       if (hasTeamReportContent(form))
         localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
     }, 500);
     return () => clearTimeout(id);
-  }, [form, open, isLoadingDraft, DRAFT_KEY]);
+  }, [form, open, initialized, isLoadingDraft, DRAFT_KEY]);
 
   return {
     form,
