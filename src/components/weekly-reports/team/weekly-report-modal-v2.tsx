@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Save, Send, Trash2 } from "lucide-react";
+import { Loader2, RotateCw, Save, Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DraftRestoredChip } from "@/components/forms/draft-restored-chip";
 import { DraftSaveState } from "@/components/forms/draft-save-state";
@@ -41,7 +41,8 @@ export function WeeklyReportModal({
     onClose: () => onOpenChange(false),
     onSuccess,
   });
-  const busy = f.isSavingDraft || f.isSubmitting || f.isLoadingDraft;
+  const busy =
+    f.isSavingDraft || f.isSubmitting || f.isLoadingDraft || f.loadError;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,6 +131,22 @@ export function WeeklyReportModal({
         <div className="text-muted-foreground flex items-center gap-2 py-10 text-sm">
           <Loader2 className="h-4 w-4 animate-spin" />
           Checking for a saved draft…
+        </div>
+      ) : f.loadError ? (
+        <div
+          role="alert"
+          className="border-destructive/40 bg-destructive/5 text-destructive flex flex-col items-start gap-3 rounded-md border p-4 text-sm"
+        >
+          Couldn&apos;t load your saved draft. Check your connection and reopen.
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={f.retryLoad}
+          >
+            <RotateCw className="h-4 w-4" />
+            Retry
+          </Button>
         </div>
       ) : (
         <TeamReportQuestions

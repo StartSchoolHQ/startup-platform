@@ -105,10 +105,16 @@ export function useTeamReportForm({
     mutationFn: async (data: ReturnType<typeof normalizeTeamReport>) => {
       const week = draft.week;
       if (!week) throw missingWeek();
+      // cancel() drops the pending debounce; flush() then only waits for a
+      // save already in flight, so a just-created draft row is upgraded
+      // instead of a second row being inserted beside it.
+      draft.autosave.cancel();
+      await draft.autosave.flush();
+      const draftId = draft.getDraftId();
       const supabase = createClient();
       const submission = { ...data, submittedAt: new Date().toISOString() };
       const now = new Date().toISOString();
-      const { error } = draft.existingDraftId
+      const { error } = draftId
         ? await supabase
             .from("weekly_reports")
             .update({
@@ -117,7 +123,7 @@ export function useTeamReportForm({
               submitted_at: now,
               updated_at: now,
             })
-            .eq("id", draft.existingDraftId)
+            .eq("id", draftId)
         : await supabase.from("weekly_reports").insert({
             user_id: userId,
             team_id: teamId,
@@ -131,9 +137,9 @@ export function useTeamReportForm({
             submitted_at: now,
           });
       if (error) throw new Error(`Failed to submit report: ${error.message}`);
-      return { week, data };
+      return { week, data, wasDraft: Boolean(draftId) };
     },
-    onSuccess: ({ week, data }) => {
+    onSuccess: ({ week, data, wasDraft }) => {
       posthog.capture("weekly_report_submitted", {
         team_id: teamId,
         week_number: week.week_number,
@@ -146,7 +152,7 @@ export function useTeamReportForm({
         meetings_held: data.meetingsHeld,
         alignment_score: data.alignmentScore,
         next_week_commitments_count: data.nextWeekCommitments.length,
-        was_draft: Boolean(draft.existingDraftId),
+        was_draft: wasDraft,
       });
       finish("Weekly report submitted!");
       onSuccess?.();
@@ -173,6 +179,8 @@ export function useTeamReportForm({
     setForm,
     errors,
     isLoadingDraft: draft.isLoadingDraft,
+    loadError: draft.loadError,
+    retryLoad: draft.retryLoad,
     restoredFromDb: draft.restoredFromDb,
     savedAt: draft.savedAt,
     autosave: draft.autosave,

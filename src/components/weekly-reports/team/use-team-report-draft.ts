@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import {
@@ -109,6 +109,11 @@ export function useTeamReportDraft({
 }) {
   const [form, setFormState] = useState(emptyTeamReportForm);
   const [existingDraftId, setExistingDraftId] = useState<string | null>(null);
+  // Read by submit after awaiting an in-flight save (state may lag a render).
+  const draftIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    draftIdRef.current = existingDraftId;
+  }, [existingDraftId]);
   const query = useQuery({
     queryKey: ["weekly-reports", "team", "draft-open", teamId, userId],
     queryFn: () => readTeamDraftOnOpen(teamId, userId),
@@ -129,7 +134,14 @@ export function useTeamReportDraft({
   }
   const [seededFor, setSeededFor] = useState(0);
   const [restoredOpen, setRestoredOpen] = useState<number | null>(null);
-  if (open && !isLoadingDraft && seededFor !== openState.count) {
+  // A failed read never seeds (TanStack keeps the last open's data on error).
+  const loadError = open && !isLoadingDraft && query.isError;
+  if (
+    open &&
+    !isLoadingDraft &&
+    !query.isError &&
+    seededFor !== openState.count
+  ) {
     setSeededFor(openState.count);
     const row = query.data?.draft ?? null;
     const seed = row ? teamDraftToForm(row.data) : emptyTeamReportForm();
@@ -157,6 +169,7 @@ export function useTeamReportDraft({
         week,
         form: value,
       });
+      draftIdRef.current = id;
       setExistingDraftId(id);
     },
     [userId, teamId, week]
@@ -191,6 +204,9 @@ export function useTeamReportDraft({
     setFormState,
     isLoadingDraft,
     existingDraftId,
+    getDraftId: () => draftIdRef.current,
+    loadError,
+    retryLoad: () => void query.refetch(),
     restoredFromDb: !isLoadingDraft && open && restoredOpen === openState.count,
     reset,
     week,
