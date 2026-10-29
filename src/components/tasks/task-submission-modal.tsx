@@ -19,7 +19,7 @@ import {
   TaskSubmissionFormField,
   type FormSchema,
 } from "@/components/tasks/task-submission-form-fields";
-import { TaskSubmissionDraftChip } from "@/components/tasks/task-submission-draft-chip";
+import { DraftRestoredChip } from "@/components/forms/draft-restored-chip";
 import { useTaskSubmissionDraft } from "@/components/tasks/use-task-submission-draft";
 import { pickTaskSeed } from "@/lib/task-draft-precedence";
 
@@ -181,7 +181,7 @@ export function TaskSubmissionModal({
             {taskTitle}
           </DialogTitle>
           {!loading && restored?.open === openState.count && (
-            <TaskSubmissionDraftChip savedAt={restored.at} />
+            <DraftRestoredChip savedAt={restored.at} />
           )}
           <DialogDescription className="text-sm">
             {isIndividualTask

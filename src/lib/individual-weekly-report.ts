@@ -80,3 +80,11 @@ export function mapIndividualReportRpcError(message: string): string {
   }
   return message;
 }
+
+/** Short form for the autosave indicator (no toast, one line in the footer). */
+export function mapIndividualDraftAutosaveError(message: string): string {
+  if (message.includes("ALREADY_SUBMITTED")) {
+    return "This week's report was already submitted.";
+  }
+  return mapIndividualReportRpcError(message);
+}

@@ -24,3 +24,16 @@ export function firstErrorKey(
 ): string | null {
   return order.find((key) => key in errors) ?? null;
 }
+
+/** Drop the error of every field whose value the student just changed. */
+export function withoutChanged<T extends object>(
+  errors: FieldErrors,
+  prev: T,
+  next: T
+): FieldErrors {
+  const kept = { ...errors };
+  for (const key of Object.keys(next) as (keyof T & string)[]) {
+    if (prev[key] !== next[key]) delete kept[key];
+  }
+  return kept;
+}

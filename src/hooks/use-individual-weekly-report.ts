@@ -4,6 +4,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  type QueryClient,
   type UseMutationResult,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -11,7 +12,10 @@ import { useApp } from "@/contexts/app-context";
 import { useMyJourneyOverview } from "@/hooks/use-my-journey-overview";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { createClient } from "@/lib/supabase/client";
-import { mapIndividualReportRpcError } from "@/lib/individual-weekly-report";
+import {
+  mapIndividualDraftAutosaveError,
+  mapIndividualReportRpcError,
+} from "@/lib/individual-weekly-report";
 import type { Json } from "@/types/database";
 import type {
   IndividualWeeklyReportData,
@@ -21,6 +25,9 @@ import type {
 export const individualWeeklyReportKeys = {
   status: (userId?: string) =>
     ["weekly-reports", "individual", "status", userId] as const,
+  /** Per-open restore read (fresh status + the draft row's updated_at). */
+  draftOpen: (userId?: string) =>
+    ["weekly-reports", "individual", "draft-open", userId] as const,
 };
 
 /**
@@ -62,22 +69,42 @@ export interface SubmitIndividualReportResult {
   week_end: string;
 }
 
+export async function fetchIndividualWeeklyReportStatus(): Promise<IndividualWeeklyReportStatus> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc(
+    "get_individual_weekly_report_status_v1"
+  );
+  if (error) throw new Error(error.message);
+  return data as unknown as IndividualWeeklyReportStatus;
+}
+
 /** One round trip for card, banner and history. Self-only on the DB side. */
 export function useIndividualWeeklyReportStatus(userId?: string) {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: individualWeeklyReportKeys.status(userId),
-    queryFn: async (): Promise<IndividualWeeklyReportStatus> => {
-      const supabase = createClient();
-      const { data, error } = await supabase.rpc(
-        "get_individual_weekly_report_status_v1"
-      );
-      if (error) throw new Error(error.message);
-      return data as unknown as IndividualWeeklyReportStatus;
-    },
+    queryFn: fetchIndividualWeeklyReportStatus,
     enabled: !!userId,
     staleTime: 60_000,
   });
   return { data, isLoading, isError, refetch };
+}
+
+/** Draft write with no toast and no invalidation; updates the status cache in place. */
+export async function saveIndividualReportDraftSilently(
+  queryClient: QueryClient,
+  userId: string,
+  data: IndividualWeeklyReportData
+): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.rpc("submit_individual_weekly_report_v1", {
+    p_submission_data: data as unknown as Json,
+    p_as_draft: true,
+  });
+  if (error) throw new Error(mapIndividualDraftAutosaveError(error.message));
+  queryClient.setQueryData<IndividualWeeklyReportStatus>(
+    individualWeeklyReportKeys.status(userId),
+    (old) => old && { ...old, draft: data }
+  );
 }
 
 export function useSubmitIndividualWeeklyReport(
