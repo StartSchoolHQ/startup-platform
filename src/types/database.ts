@@ -757,6 +757,27 @@ export type Database = {
         };
         Relationships: [];
       };
+      reading_criteria_backup_20261016: {
+        Row: {
+          id: string | null;
+          peer_review_criteria: Json | null;
+          template_code: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string | null;
+          peer_review_criteria?: Json | null;
+          template_code?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string | null;
+          peer_review_criteria?: Json | null;
+          template_code?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
       reading_resources_backup_20260930: {
         Row: {
           id: string | null;
@@ -1197,6 +1218,45 @@ export type Database = {
             columns: ["team_id"];
             isOneToOne: false;
             referencedRelation: "teams";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      task_submission_drafts: {
+        Row: {
+          created_at: string;
+          draft: Json;
+          progress_id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          draft: Json;
+          progress_id: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          draft?: Json;
+          progress_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "task_submission_drafts_progress_id_fkey";
+            columns: ["progress_id"];
+            isOneToOne: true;
+            referencedRelation: "task_progress";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "task_submission_drafts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
             referencedColumns: ["id"];
           },
         ];
@@ -2388,6 +2448,10 @@ export type Database = {
         Args: { team_id_param: string };
         Returns: undefined;
       };
+      delete_task_submission_draft_v1: {
+        Args: { p_progress_id: string };
+        Returns: number;
+      };
       deprecated_decrement_team_member_count: {
         Args: { team_id: string };
         Returns: undefined;
@@ -3356,6 +3420,10 @@ export type Database = {
           user_name: string;
         }[];
       };
+      get_task_submission_draft_v1: {
+        Args: { p_progress_id: string };
+        Returns: Json;
+      };
       get_task_templates_for_admin: {
         Args: {
           p_category?: Database["public"]["Enums"]["task_category_type"];
@@ -4034,6 +4102,10 @@ export type Database = {
           p_responsible_user_id: string;
           p_team_id: string;
         };
+        Returns: Json;
+      };
+      save_task_submission_draft_v1: {
+        Args: { p_draft: Json; p_progress_id: string };
         Returns: Json;
       };
       save_weekly_report_draft: {
@@ -4767,6 +4839,10 @@ export type Database = {
         Returns: Json;
       };
       submit_individual_task_v1: {
+        Args: { p_progress_id: string; p_submission_data: Json };
+        Returns: Json;
+      };
+      submit_individual_task_v1_backup_v1: {
         Args: { p_progress_id: string; p_submission_data: Json };
         Returns: Json;
       };
