@@ -70,44 +70,6 @@ export async function getUserIndividualTasks(userId: string) {
 }
 
 /**
- * Assign an individual task to a user
- */
-export async function assignIndividualTask(userId: string, taskId: string) {
-  const supabase = createClient();
-
-  const { data, error } = await (supabase as any).rpc(
-    "assign_individual_task",
-    {
-      p_user_id: userId,
-      p_task_id: taskId,
-    }
-  );
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
-}
-
-/**
- * Start an individual task
- */
-export async function startIndividualTask(progressId: string) {
-  const supabase = createClient();
-
-  const { data, error } = await (supabase as any).rpc("start_individual_task", {
-    p_progress_id: progressId,
-  });
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
-}
-
-/**
  * Get team tasks from task_progress table
  */
 export async function getTeamTasksFromProgress(teamId: string) {
@@ -125,38 +87,6 @@ export async function getTeamTasksFromProgress(teamId: string) {
   }
 
   return data || [];
-}
-
-/**
- * Assign a task to a team using task_progress table
- */
-export async function assignTeamTaskToProgress(
-  progressId: string,
-  userId: string,
-  teamId: string,
-  taskId: string,
-  assignedToUserId?: string,
-  assignedByUserId?: string
-) {
-  const supabase = createClient();
-
-  const { data, error } = await (supabase as any).rpc(
-    "assign_team_task_to_progress",
-    {
-      p_progress_id: progressId,
-      p_user_id: userId,
-      p_team_id: teamId,
-      p_task_id: taskId,
-      p_assigned_to_user_id: assignedToUserId,
-      p_assigned_by_user_id: assignedByUserId,
-    }
-  );
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
 }
 
 /**

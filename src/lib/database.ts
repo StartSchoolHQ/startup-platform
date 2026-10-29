@@ -72,10 +72,7 @@ export {
 export {
   getUserTaskCompletionStats,
   getUserIndividualTasks,
-  assignIndividualTask,
-  startIndividualTask,
   getTeamTasksFromProgress,
-  assignTeamTaskToProgress,
   getTeamTasksVisible,
   getUserTasksVisible,
   getMyJourneyRecurringStatus,

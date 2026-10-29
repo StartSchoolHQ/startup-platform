@@ -587,35 +587,6 @@ export async function getAdminStrikes(
 }
 
 /**
- * Admin: Resolve a strike
- */
-export async function resolveStrike(strikeId: string, adminUserId: string) {
-  const supabase = createClient();
-
-  const { data, error } = await supabase
-    .from("team_strikes")
-    .update({
-      resolved_by_user_id: adminUserId,
-      resolved_at: new Date().toISOString(),
-      status: "resolved",
-    })
-    .eq("id", strikeId)
-    .select("user_id, team_id")
-    .single();
-
-  if (error) throw error;
-
-  // Decrement team's strikes_count
-  if (data?.team_id) {
-    await supabase.rpc("decrement_team_strikes_count", {
-      team_id_param: data.team_id,
-    });
-  }
-
-  return data;
-}
-
-/**
  * Admin: Reject a strike with a reason
  */
 export async function rejectStrike(
