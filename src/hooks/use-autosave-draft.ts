@@ -43,7 +43,8 @@ const SAVED_TO_IDLE_MS = 3000;
  * Leaving the page (pagehide, tab hidden, unmount) fires `beacon` once.
  * Disabling (`enabled` → false) fires `beacon` once if dirty, as a backstop
  * for closes that bypass `flush()`, then drops the dirty and queued flags so
- * nothing carries into the next enabled session.
+ * nothing carries into the next enabled session, and resets the indicator
+ * (`status` idle, `errorMessage` null).
  */
 export function useAutosaveDraft<T>({
   enabled,
@@ -56,6 +57,16 @@ export function useAutosaveDraft<T>({
   const [status, setStatus] = useState<DraftSaveStatus>("idle");
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Disabling resets the indicator so a failed save never shows on the next
+  // open. Adjust-state-during-render, not an effect.
+  const [wasEnabled, setWasEnabled] = useState(enabled);
+  if (enabled !== wasEnabled) {
+    setWasEnabled(enabled);
+    if (!enabled) {
+      setStatus("idle");
+      setErrorMessage(null);
+    }
+  }
 
   const valueRef = useRef(value);
   const canSaveRef = useRef(canSave);
@@ -124,6 +135,7 @@ export function useAutosaveDraft<T>({
       dirtyRef.current = false;
       queuedRef.current = false;
       clearTimer(timerRef);
+      clearTimer(idleTimerRef);
       return;
     }
     if (baselineRef.current === null) {

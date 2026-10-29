@@ -237,6 +237,20 @@ describe("useAutosaveDraft", () => {
     expect(result.current.status).toBe("saved");
     expect(result.current.errorMessage).toBeNull();
   });
+
+  it("disabling after a failed save resets the indicator for the next open", async () => {
+    const { change, save, result } = setup();
+    save.mockRejectedValueOnce(new Error("Network down"));
+    change("b");
+    await tick(2000);
+    expect(result.current.status).toBe("error");
+    expect(result.current.errorMessage).toBe("Network down");
+
+    change("b", { enabled: false });
+    change("b", { enabled: true });
+    expect(result.current.status).toBe("idle");
+    expect(result.current.errorMessage).toBeNull();
+  });
 });
 
 describe("DraftSaveState", () => {
