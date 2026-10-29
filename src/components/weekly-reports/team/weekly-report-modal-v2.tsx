@@ -1,7 +1,8 @@
 "use client";
 
-import { Loader2, RotateCw, Save, Send, Trash2 } from "lucide-react";
+import { Loader2, Save, Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DraftLoadError } from "@/components/forms/draft-load-error";
 import { DraftRestoredChip } from "@/components/forms/draft-restored-chip";
 import { DraftSaveState } from "@/components/forms/draft-save-state";
 import { firstErrorKey } from "@/lib/weekly-report-form-errors";
@@ -133,21 +134,7 @@ export function WeeklyReportModal({
           Checking for a saved draft…
         </div>
       ) : f.loadError ? (
-        <div
-          role="alert"
-          className="border-destructive/40 bg-destructive/5 text-destructive flex flex-col items-start gap-3 rounded-md border p-4 text-sm"
-        >
-          Couldn&apos;t load your saved draft. Check your connection and reopen.
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={f.retryLoad}
-          >
-            <RotateCw className="h-4 w-4" />
-            Retry
-          </Button>
-        </div>
+        <DraftLoadError onRetry={f.retryLoad} />
       ) : (
         <TeamReportQuestions
           value={f.form}

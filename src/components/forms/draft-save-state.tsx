@@ -1,7 +1,6 @@
 import type { DraftSaveStatus } from "@/hooks/use-autosave-draft";
+import { DRAFT_SAVE_FALLBACK } from "@/lib/drafts/save-error";
 import { cn } from "@/lib/utils";
-
-const FALLBACK_ERROR = "Not saved, check your connection";
 
 const TEXT: Record<Exclude<DraftSaveStatus, "error">, string> = {
   idle: "",
@@ -24,7 +23,7 @@ export function DraftSaveState({
   className?: string;
 }) {
   const text =
-    status === "error" ? (errorMessage ?? FALLBACK_ERROR) : TEXT[status];
+    status === "error" ? (errorMessage ?? DRAFT_SAVE_FALLBACK) : TEXT[status];
   return (
     <p
       aria-live="polite"

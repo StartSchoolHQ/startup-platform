@@ -20,6 +20,7 @@ import {
   type FormSchema,
 } from "@/components/tasks/task-submission-form-fields";
 import { DraftRestoredChip } from "@/components/forms/draft-restored-chip";
+import { DraftLoadError } from "@/components/forms/draft-load-error";
 import { useTaskSubmissionDraft } from "@/components/tasks/use-task-submission-draft";
 import { pickTaskSeed } from "@/lib/task-draft-precedence";
 
@@ -81,12 +82,13 @@ export function TaskSubmissionModal({
     () => ({ description, external_urls: externalUrls }),
     [description, externalUrls]
   );
-  const { loading, draft, autosave } = useTaskSubmissionDraft({
-    open: isOpen,
-    progressId,
-    value: draftValue,
-    canSave: !!description.trim() || externalUrls.length > 0,
-  });
+  const { loading, loadError, retryLoad, draft, autosave } =
+    useTaskSubmissionDraft({
+      open: isOpen,
+      progressId,
+      value: draftValue,
+      canSave: !!description.trim() || externalUrls.length > 0,
+    });
 
   // Seed once per open, after that open's draft fetch settled, then leave the
   // form alone (a fresh `initialData` literal per render must not wipe what
@@ -100,7 +102,9 @@ export function TaskSubmissionModal({
   }
   const [seededFor, setSeededFor] = useState(0);
   const [restored, setRestored] = useState<{ open: number; at: string }>();
-  if (isOpen && !loading && seededFor !== openState.count) {
+  const [waitingForSave, setWaitingForSave] = useState(false);
+  // A failed read never seeds (it would be the last open's cached draft).
+  if (isOpen && !loading && !loadError && seededFor !== openState.count) {
     setSeededFor(openState.count);
     const { seed, restoredFromDraft } = pickTaskSeed({
       draft,
@@ -125,7 +129,7 @@ export function TaskSubmissionModal({
 
   const schema = formSchema?.fields?.length ? formSchema : DEFAULT_SCHEMA;
   const isResubmission = !!initialData?.description;
-  const busy = isLoading || loading;
+  const busy = isLoading || loading || loadError || waitingForSave;
 
   const clearError = (name: string) => {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
@@ -161,7 +165,15 @@ export function TaskSubmissionModal({
       return;
     }
     setErrors({});
+    // cancel() drops the pending debounce; flush() then only waits for a
+    // save already in flight, so it cannot land after the submit.
     autosave.cancel();
+    setWaitingForSave(true);
+    try {
+      await autosave.flush();
+    } finally {
+      setWaitingForSave(false);
+    }
     await onSubmit({
       ...formData,
       external_urls: externalUrls,
@@ -201,6 +213,8 @@ export function TaskSubmissionModal({
             <p className="text-muted-foreground text-sm">
               Checking for a saved draft…
             </p>
+          ) : loadError ? (
+            <DraftLoadError onRetry={retryLoad} />
           ) : (
             schema.fields.map((field) => (
               <TaskSubmissionFormField

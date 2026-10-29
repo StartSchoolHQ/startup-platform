@@ -34,6 +34,9 @@ export function useTaskSubmissionDraft({
   canSave: boolean;
 }): {
   loading: boolean;
+  /** This open's read failed: no seed, no autosave, show Retry. */
+  loadError: boolean;
+  retryLoad: () => void;
   draft: TaskDraft | null;
   autosave: UseAutosaveDraftResult;
 } {
@@ -45,6 +48,8 @@ export function useTaskSubmissionDraft({
     queryKey: taskDraftKeys.one(id ?? ""),
     queryFn: () => getTaskSubmissionDraft(id!),
     enabled: open && !!id,
+    // One retry, so "Checking for a saved draft…" does not hang offline.
+    retry: 1,
     staleTime: 0,
     refetchOnMount: "always",
     // Only the open itself fetches: a focus/reconnect refetch mid-typing
@@ -54,6 +59,9 @@ export function useTaskSubmissionDraft({
   });
 
   const loading = open && !!id && query.isFetching;
+  // TanStack keeps the last open's data on error, so a failed read must
+  // neither seed the form nor let an autosave overwrite the real draft.
+  const loadError = open && !!id && !loading && query.isError;
 
   const save = useCallback(
     async (draft: TaskDraftBody) => {
@@ -76,7 +84,7 @@ export function useTaskSubmissionDraft({
   );
 
   const autosave = useAutosaveDraft<TaskDraftBody>({
-    enabled: open && !!id && !loading,
+    enabled: open && !!id && !loading && !query.isError,
     value,
     // Once a row exists, clearing the form still writes (no stale text).
     canSave: () => canSave || !!query.data,
@@ -84,5 +92,11 @@ export function useTaskSubmissionDraft({
     beacon,
   });
 
-  return { loading, draft: id ? (query.data ?? null) : null, autosave };
+  return {
+    loading,
+    loadError,
+    retryLoad: () => void query.refetch(),
+    draft: id ? (query.data ?? null) : null,
+    autosave,
+  };
 }

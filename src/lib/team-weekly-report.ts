@@ -1,4 +1,5 @@
 import type { TeamWeeklyReportForm } from "@/types/weekly-report";
+import { DRAFT_SAVE_FALLBACK } from "@/lib/drafts/save-error";
 
 /** Pure helpers for the team (8-question) weekly report form. */
 
@@ -57,4 +58,20 @@ export function teamDraftToForm(
     meetingsHeld: saved.meetingsHeld ?? 0,
     alignmentScore: saved.alignmentScore ?? 5,
   };
+}
+
+/**
+ * Autosave indicator text for a failed team draft save: already-submitted
+ * gets its own line, anything else (network, PostgREST) the generic one.
+ */
+export function mapTeamDraftAutosaveError(message: string): string {
+  if (
+    message.includes("already been submitted") ||
+    message.includes("already submitted") ||
+    message.includes("ALREADY_SUBMITTED")
+  ) {
+    return "This week's report was already submitted.";
+  }
+  console.error("Team report draft autosave failed:", message);
+  return DRAFT_SAVE_FALLBACK;
 }

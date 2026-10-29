@@ -6,7 +6,7 @@ import type { DraftSaveStatus } from "@/hooks/use-autosave-draft";
 interface Props {
   formId: string;
   hasContent: boolean;
-  /** Restore read still running or a submit/save is pending. */
+  /** Restore read running or failed, or a submit/save is pending. */
   busy: boolean;
   savingDraft: boolean;
   submitting: boolean;

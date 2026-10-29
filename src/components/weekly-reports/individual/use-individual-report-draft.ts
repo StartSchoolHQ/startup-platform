@@ -70,6 +70,9 @@ export function useIndividualReportDraft({
   form: IndividualWeeklyReportForm;
 }): {
   loading: boolean;
+  /** This open's read failed: no seed, no autosave, show Retry. */
+  loadError: boolean;
+  retryLoad: () => void;
   draft: Partial<IndividualWeeklyReportData> | null;
   savedAt: Date | null;
   hasRow: boolean;
@@ -80,6 +83,8 @@ export function useIndividualReportDraft({
     queryKey: individualWeeklyReportKeys.draftOpen(userId),
     queryFn: () => readDraftOnOpen(queryClient, userId!),
     enabled: open && !!userId,
+    // One retry, so "Checking for a saved draft…" does not hang offline.
+    retry: 1,
     staleTime: 0,
     refetchOnMount: "always",
     // Only the open itself fetches: a focus/reconnect refetch mid-typing
@@ -89,6 +94,8 @@ export function useIndividualReportDraft({
   });
 
   const loading = open && !!userId && query.isFetching;
+  // TanStack keeps the last open's data on error: never seed from it.
+  const loadError = open && !!userId && !loading && query.isError;
   // A row exists if the open found one or an autosave wrote one since.
   const hasRow = !!query.data?.draft;
 
@@ -125,6 +132,8 @@ export function useIndividualReportDraft({
   const savedAt = query.data?.savedAt;
   return {
     loading,
+    loadError,
+    retryLoad: () => void query.refetch(),
     draft: query.data?.draft ?? null,
     savedAt: savedAt ? new Date(savedAt) : null,
     hasRow,

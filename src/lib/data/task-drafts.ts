@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import type { Json } from "@/types/database";
 import type { ExternalUrl } from "@/components/tasks/submission-fields";
+import { DRAFT_SAVE_FALLBACK } from "@/lib/drafts/save-error";
 
 /** What a task submission draft stores: text and links, never files. */
 export interface TaskDraftBody {
@@ -24,6 +25,18 @@ function draftError(message: string): Error {
   if (message.includes("task_draft_denied"))
     return new Error("You can't edit this task.");
   return new Error(message);
+}
+
+/**
+ * Autosave indicator text for a failed save: the two stable codes get their
+ * own line, anything else (network, PostgREST) the generic one.
+ */
+export function mapTaskDraftSaveError(message: string): string {
+  if (message.includes("task_draft_status_locked"))
+    return "This task was already submitted.";
+  if (message.includes("task_draft_denied")) return "You can't edit this task.";
+  console.error("Task draft autosave failed:", message);
+  return DRAFT_SAVE_FALLBACK;
 }
 
 /** The caller's saved draft for a progress row (solo or team), or null. */
@@ -59,7 +72,7 @@ export async function saveTaskSubmissionDraft(
     p_progress_id: progressId,
     p_draft: draft as unknown as Json,
   });
-  if (error) throw draftError(error.message);
+  if (error) throw new Error(mapTaskDraftSaveError(error.message));
 }
 
 /** Removes the draft after a successful submit. Swallows nothing. */

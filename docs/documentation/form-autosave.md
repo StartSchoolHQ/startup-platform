@@ -46,14 +46,24 @@ All three forms use `useAutosaveDraft` (`src/hooks/use-autosave-draft.ts`).
   `POST /api/drafts` with `fetch(…, { keepalive: true })`. Unmount matters
   because Next.js client navigation never fires `pagehide`.
 - **Submit** calls `cancel()` first so a late debounce cannot resurrect the
-  draft. The team report then awaits any save already in flight and upgrades
-  that draft row by id instead of inserting a second row.
+  draft, then awaits `flush()`, which (with nothing dirty) only waits for a
+  save already in flight, so no draft write lands after the submit. All
+  three forms do this; the team report then upgrades that draft row by id
+  instead of inserting a second row.
 - **Indicator.** `DraftSaveState` (`src/components/forms/draft-save-state.tsx`)
   shows nothing → "Saving…" → "Saved" (fades back to nothing after 3 s), or
-  on failure the save's error message in red (already-submitted cases are
-  mapped to "This task / This week's report was already submitted."; "Not
-  saved, check your connection" only when the error has no message). Never
-  a toast, and it never blocks submit.
+  on failure one short line in red. Each form's silent-save mapper turns the
+  known codes into their own line (`task_draft_status_locked` → "This task
+  was already submitted.", `task_draft_denied` → "You can't edit this
+  task.", `ALREADY_SUBMITTED` / "already been submitted" → "This week's
+  report was already submitted.", solo `MY_JOURNEY_DISABLED` → its existing
+  message) and everything else (network, PostgREST) into "Not saved, check
+  your connection"; the raw message goes to `console.error`, never to the
+  screen. Mappers: `mapTaskDraftSaveError` (`src/lib/data/task-drafts.ts`),
+  `mapIndividualDraftAutosaveError` (`src/lib/individual-weekly-report.ts`),
+  `mapTeamDraftAutosaveError` (`src/lib/team-weekly-report.ts`). Disabling
+  the hook (modal closed) resets the indicator, so an error never carries
+  into the next open. Never a toast, and it never blocks submit.
 
 ### Keepalive route
 
@@ -74,11 +84,18 @@ never the admin client. The beacon swallows every error: the tab is dying.
 ## Restore on open
 
 Every open refetches the draft (`staleTime: 0`, `refetchOnMount: "always"`,
-no refetch on focus or reconnect so typing is never interrupted). While the
-fetch runs the form shows "Checking for a saved draft…" and autosave is off.
-Once it settles the form is seeded once for that open. A non-empty restored
-draft shows `DraftRestoredChip` under the title: "Draft restored · saved
-3 min ago".
+`retry: 1`, no refetch on focus or reconnect so typing is never
+interrupted). While the fetch runs the form shows "Checking for a saved
+draft…" and autosave is off. Once it settles the form is seeded once for
+that open. A non-empty restored draft shows `DraftRestoredChip` under the
+title: "Draft restored · saved 3 min ago".
+
+If the read fails (in all three forms) the modal does not seed, shows
+`DraftLoadError` (`src/components/forms/draft-load-error.tsx`, an inline
+`role="alert"` box with **Retry**, not a toast) in place of the fields,
+disables the submit and save buttons, and keeps autosave off for that
+open, so an empty or stale cached form can never overwrite the real draft.
+Retry re-runs that open's read; on success the form seeds as usual.
 
 - **Task:** `useTaskSubmissionDraft`
   (`src/components/tasks/use-task-submission-draft.ts`) reads through
@@ -94,9 +111,7 @@ draft shows `DraftRestoredChip` under the title: "Draft restored · saved
 - **Team report:** `useTeamReportDraft`
   (`src/components/weekly-reports/team/use-team-report-draft.ts`) reads the
   week boundaries and the draft row once per open; autosave and submit both
-  reuse that week. If the read fails the modal shows an inline error with
-  **Retry** and autosave stays off for that open, so an empty form can never
-  overwrite the real draft.
+  reuse that week.
 
 ### Precedence on a rejected task
 
@@ -190,7 +205,7 @@ Weekly report drafts are ordinary `weekly_reports` rows with
 
 | Area | Files |
 |---|---|
-| Hook + UI | `src/hooks/use-autosave-draft.ts`, `src/components/forms/draft-save-state.tsx`, `draft-restored-chip.tsx` |
+| Hook + UI | `src/hooks/use-autosave-draft.ts`, `src/components/forms/draft-save-state.tsx`, `draft-restored-chip.tsx`, `draft-load-error.tsx`, `src/lib/drafts/save-error.ts` |
 | Keepalive | `src/app/api/drafts/route.ts`, `src/lib/drafts/beacon.ts` |
 | Task | `src/lib/data/task-drafts.ts` (re-exported from `src/lib/database.ts`), `src/lib/task-draft-precedence.ts`, `src/components/tasks/use-task-submission-draft.ts`, `task-submission-modal.tsx`, `task-submission-form-fields.tsx` |
 | Solo report | `src/components/weekly-reports/individual/use-individual-report-draft.ts`, `individual-weekly-report-modal.tsx`, `individual-report-footer.tsx`, `src/hooks/use-individual-weekly-report.ts` |

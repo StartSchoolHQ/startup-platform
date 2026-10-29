@@ -2,6 +2,7 @@ import type {
   IndividualWeeklyReportData,
   IndividualWeeklyReportForm,
 } from "@/types/weekly-report";
+import { DRAFT_SAVE_FALLBACK } from "@/lib/drafts/save-error";
 
 export function emptyIndividualReportForm(): IndividualWeeklyReportForm {
   return {
@@ -81,10 +82,18 @@ export function mapIndividualReportRpcError(message: string): string {
   return message;
 }
 
-/** Short form for the autosave indicator (no toast, one line in the footer). */
+/**
+ * Short form for the autosave indicator (no toast, one line in the footer).
+ * Known codes get their own line; network and PostgREST errors the generic
+ * one (the raw text goes to the console).
+ */
 export function mapIndividualDraftAutosaveError(message: string): string {
   if (message.includes("ALREADY_SUBMITTED")) {
     return "This week's report was already submitted.";
   }
-  return mapIndividualReportRpcError(message);
+  if (message.includes("MY_JOURNEY_DISABLED")) {
+    return mapIndividualReportRpcError(message);
+  }
+  console.error("Solo report draft autosave failed:", message);
+  return DRAFT_SAVE_FALLBACK;
 }

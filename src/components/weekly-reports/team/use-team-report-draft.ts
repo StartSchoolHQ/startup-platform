@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   emptyTeamReportForm,
   hasTeamReportContent,
+  mapTeamDraftAutosaveError,
   normalizeTeamReport,
   teamDraftToForm,
 } from "@/lib/team-weekly-report";
@@ -118,6 +119,8 @@ export function useTeamReportDraft({
     queryKey: ["weekly-reports", "team", "draft-open", teamId, userId],
     queryFn: () => readTeamDraftOnOpen(teamId, userId),
     enabled: open && !!teamId && !!userId,
+    // One retry, so "Checking for a saved draft…" does not hang offline.
+    retry: 1,
     staleTime: 0,
     refetchOnMount: "always",
     // Only the open itself fetches: a focus refetch mid-typing would lock it.
@@ -163,12 +166,14 @@ export function useTeamReportDraft({
   const save = useCallback(
     async (value: TeamWeeklyReportForm) => {
       if (!week) throw new Error("Failed to get current week boundaries");
-      const id = await saveTeamReportDraft({
-        userId,
-        teamId,
-        week,
-        form: value,
-      });
+      let id: string;
+      try {
+        id = await saveTeamReportDraft({ userId, teamId, week, form: value });
+      } catch (err) {
+        // The indicator gets a short line, never raw PostgREST/fetch text.
+        const message = err instanceof Error ? err.message : String(err);
+        throw new Error(mapTeamDraftAutosaveError(message));
+      }
       draftIdRef.current = id;
       setExistingDraftId(id);
     },

@@ -30,6 +30,7 @@ import {
 import { IndividualReportFooter } from "@/components/weekly-reports/individual/individual-report-footer";
 import { useIndividualReportDraft } from "@/components/weekly-reports/individual/use-individual-report-draft";
 import { ReportDialogShell } from "@/components/weekly-reports/shared/report-dialog-shell";
+import { DraftLoadError } from "@/components/forms/draft-load-error";
 import { DraftRestoredChip } from "@/components/forms/draft-restored-chip";
 
 interface Props {
@@ -48,11 +49,9 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
   const submit = useSubmitIndividualWeeklyReport(user?.id);
   const [form, setForm] = useState(emptyIndividualReportForm);
   const [errors, setErrors] = useState<FieldErrors>({});
-  const { loading, draft, savedAt, autosave } = useIndividualReportDraft({
-    open,
-    userId: user?.id,
-    form,
-  });
+  const { loading, loadError, retryLoad, draft, savedAt, autosave } =
+    useIndividualReportDraft({ open, userId: user?.id, form });
+  const [waitingForSave, setWaitingForSave] = useState(false);
 
   // Seed once per open, after that open's refetch settled, then leave the
   // form alone. Adjust-state-during-render, not an effect.
@@ -65,7 +64,8 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
   }
   const [seededFor, setSeededFor] = useState(0);
   const [restored, setRestored] = useState<{ open: number; at: Date | null }>();
-  if (open && !loading && seededFor !== openState.count) {
+  // A failed read never seeds (it would be the last open's cached draft).
+  if (open && !loading && !loadError && seededFor !== openState.count) {
     setSeededFor(openState.count);
     const seed = draft ? draftToForm(draft) : emptyIndividualReportForm();
     setForm(seed);
@@ -115,7 +115,7 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const data = normalizeIndividualReport(form);
     const parsed = IndividualWeeklyReportSchema.safeParse(data);
@@ -130,7 +130,15 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
       }
       return;
     }
+    // cancel() drops the pending debounce; flush() then only waits for a
+    // save already in flight, so it cannot land after the submit.
     autosave.cancel();
+    setWaitingForSave(true);
+    try {
+      await autosave.flush();
+    } finally {
+      setWaitingForSave(false);
+    }
     submit.mutate(
       { data, asDraft: false },
       {
@@ -174,7 +182,7 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
         <IndividualReportFooter
           formId="solo-weekly-report-form"
           hasContent={hasContent}
-          busy={loading || submit.isPending}
+          busy={loading || loadError || waitingForSave || submit.isPending}
           savingDraft={savingDraft}
           submitting={submitting}
           autosaveStatus={autosave.status}
@@ -192,12 +200,14 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
         <p className="text-muted-foreground text-sm">
           Checking for a saved draft…
         </p>
+      ) : loadError ? (
+        <DraftLoadError onRetry={retryLoad} />
       ) : (
         <IndividualReportQuestions
           value={form}
           onChange={handleChange}
           errors={errors}
-          disabled={submit.isPending}
+          disabled={waitingForSave || submit.isPending}
         />
       )}
     </ReportDialogShell>
