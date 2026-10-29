@@ -17,6 +17,7 @@ type PartialProgressData = {
   status?: string;
   started_at?: string | null;
   completed_at?: string | null;
+  submitted_at?: string | null;
   updated_at?: string;
   submission_data?: unknown;
   submission_notes?: string | null;
@@ -614,6 +615,7 @@ export async function getTaskByIdLazy(
           status,
           started_at,
           completed_at,
+          submitted_at,
           updated_at,
           submission_data,
           submission_notes,
@@ -684,6 +686,7 @@ export async function getTaskByIdLazy(
       status: (progressData?.status as TaskStatus) || "not_started",
       started_at: progressData?.started_at || undefined,
       completed_at: progressData?.completed_at || undefined,
+      submitted_at: progressData?.submitted_at ?? null,
       updated_at: progressData?.updated_at || new Date().toISOString(),
       submission_data: progressData?.submission_data
         ? typeof progressData.submission_data === "string"
@@ -697,9 +700,7 @@ export async function getTaskByIdLazy(
         (progressData?.peer_review_history as Array<{
           timestamp: string;
           event_type:
-            | "submitted_for_review"
-            | "reviewer_assigned"
-            | "review_completed";
+            "submitted_for_review" | "reviewer_assigned" | "review_completed";
           reviewer_id?: string;
           reviewer_name?: string;
           reviewer_avatar_url?: string;
@@ -892,9 +893,7 @@ export async function getTaskById(
         (progressData.peer_review_history as Array<{
           timestamp: string;
           event_type:
-            | "submitted_for_review"
-            | "reviewer_assigned"
-            | "review_completed";
+            "submitted_for_review" | "reviewer_assigned" | "review_completed";
           reviewer_id?: string;
           reviewer_name?: string;
           reviewer_avatar_url?: string;
@@ -1218,11 +1217,7 @@ export async function retryTask(
 export async function getAllTasks(
   activityType?: "individual" | "team",
   sortBy?:
-    | "created_at"
-    | "title"
-    | "priority"
-    | "difficulty_level"
-    | "category",
+    "created_at" | "title" | "priority" | "difficulty_level" | "category",
   sortOrder?: "asc" | "desc"
 ): Promise<AdminTaskItem[]> {
   try {
@@ -1259,30 +1254,28 @@ export async function getAllTasks(
     }
 
     return (
-      data?.map(
-        (task): AdminTaskItem => ({
-          id: task.id,
-          title: task.title,
-          description: task.description || "",
-          difficulty: (task.difficulty_level === 1
-            ? "Easy"
-            : task.difficulty_level === 2
-              ? "Medium"
-              : "Hard") as "Easy" | "Medium" | "Hard",
-          xp: task.base_xp_reward || 0,
-          points: task.base_points_reward || task.base_xp_reward || 0,
-          status: "Not Started" as AdminTaskItem["status"],
-          action: "complete" as "complete" | "done",
-          // Admin-specific additional fields
-          category: task.category || undefined,
-          priority: task.priority || undefined,
-          activity_type: task.activity_type,
-          is_confidential: task.is_confidential || false,
-          created_at: task.created_at || undefined,
-          updated_at: task.updated_at || task.created_at || undefined,
-          difficulty_level: task.difficulty_level || 1,
-        })
-      ) || []
+      data?.map((task): AdminTaskItem => ({
+        id: task.id,
+        title: task.title,
+        description: task.description || "",
+        difficulty: (task.difficulty_level === 1
+          ? "Easy"
+          : task.difficulty_level === 2
+            ? "Medium"
+            : "Hard") as "Easy" | "Medium" | "Hard",
+        xp: task.base_xp_reward || 0,
+        points: task.base_points_reward || task.base_xp_reward || 0,
+        status: "Not Started" as AdminTaskItem["status"],
+        action: "complete" as "complete" | "done",
+        // Admin-specific additional fields
+        category: task.category || undefined,
+        priority: task.priority || undefined,
+        activity_type: task.activity_type,
+        is_confidential: task.is_confidential || false,
+        created_at: task.created_at || undefined,
+        updated_at: task.updated_at || task.created_at || undefined,
+        difficulty_level: task.difficulty_level || 1,
+      })) || []
     );
   } catch (error) {
     return [];

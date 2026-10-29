@@ -103,6 +103,18 @@ export {
 } from "./data/ai-reviews";
 
 // ============================================================================
+// TASK SUBMISSION DRAFTS (autosave)
+// ============================================================================
+export {
+  getTaskSubmissionDraft,
+  saveTaskSubmissionDraft,
+  deleteTaskSubmissionDraft,
+  taskDraftKeys,
+  type TaskDraft,
+  type TaskDraftBody,
+} from "./data/task-drafts";
+
+// ============================================================================
 // PEER REVIEW FUNCTIONS
 // ============================================================================
 export {

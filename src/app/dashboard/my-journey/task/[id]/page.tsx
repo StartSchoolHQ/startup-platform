@@ -4,7 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTaskByIdLazy } from "@/lib/tasks";
-import { submitIndividualTaskV1 } from "@/lib/database";
+import {
+  deleteTaskSubmissionDraft,
+  submitIndividualTaskV1,
+  taskDraftKeys,
+} from "@/lib/database";
 import { uploadTaskFiles } from "@/lib/file-upload";
 import { useAiReviewStatus } from "@/hooks/use-ai-review-status";
 import { normalizeSubmission } from "@/lib/ai-review/normalize";
@@ -147,6 +151,8 @@ export default function IndividualTaskDetailPage() {
         completion_date: new Date().toISOString(),
       };
       const result = await submitIndividualTaskV1(task.progress_id, payload);
+      await deleteTaskSubmissionDraft(task.progress_id).catch(() => undefined);
+      queryClient.setQueryData(taskDraftKeys.one(task.progress_id), null);
       posthog.capture("individual_task_submitted", {
         task_id: task.task_id,
         task_title: task.title,
@@ -259,6 +265,8 @@ export default function IndividualTaskDetailPage() {
         isLoading={isSubmitting}
         isIndividualTask={true}
         initialData={resubmitInitialData}
+        progressId={task.progress_id}
+        submittedAt={task.submitted_at ?? null}
       />
       {/* Suggest Edits Modal */}
       <SuggestEditsModal

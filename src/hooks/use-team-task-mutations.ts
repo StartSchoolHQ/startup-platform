@@ -14,6 +14,7 @@ import {
   startTask,
   startTaskLazy,
 } from "@/lib/tasks";
+import { deleteTaskSubmissionDraft, taskDraftKeys } from "@/lib/database";
 import { invalidateNotifications } from "@/hooks/use-task-notifications";
 import type { TeamTask } from "@/types/team-journey";
 
@@ -126,6 +127,12 @@ export function useTeamTaskMutations({
     },
     retry: 0,
     onSuccess: async () => {
+      if (task?.progress_id) {
+        await deleteTaskSubmissionDraft(task.progress_id).catch(
+          () => undefined
+        );
+        queryClient.setQueryData(taskDraftKeys.one(task.progress_id), null);
+      }
       posthog.capture("task_submitted", {
         ...event(),
         base_xp_reward: task?.base_xp_reward,

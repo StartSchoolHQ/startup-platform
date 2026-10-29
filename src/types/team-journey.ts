@@ -107,6 +107,8 @@ export interface TeamTask {
   assigned_at?: string;
   started_at?: string;
   completed_at?: string;
+  /** Last time the row was submitted (drafts older than this lose). */
+  submitted_at?: string | null;
   updated_at?: string;
   submission_data?: Record<string, unknown>;
   submission_notes?: string;
@@ -118,9 +120,7 @@ export interface TeamTask {
   peer_review_history?: Array<{
     timestamp: string;
     event_type:
-      | "submitted_for_review"
-      | "reviewer_assigned"
-      | "review_completed";
+      "submitted_for_review" | "reviewer_assigned" | "review_completed";
     reviewer_id?: string;
     reviewer_name?: string;
     reviewer_avatar_url?: string;

@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Loader2, Send } from "lucide-react";
+import posthog from "posthog-js";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -13,28 +12,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DraftSaveState } from "@/components/forms/draft-save-state";
+import type { ExternalUrl } from "@/components/tasks/submission-fields";
 import {
-  FieldShell,
-  FileListField,
-  UrlListField,
-  type ExternalUrl,
-} from "@/components/tasks/submission-fields";
+  DEFAULT_SCHEMA,
+  TaskSubmissionFormField,
+  type FormSchema,
+} from "@/components/tasks/task-submission-form-fields";
+import { TaskSubmissionDraftChip } from "@/components/tasks/task-submission-draft-chip";
+import { useTaskSubmissionDraft } from "@/components/tasks/use-task-submission-draft";
+import { pickTaskSeed } from "@/lib/task-draft-precedence";
 
 export type { ExternalUrl } from "@/components/tasks/submission-fields";
-
-interface FormField {
-  name: string;
-  type: "text" | "textarea" | "url_list" | "file";
-  label: string;
-  placeholder?: string;
-  required?: boolean;
-  multiple?: boolean;
-  accept?: string;
-}
-
-interface FormSchema {
-  fields: FormField[];
-}
 
 interface SubmissionData {
   description?: string;
@@ -63,35 +52,11 @@ interface TaskSubmissionModalProps {
   isLoading?: boolean;
   isIndividualTask?: boolean;
   initialData?: TaskSubmissionInitialData;
+  /** Enables draft restore + autosave when set. */
+  progressId?: string | null;
+  /** Last submission time; a draft older than this loses to `initialData`. */
+  submittedAt?: string | null;
 }
-
-const DEFAULT_SCHEMA: FormSchema = {
-  fields: [
-    {
-      name: "description",
-      type: "textarea",
-      label: "What did you do?",
-      required: true,
-      placeholder:
-        "Write the actual result here — the pitch, the answers, the reflection. Not a summary of the task.",
-    },
-    {
-      name: "external_urls",
-      type: "url_list",
-      label: "Links",
-      placeholder: "https://docs.google.com/…",
-      required: false,
-    },
-    {
-      name: "screenshots",
-      type: "file",
-      label: "Files",
-      accept: "image/*,.pdf,.docx,.txt",
-      required: false,
-      multiple: true,
-    },
-  ],
-};
 
 export function TaskSubmissionModal({
   isOpen,
@@ -102,35 +67,73 @@ export function TaskSubmissionModal({
   isLoading = false,
   isIndividualTask = false,
   initialData,
+  progressId = null,
+  submittedAt = null,
 }: TaskSubmissionModalProps) {
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [externalUrls, setExternalUrls] = useState<ExternalUrl[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Seed the form each time the modal opens, then leave it alone — keyed on
-  // `isOpen` only, so a caller passing a fresh object literal on every render
-  // cannot re-seed (and wipe) what the student is typing. Done during render
-  // (React's adjust-state-on-prop-change pattern) rather than in an effect.
-  const [seededOpen, setSeededOpen] = useState<boolean | null>(null);
-  if (isOpen !== seededOpen) {
-    setSeededOpen(isOpen);
-    if (isOpen) {
-      setFormData(
-        initialData?.description ? { description: initialData.description } : {}
-      );
-      setExternalUrls(initialData?.external_urls ?? []);
-      setUploadedFiles([]);
-      setErrors({});
-    }
+  const description =
+    typeof formData.description === "string" ? formData.description : "";
+  const draftValue = useMemo(
+    () => ({ description, external_urls: externalUrls }),
+    [description, externalUrls]
+  );
+  const { loading, draft, autosave } = useTaskSubmissionDraft({
+    open: isOpen,
+    progressId,
+    value: draftValue,
+    canSave: !!description.trim() || externalUrls.length > 0,
+  });
+
+  // Seed once per open, after that open's draft fetch settled, then leave the
+  // form alone (a fresh `initialData` literal per render must not wipe what
+  // the student types). Adjust-state-during-render, not an effect.
+  const [openState, setOpenState] = useState({ open: false, count: 0 });
+  if (isOpen !== openState.open) {
+    setOpenState({
+      open: isOpen,
+      count: isOpen ? openState.count + 1 : openState.count,
+    });
   }
+  const [seededFor, setSeededFor] = useState(0);
+  const [restored, setRestored] = useState<{ open: number; at: string }>();
+  if (isOpen && !loading && seededFor !== openState.count) {
+    setSeededFor(openState.count);
+    const { seed, restoredFromDraft } = pickTaskSeed({
+      draft,
+      rejected: initialData,
+      submittedAt,
+    });
+    setFormData(seed?.description ? { description: seed.description } : {});
+    setExternalUrls(seed?.external_urls ?? []);
+    setUploadedFiles([]);
+    setErrors({});
+    setRestored(
+      restoredFromDraft && draft
+        ? { open: openState.count, at: draft.updated_at }
+        : undefined
+    );
+  }
+  const restoredOpen = restored?.open;
+  useEffect(() => {
+    if (restoredOpen === undefined || !progressId) return;
+    posthog.capture("task_draft_restored", { progress_id: progressId });
+  }, [restoredOpen, progressId]);
 
   const schema = formSchema?.fields?.length ? formSchema : DEFAULT_SCHEMA;
   const isResubmission = !!initialData?.description;
+  const busy = isLoading || loading;
 
-  const setValue = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const clearError = (name: string) => {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleClose = async () => {
+    await autosave.flush();
+    onClose();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -158,6 +161,7 @@ export function TaskSubmissionModal({
       return;
     }
     setErrors({});
+    autosave.cancel();
     await onSubmit({
       ...formData,
       external_urls: externalUrls,
@@ -166,88 +170,8 @@ export function TaskSubmissionModal({
     });
   };
 
-  const renderField = (field: FormField) => {
-    switch (field.type) {
-      case "text":
-        return (
-          <FieldShell
-            key={field.name}
-            id={field.name}
-            label={field.label}
-            required={field.required}
-            error={errors[field.name]}
-          >
-            <Input
-              id={field.name}
-              placeholder={field.placeholder}
-              value={(formData[field.name] as string) || ""}
-              onChange={(e) => setValue(field.name, e.target.value)}
-              disabled={isLoading}
-            />
-          </FieldShell>
-        );
-      case "textarea":
-        return (
-          <FieldShell
-            key={field.name}
-            id={field.name}
-            label={field.label}
-            required={field.required}
-            error={errors[field.name]}
-          >
-            <Textarea
-              id={field.name}
-              placeholder={field.placeholder}
-              value={(formData[field.name] as string) || ""}
-              onChange={(e) => setValue(field.name, e.target.value)}
-              className="min-h-[160px] resize-y"
-              disabled={isLoading}
-            />
-          </FieldShell>
-        );
-      case "url_list":
-        return (
-          <UrlListField
-            key={field.name}
-            label={field.label}
-            placeholder={field.placeholder}
-            required={field.required}
-            urls={externalUrls}
-            onChange={(urls) => {
-              setExternalUrls(urls);
-              if (errors[field.name])
-                setErrors((prev) => ({ ...prev, [field.name]: "" }));
-            }}
-            error={errors[field.name]}
-            disabled={isLoading}
-          />
-        );
-      case "file":
-        return (
-          <FileListField
-            key={field.name}
-            id={`file-${field.name}`}
-            label={field.label}
-            accept={field.accept}
-            multiple={field.multiple}
-            required={field.required}
-            files={uploadedFiles}
-            onChange={(files) => {
-              setUploadedFiles(files);
-              if (errors[field.name])
-                setErrors((prev) => ({ ...prev, [field.name]: "" }));
-            }}
-            error={errors[field.name]}
-            disabled={isLoading}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[640px]">
         <DialogHeader className="space-y-1.5 px-6 pt-6 pb-5 text-left">
           <p className="text-primary text-xs font-medium">
@@ -256,6 +180,9 @@ export function TaskSubmissionModal({
           <DialogTitle className="pr-6 text-xl leading-snug font-semibold tracking-tight">
             {taskTitle}
           </DialogTitle>
+          {!loading && restored?.open === openState.count && (
+            <TaskSubmissionDraftChip savedAt={restored.at} />
+          )}
           <DialogDescription className="text-sm">
             {isIndividualTask
               ? "Goes straight to review. You'll see the result on this page and get a notification."
@@ -270,23 +197,52 @@ export function TaskSubmissionModal({
           onSubmit={handleSubmit}
           className="min-h-0 flex-1 space-y-5 overflow-y-auto border-t px-6 py-5"
         >
-          {schema.fields.map(renderField)}
+          {loading ? (
+            <p className="text-muted-foreground text-sm">
+              Checking for a saved draft…
+            </p>
+          ) : (
+            schema.fields.map((field) => (
+              <TaskSubmissionFormField
+                key={field.name}
+                field={field}
+                text={(formData[field.name] as string) || ""}
+                externalUrls={externalUrls}
+                uploadedFiles={uploadedFiles}
+                error={errors[field.name]}
+                disabled={busy}
+                onText={(value) => {
+                  setFormData((prev) => ({ ...prev, [field.name]: value }));
+                  clearError(field.name);
+                }}
+                onUrls={(urls) => {
+                  setExternalUrls(urls);
+                  clearError(field.name);
+                }}
+                onFiles={(files) => {
+                  setUploadedFiles(files);
+                  clearError(field.name);
+                }}
+              />
+            ))
+          )}
         </form>
 
         <DialogFooter className="gap-2 border-t px-6 py-4 sm:gap-2">
+          <DraftSaveState
+            status={autosave.status}
+            errorMessage={autosave.errorMessage}
+            className="self-center sm:mr-auto"
+          />
           <Button
             type="button"
             variant="outline"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isLoading}
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            form="task-submission-form"
-            disabled={isLoading}
-          >
+          <Button type="submit" form="task-submission-form" disabled={busy}>
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (

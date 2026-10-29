@@ -136,6 +136,8 @@ export default function TeamTaskDetailPage(props: {
         formSchema={task.submission_form_schema}
         isLoading={m.complete.isPending}
         initialData={resubmitInitialData}
+        progressId={task.progress_id}
+        submittedAt={task.submitted_at ?? null}
       />
       <SuggestEditsModal
         open={suggestOpen}
