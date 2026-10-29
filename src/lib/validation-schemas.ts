@@ -481,3 +481,24 @@ export const AssistantChatSchema = z.object({
   }),
 });
 export type AssistantChatData = z.infer<typeof AssistantChatSchema>;
+
+// ---------------------------------------------------------------------------
+// Draft keepalive beacon — POST /api/drafts (tab-close flush)
+// ---------------------------------------------------------------------------
+export const DraftBeaconSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("task"),
+    progressId: z.string().uuid(),
+    draft: z.record(z.string(), z.unknown()),
+  }),
+  z.object({
+    kind: z.literal("solo_report"),
+    data: z.record(z.string(), z.unknown()),
+  }),
+  z.object({
+    kind: z.literal("team_report"),
+    teamId: z.string().uuid(),
+    data: z.record(z.string(), z.unknown()),
+  }),
+]);
+export type DraftBeacon = z.infer<typeof DraftBeaconSchema>;
