@@ -3,7 +3,7 @@
 -- there), so NOT (NULL OR false) was NULL and the guard never raised for a
 -- non-member. Verified in a rolled-back test before this fix: an outsider
 -- reached the "no assigned reviewer" check instead of being denied.
--- The guard text in 20261029131000_rpc_auth_guards_v1.sql is corrected to
+-- The guard text in 20261029105054_rpc_auth_guards_v1.sql is corrected to
 -- match; this delta rewrites the live function body in place.
 --
 -- Rollback: same as rpc_auth_guards_v1 (restore from
