@@ -285,6 +285,17 @@ Stored in `tasks.submission_form_schema`:
 
 URL types are auto-detected from the URL pattern.
 
+### Drafts (autosave)
+
+While the modal is open, `description` and `external_urls` are autosaved
+2 s after the last change (and flushed on close or tab hide) into
+`task_submission_drafts`, one row per `task_progress` row, through
+`save_task_submission_draft_v1`. Every open restores the draft; on a
+rejected task it wins over the rejected submission only if it is newer than
+`submitted_at`. A successful submit deletes it. Drafts never touch
+`task_progress.submission_data`; files are never drafted. Details:
+[form-autosave.md](./form-autosave.md).
+
 ---
 
 ## Recurring Tasks

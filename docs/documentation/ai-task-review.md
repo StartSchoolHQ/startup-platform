@@ -323,6 +323,9 @@ Default `confidence_threshold` is **0.75** (admin-editable).
   description and links (`TaskSubmissionModal`'s optional `initialData` prop, derived from
   `task.submission_data` via `normalizeSubmission`; files cannot be prefilled and must be
   re-attached).
+- Autosaved drafts ([form-autosave.md](./form-autosave.md)) live in
+  `task_submission_drafts`, never in `submission_data`, so they never reach
+  the reviewer, `submission_history` or `previous_submissions`.
 - When the review settles, the page fires PostHog `ai_review_completed`
   (`{task_id, outcome, attempt}`).
 
