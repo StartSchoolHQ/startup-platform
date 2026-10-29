@@ -41,6 +41,9 @@ const SAVED_TO_IDLE_MS = 3000;
  * Debounced draft autosave. Saves the latest value `delayMs` after the last
  * change; a change during an in-flight save queues exactly one more save.
  * Leaving the page (pagehide, tab hidden, unmount) fires `beacon` once.
+ * Disabling (`enabled` → false) fires `beacon` once if dirty, as a backstop
+ * for closes that bypass `flush()`, then drops the dirty and queued flags so
+ * nothing carries into the next enabled session.
  */
 export function useAutosaveDraft<T>({
   enabled,
@@ -116,7 +119,10 @@ export function useAutosaveDraft<T>({
   // The first value seen after enabling is the baseline, not a change.
   useEffect(() => {
     if (!enabled) {
+      // Runs after the listener effect's cleanup, so its beacon goes first.
       baselineRef.current = null;
+      dirtyRef.current = false;
+      queuedRef.current = false;
       clearTimer(timerRef);
       return;
     }

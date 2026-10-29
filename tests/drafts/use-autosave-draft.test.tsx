@@ -161,6 +161,35 @@ describe("useAutosaveDraft", () => {
     expect(beacon).toHaveBeenLastCalledWith("c");
   });
 
+  it("disabling while dirty fires beacon once, then resets so nothing carries over", async () => {
+    const { change, save, beacon, result } = setup();
+    change("b");
+    await tick(1000);
+    change("c");
+    change("c", { enabled: false });
+    expect(beacon).toHaveBeenCalledTimes(1);
+    expect(beacon).toHaveBeenCalledWith("c");
+
+    await tick(5000);
+    expect(save).not.toHaveBeenCalled();
+
+    change("c");
+    await act(() => result.current.flush());
+    await tick(5000);
+    expect(save).not.toHaveBeenCalled();
+    expect(beacon).toHaveBeenCalledTimes(1);
+  });
+
+  it("disabling without a beacon still drops the dirty flag", async () => {
+    const { change, save, result } = setup({ beacon: undefined });
+    change("b");
+    change("b", { enabled: false });
+    change("b");
+    await act(() => result.current.flush());
+    await tick(5000);
+    expect(save).not.toHaveBeenCalled();
+  });
+
   it("unmount while dirty calls beacon", () => {
     const { change, beacon, unmount } = setup();
     change("b");
@@ -211,27 +240,24 @@ describe("useAutosaveDraft", () => {
 });
 
 describe("DraftSaveState", () => {
-  it("renders nothing when idle", () => {
-    const { container } = render(
-      <DraftSaveState status="idle" savedAt={null} />
-    );
-    expect(container.innerHTML).toBe("");
+  it("keeps an empty live region mounted when idle", () => {
+    const { container } = render(<DraftSaveState status="idle" />);
+    const region = container.querySelector("[aria-live='polite']");
+    expect(region).not.toBeNull();
+    expect(region?.textContent).toBe("");
   });
 
-  it("shows saving, saved with age, and the error fallback", () => {
-    const { rerender } = render(
-      <DraftSaveState status="saving" savedAt={null} />
-    );
+  it("shows saving, saved, and the error fallback", () => {
+    const { rerender } = render(<DraftSaveState status="saving" />);
     expect(screen.getByText("Saving…")).toBeTruthy();
 
-    rerender(<DraftSaveState status="saved" savedAt={new Date()} />);
+    rerender(<DraftSaveState status="saved" />);
     expect(screen.getByText("Saved")).toBeTruthy();
 
-    const old = new Date(Date.now() - 3 * 60_000);
-    rerender(<DraftSaveState status="saved" savedAt={old} />);
-    expect(screen.getByText("Saved · 3 min ago")).toBeTruthy();
+    rerender(<DraftSaveState status="error" errorMessage="Network down" />);
+    expect(screen.getByText("Network down")).toBeTruthy();
 
-    rerender(<DraftSaveState status="error" savedAt={null} />);
+    rerender(<DraftSaveState status="error" />);
     expect(screen.getByText("Not saved, check your connection")).toBeTruthy();
     expect(screen.getByText(/Not saved/).getAttribute("aria-live")).toBe(
       "polite"
