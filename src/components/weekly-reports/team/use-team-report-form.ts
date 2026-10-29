@@ -6,6 +6,7 @@ import posthog from "posthog-js";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import {
+  emptyTeamReportForm,
   hasTeamReportContent,
   normalizeTeamReport,
 } from "@/lib/team-weekly-report";
@@ -14,9 +15,11 @@ import {
   fieldErrorsFromIssues,
   type FieldErrors,
 } from "@/lib/weekly-report-form-errors";
-import { getCurrentWeekBoundaries } from "@/lib/weekly-reports";
 import type { TeamWeeklyReportForm } from "@/types/weekly-report";
-import { useTeamReportDraft } from "@/components/weekly-reports/team/use-team-report-draft";
+import {
+  saveTeamReportDraft,
+  useTeamReportDraft,
+} from "@/components/weekly-reports/team/use-team-report-draft";
 
 interface Options {
   open: boolean;
@@ -27,11 +30,11 @@ interface Options {
 }
 
 /**
- * The team modal's behaviour, unchanged from V1: drafts via
- * `useTeamReportDraft`, "Save as draft" through `save_weekly_report_draft`,
- * submit inserts (or upgrades the draft row) directly in `weekly_reports`,
- * same PostHog events. Only the error surface is new: validation returns
- * per-question errors instead of a toast.
+ * The team modal's behaviour: drafts restore and autosave via
+ * `useTeamReportDraft`; "Save and close" goes through
+ * `save_weekly_report_draft` with a toast; submit inserts (or upgrades the
+ * draft row) directly in `weekly_reports`, reusing the week fetched on open.
+ * Validation returns per-question errors instead of a toast.
  */
 export function useTeamReportForm({
   open,
@@ -55,9 +58,22 @@ export function useTeamReportForm({
     setFormState(next);
   };
 
+  const missingWeek = () =>
+    new Error(
+      "Couldn't load this week's dates. Close and reopen the report, then try again."
+    );
+
   const finish = (message: string) => {
     toast.success(message);
-    draft.clearLocal();
+    draft.autosave.cancel();
+    onClose();
+    draft.reset();
+    setErrors({});
+  };
+
+  // Save what is on screen before the form is reset and the dialog closes.
+  const close = async () => {
+    await draft.autosave.flush();
     onClose();
     draft.reset();
     setErrors({});
@@ -66,22 +82,11 @@ export function useTeamReportForm({
   const saveDraft = useMutation({
     retry: 0,
     mutationFn: async () => {
-      const supabase = createClient();
-      const week = await getCurrentWeekBoundaries();
-      if (!week) throw new Error("Failed to get current week boundaries");
-      const { data, error } = await supabase.rpc("save_weekly_report_draft", {
-        p_user_id: userId,
-        p_team_id: teamId,
-        p_week_start_date: week.week_start,
-        p_week_end_date: week.week_end,
-        p_week_number: week.week_number,
-        p_week_year: week.week_year,
-        p_submission_data: normalizeTeamReport(form) as never,
-      });
-      if (error) throw new Error(`Failed to save draft: ${error.message}`);
-      const result = data as { success?: boolean; error?: string } | null;
-      if (!result?.success)
-        throw new Error(result?.error || "Failed to save draft");
+      if (!draft.week) throw missingWeek();
+      // Let a pending autosave land first so it cannot overwrite this save.
+      await draft.autosave.flush();
+      draft.autosave.cancel();
+      await saveTeamReportDraft({ userId, teamId, week: draft.week, form });
     },
     onSuccess: () => {
       posthog.capture("weekly_report_draft_saved", {
@@ -98,9 +103,9 @@ export function useTeamReportForm({
   const submit = useMutation({
     retry: 0,
     mutationFn: async (data: ReturnType<typeof normalizeTeamReport>) => {
+      const week = draft.week;
+      if (!week) throw missingWeek();
       const supabase = createClient();
-      const week = await getCurrentWeekBoundaries();
-      if (!week) throw new Error("Failed to get current week boundaries");
       const submission = { ...data, submittedAt: new Date().toISOString() };
       const now = new Date().toISOString();
       const { error } = draft.existingDraftId
@@ -158,6 +163,7 @@ export function useTeamReportForm({
       setErrors(next);
       return next;
     }
+    draft.autosave.cancel();
     submit.mutate(data);
     return {};
   };
@@ -168,14 +174,14 @@ export function useTeamReportForm({
     errors,
     isLoadingDraft: draft.isLoadingDraft,
     restoredFromDb: draft.restoredFromDb,
-    pendingLocalDraft: draft.pendingLocalDraft,
-    restoreLocalDraft: draft.restoreLocalDraft,
-    discardLocalDraft: draft.discardLocalDraft,
+    savedAt: draft.savedAt,
+    autosave: draft.autosave,
+    // Keeps existingDraftId, so the autosave writes the empty draft.
     clearForm: () => {
-      draft.clearLocal();
-      draft.reset();
+      draft.setFormState(emptyTeamReportForm());
       setErrors({});
     },
+    close,
     saveDraft: () => saveDraft.mutate(),
     trySubmit,
     isSavingDraft: saveDraft.isPending,

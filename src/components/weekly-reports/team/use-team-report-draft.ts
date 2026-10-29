@@ -1,140 +1,200 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import posthog from "posthog-js";
+import {
+  useAutosaveDraft,
+  type UseAutosaveDraftResult,
+} from "@/hooks/use-autosave-draft";
+import { sendDraftBeacon } from "@/lib/drafts/beacon";
 import { createClient } from "@/lib/supabase/client";
 import {
   emptyTeamReportForm,
   hasTeamReportContent,
+  normalizeTeamReport,
   teamDraftToForm,
 } from "@/lib/team-weekly-report";
-import { getCurrentWeekBoundaries } from "@/lib/weekly-reports";
+import {
+  getCurrentWeekBoundaries,
+  type WeekBoundaries,
+} from "@/lib/weekly-reports";
 import type { TeamWeeklyReportForm } from "@/types/weekly-report";
 
-interface Options {
-  open: boolean;
-  teamId: string;
-  userId: string;
+interface TeamDraftOpenRead {
+  week: WeekBoundaries;
+  draft: {
+    id: string;
+    data: Partial<TeamWeeklyReportForm>;
+    updatedAt: string | null;
+  } | null;
+}
+
+/** This week's boundaries (shared 10:00 cutoff) + the team draft row. */
+async function readTeamDraftOnOpen(
+  teamId: string,
+  userId: string
+): Promise<TeamDraftOpenRead> {
+  const week = await getCurrentWeekBoundaries();
+  if (!week) throw new Error("Failed to get current week boundaries");
+  const { data, error } = await createClient()
+    .from("weekly_reports")
+    .select("id, submission_data, updated_at")
+    .eq("user_id", userId)
+    .eq("team_id", teamId)
+    .eq("context", "team")
+    .eq("week_number", week.week_number)
+    .eq("week_year", week.week_year)
+    .eq("status", "draft")
+    .maybeSingle();
+  if (error) throw new Error(`Failed to load draft: ${error.message}`);
+  const draft = data?.submission_data
+    ? {
+        id: data.id,
+        data: data.submission_data as Partial<TeamWeeklyReportForm>,
+        updatedAt: data.updated_at,
+      }
+    : null;
+  return { week, draft };
 }
 
 /**
- * Draft plumbing for the team form, unchanged from V1: on open, load this
- * week's DB draft row (status = draft); if there is none, offer a
- * localStorage draft left by an earlier session; while open, mirror the
- * form to localStorage every 500 ms so a closed tab loses nothing.
+ * Upserts this week's team draft via `save_weekly_report_draft` (which
+ * answers `{ success: false, error }` instead of throwing). Returns the
+ * draft row id.
  */
-export function useTeamReportDraft({ open, teamId, userId }: Options) {
-  const [form, setFormState] = useState(emptyTeamReportForm());
-  const [isLoadingDraft, setIsLoadingDraft] = useState(false);
-  const [existingDraftId, setExistingDraftId] = useState<string | null>(null);
-  const [pendingLocalDraft, setPendingLocalDraft] =
-    useState<TeamWeeklyReportForm | null>(null);
-  const [restoredFromDb, setRestoredFromDb] = useState(false);
-  // True once this open's draft lookup has finished (so a re-render does not
-  // reload over the student's edits); cleared on close.
-  const [initialized, setInitialized] = useState(false);
-  const DRAFT_KEY = `weekly-report-draft-${teamId}-${userId}`;
+export async function saveTeamReportDraft(args: {
+  userId: string;
+  teamId: string;
+  week: WeekBoundaries;
+  form: TeamWeeklyReportForm;
+}): Promise<string> {
+  const { week } = args;
+  const { data, error } = await createClient().rpc("save_weekly_report_draft", {
+    p_user_id: args.userId,
+    p_team_id: args.teamId,
+    p_week_start_date: week.week_start,
+    p_week_end_date: week.week_end,
+    p_week_number: week.week_number,
+    p_week_year: week.week_year,
+    p_submission_data: normalizeTeamReport(args.form) as never,
+  });
+  if (error) throw new Error(`Failed to save draft: ${error.message}`);
+  const result = data as {
+    success?: boolean;
+    error?: string;
+    report_id?: string;
+  } | null;
+  if (!result?.success) {
+    if (result?.error?.includes("already been submitted"))
+      throw new Error("This week's report was already submitted.");
+    throw new Error(result?.error || "Failed to save draft");
+  }
+  return result.report_id as string;
+}
 
-  const clearLocal = useCallback(
-    () => localStorage.removeItem(DRAFT_KEY),
-    [DRAFT_KEY]
+/**
+ * Restore + autosave for the team form. Each open refetches the week and
+ * this week's DB draft, seeds the form once that settled, then saves edits
+ * silently (no toast). No browser storage: the DB row is the only draft.
+ */
+export function useTeamReportDraft({
+  open,
+  teamId,
+  userId,
+}: {
+  open: boolean;
+  teamId: string;
+  userId: string;
+}) {
+  const [form, setFormState] = useState(emptyTeamReportForm);
+  const [existingDraftId, setExistingDraftId] = useState<string | null>(null);
+  const query = useQuery({
+    queryKey: ["weekly-reports", "team", "draft-open", teamId, userId],
+    queryFn: () => readTeamDraftOnOpen(teamId, userId),
+    enabled: open && !!teamId && !!userId,
+    staleTime: 0,
+    refetchOnMount: "always",
+    // Only the open itself fetches: a focus refetch mid-typing would lock it.
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+  const isLoadingDraft = open && query.isFetching;
+
+  // Seed once per open, after that open's fetch settled. Adjust-state-during-
+  // render, not an effect.
+  const [openState, setOpenState] = useState({ open: false, count: 0 });
+  if (open !== openState.open) {
+    setOpenState({ open, count: open ? openState.count + 1 : openState.count });
+  }
+  const [seededFor, setSeededFor] = useState(0);
+  const [restoredOpen, setRestoredOpen] = useState<number | null>(null);
+  if (open && !isLoadingDraft && seededFor !== openState.count) {
+    setSeededFor(openState.count);
+    const row = query.data?.draft ?? null;
+    const seed = row ? teamDraftToForm(row.data) : emptyTeamReportForm();
+    setFormState(seed);
+    setExistingDraftId(row?.id ?? null);
+    // An empty restored draft (e.g. after Clear) gets no chip and no event.
+    setRestoredOpen(row && hasTeamReportContent(seed) ? openState.count : null);
+  }
+  useEffect(() => {
+    if (restoredOpen === null) return;
+    posthog.capture("weekly_report_draft_restored", { context: "team" });
+  }, [restoredOpen]);
+
+  // Only this open's settled, successful read counts (never a stale week).
+  const week =
+    open && !isLoadingDraft && !query.isError
+      ? (query.data?.week ?? null)
+      : null;
+  const save = useCallback(
+    async (value: TeamWeeklyReportForm) => {
+      if (!week) throw new Error("Failed to get current week boundaries");
+      const id = await saveTeamReportDraft({
+        userId,
+        teamId,
+        week,
+        form: value,
+      });
+      setExistingDraftId(id);
+    },
+    [userId, teamId, week]
   );
+  const beacon = useCallback(
+    (value: TeamWeeklyReportForm) =>
+      sendDraftBeacon({
+        kind: "team_report",
+        teamId,
+        data: { ...normalizeTeamReport(value) },
+      }),
+    [teamId]
+  );
+  const autosave: UseAutosaveDraftResult = useAutosaveDraft({
+    // A failed open read (week or draft) keeps autosave off for this open.
+    enabled: week !== null,
+    value: form,
+    // Once a row exists, Clear still writes (an empty draft, no stale text).
+    canSave: (value) => hasTeamReportContent(value) || existingDraftId !== null,
+    save,
+    beacon,
+  });
 
   const reset = useCallback(() => {
     setFormState(emptyTeamReportForm());
-    setExistingDraftId(null);
-    setRestoredFromDb(false);
+    setRestoredOpen(null);
   }, []);
 
-  // Closing resets the form so the next open starts from the DB draft again.
-  // Done during render (adjust-state-on-prop-change) rather than in an effect.
-  const [wasOpen, setWasOpen] = useState(open);
-  if (open !== wasOpen) {
-    setWasOpen(open);
-    if (!open) {
-      setInitialized(false);
-      setFormState(emptyTeamReportForm());
-      setExistingDraftId(null);
-      setRestoredFromDb(false);
-    }
-  }
-
-  useEffect(() => {
-    if (!open || initialized) return;
-    let cancelled = false;
-    (async () => {
-      setIsLoadingDraft(true);
-      try {
-        const week = await getCurrentWeekBoundaries();
-        if (!week) return;
-        const supabase = createClient();
-        const { data } = await supabase
-          .from("weekly_reports")
-          .select("id, submission_data")
-          .eq("user_id", userId)
-          .eq("team_id", teamId)
-          .eq("context", "team")
-          .eq("week_number", week.week_number)
-          .eq("week_year", week.week_year)
-          .eq("status", "draft")
-          .maybeSingle();
-        if (cancelled) return;
-        if (data?.submission_data) {
-          setExistingDraftId(data.id);
-          setFormState(
-            teamDraftToForm(
-              data.submission_data as Partial<TeamWeeklyReportForm>
-            )
-          );
-          setRestoredFromDb(true);
-        } else {
-          const local = localStorage.getItem(DRAFT_KEY);
-          if (local) {
-            try {
-              setPendingLocalDraft(JSON.parse(local));
-            } catch {
-              clearLocal();
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Error loading draft:", err);
-      } finally {
-        if (!cancelled) {
-          setInitialized(true);
-          setIsLoadingDraft(false);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [open, initialized, teamId, userId, DRAFT_KEY, clearLocal]);
-
-  useEffect(() => {
-    if (!open || !initialized || isLoadingDraft) return;
-    const id = setTimeout(() => {
-      if (hasTeamReportContent(form))
-        localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
-    }, 500);
-    return () => clearTimeout(id);
-  }, [form, open, initialized, isLoadingDraft, DRAFT_KEY]);
-
+  const updatedAt = query.data?.draft?.updatedAt;
   return {
     form,
     setFormState,
     isLoadingDraft,
     existingDraftId,
-    restoredFromDb,
-    pendingLocalDraft,
-    restoreLocalDraft: () => {
-      if (pendingLocalDraft) setFormState(pendingLocalDraft);
-      setPendingLocalDraft(null);
-    },
-    discardLocalDraft: () => {
-      clearLocal();
-      setPendingLocalDraft(null);
-    },
-    clearLocal,
+    restoredFromDb: !isLoadingDraft && open && restoredOpen === openState.count,
     reset,
+    week,
+    autosave,
+    savedAt: updatedAt ? new Date(updatedAt) : null,
   };
 }

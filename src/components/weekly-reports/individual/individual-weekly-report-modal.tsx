@@ -39,7 +39,7 @@ interface Props {
 
 /**
  * Solo (My Journey) weekly report. Drafts live in the DB row for the current
- * week (no localStorage): each open refetches the draft and prefills from it,
+ * week (no browser storage): each open refetches the draft and prefills from it,
  * then edits autosave silently. Validation shows inline under the question.
  */
 export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
