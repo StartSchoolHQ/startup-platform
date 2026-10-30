@@ -978,6 +978,26 @@ export type Database = {
         };
         Relationships: [];
       };
+      submitted_at_backfill_20261029: {
+        Row: {
+          id: string;
+        };
+        Insert: {
+          id: string;
+        };
+        Update: {
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "submitted_at_backfill_20261029_id_fkey";
+            columns: ["id"];
+            isOneToOne: true;
+            referencedRelation: "task_progress";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       support_rate_limits: {
         Row: {
           created_at: string;
@@ -2049,6 +2069,47 @@ export type Database = {
             columns: ["batch_id"];
             isOneToOne: false;
             referencedRelation: "diploma_batches";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      weekly_report_email_log: {
+        Row: {
+          context: string;
+          email: string;
+          id: string;
+          kind: string;
+          sent_at: string;
+          user_id: string;
+          week_number: number;
+          week_year: number;
+        };
+        Insert: {
+          context: string;
+          email: string;
+          id?: string;
+          kind: string;
+          sent_at?: string;
+          user_id: string;
+          week_number: number;
+          week_year: number;
+        };
+        Update: {
+          context?: string;
+          email?: string;
+          id?: string;
+          kind?: string;
+          sent_at?: string;
+          user_id?: string;
+          week_number?: number;
+          week_year?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "weekly_report_email_log_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
             referencedColumns: ["id"];
           },
         ];
@@ -3968,12 +4029,30 @@ export type Database = {
         Args: { p_member_count: number };
         Returns: number;
       };
+      get_weekly_report_email_recipients_v1: {
+        Args: { p_kind: string; p_test_emails?: string[] };
+        Returns: {
+          context: string;
+          due_label: string;
+          email: string;
+          kind: string;
+          name: string;
+          team_name: string;
+          user_id: string;
+          week_number: number;
+          week_year: number;
+        }[];
+      };
       has_user_submitted_this_week: {
         Args: { p_team_id: string; p_user_id: string };
         Returns: boolean;
       };
       hook_restrict_signup: { Args: { event: Json }; Returns: Json };
       increment_team_member_count: {
+        Args: { team_id: string };
+        Returns: undefined;
+      };
+      increment_team_member_count_backup_v1: {
         Args: { team_id: string };
         Returns: undefined;
       };
@@ -4058,7 +4137,22 @@ export type Database = {
       };
       program_watchdog_v1: { Args: never; Returns: undefined };
       qwasar_student_track_upsert_v1: { Args: { p_rows: Json }; Returns: Json };
+      qwasar_student_track_upsert_v1_backup_v1: {
+        Args: { p_rows: Json };
+        Returns: Json;
+      };
       reassign_task: {
+        Args: {
+          p_new_user_id: string;
+          p_progress_id: string;
+          p_reassigned_by_user_id: string;
+        };
+        Returns: {
+          message: string;
+          success: boolean;
+        }[];
+      };
+      reassign_task_backup_v1: {
         Args: {
           p_new_user_id: string;
           p_progress_id: string;
@@ -4090,6 +4184,10 @@ export type Database = {
         }[];
       };
       resubmit_task_for_review: { Args: { p_task_id: string }; Returns: Json };
+      resubmit_task_for_review_backup_v1: {
+        Args: { p_task_id: string };
+        Returns: Json;
+      };
       retry_rejected_task: { Args: { p_task_id: string }; Returns: Json };
       save_meeting_draft: {
         Args: {
@@ -4958,6 +5056,17 @@ export type Database = {
       user_can_see_confidential_tasks: {
         Args: { p_team_id: string; p_user_id: string };
         Returns: boolean;
+      };
+      weekly_report_email_mark_sent_v1: {
+        Args: {
+          p_context: string;
+          p_email: string;
+          p_kind: string;
+          p_user_id: string;
+          p_week_number: number;
+          p_week_year: number;
+        };
+        Returns: number;
       };
     };
     Enums: {
