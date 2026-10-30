@@ -29,6 +29,7 @@ const pageNames: Record<string, string> = {
   "team-journey": "Team Journey",
   "transaction-history": "Transaction History",
   "how-it-works": "How it works",
+  changelog: "What's new",
   support: "Support",
   account: "Account",
   invitations: "Invitations",

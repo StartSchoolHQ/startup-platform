@@ -15,6 +15,7 @@ import {
   Settings,
   HelpCircle,
   Rocket,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -23,6 +24,7 @@ import {
 } from "@/hooks/use-platform-settings";
 
 import { NotificationCenter } from "@/components/notification-center";
+import { WhatsNewDot } from "@/components/changelog/whats-new";
 
 import { NavMain } from "@/components/nav-main";
 import { adminNavItems } from "@/components/admin-nav-items";
@@ -43,6 +45,9 @@ type NavMainItem = {
   icon: LucideIcon;
   /** When set, the item only shows while that journey is enabled. */
   journey?: keyof JourneySettings;
+  badge?: React.ReactNode;
+  /** Admins only (the page redirects everyone else as well). */
+  adminOnly?: boolean;
 };
 
 // "Overview" (/dashboard) was retired on 2026-09-15 — the route now forwards
@@ -50,7 +55,8 @@ type NavMainItem = {
 // as deprecated code; re-add { title: "Overview", url: "/dashboard", icon:
 // BarChart3 } here to bring the page back.
 // Order (2026-09-15): My Journey, Leaderboard, the Team Journey pages while
-// that phase is on, then the How it works guide, then Support.
+// that phase is on, then the How it works guide, Support, and What's new
+// (the changelog) last.
 const navMainItems: NavMainItem[] = [
   {
     title: "My Journey",
@@ -85,6 +91,13 @@ const navMainItems: NavMainItem[] = [
     url: "/dashboard/support",
     icon: HelpCircle,
   },
+  {
+    title: "What's new",
+    url: "/dashboard/changelog",
+    icon: Sparkles,
+    badge: <WhatsNewDot />,
+    adminOnly: true, // 2026-10-30: changelog visible to admins only for now
+  },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -117,7 +130,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     // every journey regardless, so they can inspect and test a paused
     // journey (the page guards let admins through the same way).
     const baseItems: NavMainItem[] = navMainItems.filter(
-      (item) => !item.journey || journeys[item.journey] || isAdmin
+      (item) =>
+        (!item.journey || journeys[item.journey] || isAdmin) &&
+        (!item.adminOnly || isAdmin)
     );
 
     // Insert dynamic team link after Leaderboard

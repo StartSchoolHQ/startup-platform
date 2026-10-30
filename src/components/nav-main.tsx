@@ -29,6 +29,8 @@ export type NavItem = {
   url: string;
   icon: LucideIcon;
   isActive?: boolean;
+  /** Rendered after the title, e.g. an unread dot. */
+  badge?: React.ReactNode;
   items?: {
     title: string;
     url: string;
@@ -68,6 +70,7 @@ function NavMainItem({ item }: { item: NavItem }) {
               <item.icon />
             </motion.span>
             <span>{item.title}</span>
+            {item.badge}
           </Link>
         </SidebarMenuButton>
         {hasSubItems ? (
