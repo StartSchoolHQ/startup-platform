@@ -43,6 +43,12 @@ export interface IndividualWeeklyReportStatus {
   submitted: boolean;
   submitted_at: string | null;
   draft: Partial<IndividualWeeklyReportData> | null;
+  /**
+   * Friday 00:00 → Monday 12:00 Riga of the reported week: the banner
+   * window. The week itself stays open until Thursday night (a report
+   * filed Mon–Thu counts for the previous week).
+   */
+  reminder_open?: boolean;
   history: IndividualWeeklyReportHistoryEntry[];
 }
 

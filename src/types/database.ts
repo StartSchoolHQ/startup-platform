@@ -3391,6 +3391,15 @@ export type Database = {
           week_year: number;
         }[];
       };
+      get_solo_report_week_v1: {
+        Args: { input_date?: string };
+        Returns: {
+          week_end: string;
+          week_number: number;
+          week_start: string;
+          week_year: number;
+        }[];
+      };
       get_student_progress_overview: {
         Args: never;
         Returns: {

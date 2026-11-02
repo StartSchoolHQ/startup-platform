@@ -36,7 +36,7 @@ A verbatim mirror of the in-app reminder functions:
 
 | Context | Rule |
 |---|---|
-| Solo (My Journey) | active, role `user`, confirmed email, no `submitted` individual report for the week cut at Monday 12:00 Riga; skipped while My Journey is off; skipped for active-team members while Team Journey is on |
+| Solo (My Journey) | active, role `user`, confirmed email, no `submitted` individual report for the solo report week (`get_solo_report_week_v1`: Mon–Thu = the previous week, Fri–Sun = the current one; the Monday 12:00 in the mail is the nudge, not a cutoff); skipped while My Journey is off; skipped for active-team members while Team Journey is on |
 | Team (Team Journey) | active member of an active team, `team_xp < 8000`, no team report for the week cut at Monday 10:00 Riga; skipped while Team Journey is off |
 
 Admins are never mailed. Test accounts are not excluded by the RPC because

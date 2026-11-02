@@ -236,38 +236,39 @@ describe("submit_individual_weekly_report_v1", () => {
   });
 });
 
-describe("get_riga_week_boundaries_v2 (solo cutoff Monday 12:00 Riga)", () => {
-  async function weekStart(iso: string, cutoff = "12:00:00") {
-    const { data, error } = await admin.rpc("get_riga_week_boundaries_v2", {
+describe("get_solo_report_week_v1 (Mon–Thu = previous week, Fri–Sun = current)", () => {
+  async function weekStart(iso: string) {
+    const { data, error } = await admin.rpc("get_solo_report_week_v1", {
       input_date: iso,
-      p_cutoff: cutoff,
     });
     expect(error).toBeNull();
     return (data as { week_start: string }[])[0].week_start;
   }
 
-  it("keeps Monday before 12:00 Riga in the previous week (winter time)", async () => {
-    expect(await weekStart("2026-10-26T11:59:00+02:00")).toBe("2026-10-19");
-    expect(await weekStart("2026-10-26T12:00:00+02:00")).toBe("2026-10-26");
+  it("files Monday through Thursday under the previous week (winter time)", async () => {
+    expect(await weekStart("2026-11-02T11:00:00+02:00")).toBe("2026-10-26");
+    // The Monday 12:00 nudge is not a cutoff any more.
+    expect(await weekStart("2026-11-02T12:00:00+02:00")).toBe("2026-10-26");
+    expect(await weekStart("2026-11-05T23:59:59+02:00")).toBe("2026-10-26");
   });
 
-  it("uses Riga local time, not UTC, for the cutoff (summer time)", async () => {
-    // 11:30 Riga summer = 08:30 UTC; still last week under the 12:00 cutoff.
-    expect(await weekStart("2026-06-01T11:30:00+03:00")).toBe("2026-05-25");
-    expect(await weekStart("2026-06-01T12:30:00+03:00")).toBe("2026-06-01");
+  it("opens the new week on Friday 00:00 Riga", async () => {
+    expect(await weekStart("2026-11-06T00:00:00+02:00")).toBe("2026-11-02");
+    expect(await weekStart("2026-11-08T23:59:59+02:00")).toBe("2026-11-02");
   });
 
-  it("matches the 10:00 team rule when asked for 10:00", async () => {
-    expect(await weekStart("2026-10-26T11:30:00+02:00", "10:00:00")).toBe(
-      "2026-10-26"
-    );
+  it("uses Riga local time, not UTC, for the Friday boundary (summer time)", async () => {
+    // Thursday 23:30 Riga summer = 20:30 UTC; still the previous week.
+    expect(await weekStart("2026-06-04T23:30:00+03:00")).toBe("2026-05-25");
+    expect(await weekStart("2026-06-05T00:30:00+03:00")).toBe("2026-06-01");
   });
 
-  it("solo status RPC reports the 12:00-cutoff week", async () => {
+  it("solo status RPC reports the same week plus the banner flag", async () => {
     const { data } = await student.rpc(
       "get_individual_weekly_report_status_v1"
     );
     const expected = await weekStart(new Date().toISOString());
     expect(data.week.week_start).toBe(expected);
+    expect(typeof data.reminder_open).toBe("boolean");
   });
 });

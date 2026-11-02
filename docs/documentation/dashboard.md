@@ -174,8 +174,10 @@ Full detail on the phase-aware split, the gating matrix and the
 3. **Weekly Report Banners** — rendered by the dashboard layout above the
    page content, not by this page. `WeeklyReportBanner` (team): unsubmitted
    teams, Friday–Monday 10:00 Riga, only while Team Journey is on.
-   `IndividualWeeklyReportBanner` (solo): Friday–Monday **12:00** Riga (the solo
-   cutoff, `get_riga_week_boundaries_v2(now(), '12:00:00')`), only while My Journey
+   `IndividualWeeklyReportBanner` (solo): Friday–Monday **12:00** Riga (`reminder_open`
+   from `get_individual_weekly_report_status_v1`; the solo week itself follows
+   `get_solo_report_week_v1` — Mon–Thu files for the previous week, Fri–Sun for the
+   current one — so a late report still lands on the right week), only while My Journey
    is on and the student resolves to the solo form; opens the modal in place.
 
 ---

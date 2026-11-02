@@ -372,7 +372,7 @@ Returns:
 | `getCurrentWeekBoundaries()` | Get current week via RPC |
 | `hasUserSubmittedThisWeek(userId, teamId)` | Check submission status |
 | `formatWeekPeriod(boundaries)` | Format for display |
-| `isWeeklyReportBannerWindow(boundaries, now?)` | Friday → Monday cutoff banner window (shared by both banners; team 10:00, solo 12:00 Riga) |
+| `isWeeklyReportBannerWindow(boundaries, now?)` | Friday → Monday 10:00 team banner window; the solo banner reads `reminder_open` from its status RPC instead (solo week = `get_solo_report_week_v1`, Mon–Thu files for the previous week) and only falls back to this helper |
 
 ### Weekly Report Banner
 

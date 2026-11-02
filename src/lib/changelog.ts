@@ -26,6 +26,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-11-02",
+    area: "Reports",
+    title: "Late weekly reports land on the right week",
+    summary:
+      "A solo weekly report filed Monday to Thursday now counts for the week that just ended. It used to be filed under the new week, which then showed as already submitted on Friday.",
+    impact:
+      "Submit by Monday 12:00 as before. If you are late, the form still files last week's report until Thursday night, and Friday opens the new one. If this hit you last week, your Monday report has been moved to the week it describes and this week's form is open again.",
+    link: { label: "Open My Journey", href: "/dashboard/my-journey" },
+  },
+  {
     date: "2026-10-30",
     area: "Reports",
     title: "Weekly report reminders by email",

@@ -14,10 +14,12 @@ import {
 import { IndividualWeeklyReportModal } from "@/components/weekly-reports/individual/individual-weekly-report-modal";
 
 /**
- * Solo twin of WeeklyReportBanner: Friday → Monday 12:00 Riga (the solo
- * cutoff; teams close at 10:00), only while
- * My Journey is on, only for students who resolve to the solo form, and
- * only until this week's report is submitted. Opens the modal in place.
+ * Solo twin of WeeklyReportBanner: Friday → Monday 12:00 Riga (the nudge
+ * window the status RPC reports as `reminder_open`; the solo week itself
+ * stays open until Thursday night — Mon–Thu files for the previous week),
+ * only while My Journey is on, only for students who resolve to the solo
+ * form, and only until that week's report is submitted. Opens the modal in
+ * place.
  */
 export function IndividualWeeklyReportBanner() {
   const { soloMode, userId } = useSoloWeeklyReportMode();
@@ -27,7 +29,9 @@ export function IndividualWeeklyReportBanner() {
   const [open, setOpen] = useState(false);
 
   if (!soloMode || !status || status.submitted) return null;
-  if (!isWeeklyReportBannerWindow(status.week)) return null;
+  const inWindow =
+    status.reminder_open ?? isWeeklyReportBannerWindow(status.week);
+  if (!inWindow) return null;
 
   return (
     <div className="px-4 pt-1 pb-6">

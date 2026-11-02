@@ -92,11 +92,12 @@ export function formatWeekPeriod(weekBoundaries: WeekBoundaries): string {
 }
 
 /**
- * Banner window: Friday 00:00 through the Monday cutoff (team 10:00, solo
- * 12:00 Riga — whichever RPC produced `week`). `week_start` is
- * always a Monday, so Friday = week_start + 4 days. After the cutoff
- * the boundaries RPC flips to the new week, whose Friday is ahead,
- * so the banner closes by itself.
+ * Banner window: Friday 00:00 through the Monday 10:00 team cutoff.
+ * `week_start` is always a Monday, so Friday = week_start + 4 days. After
+ * the cutoff the boundaries RPC flips to the new week, whose Friday is
+ * ahead, so the banner closes by itself. The solo banner prefers the
+ * status RPC's `reminder_open` (the solo week stays open until Thursday
+ * night, so this helper alone would nag all week); this is its fallback.
  */
 export function isWeeklyReportBannerWindow(
   week: WeekBoundaries,
