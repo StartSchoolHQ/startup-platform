@@ -31,6 +31,8 @@ interface Props {
   value: IndividualWeeklyReportForm;
   onChange: (next: IndividualWeeklyReportForm) => void;
   errors: FieldErrors;
+  /** Question 1 was seeded from the previous report's plan. */
+  commitmentsPrefilled?: boolean;
   disabled?: boolean;
 }
 
@@ -42,6 +44,7 @@ export function IndividualReportQuestions({
   value,
   onChange,
   errors,
+  commitmentsPrefilled,
   disabled,
 }: Props) {
   const set = <K extends keyof IndividualWeeklyReportForm>(
@@ -55,7 +58,11 @@ export function IndividualReportQuestions({
         id={soloQuestionAnchor("commitments")}
         number={1}
         title="What were your top commitments previous week?"
-        hint="Mark how each one went. Explain only the ones that didn't fully land."
+        hint={
+          commitmentsPrefilled
+            ? "Filled in from your last report's plan. Edit, remove or add anything, then mark how each one went."
+            : "Mark how each one went. Explain only the ones that didn't fully land."
+        }
         error={errors.commitments}
       >
         <CommitmentsField

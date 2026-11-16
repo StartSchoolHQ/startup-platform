@@ -26,6 +26,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-11-16",
+    area: "Reports",
+    title: "Last week's plan is waiting in your weekly report",
+    summary:
+      "The first question of the solo weekly report now opens with the commitments you wrote for the upcoming week in your last report.",
+    impact:
+      "No more retyping or guessing what you promised. Each line starts as In progress: mark how it went, and edit, remove or add lines as you like. If you already have a draft for the week, the draft is what you see.",
+    link: { label: "Open My Journey", href: "/dashboard/my-journey" },
+  },
+  {
     date: "2026-11-02",
     area: "Reports",
     title: "Late weekly reports land on the right week",

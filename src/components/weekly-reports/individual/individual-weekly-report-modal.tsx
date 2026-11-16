@@ -49,7 +49,7 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
   const submit = useSubmitIndividualWeeklyReport(user?.id);
   const [form, setForm] = useState(emptyIndividualReportForm);
   const [errors, setErrors] = useState<FieldErrors>({});
-  const { loading, loadError, retryLoad, draft, savedAt, autosave } =
+  const { loading, loadError, retryLoad, draft, prefill, savedAt, autosave } =
     useIndividualReportDraft({ open, userId: user?.id, form });
   const [waitingForSave, setWaitingForSave] = useState(false);
 
@@ -64,12 +64,21 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
   }
   const [seededFor, setSeededFor] = useState(0);
   const [restored, setRestored] = useState<{ open: number; at: Date | null }>();
+  // The open whose question 1 came from the previous report's plan.
+  const [prefilledFor, setPrefilledFor] = useState<number>();
   // A failed read never seeds (it would be the last open's cached draft).
   if (open && !loading && !loadError && seededFor !== openState.count) {
     setSeededFor(openState.count);
-    const seed = draft ? draftToForm(draft) : emptyIndividualReportForm();
+    // A saved draft always wins; the previous plan only fills a fresh form.
+    const usePrefill = !draft && prefill.length > 0;
+    const seed = draft
+      ? draftToForm(draft)
+      : usePrefill
+        ? { ...emptyIndividualReportForm(), commitments: prefill }
+        : emptyIndividualReportForm();
     setForm(seed);
     setErrors({});
+    setPrefilledFor(usePrefill ? openState.count : undefined);
     // An empty restored draft (e.g. after Clear) gets no chip and no event.
     setRestored(
       draft && hasIndividualReportContent(seed)
@@ -83,6 +92,7 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
     posthog.capture("weekly_report_draft_restored", { context: "individual" });
   }, [restoredOpen]);
   const restoredNow = !loading && restored?.open === openState.count;
+  const prefilledNow = !loading && prefilledFor === openState.count;
 
   const hasContent = hasIndividualReportContent(form);
   const weekLabel = status ? formatWeekPeriod(status.week) : null;
@@ -154,6 +164,7 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
             alignment_score: data.alignmentScore,
             next_week_commitments_count: data.nextWeekCommitments.length,
             was_draft: restoredNow,
+            commitments_prefilled: prefilledNow,
           });
           void close();
         },
@@ -190,6 +201,7 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
           onClear={() => {
             setForm(emptyIndividualReportForm());
             setErrors({});
+            setPrefilledFor(undefined);
           }}
           onCancel={() => void close()}
           onSaveAndClose={handleSaveDraft}
@@ -207,6 +219,7 @@ export function IndividualWeeklyReportModal({ open, onOpenChange }: Props) {
           value={form}
           onChange={handleChange}
           errors={errors}
+          commitmentsPrefilled={prefilledNow}
           disabled={waitingForSave || submit.isPending}
         />
       )}

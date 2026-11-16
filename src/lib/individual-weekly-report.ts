@@ -1,6 +1,8 @@
 import type {
   IndividualWeeklyReportData,
   IndividualWeeklyReportForm,
+  IndividualWeeklyReportStatus,
+  ReportCommitment,
 } from "@/types/weekly-report";
 import { DRAFT_SAVE_FALLBACK } from "@/lib/drafts/save-error";
 
@@ -37,6 +39,28 @@ export function draftToForm(
         : base.alignmentScore,
     alignmentReason: draft.alignmentReason ?? "",
   };
+}
+
+/**
+ * Question 1 rows seeded from question 3 ("commitments for the upcoming
+ * week") of the newest submitted report older than the week being reported.
+ * Empty when there is no such report. Rows start as "in progress" and stay
+ * fully editable.
+ */
+export function prefillCommitmentsFromHistory(
+  status: Pick<IndividualWeeklyReportStatus, "week" | "history">
+): ReportCommitment[] {
+  const { week_year: year, week_number: week } = status.week;
+  // History is newest first.
+  const previous = status.history.find(
+    (h) => h.week_year < year || (h.week_year === year && h.week_number < week)
+  );
+  const lines = previous?.submission_data?.nextWeekCommitments ?? [];
+  return lines
+    .filter((line): line is string => typeof line === "string")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((text) => ({ text, status: "in_progress", explanation: "" }));
 }
 
 /** Trims text and drops blank rows — what we validate and what we send. */

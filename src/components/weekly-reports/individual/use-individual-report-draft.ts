@@ -15,16 +15,20 @@ import { sendDraftBeacon } from "@/lib/drafts/beacon";
 import {
   hasIndividualReportContent,
   normalizeIndividualReport,
+  prefillCommitmentsFromHistory,
 } from "@/lib/individual-weekly-report";
 import { createClient } from "@/lib/supabase/client";
 import type {
   IndividualWeeklyReportData,
   IndividualWeeklyReportForm,
+  ReportCommitment,
 } from "@/types/weekly-report";
 
 interface DraftOpenRead {
   draft: Partial<IndividualWeeklyReportData> | null;
   savedAt: string | null;
+  /** Question 1 rows from the previous report's plan; used when no draft. */
+  prefill: ReportCommitment[];
 }
 
 /** Refetches the status (the draft) and reads the draft row's updated_at. */
@@ -37,7 +41,8 @@ async function readDraftOnOpen(
     queryFn: fetchIndividualWeeklyReportStatus,
     staleTime: 0,
   });
-  if (!status.draft) return { draft: null, savedAt: null };
+  const prefill = prefillCommitmentsFromHistory(status);
+  if (!status.draft) return { draft: null, savedAt: null, prefill };
   // Owner-select under RLS. Only feeds the chip's age, so a failure here
   // just drops the age instead of blocking the restore.
   const { data } = await createClient()
@@ -51,7 +56,7 @@ async function readDraftOnOpen(
     .order("updated_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  return { draft: status.draft, savedAt: data?.updated_at ?? null };
+  return { draft: status.draft, savedAt: data?.updated_at ?? null, prefill };
 }
 
 /**
@@ -74,6 +79,8 @@ export function useIndividualReportDraft({
   loadError: boolean;
   retryLoad: () => void;
   draft: Partial<IndividualWeeklyReportData> | null;
+  /** Previous report's plan as question 1 rows; seed only when no draft. */
+  prefill: ReportCommitment[];
   savedAt: Date | null;
   hasRow: boolean;
   autosave: UseAutosaveDraftResult;
@@ -135,6 +142,7 @@ export function useIndividualReportDraft({
     loadError,
     retryLoad: () => void query.refetch(),
     draft: query.data?.draft ?? null,
+    prefill: query.data?.prefill ?? [],
     savedAt: savedAt ? new Date(savedAt) : null,
     hasRow,
     autosave,

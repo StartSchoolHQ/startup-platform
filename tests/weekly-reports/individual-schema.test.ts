@@ -4,6 +4,7 @@ import {
   emptyIndividualReportForm,
   mapIndividualReportRpcError,
   normalizeIndividualReport,
+  prefillCommitmentsFromHistory,
 } from "@/lib/individual-weekly-report";
 import { isWeeklyReportBannerWindow } from "@/lib/weekly-reports";
 
@@ -85,6 +86,75 @@ describe("normalizeIndividualReport", () => {
     expect(form.commitments).toHaveLength(1);
     expect(form.nextWeekCommitments).toEqual([""]);
     expect(form.alignmentScore).toBe(5);
+  });
+});
+
+describe("prefillCommitmentsFromHistory", () => {
+  const week = {
+    week_start: "2026-11-02",
+    week_end: "2026-11-08",
+    week_number: 45,
+    week_year: 2026,
+  };
+  const entry = (
+    week_year: number,
+    week_number: number,
+    nextWeekCommitments: string[]
+  ) => ({
+    id: `${week_year}-${week_number}`,
+    week_year,
+    week_number,
+    week_start_date: "2026-01-01",
+    week_end_date: "2026-01-07",
+    submitted_at: null,
+    submission_data: { ...valid, nextWeekCommitments },
+  });
+
+  it("turns the previous report's plan into in-progress rows", () => {
+    const rows = prefillCommitmentsFromHistory({
+      week,
+      history: [entry(2026, 44, ["Call ten users", "  Draft the pitch "])],
+    });
+    expect(rows).toEqual([
+      { text: "Call ten users", status: "in_progress", explanation: "" },
+      { text: "Draft the pitch", status: "in_progress", explanation: "" },
+    ]);
+  });
+  it("returns nothing without a previous report", () => {
+    expect(prefillCommitmentsFromHistory({ week, history: [] })).toEqual([]);
+  });
+  it("uses the newest older report, even after a skipped week", () => {
+    const rows = prefillCommitmentsFromHistory({
+      week,
+      history: [
+        entry(2026, 42, ["Newest older plan"]),
+        entry(2026, 40, ["Stale plan"]),
+      ],
+    });
+    expect(rows.map((r) => r.text)).toEqual(["Newest older plan"]);
+  });
+  it("ignores the reported week itself and crosses the year boundary", () => {
+    const rows = prefillCommitmentsFromHistory({
+      week: { ...week, week_number: 1, week_year: 2027 },
+      history: [
+        entry(2027, 1, ["This week's own plan"]),
+        entry(2026, 52, ["December plan"]),
+      ],
+    });
+    expect(rows.map((r) => r.text)).toEqual(["December plan"]);
+  });
+  it("drops blank and non-string lines, and survives missing data", () => {
+    const broken = { ...entry(2026, 44, []), submission_data: null };
+    expect(prefillCommitmentsFromHistory({ week, history: [broken] })).toEqual(
+      []
+    );
+    const mixed = entry(2026, 44, ["", "  ", "Real one"]);
+    (mixed.submission_data.nextWeekCommitments as unknown[]).push(42);
+    expect(
+      prefillCommitmentsFromHistory({ week, history: [mixed] }).map(
+        (r) => r.text
+      )
+    ).toEqual(["Real one"]);
   });
 });
 

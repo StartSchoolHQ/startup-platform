@@ -122,6 +122,18 @@ before. Recurring solo tasks reuse one `progress_id` across cycles, so this
 check keeps an old cycle's draft from hiding what the reviewer just
 rejected.
 
+### Pre-filled commitments (solo weekly report)
+
+With no draft for the week, question 1 ("top commitments previous week") is
+seeded from question 3 ("commitments for the upcoming week") of the newest
+submitted report older than the week being reported
+(`prefillCommitmentsFromHistory` in `src/lib/individual-weekly-report.ts`,
+read from the `history` the status RPC already returns; no DB change). Rows
+start as *In progress* and are ordinary editable rows. A draft always wins,
+even an empty one left by Clear. The seeded form is the autosave baseline,
+so opening the form writes nothing until the student edits. The submit event
+carries `commitments_prefilled`. Solo form only; the team form is unchanged.
+
 ### After submit
 
 - **Task:** the draft is deleted with `delete_task_submission_draft_v1` right
